@@ -1,19 +1,11 @@
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <limits.h>
+#include "common.h"
 #include <assert.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <memory.h>
-#include <malloc.h>
 #include <elf.h>
 #include <dlfcn.h>
 #include <link.h>
 #include <bfd.h>
-#include <ctype.h>
 #include <setjmp.h>
 #include <regex.h>
-#include <stdbool.h>
 
 typedef struct u4c_object u4c_object_t;
 typedef struct u4c_classifier u4c_classifier_t;
@@ -96,72 +88,6 @@ functype_as_string(enum u4c_functype type)
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-// extern char *argv0;
-
-static void oom(void) __attribute__((noreturn));
-
-/* Do write() but handle short writes */
-static int
-do_write(int fd, const char *buf, int len)
-{
-    int remain = len;
-
-    while (remain > 0)
-    {
-	int n = write(fd, buf, remain);
-	if (n < 0)
-	    return -1;
-	buf += n;
-	remain -= n;
-    }
-    return len;
-}
-
-static void
-oom(void)
-{
-    static const char message[] = ": no memory, exiting\n";
-
-//     if (do_write(2, argv0, strlen(argv0)) < 0)
-// 	exit(1);
-    if (do_write(2, message, sizeof(message)-1) < 0)
-	exit(1);
-    exit(1);
-}
-
-void *
-__u4c_malloc(size_t sz)
-{
-    void *x;
-
-    x = malloc(sz);
-    if (!x)
-	oom();
-    memset(x, 0, sz);
-    return x;
-}
-
-char *
-__u4c_strdup(const char *s)
-{
-    char *x;
-    size_t len;
-
-    assert(s);
-    len = strlen(s);
-    x = malloc(len+1);
-    if (!x)
-	oom();
-    return strcpy(x, s);
-}
-
-#define xmalloc(sz) __u4c_malloc(sz)
-#define xstrdup(s) __u4c_strdup(s)
-#define xfree(v) \
-    do { free(v); (v) = NULL; } while(0)
-#define safestr(x)  ((x) ? (x) : "")
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 static void
 init_state(u4c_globalstate_t *state)
@@ -182,8 +108,8 @@ delete_node(u4c_testnode_t *tn)
 	delete_node(child);
     }
 
-    free(tn->name);
-    free(tn);
+    xfree(tn->name);
+    xfree(tn);
 }
 
 static void
@@ -198,8 +124,8 @@ free_state(u4c_globalstate_t *state)
 	o = state->objects;
 	state->objects = o->next;
 
-	free(o->name);
-	free(o);
+	xfree(o->name);
+	xfree(o);
     }
 
     while (state->funcs)
@@ -207,10 +133,10 @@ free_state(u4c_globalstate_t *state)
 	f = state->funcs;
 	state->funcs = f->next;
 
-	free(f->name);
-	free(f->filename);
-	free(f->submatch);
-	free(f);
+	xfree(f->name);
+	xfree(f->filename);
+	xfree(f->submatch);
+	xfree(f);
     }
 
     while (state->classifiers)
@@ -218,15 +144,15 @@ free_state(u4c_globalstate_t *state)
 	cl = state->classifiers;
 	state->classifiers = cl->next;
 
-	free(cl->re);
+	xfree(cl->re);
 	regfree(&cl->compiled_re);
-	free(cl);
+	xfree(cl);
     }
 
     delete_node(state->root);
 
-    free(state->fixtures);
-    free(state->common);
+    xfree(state->fixtures);
+    xfree(state->common);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -367,8 +293,8 @@ u4c_add_classifier(u4c_globalstate_t *state,
 	regerror(r, &cl->compiled_re, err, sizeof(err));
 	fprintf(stderr, "u4c: bad classifier %s: %s\n",
 		re, err);
-	free(cl->re);
-	free(cl);
+	xfree(cl->re);
+	xfree(cl);
 	return;
     }
 
@@ -461,7 +387,7 @@ add_one_object(struct dl_phdr_info *info,
 
     o = xmalloc(sizeof(*o));
     o->base = (unsigned long)info->dlpi_addr;
-    o->name = xstrdup(safestr(info->dlpi_name));
+    o->name = xstrdup(xstr(info->dlpi_name));
 
     /* append to the objects list */
     o->next = NULL;
@@ -606,7 +532,7 @@ discover_functions(u4c_globalstate_t *state)
 	    add_function(state, type, s->name, filename, submatch,
 			 (void(*)(void))addr, o);
 	}
-	free(syms);
+	xfree(syms);
 	bfd_close(b);
     }
 }
@@ -750,7 +676,7 @@ generate_nodes(u4c_globalstate_t *state)
 // 		    f->name, f->filename+lastcommonlen, s);
 	add_testnode(state, buf, f);
     }
-    free(buf);
+    xfree(buf);
 }
 
 static void
@@ -965,7 +891,7 @@ run_test(u4c_globalstate_t *state,
 	state->nfailed++;
     else
 	fprintf(stderr, "PASS %s\n", fullname);
-    free(fullname);
+    xfree(fullname);
 }
 
 static void

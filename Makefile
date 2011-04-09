@@ -6,14 +6,18 @@ libdir=		$(prefix)/lib
 CC=		gcc
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
+CDEFINES=	-D_GNU_SOURCE
 CWARNFLAGS=	-Wall -Wextra
-CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS)
+CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 INSTALL=	/usr/bin/install -c
 RANLIB=		ranlib
 
 all: libu4c.a
 
-libu4c_SOURCE=	u4c.c
+libu4c_SOURCE=	\
+		u4c.c common.c
+libu4c_PRIVHEADERS= \
+		common.h
 libu4c_HEADERS=	u4c.h
 libu4c_OBJS=	$(libu4c_SOURCE:.c=.o)
 
