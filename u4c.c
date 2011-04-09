@@ -1,81 +1,15 @@
 #include "common.h"
+#include "u4c_priv.h"
 #include <assert.h>
 #include <elf.h>
 #include <dlfcn.h>
 #include <link.h>
 #include <bfd.h>
 #include <setjmp.h>
-#include <regex.h>
-
-typedef struct u4c_object u4c_object_t;
-typedef struct u4c_classifier u4c_classifier_t;
-typedef struct u4c_function u4c_function_t;
-typedef struct u4c_testnode u4c_testnode_t;
-typedef struct u4c_globalstate u4c_globalstate_t;
-
-struct u4c_object
-{
-    u4c_object_t *next;
-    unsigned long base;
-    char *name;
-};
-
-enum u4c_functype
-{
-    FT_UNKNOWN,
-    FT_BEFORE,
-    FT_TEST,
-    FT_AFTER,
-
-    FT_NUM
-};
-
-struct u4c_classifier
-{
-    u4c_classifier_t *next;
-    char *re;
-    regex_t compiled_re;
-    enum u4c_functype type;
-};
-
-struct u4c_function
-{
-    u4c_function_t *next;
-    enum u4c_functype type;
-    char *name;
-    char *filename;
-    char *submatch;
-    void (*addr)(void);
-    u4c_object_t *object;
-};
-
-struct u4c_testnode
-{
-    u4c_testnode_t *next;
-    u4c_testnode_t *parent;
-    u4c_testnode_t *children;
-    char *name;
-    u4c_function_t *funcs[FT_NUM];
-};
-
-struct u4c_globalstate
-{
-    u4c_classifier_t *classifiers, **classifiers_tailp;
-    u4c_object_t *objects, **objects_tailp;
-    u4c_function_t *funcs, **funcs_tailp;
-    char *common;
-    unsigned int commonlen;
-    u4c_testnode_t *root;
-    unsigned int maxdepth;
-    /* runtime state */
-    u4c_function_t **fixtures;
-    unsigned int nrun;
-    unsigned int nfailed;
-};
 
 
-static const char *
-functype_as_string(enum u4c_functype type)
+const char *
+__u4c_functype_as_string(enum u4c_functype type)
 {
     switch (type)
     {
@@ -626,7 +560,7 @@ add_testnode(u4c_globalstate_t *state,
     if (child->funcs[func->type])
 	fprintf(stderr, "u4c: WARNING: duplicate %s functions: "
 			"%s:%s and %s:%s\n",
-			functype_as_string(func->type),
+			__u4c_functype_as_string(func->type),
 			child->funcs[func->type]->filename,
 			child->funcs[func->type]->name,
 			func->filename,
@@ -703,7 +637,7 @@ dump_nodes(u4c_globalstate_t *state,
 	{
 	    indent(level);
 	    fprintf(stderr, "  %s=%s:%s\n",
-			    functype_as_string(type),
+			    __u4c_functype_as_string(type),
 			    tn->funcs[type]->filename + state->commonlen,
 			    tn->funcs[type]->name);
 	}
