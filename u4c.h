@@ -1,4 +1,4 @@
-#ifdef __U4C_H__
+#ifndef __U4C_H__
 #define __U4C_H__ 1
 
 extern int u4c(void);
