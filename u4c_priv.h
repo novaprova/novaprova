@@ -72,10 +72,22 @@ struct u4c_globalstate
 /* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
 extern char *__u4c_testnode_fullname(const u4c_testnode_t *tn);
+extern enum u4c_functype __u4c_classify_function(u4c_globalstate_t *,
+	const char *func, char *match_return, size_t maxmatch);
+extern u4c_object_t *__u4c_add_object(u4c_globalstate_t *,
+	const char *name, unsigned long base);
+extern u4c_function_t *__u4c_add_function(u4c_globalstate_t *,
+	enum u4c_functype type, const char *name,
+	const char *filename, const char *submatch,
+	void (*addr)(void), u4c_object_t *o);
 
 /* run.c */
 extern void __u4c_run_tests(u4c_globalstate_t *,
 			    u4c_testnode_t *);
 extern void __u4c_summarise_results(u4c_globalstate_t *);
+
+/* discover.c */
+extern void __u4c_discover_objects(u4c_globalstate_t *state);
+extern void __u4c_discover_functions(u4c_globalstate_t *state);
 
 #endif /* __U4C_PRIV_H__ */
