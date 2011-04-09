@@ -19,13 +19,18 @@ __u4c_functype_as_string(enum u4c_functype type)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static void
-init_state(u4c_globalstate_t *state)
+static u4c_globalstate_t *
+new_state(void)
 {
-    memset(state, 0, sizeof(*state));
+    u4c_globalstate_t *state;
+
+    state = xmalloc(sizeof(*state));
+
     state->classifiers_tailp = &state->classifiers;
     state->objects_tailp = &state->objects;
     state->funcs_tailp = &state->funcs;
+
+    return state;
 }
 
 static void
@@ -83,6 +88,7 @@ free_state(u4c_globalstate_t *state)
 
     xfree(state->fixtures);
     xfree(state->common);
+    xfree(state);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -463,30 +469,67 @@ __u4c_testnode_fullname(const u4c_testnode_t *tn)
     return buf;
 }
 
-int
-u4c(void)
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+void
+list_tests(u4c_globalstate_t *state,
+	   u4c_testnode_t *tn)
 {
-    u4c_globalstate_t state;
-    int ec;
+    u4c_testnode_t *child;
+
+    if (tn->funcs[FT_TEST])
+    {
+	char *fullname = __u4c_testnode_fullname(tn);
+	printf("%s\n", fullname);
+	xfree(fullname);
+    }
+    else
+    {
+	for (child = tn->children ; child ; child = child->next)
+	    list_tests(state, child);
+    }
+}
+
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+u4c_globalstate_t *
+u4c_init(void)
+{
+    u4c_globalstate_t *state;
 
     fprintf(stderr, "u4c: running\n");
 
-    init_state(&state);
-    setup_classifiers(&state);
-    __u4c_discover_objects(&state);
-    __u4c_discover_functions(&state);
-    find_common_path(&state);
-    generate_nodes(&state);
+    state = new_state();
+    setup_classifiers(state);
+    __u4c_discover_objects(state);
+    __u4c_discover_functions(state);
+    find_common_path(state);
+    generate_nodes(state);
     /* TODO: check tree for a) leaves without FT_TEST
      * and b) non-leaves with FT_TEST */
-//     dump_nodes(&state, state.root, 0);
+//     dump_nodes(state, state->root, 0);
 
-    __u4c_run_tests(&state, state.root);
-    __u4c_summarise_results(&state);
+    return state;
+}
 
-    ec = !!state.nfailed;
-    free_state(&state);
+void
+u4c_list_tests(u4c_globalstate_t *state)
+{
+    list_tests(state, state->root);
+}
 
-    return ec;
+int
+u4c_run_tests(u4c_globalstate_t *state)
+{
+    __u4c_run_tests(state, state->root);
+    __u4c_summarise_results(state);
+    return !!state->nfailed;
+}
+
+void
+u4c_done(u4c_globalstate_t *state)
+{
+    free_state(state);
 }
 
