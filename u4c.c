@@ -1,12 +1,13 @@
 #include "common.h"
 #include "u4c_priv.h"
+#include "except.h"
 #include <assert.h>
 #include <elf.h>
 #include <dlfcn.h>
 #include <link.h>
 #include <bfd.h>
-#include <setjmp.h>
 
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 const char *
 __u4c_functype_as_string(enum u4c_functype type)
@@ -647,26 +648,6 @@ dump_nodes(u4c_globalstate_t *state,
 	dump_nodes(state, child, level+1);
 }
 
-static jmp_buf u4c_jbuf;
-static bool u4c_catching;
-static int u4c_caught;
-
-#define u4c_try \
-	u4c_catching = true; \
-	if (!(u4c_caught = setjmp(u4c_jbuf)))
-#define u4c_catch \
-	u4c_catching = false; \
-	if (u4c_caught)
-
-#define __u4c_throw \
-	if (u4c_catching) \
-	    longjmp(u4c_jbuf, 1);
-#define u4c_throw \
-    do { \
-	__u4c_throw; \
-	abort(); \
-    } while(0)
-
 bool CU_assertImplementation(bool bValue,
 			     unsigned int uiLine,
 			     char strCondition[],
@@ -691,60 +672,8 @@ void exit(int status)
     _exit(status);
 }
 
-static void
-run_function(u4c_globalstate_t *state,
-	     u4c_function_t *f)
-{
-    if (f->type == FT_TEST)
-    {
-	void (*call)(void) = f->addr;
-	call();
-    }
-    else
-    {
-	int (*call)(void) = (int(*)(void))f->addr;
-	if (call())
-	    u4c_throw;
-    }
-}
-
-static void
-run_fixtures(u4c_globalstate_t *state,
-	     u4c_testnode_t *tn,
-	     enum u4c_functype type)
-{
-    u4c_testnode_t *a;
-    int i;
-
-    if (!state->fixtures)
-	state->fixtures = xmalloc(sizeof(u4c_function_t*) *
-				  state->maxdepth);
-    else
-	memset(state->fixtures, 0, sizeof(u4c_function_t*) *
-				   state->maxdepth);
-
-    /* Run FT_BEFORE from outermost in, and FT_AFTER
-     * from innermost out */
-    if (type == FT_BEFORE)
-    {
-	i = state->maxdepth;
-	for (a = tn ; a ; a = a->parent)
-	    state->fixtures[--i] = a->funcs[type];
-    }
-    else
-    {
-	i = 0;
-	for (a = tn ; a ; a = a->parent)
-	    state->fixtures[i++] = a->funcs[type];
-    }
-
-    for (i = 0 ; i < state->maxdepth ; i++)
-	if (state->fixtures[i])
-	    run_function(state, state->fixtures[i]);
-}
-
-static char *
-u4c_testnode_fullname(const u4c_testnode_t *tn)
+char *
+__u4c_testnode_fullname(const u4c_testnode_t *tn)
 {
     const u4c_testnode_t *a;
     unsigned int len = 0;
@@ -771,87 +700,6 @@ u4c_testnode_fullname(const u4c_testnode_t *tn)
     return buf;
 }
 
-static void
-run_test(u4c_globalstate_t *state,
-	 u4c_testnode_t *tn)
-{
-    char *fullname;
-    bool fail = false;
-
-    {
-	static int n = 0;
-	if (++n > 10)
-	    return;
-    }
-
-    fullname = u4c_testnode_fullname(tn);
-    fprintf(stderr, "u4c: running: \"%s\"\n", fullname);
-
-    u4c_try
-    {
-	run_fixtures(state, tn, FT_BEFORE);
-    }
-    u4c_catch
-    {
-	fprintf(stderr, "FAIL %s in before fixture\n", fullname);
-	fail = true;
-    }
-
-    if (!fail)
-    {
-	u4c_try
-	{
-	    run_function(state, tn->funcs[FT_TEST]);
-	}
-	u4c_catch
-	{
-	    fprintf(stderr, "FAIL %s\n", fullname);
-	    fail = true;
-	}
-
-	u4c_try
-	{
-	    run_fixtures(state, tn, FT_AFTER);
-	}
-	u4c_catch
-	{
-	    fprintf(stderr, "FAIL %s in after fixture\n", fullname);
-	    fail = true;
-	}
-    }
-
-    state->nrun++;
-    if (fail)
-	state->nfailed++;
-    else
-	fprintf(stderr, "PASS %s\n", fullname);
-    xfree(fullname);
-}
-
-static void
-run_tests(u4c_globalstate_t *state,
-	  u4c_testnode_t *tn)
-{
-    u4c_testnode_t *child;
-
-    if (tn->funcs[FT_TEST])
-    {
-	run_test(state, tn);
-    }
-    else
-    {
-	for (child = tn->children ; child ; child = child->next)
-	    run_tests(state, child);
-    }
-}
-
-static void
-summarise_results(u4c_globalstate_t *state)
-{
-    fprintf(stderr, "u4c: %u run %u failed\n",
-	    state->nrun, state->nfailed);
-}
-
 int
 u4c(void)
 {
@@ -870,8 +718,8 @@ u4c(void)
      * and b) non-leaves with FT_TEST */
 //     dump_nodes(&state, state.root, 0);
 
-    run_tests(&state, state.root);
-    summarise_results(&state);
+    __u4c_run_tests(&state, state.root);
+    __u4c_summarise_results(&state);
 
     ec = !!state.nfailed;
     free_state(&state);

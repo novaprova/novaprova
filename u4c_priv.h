@@ -69,6 +69,13 @@ struct u4c_globalstate
     unsigned int nfailed;
 };
 
+/* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
+extern char *__u4c_testnode_fullname(const u4c_testnode_t *tn);
+
+/* run.c */
+extern void __u4c_run_tests(u4c_globalstate_t *,
+			    u4c_testnode_t *);
+extern void __u4c_summarise_results(u4c_globalstate_t *);
 
 #endif /* __U4C_PRIV_H__ */
