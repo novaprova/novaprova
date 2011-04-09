@@ -1,0 +1,15 @@
+# The BFD library has a big chunky memleak when you use
+# bfd_find_line() on an ELF executable with DWARF2 line
+# debug info.
+{
+   stupid_bfd_memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:objalloc_create
+   fun:bfd_hash_table_init_n
+   ...
+   fun:_bfd_dwarf2_find_line
+   fun:_bfd_elf_find_line
+   ...
+}
+
