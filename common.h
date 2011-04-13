@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <memory.h>
 #include <malloc.h>
+#include <stdarg.h>
 
 extern void *__u4c_malloc(size_t sz);
 extern char *__u4c_strdup(const char *s);
