@@ -417,30 +417,6 @@ dump_nodes(u4c_globalstate_t *state,
 	dump_nodes(state, child, level+1);
 }
 
-bool CU_assertImplementation(bool bValue,
-			     unsigned int uiLine,
-			     char strCondition[],
-			     char strFile[],
-			     char strFunction[] __attribute__((unused)),
-			     bool bFatal __attribute__((unused)))
-{
-//     fprintf(stderr, "    %s at %s:%u\n", strCondition, strFile, uiLine);
-    if (!bValue)
-    {
-	fprintf(stderr, "u4c: FAILED: %s at %s:%u\n",
-		strCondition, strFile, uiLine);
-	u4c_throw;
-    }
-    return true;
-}
-
-void exit(int status)
-{
-    fprintf(stderr, "u4c: exit(%d) called\n", status);
-    __u4c_throw;
-    _exit(status);
-}
-
 char *
 __u4c_testnode_fullname(const u4c_testnode_t *tn)
 {

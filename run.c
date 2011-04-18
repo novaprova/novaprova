@@ -4,6 +4,20 @@
 
 __u4c_exceptstate_t __u4c_exceptstate;
 
+void __u4c_fail(const char *condition,
+		const char *filename,
+	        unsigned int lineno,
+		const char *function)
+{
+    function = xstr(function);
+    filename = xstr(filename);
+    fprintf(stderr, "u4c: FAILED: %s%s%s at %s:%u\n",
+	    condition,
+	    (*function ? " in" : ""), function,
+	    filename, lineno);
+    u4c_throw;
+}
+
 static void
 run_function(u4c_function_t *f)
 {

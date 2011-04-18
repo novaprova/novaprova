@@ -86,6 +86,9 @@ extern u4c_function_t *__u4c_add_function(u4c_globalstate_t *,
 extern void __u4c_run_tests(u4c_globalstate_t *,
 			    u4c_testnode_t *);
 extern void __u4c_summarise_results(u4c_globalstate_t *);
+extern void __u4c_fail(const char *condition, const char *filename,
+		       unsigned int lineno, const char *function)
+	__attribute__((noreturn));
 
 /* discover.c */
 extern void __u4c_discover_objects(u4c_globalstate_t *state);
