@@ -4,6 +4,7 @@
 #include "common.h"
 #include "u4c.h"
 #include <regex.h>
+#include <bfd.h>
 
 typedef struct u4c_object u4c_object_t;
 typedef struct u4c_classifier u4c_classifier_t;
@@ -15,6 +16,10 @@ struct u4c_object
     u4c_object_t *next;
     unsigned long base;
     char *name;
+
+    bfd *bfd;
+    unsigned int nsyms;
+    asymbol **syms;
 };
 
 enum u4c_functype

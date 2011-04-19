@@ -61,6 +61,11 @@ free_state(u4c_globalstate_t *state)
 	state->objects = o->next;
 
 	xfree(o->name);
+	if (o->bfd)
+	{
+	    xfree(o->syms);
+	    bfd_close(o->bfd);
+	}
 	xfree(o);
     }
 

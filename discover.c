@@ -3,7 +3,6 @@
 #include <elf.h>
 #include <dlfcn.h>
 #include <link.h>
-#include <bfd.h>
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -256,8 +255,9 @@ __u4c_discover_functions(u4c_globalstate_t *state)
 	    __u4c_add_function(state, type, s->name, filename, submatch,
 			       (void(*)(void))addr, o);
 	}
-	xfree(syms);
-	bfd_close(b);
+	o->bfd = b;
+	o->nsyms = nsyms;
+	o->syms = syms;
     }
 }
 
