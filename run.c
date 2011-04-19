@@ -1,6 +1,7 @@
 #include "common.h"
 #include "u4c_priv.h"
 #include "except.h"
+#include <valgrind/memcheck.h>
 
 __u4c_exceptstate_t __u4c_exceptstate;
 
@@ -69,6 +70,31 @@ run_fixtures(u4c_globalstate_t *state,
 	    run_function(state->fixtures[i]);
 }
 
+static bool
+valgrind_errors(void)
+{
+    unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
+    unsigned long nerrors;
+    bool fail = false;
+
+    VALGRIND_DO_LEAK_CHECK;
+    VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
+    if (leaked)
+    {
+	fprintf(stderr, "FAIL %lu bytes of memory leaked\n", leaked);
+	fail = true;
+    }
+
+    nerrors = VALGRIND_COUNT_ERRORS;
+    if (nerrors)
+    {
+	fprintf(stderr, "FAIL %lu errors found by valgrind\n", nerrors);
+	fail = true;
+    }
+
+    return fail;
+}
+
 static void
 run_test(u4c_globalstate_t *state,
 	 u4c_testnode_t *tn)
@@ -117,6 +143,9 @@ run_test(u4c_globalstate_t *state,
 	    fail = true;
 	}
     }
+
+    if (valgrind_errors())
+	fail = true;
 
     state->nrun++;
     if (fail)
