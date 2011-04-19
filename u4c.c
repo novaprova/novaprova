@@ -1,6 +1,7 @@
 #include "common.h"
 #include "u4c_priv.h"
 #include "except.h"
+#include <valgrind/valgrind.h>
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -466,6 +467,53 @@ list_tests(u4c_globalstate_t *state,
     }
 }
 
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+extern char **environ;
+
+static bool
+discover_args(int *argcp, char ***argvp)
+{
+    char **p;
+    int n;
+
+    /* This early, environ[] points at the area
+     * above argv[], so walk down from there */
+    for (p = environ-2, n = 1;
+	 ((int *)p)[-1] != n ;
+	 --p, ++n)
+	;
+    *argcp = n;
+    *argvp = p;
+    return true;
+}
+
+static void
+be_valground(void)
+{
+    int argc;
+    char **argv;
+    char **newargv;
+    char **p;
+
+    if (RUNNING_ON_VALGRIND)
+	return;
+    fprintf(stderr, "u4c: starting valgrind\n");
+
+    if (!discover_args(&argc, &argv))
+	return;
+
+    p = newargv = xmalloc(sizeof(char *) * (argc+6));
+    *p++ = "/usr/bin/valgrind";
+    *p++ = "-q";
+    *p++ = "--tool=memcheck";
+    *p++ = "--leak-check=full";
+    *p++ = "--suppressions=../../../u4c/valgrind.supp";
+    while (*argv)
+	*p++ = *argv++;
+
+    execv(newargv[0], newargv);
+}
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -476,6 +524,7 @@ u4c_init(void)
 
     fprintf(stderr, "u4c: running\n");
 
+    be_valground();
     state = new_state();
     setup_classifiers(state);
     __u4c_discover_objects(state);
