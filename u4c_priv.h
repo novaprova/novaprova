@@ -60,6 +60,15 @@ struct u4c_testnode
     u4c_function_t *funcs[FT_NUM];
 };
 
+struct u4c_plan
+{
+    u4c_plan_t *next;
+    u4c_globalstate_t *state;
+    int numnodes;
+    u4c_testnode_t **nodes;
+    int current;
+};
+
 struct u4c_globalstate
 {
     u4c_classifier_t *classifiers, **classifiers_tailp;
@@ -69,6 +78,8 @@ struct u4c_globalstate
     unsigned int commonlen;
     u4c_testnode_t *root;
     unsigned int maxdepth;
+    u4c_plan_t *rootplan;
+    u4c_plan_t *plans;
     /* runtime state */
     u4c_function_t **fixtures;
     unsigned int nrun;
