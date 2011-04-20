@@ -13,10 +13,12 @@
 #include <stdarg.h>
 
 extern void *__u4c_malloc(size_t sz);
+extern void *__u4c_realloc(void *, size_t);
 extern char *__u4c_strdup(const char *s);
 extern const char *__u4c_argv0;
 
 #define xmalloc(sz) __u4c_malloc(sz)
+#define xrealloc(p, sz) __u4c_realloc(p, sz)
 #define xstrdup(s) __u4c_strdup(s)
 #define xfree(v) \
     do { free(v); (v) = NULL; } while(0)

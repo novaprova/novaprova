@@ -60,3 +60,13 @@ __u4c_strdup(const char *s)
     return strcpy(x, s);
 }
 
+void *
+__u4c_realloc(void *p, size_t sz)
+{
+    void *x;
+
+    x = realloc(p, sz);
+    if (!x)
+	oom();
+    return x;
+}
