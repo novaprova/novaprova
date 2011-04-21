@@ -10,6 +10,14 @@ typedef struct u4c_object u4c_object_t;
 typedef struct u4c_classifier u4c_classifier_t;
 typedef struct u4c_function u4c_function_t;
 typedef struct u4c_testnode u4c_testnode_t;
+typedef struct u4c_child u4c_child_t;
+
+struct u4c_child
+{
+    u4c_child_t *next;
+    pid_t pid;
+    int event_pipe;	    /* read end of the pipe */
+};
 
 struct u4c_object
 {
@@ -84,6 +92,9 @@ struct u4c_globalstate
     u4c_function_t **fixtures;
     unsigned int nrun;
     unsigned int nfailed;
+    int event_pipe;		/* only in child processes */
+    u4c_child_t *children;	/* only in the parent process */
+    int nchildren;
 };
 
 /* u4c.c */

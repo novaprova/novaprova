@@ -1,4 +1,6 @@
 #include "common.h"
+#include <sys/wait.h>
+#include <sys/poll.h>
 #include "u4c_priv.h"
 #include "except.h"
 #include <valgrind/memcheck.h>
@@ -17,6 +19,145 @@ void __u4c_fail(const char *condition,
 	    (*function ? " in" : ""), function,
 	    filename, lineno);
     u4c_throw;
+}
+
+
+static u4c_child_t *
+isolate_begin(u4c_globalstate_t *state)
+{
+    pid_t pid;
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+    int pipefd[2];
+    u4c_child_t *child;
+    int delay_ms = 10;
+    int max_sleeps = 20;
+    int r;
+
+    r = pipe(pipefd);
+    if (r < 0)
+    {
+	perror("u4c: pipe");
+	exit(1);
+    }
+
+    for (;;)
+    {
+	pid = fork();
+	if (pid < 0)
+	{
+	    if (errno == EAGAIN && max_sleeps-- > 0)
+	    {
+		/* rats, we fork-bombed, try again after a delay */
+		fprintf(stderr, "u4c: fork bomb! sleeping %u ms.\n",
+			delay_ms);
+		poll(0, 0, delay_ms);
+		delay_ms += (delay_ms>>1);	/* exponential backoff */
+		continue;
+	    }
+	    perror("u4c: fork");
+	    exit(1);
+	}
+	break;
+    }
+
+    if (!pid)
+    {
+	/* child process: return, will run the test */
+	close(pipefd[PIPE_READ]);
+	state->event_pipe = pipefd[PIPE_WRITE];
+	return 0;
+    }
+
+    /* parent process */
+
+    fprintf(stderr, "u4c: spawned child process %d\n",
+	    (int)pid);
+    child = xmalloc(sizeof(*child));
+    child->pid = pid;
+    close(pipefd[PIPE_WRITE]);
+    child->event_pipe = pipefd[PIPE_READ];
+    child->next = state->children;
+    state->children = child;
+    state->nchildren++;
+
+    return child;
+#undef PIPE_READ
+#undef PIPE_WRITE
+}
+
+static bool
+isolate_end(u4c_globalstate_t *state,
+	    u4c_child_t *special,
+	    bool fail)
+{
+    pid_t pid;
+    u4c_child_t **prevp, *child;
+    int status;
+
+    if (!special)
+    {
+	fprintf(stderr, "u4c: child process %d finishing\n",
+		(int)getpid());
+	exit(fail);
+    }
+
+    for (;;)
+    {
+	pid = waitpid(-1, &status, 0);
+	if (pid < 0)
+	{
+	    if (errno == ESRCH || errno == ECHILD)
+		fprintf(stderr, "u4c: child %d already reaped!?\n",
+			special->pid);
+	    else
+		perror("u4c: waitpid");
+	    return false;
+	}
+	if (WIFSTOPPED(status))
+	{
+	    fprintf(stderr, "u4c: process %d stopped on signal %d, ignoring\n",
+		    (int)pid, WSTOPSIG(status));
+	    continue;
+	}
+	for (child = state->children, prevp = &state->children ;
+	     child && child->pid != pid ;
+	     prevp = &child->next, child = child->next)
+	    ;
+	if (!child)
+	{
+	    /* some other process */
+	    fprintf(stderr, "u4c: reaped stray process %d\n", (int)pid);
+	    continue;	    /* whatever */
+	}
+
+	fail = false;
+	if (WIFEXITED(status))
+	{
+	    if (WEXITSTATUS(status))
+	    {
+		fprintf(stderr, "FAIL child process %d exited with %d\n",
+			(int)pid, WEXITSTATUS(status));
+		fail = true;
+	    }
+	}
+	else if (WIFSIGNALED(status))
+	{
+	    fprintf(stderr, "FAIL child process %d died on signal %d\n",
+		    (int)pid, WTERMSIG(status));
+	    fail = true;
+	}
+
+	/* detach and clean up */
+	*prevp = child->next;
+	state->nchildren--;
+	close(child->event_pipe);
+	free(child);
+
+	/* Are you the one that I've been waiting for? */
+	if (child == special)
+	    return fail;
+    }
 }
 
 static void
@@ -95,20 +236,13 @@ valgrind_errors(void)
     return fail;
 }
 
-static void
-run_test(u4c_globalstate_t *state,
-	 u4c_testnode_t *tn)
+static bool
+run_test_code(u4c_globalstate_t *state,
+	      u4c_testnode_t *tn,
+	      const char *fullname)
 {
-    char *fullname;
     bool fail = false;
 
-    {
-	static int n = 0;
-	if (++n > 10)
-	    return;
-    }
-
-    fullname = __u4c_testnode_fullname(tn);
     fprintf(stderr, "u4c: running: \"%s\"\n", fullname);
 
     u4c_try
@@ -146,6 +280,32 @@ run_test(u4c_globalstate_t *state,
 
     if (valgrind_errors())
 	fail = true;
+
+    return fail;
+}
+
+static void
+run_test(u4c_globalstate_t *state,
+	 u4c_testnode_t *tn)
+{
+    char *fullname;
+    u4c_child_t *child;
+    bool fail = false;
+
+    {
+	static int n = 0;
+	if (++n > 10)
+	    return;
+    }
+
+    fullname = __u4c_testnode_fullname(tn);
+    child = isolate_begin(state);
+    if (!child)
+    {
+	/* child process */
+	fail = run_test_code(state, tn, fullname);
+    }
+    fail = isolate_end(state, child, fail);
 
     state->nrun++;
     if (fail)

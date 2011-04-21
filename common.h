@@ -11,6 +11,7 @@
 #include <memory.h>
 #include <malloc.h>
 #include <stdarg.h>
+#include <errno.h>
 
 extern void *__u4c_malloc(size_t sz);
 extern void *__u4c_realloc(void *, size_t);
