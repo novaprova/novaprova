@@ -622,7 +622,7 @@ be_valground(void)
     *p++ = "/usr/bin/valgrind";
     *p++ = "-q";
     *p++ = "--tool=memcheck";
-    *p++ = "--leak-check=full";
+//     *p++ = "--leak-check=full";
     *p++ = "--suppressions=../../../u4c/valgrind.supp";
     while (*argv)
 	*p++ = *argv++;
