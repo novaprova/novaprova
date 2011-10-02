@@ -12,6 +12,8 @@ typedef struct u4c_function u4c_function_t;
 typedef struct u4c_testnode u4c_testnode_t;
 typedef struct u4c_child u4c_child_t;
 typedef struct u4c_event u4c_event_t;
+typedef struct u4c_listener u4c_listener_t;
+typedef struct u4c_listener_ops u4c_listener_ops_t;
 
 struct u4c_child
 {
@@ -78,6 +80,23 @@ struct u4c_plan
     int current;
 };
 
+struct u4c_listener_ops
+{
+    void (*begin)(u4c_listener_t *);
+    void (*end)(u4c_listener_t *);
+    void (*begin_node)(u4c_listener_t *, const u4c_testnode_t *);
+    void (*end_node)(u4c_listener_t *, const u4c_testnode_t *);
+    void (*add_event)(u4c_listener_t *, const u4c_event_t *, enum u4c_functype ft);
+    void (*fail)(u4c_listener_t *);
+    void (*pass)(u4c_listener_t *);
+};
+
+struct u4c_listener
+{
+    u4c_listener_t *next;
+    u4c_listener_ops_t *ops;
+};
+
 struct u4c_globalstate
 {
     u4c_classifier_t *classifiers, **classifiers_tailp;
@@ -90,6 +109,7 @@ struct u4c_globalstate
     u4c_plan_t *rootplan;
     u4c_plan_t *plans;
     /* runtime state */
+    u4c_listener_t *listeners;
     u4c_function_t **fixtures;
     unsigned int nrun;
     unsigned int nfailed;
@@ -97,6 +117,17 @@ struct u4c_globalstate
     u4c_child_t *children;	/* only in the parent process */
     int nchildren;
 };
+
+#define dispatch_listeners(st, func, ...) \
+    do { \
+	u4c_listener_t *_l, *_n; \
+	for (_l = (st)->listeners ; _l ; _l = _n) \
+	{ \
+	    _n = _l->next; \
+	    if ((_l)->ops->func) \
+		(_l)->ops->func((_l), ## __VA_ARGS__); \
+	} \
+    } while(0)
 
 /* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
@@ -109,13 +140,22 @@ extern u4c_function_t *__u4c_add_function(u4c_globalstate_t *,
 	enum u4c_functype type, const char *name,
 	const char *filename, const char *submatch,
 	void (*addr)(void), u4c_object_t *o);
+extern u4c_listener_t *__u4c_new_text_listener(void);
 
 /* run.c */
+extern void __u4c_add_listener(u4c_globalstate_t *, u4c_listener_t *);
+extern void __u4c_set_listener(u4c_globalstate_t *, u4c_listener_t *);
 extern void __u4c_begin(u4c_globalstate_t *);
 extern void __u4c_end(void);
 extern void __u4c_run_tests(u4c_testnode_t *);
-extern void __u4c_summarise_results(void);
 extern void __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
+
+/* textl.c */
+extern u4c_listener_t *__u4c_text_listener(void);
+
+/* proxyl.c */
+extern u4c_listener_t *__u4c_proxy_listener(int fd);
+extern int __u4c_handle_proxy_call(int fd);
 
 /* discover.c */
 extern bool __u4c_describe_address(u4c_globalstate_t *state,

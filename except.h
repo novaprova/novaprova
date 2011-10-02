@@ -8,11 +8,12 @@ typedef struct __u4c_exceptstate __u4c_exceptstate_t;
 
 enum u4c_events
 {
-    EV_FINISHED=1,
-    EV_ASSERT,
+    EV_ASSERT = 1,
     EV_EXIT,
+    EV_SIGNAL,
     EV_SYSLOG,
     EV_FIXTURE,
+    EV_VALGRIND,
 };
 
 struct u4c_event

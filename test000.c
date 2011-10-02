@@ -3,11 +3,17 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
 
-// static void test_segv(void)
-// {
-//     *(char *)0 = 0;
-// }
+static void test_segv(void)
+{
+    *(char *)0 = 0;
+}
+
+static void test_sigill(void)
+{
+    kill(getpid(), SIGILL);
+}
 
 static void test_assert(void)
 {
@@ -17,9 +23,19 @@ static void test_assert(void)
     assert(white == black);
 }
 
+static void test_exit(void)
+{
+    exit(1);
+}
+
 static void test_syslog(void)
 {
     syslog(LOG_ERR, "Hello world!\n");
+}
+
+static void test_memleak(void)
+{
+    malloc(32);
 }
 
 int

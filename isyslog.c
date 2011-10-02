@@ -67,7 +67,7 @@ void __syslog_chk(int prio,
 
     {
 	struct u4c_event ev = eventc(EV_SYSLOG, msg);
-	__u4c_raise_event(&ev);
+	__u4c_raise_event(&ev, FT_UNKNOWN);
     }
 }
 #endif
@@ -83,7 +83,7 @@ void syslog(int prio, const char *fmt, ...)
 
     {
 	struct u4c_event ev = eventc(EV_SYSLOG, msg);
-	__u4c_raise_event(&ev);
+	__u4c_raise_event(&ev, FT_UNKNOWN);
     }
 }
 

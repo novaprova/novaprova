@@ -25,4 +25,17 @@ extern const char *__u4c_argv0;
     do { free(v); (v) = NULL; } while(0)
 #define xstr(x)  ((x) ? (x) : "")
 
+/* copied from <linux/kernel.h> */
+/**
+ * container_of - cast a member of a structure out to the containing structure
+ * @ptr:	the pointer to the member.
+ * @type:	the type of the container struct this is embedded in.
+ * @member:	the name of the member within the struct.
+ *
+ */
+#define container_of(ptr, type, member) ({			\
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+
+
 #endif /* __U4C_COMMON_H__ */

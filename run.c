@@ -8,17 +8,44 @@
 __u4c_exceptstate_t __u4c_exceptstate;
 static u4c_globalstate_t *state;
 
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+void
+__u4c_add_listener(u4c_globalstate_t *st, u4c_listener_t *l)
+{
+    u4c_listener_t **tailp;
+
+    /* append to the list.  The order of adding is preserved for
+     * dispatching */
+    for (tailp = &st->listeners ; *tailp ; tailp = &(*tailp)->next)
+	;
+    *tailp = l;
+    l->next = 0;
+}
+
+void
+__u4c_set_listener(u4c_globalstate_t *st, u4c_listener_t *l)
+{
+    /* just throw away the old ones */
+    st->listeners = l;
+    l->next = 0;
+}
+
 void
 __u4c_begin(u4c_globalstate_t *s)
 {
     state = s;
+    dispatch_listeners(state, begin);
 }
 
 void
 __u4c_end(void)
 {
+    dispatch_listeners(state, end);
     state = 0;
 }
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 static const u4c_event_t *
 normalise_event(const u4c_event_t *ev)
@@ -53,139 +80,12 @@ normalise_event(const u4c_event_t *ev)
     return &norm;
 }
 
-static void
-serialise_uint(int fd, unsigned int i)
-{
-    write(fd, &i, sizeof(i));
-}
-
-static void
-serialise_string(int fd, const char *s)
-{
-    unsigned int len = (s ? strlen(s) : 0);
-    serialise_uint(fd, len);
-    if (len)
-    {
-	write(fd, s, len);
-	write(fd, "\0", 1);
-    }
-}
-
-static void
-serialise_event(int fd, const u4c_event_t *ev)
-{
-    serialise_uint(fd, ev->which);
-    serialise_string(fd, ev->description);
-    serialise_string(fd, ev->filename);
-    serialise_uint(fd, ev->lineno);
-    serialise_string(fd, ev->function);
-}
-
-static int
-deserialise_bytes(int fd, char *p, unsigned int len)
-{
-    int r;
-
-    while (len)
-    {
-	r = read(fd, p, len);
-	if (r < 0)
-	    return -errno;
-	if (r == 0)
-	    return EOF;
-	len -= r;
-	p += r;
-    }
-    return 0;
-}
-
-static int
-deserialise_uint(int fd, unsigned int *ip)
-{
-    return deserialise_bytes(fd, (char *)ip, sizeof(*ip));
-}
-
-static int
-deserialise_string(int fd, char *buf, unsigned int maxlen)
-{
-    unsigned int len;
-    int r;
-    if ((r = deserialise_uint(fd, &len)))
-	return r;
-    if (len >= maxlen)
-	return -ENAMETOOLONG;
-    return deserialise_bytes(fd, buf, len+1);
-}
-
-static bool
-deserialise_event(int fd, u4c_event_t *ev)
-{
-    int r;
-    unsigned int which;
-    unsigned int lineno;
-    static char description_buf[1024];
-    static char filename_buf[1024];
-    static char function_buf[1024];
-
-    if ((r = deserialise_uint(fd, &which)))
-	return r;
-    if ((r = deserialise_string(fd, description_buf,
-				sizeof(description_buf))))
-	return r;
-    if ((r = deserialise_string(fd, filename_buf,
-				sizeof(filename_buf))))
-	return r;
-    if ((r = deserialise_uint(fd, &lineno)))
-	return r;
-    if ((r = deserialise_string(fd, function_buf,
-				sizeof(function_buf))))
-	return r;
-    ev->which = which;
-    ev->description = description_buf;
-    ev->lineno = lineno;
-    ev->filename = filename_buf;
-    ev->function = function_buf;
-    return 0;
-}
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 void __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
 {
     ev = normalise_event(ev);
-
-    if (state->event_pipe)
-    {
-	/* in child process */
-	serialise_event(state->event_pipe, ev);
-	serialise_uint(state->event_pipe, ft);
-	return;
-    }
-
-    /* TODO: notify listener here */
-    {
-	const char *type;
-	char buf[2048];
-
-	switch (ev->which)
-	{
-	case EV_ASSERT: type = "assert"; break;
-	case EV_SYSLOG: type = "syslog"; break;
-	case EV_EXIT: type = "exit"; break;
-	default: type = "unknown"; break;
-	}
-	snprintf(buf, sizeof(buf), "u4c: %s %s",
-		    type, ev->description);
-	if (*ev->filename && ev->lineno)
-	    snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
-		     " at %s:%u",
-		     ev->filename, ev->lineno);
-	if (*ev->function)
-	    snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
-		     " in %s %s",
-		     (ft == FT_TEST ? "test" : "fixture"),
-		     ev->function);
-	strcat(buf, "\n");
-	fputs(buf, stderr);
-    }
+    dispatch_listeners(state, add_event, ev, ft);
 }
 
 static u4c_child_t *
@@ -232,6 +132,7 @@ isolate_begin(void)
 	/* child process: return, will run the test */
 	close(pipefd[PIPE_READ]);
 	state->event_pipe = pipefd[PIPE_WRITE];
+	__u4c_set_listener(state, __u4c_proxy_listener(state->event_pipe));
 	return 0;
     }
 
@@ -252,26 +153,31 @@ isolate_begin(void)
 #undef PIPE_WRITE
 }
 
-static bool
-isolate_end(u4c_child_t *special, bool fail)
-{
-    pid_t pid;
-    u4c_child_t **prevp, *child;
-    int status;
-    struct pollfd pfd;
-    unsigned int ft;
-    int r;
-    u4c_event_t ev;
 
+static void
+isolate_end(u4c_child_t *special)
+{
     if (!special)
     {
 	fprintf(stderr, "u4c: child process %d finishing\n",
 		(int)getpid());
-	exit(fail);
+	exit(0);
     }
+}
+
+static bool
+isolate_wait(u4c_child_t *special)
+{
+    pid_t pid;
+    u4c_child_t **prevp, *child;
+    int status;
+    bool fail = false;
+    struct pollfd pfd;
+    int r;
+    char msg[1024];
 
     /* Note: too lazy to handle more than 1 child here */
-    for (;;)
+    do
     {
 	memset(&pfd, 0, sizeof(pfd));
 	pfd.fd = special->event_pipe;
@@ -283,12 +189,11 @@ isolate_end(u4c_child_t *special, bool fail)
 	    return false;
 	}
 	/* TODO: implement test timeout handling here */
-	if (deserialise_event(special->event_pipe, &ev))
-	    break;
-	if (deserialise_uint(special->event_pipe, &ft))
-	    break;
-	__u4c_raise_event(&ev, ft);
+	r = __u4c_handle_proxy_call(special->event_pipe);
+	if (r > 1)
+	    fail = true;
     }
+    while (!r);
 
     for (;;)
     {
@@ -319,20 +224,25 @@ isolate_end(u4c_child_t *special, bool fail)
 	    continue;	    /* whatever */
 	}
 
-	fail = false;
 	if (WIFEXITED(status))
 	{
 	    if (WEXITSTATUS(status))
 	    {
-		fprintf(stderr, "FAIL child process %d exited with %d\n",
-			(int)pid, WEXITSTATUS(status));
+		u4c_event_t ev = event(EV_EXIT, msg, NULL, 0, NULL);
+		snprintf(msg, sizeof(msg),
+			 "child process %d exited with %d",
+			 (int)pid, WEXITSTATUS(status));
+		__u4c_raise_event(&ev, FT_UNKNOWN);
 		fail = true;
 	    }
 	}
 	else if (WIFSIGNALED(status))
 	{
-	    fprintf(stderr, "FAIL child process %d died on signal %d\n",
+	    u4c_event_t ev = event(EV_SIGNAL, msg, NULL, 0, NULL);
+	    snprintf(msg, sizeof(msg),
+		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
+	    __u4c_raise_event(&ev, FT_UNKNOWN);
 	    fail = true;
 	}
 
@@ -414,19 +324,26 @@ valgrind_errors(void)
     unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
     unsigned long nerrors;
     bool fail = false;
+    char msg[1024];
 
     VALGRIND_DO_LEAK_CHECK;
     VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
     if (leaked)
     {
-	fprintf(stderr, "FAIL %lu bytes of memory leaked\n", leaked);
+	u4c_event_t ev = event(EV_VALGRIND, msg, NULL, 0, NULL);
+	snprintf(msg, sizeof(msg),
+		 "%lu bytes of memory leaked", leaked);
+	__u4c_raise_event(&ev, FT_UNKNOWN);
 	fail = true;
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
     if (nerrors)
     {
-	fprintf(stderr, "FAIL %lu errors found by valgrind\n", nerrors);
+	u4c_event_t ev = event(EV_VALGRIND, msg, NULL, 0, NULL);
+	snprintf(msg, sizeof(msg),
+		 "%lu unsuppressed errors found by valgrind", nerrors);
+	__u4c_raise_event(&ev, FT_UNKNOWN);
 	fail = true;
     }
 
@@ -434,13 +351,10 @@ valgrind_errors(void)
 }
 
 static bool
-run_test_code(u4c_testnode_t *tn,
-	      const char *fullname)
+run_test_code(u4c_testnode_t *tn)
 {
     bool fail = false;
     const u4c_event_t *ev;
-
-    fprintf(stderr, "u4c: running: \"%s\"\n", fullname);
 
     u4c_try
     {
@@ -475,16 +389,13 @@ run_test_code(u4c_testnode_t *tn,
 	}
     }
 
-    if (valgrind_errors())
-	fail = true;
-
+    fail |= valgrind_errors();
     return fail;
 }
 
 static void
 run_test(u4c_testnode_t *tn)
 {
-    char *fullname;
     u4c_child_t *child;
     bool fail = false;
 
@@ -494,21 +405,26 @@ run_test(u4c_testnode_t *tn)
 	    return;
     }
 
-    fullname = __u4c_testnode_fullname(tn);
+    dispatch_listeners(state, begin_node, tn);
+
     child = isolate_begin();
     if (!child)
     {
 	/* child process */
-	fail = run_test_code(tn, fullname);
+	fail = run_test_code(tn);
     }
-    fail = isolate_end(child, fail);
-
-    state->nrun++;
-    if (fail)
-	state->nfailed++;
     else
-	fprintf(stderr, "PASS %s\n", fullname);
-    xfree(fullname);
+    {
+	fail = isolate_wait(child);
+    }
+
+    if (fail)
+	dispatch_listeners(state, fail);
+    else
+	dispatch_listeners(state, pass);
+    dispatch_listeners(state, end_node, tn);
+
+    isolate_end(child);
 }
 
 void
@@ -527,11 +443,4 @@ __u4c_run_tests(u4c_testnode_t *tn)
     }
 }
 
-void
-__u4c_summarise_results(void)
-{
-    fprintf(stderr, "u4c: %u run %u failed\n",
-	    state->nrun, state->nfailed);
-}
-
-
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

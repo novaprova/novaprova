@@ -637,8 +637,6 @@ u4c_init(void)
 {
     u4c_globalstate_t *state;
 
-    fprintf(stderr, "u4c: running\n");
-
     be_valground();
     state = new_state();
     setup_classifiers(state);
@@ -672,11 +670,12 @@ u4c_run_tests(u4c_globalstate_t *state)
 	u4c_plan_enable(plan);
     }
 
+    if (!state->listeners)
+	__u4c_add_listener(state, __u4c_text_listener());
+
     __u4c_begin(state);
     while ((tn = u4c_plan_next(state->rootplan)))
 	__u4c_run_tests(tn);
-
-    __u4c_summarise_results();
     __u4c_end();
     return !!state->nfailed;
 }

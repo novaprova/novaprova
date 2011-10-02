@@ -15,7 +15,7 @@ RANLIB=		ranlib
 all: libu4c.a
 
 libu4c_SOURCE=	\
-		u4c.c common.c run.c discover.c \
+		u4c.c common.c run.c textl.c proxyl.c discover.c \
 		isyslog.c iassert.c icunit.c
 libu4c_PRIVHEADERS= \
 		common.h u4c_priv.h
