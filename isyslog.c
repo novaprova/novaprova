@@ -1,5 +1,6 @@
 /* isyslog.c - intercept syslog() calls from CUT */
-#include "common.h"
+#define SYSLOG_NAMES 1
+#include "u4c_priv.h"
 #include "except.h"
 #include <syslog.h>
 #include <unistd.h>
@@ -13,16 +14,41 @@
  * at Carnegie Mellon University (http://www.cmu.edu/computing/).
  */
 
-static void vlog(int prio, const char *fmt, va_list args)
+static const char *
+syslog_priority_name(int prio)
+{
+    const CODE *c;
+    static char buf[32];
+
+    prio &= LOG_PRIMASK;
+    for (c = prioritynames ; c->c_name ; c++)
+    {
+	if (prio == c->c_val)
+	    return c->c_name;
+    }
+
+    snprintf(buf, sizeof(buf), "%d", prio);
+    return buf;
+}
+
+static const char *
+vlogmsg(int prio, const char *fmt, va_list args)
 {
     /* glibc handles %m in vfprintf() so we don't need to do
      * anything special to simulate that feature of syslog() */
      /* TODO: find and expand %m on non-glibc platforms */
+    char *p;
+    static char buf[1024];
 
-    fprintf(stderr, "\nSYSLOG %d[", prio & LOG_PRIMASK);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "]\n");
-    fflush(stderr);
+    strncpy(buf, syslog_priority_name(prio), sizeof(buf-3));
+    buf[sizeof(buf)-3] = '\0';
+    strcat(buf, ": ");
+    vsnprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
+	      fmt, args);
+    for (p = buf+strlen(buf)-1 ; p > buf && isspace(*p) ; p--)
+	*p = '\0';
+
+    return buf;
 }
 
 #if defined(__GLIBC__)
@@ -32,20 +58,32 @@ void __syslog_chk(int prio,
 		  int whatever __attribute__((unused)),
 		  const char *fmt, ...)
 {
+    const char *msg;
     va_list args;
 
     va_start(args, fmt);
-    vlog(prio, fmt, args);
+    msg = vlogmsg(prio, fmt, args);
     va_end(args);
+
+    {
+	struct u4c_event ev = eventc(EV_SYSLOG, msg);
+	__u4c_raise_event(&ev);
+    }
 }
 #endif
 
 void syslog(int prio, const char *fmt, ...)
 {
+    const char *msg;
     va_list args;
 
     va_start(args, fmt);
-    vlog(prio, fmt, args);
+    msg = vlogmsg(prio, fmt, args);
     va_end(args);
+
+    {
+	struct u4c_event ev = eventc(EV_SYSLOG, msg);
+	__u4c_raise_event(&ev);
+    }
 }
 

@@ -623,7 +623,7 @@ be_valground(void)
     *p++ = "-q";
     *p++ = "--tool=memcheck";
 //     *p++ = "--leak-check=full";
-    *p++ = "--suppressions=../../../u4c/valgrind.supp";
+//     *p++ = "--suppressions=../../../u4c/valgrind.supp";
     while (*argv)
 	*p++ = *argv++;
 
@@ -672,10 +672,12 @@ u4c_run_tests(u4c_globalstate_t *state)
 	u4c_plan_enable(plan);
     }
 
+    __u4c_begin(state);
     while ((tn = u4c_plan_next(state->rootplan)))
-	__u4c_run_tests(state, tn);
+	__u4c_run_tests(tn);
 
-    __u4c_summarise_results(state);
+    __u4c_summarise_results();
+    __u4c_end();
     return !!state->nfailed;
 }
 

@@ -11,6 +11,7 @@ typedef struct u4c_classifier u4c_classifier_t;
 typedef struct u4c_function u4c_function_t;
 typedef struct u4c_testnode u4c_testnode_t;
 typedef struct u4c_child u4c_child_t;
+typedef struct u4c_event u4c_event_t;
 
 struct u4c_child
 {
@@ -110,14 +111,18 @@ extern u4c_function_t *__u4c_add_function(u4c_globalstate_t *,
 	void (*addr)(void), u4c_object_t *o);
 
 /* run.c */
-extern void __u4c_run_tests(u4c_globalstate_t *,
-			    u4c_testnode_t *);
-extern void __u4c_summarise_results(u4c_globalstate_t *);
-extern void __u4c_fail(const char *condition, const char *filename,
-		       unsigned int lineno, const char *function)
-	__attribute__((noreturn));
+extern void __u4c_begin(u4c_globalstate_t *);
+extern void __u4c_end(void);
+extern void __u4c_run_tests(u4c_testnode_t *);
+extern void __u4c_summarise_results(void);
+extern void __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 
 /* discover.c */
+extern bool __u4c_describe_address(u4c_globalstate_t *state,
+				   unsigned long addr,
+				   const char **filenamep,
+				   unsigned int *linenop,
+				   const char **functionp);
 extern void __u4c_discover_objects(u4c_globalstate_t *state);
 extern void __u4c_discover_functions(u4c_globalstate_t *state);
 

@@ -1,5 +1,6 @@
 /* icunit.c - intercept CUnit assert failures in CUT */
 #include "u4c_priv.h"
+#include "except.h"
 
 bool CU_assertImplementation(bool bValue,
 			     unsigned int uiLine,
@@ -10,7 +11,8 @@ bool CU_assertImplementation(bool bValue,
 {
 //     fprintf(stderr, "    %s at %s:%u\n", strCondition, strFile, uiLine);
     if (!bValue)
-	__u4c_fail(strCondition, strFile, uiLine, strFunction);
+	u4c_throw(event(EV_ASSERT, strCondition,
+		  strFile, uiLine, strFunction));
     return true;
 }
 

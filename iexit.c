@@ -10,7 +10,7 @@ void exit(int status)
     {
 	static char cond[64];
 	snprintf(cond, sizeof(cond), "exit(%d)", status);
-	__u4c_fail(cond, 0, 0, 0);
+	u4c_throw(eventc(EV_ASSERT, condition));
     }
     _exit(status);
 }

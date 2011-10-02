@@ -1,5 +1,6 @@
 /* iassert.c - intercept assert() failures in CUT */
 #include "u4c_priv.h"
+#include "except.h"
 #include <assert.h>
 #include <unistd.h>
 
@@ -11,7 +12,8 @@ __assert_fail(const char *condition,
 	      unsigned int lineno,
 	      const char *function)
 {
-    __u4c_fail(condition, filename, lineno, function);
+    u4c_throw(event(EV_ASSERT, condition,
+	      filename, lineno, function));
 }
 
 void
@@ -20,7 +22,8 @@ __assert_perror_fail(int errnum,
 		     unsigned int lineno,
 		     const char *function)
 {
-    __u4c_fail(strerror(errnum), filename, lineno, function);
+    u4c_throw(event(EV_ASSERT, strerror(errnum),
+	      filename, lineno, function));
 }
 
 #endif
@@ -30,6 +33,7 @@ __assert(const char *condition,
 	 const char *filename,
 	 int lineno)
 {
-    __u4c_fail(condition, filename, lineno, 0);
+    u4c_throw(event(EV_ASSERT, condition,
+	      filename, lineno, 0));
 }
 

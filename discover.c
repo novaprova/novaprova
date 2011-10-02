@@ -45,6 +45,42 @@ exe_filename(void)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+bool
+__u4c_describe_address(u4c_globalstate_t *state,
+		       unsigned long addr,
+		       const char **filenamep,
+		       unsigned int *linenop,
+		       const char **functionp)
+{
+    u4c_object_t *o;
+    struct bfd_section *sec;
+
+#ifdef __i386__
+    /* addr is a return address; adjust it to the start of
+     * the call instruction */
+    addr -= 5;
+#endif
+
+    for (o = state->objects ; o ; o = o->next)
+    {
+	if (!o->bfd)
+	    continue;
+	for (sec = o->bfd->sections ;
+	     sec ;
+	     sec = sec->next)
+	{
+	    if ((bfd_vma)addr >= sec->vma &&
+		(bfd_vma)addr < sec->vma + sec->size)
+		return bfd_find_nearest_line(o->bfd, sec,
+			o->syms, (bfd_vma)addr - sec->vma,
+			filenamep, functionp, linenop);
+	}
+    }
+    return false;
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
 static bool
 filename_is_ignored(const char *filename)
 {
