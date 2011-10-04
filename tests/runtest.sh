@@ -14,7 +14,7 @@ function msg()
 function fail()
 {
     msg "FAIL $TEST"
-    exit 0;
+    exit 1;
 }
 
 TEST="$1"
@@ -41,3 +41,4 @@ else
 fi
 
 msg "PASS $TEST"
+exit 0

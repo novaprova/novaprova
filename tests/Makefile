@@ -16,11 +16,11 @@ TESTS= \
 tests: $(TESTS)
 
 check: $(TESTS)
-	@for t in $(TESTS) ; do \
+	@e=0 ; for t in $(TESTS) ; do \
 	    s=runtest.sh ;\
 	    [ -f $$t.sh ] && s=$$t.sh ;\
-	    env bash $$s $$t ;\
-	done
+	    env bash $$s $$t || e=1 ;\
+	done ; exit $$e
 
 %: %.c $(DEPS)
 	$(LINK.c) -o $@ $< $(LIBS)
