@@ -4,6 +4,7 @@
 #include "except.h"
 #include <syslog.h>
 #include <unistd.h>
+#include <valgrind/valgrind.h>
 
 /*
  * Includes code copied from Cyrus IMAPD, which is
@@ -65,6 +66,8 @@ void __syslog_chk(int prio,
     msg = vlogmsg(prio, fmt, args);
     va_end(args);
 
+    VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
+
     {
 	struct u4c_event ev = eventc(EV_SYSLOG, msg);
 	__u4c_raise_event(&ev, FT_UNKNOWN);
@@ -80,6 +83,8 @@ void syslog(int prio, const char *fmt, ...)
     va_start(args, fmt);
     msg = vlogmsg(prio, fmt, args);
     va_end(args);
+
+    VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
     {
 	struct u4c_event ev = eventc(EV_SYSLOG, msg);
