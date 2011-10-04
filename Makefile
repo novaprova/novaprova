@@ -37,8 +37,6 @@ install: all
 clean:
 	$(RM) libu4c.a $(libu4c_OBJS)
 
-check:	test000
+check: all
+	cd tests ; $(MAKE) $@
 
-test000_SOURCE=	test000.c
-test000: $(test000_SOURCE) $(libuc4_HEADERS) libu4c.a
-	$(LINK.c) -o $@ $(test000_SOURCE) -I. -L. -lu4c -lbfd
