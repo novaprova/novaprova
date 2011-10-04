@@ -16,7 +16,7 @@ TESTS= \
 tests: $(TESTS)
 
 check: $(TESTS)
-	for t in $(TESTS) ; do \
+	@for t in $(TESTS) ; do \
 	    s=runtest.sh ;\
 	    [ -f $$t.sh ] && s=$$t.sh ;\
 	    env bash $$s $$t ;\

@@ -1,0 +1,13 @@
+EVENT SIGNAL child process %PID% died on signal 11
+FAIL u4c.tests.t000.segv
+EVENT SIGNAL child process %PID% died on signal 4
+FAIL u4c.tests.t000.sigill
+EVENT ASSERT white == black at t000.c:23 in test test_assert
+FAIL u4c.tests.t000.assert
+EVENT EXIT exit(1) at /home/gnb/software/u4c/tests/t000.c:28 in test test_exit
+FAIL u4c.tests.t000.exit
+EVENT SYSLOG err: Hello world! at /home/gnb/software/u4c/tests/t000.c:33 in fixture test_syslog
+PASS u4c.tests.t000.syslog
+EVENT VALGRIND 32 bytes of memory leaked in fixture test_syslog
+FAIL u4c.tests.t000.memleak
+EXIT 1

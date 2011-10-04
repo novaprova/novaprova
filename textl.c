@@ -80,7 +80,7 @@ text_add_event(u4c_listener_t *l __attribute__((unused)),
     case EV_VALGRIND: type = "VALGRIND"; break;
     default: type = "unknown"; break;
     }
-    snprintf(buf, sizeof(buf), "u4c: %s %s",
+    snprintf(buf, sizeof(buf), "EVENT %s %s",
 		type, ev->description);
     if (*ev->filename && ev->lineno)
 	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
