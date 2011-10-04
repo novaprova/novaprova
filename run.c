@@ -418,6 +418,8 @@ run_test(u4c_testnode_t *tn)
 	fail = isolate_wait(child);
     }
 
+    state->nfailed += !!fail;
+    state->nrun++;
     if (fail)
 	dispatch_listeners(state, fail);
     else
