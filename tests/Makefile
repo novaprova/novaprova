@@ -15,11 +15,16 @@ TESTS= \
 
 tests: $(TESTS)
 
+# Default to verbose for now
+V=1
+
 check: $(TESTS)
 	@e=0 ; for t in $(TESTS) ; do \
+	    a= ;\
+	    [ "$V" ] && a="--verbose" ;\
 	    s=runtest.sh ;\
 	    [ -f $$t.sh ] && s=$$t.sh ;\
-	    env bash $$s $$t || e=1 ;\
+	    env bash $$s $$a $$t || e=1 ;\
 	done ; exit $$e
 
 %: %.c $(DEPS)

@@ -17,12 +17,28 @@ function fail()
     exit 1;
 }
 
+verbose=
+if [ "$1" = "--verbose" ] ; then
+    verbose=yes
+    shift
+fi
+
 TEST="$1"
 [ -x $TEST ] || fatal "$TEST: No such executable"
 
-msg "starting $TEST"
+[ $verbose ] && msg "starting $TEST"
 
-( ./$TEST 2>&1 ; echo "EXIT $?" ) | tee $TEST.log
+function runtest
+{
+    ./$TEST
+    echo "EXIT $?"
+}
+
+if [ $verbose ] ; then
+    runtest 2>&1 | tee $TEST.log
+else
+    runtest > $TEST.log 2>&1
+fi
 
 if [ -f $TEST.ee ] ; then
     # compare events logged against expected events
