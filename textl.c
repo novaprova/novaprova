@@ -8,8 +8,7 @@ struct u4c_text_listener
     u4c_listener_t super;
     unsigned int nrun;
     unsigned int nfailed;
-    bool passed;
-    bool failed;
+    u4c_result_t result; /* for the current test */
 };
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -39,8 +38,7 @@ text_begin_node(u4c_listener_t *l __attribute__((unused)),
     char *fullname = __u4c_testnode_fullname(tn);
 
     fprintf(stderr, "u4c: running: \"%s\"\n", fullname);
-    tl->passed = false;
-    tl->failed = false;
+    tl->result = R_UNKNOWN;
     xfree(fullname);
 }
 
@@ -52,13 +50,20 @@ text_end_node(u4c_listener_t *l __attribute__((unused)),
     char *fullname = __u4c_testnode_fullname(tn);
 
     tl->nrun++;
-    if (tl->failed)
+    switch (tl->result)
     {
+    case R_PASS:
+	fprintf(stderr, "PASS %s\n", fullname);
+	break;
+	break;
+    case R_FAIL:
 	tl->nfailed++;
 	fprintf(stderr, "FAIL %s\n", fullname);
+	break;
+    default:
+	fprintf(stderr, "??? (result %d) %s\n", tl->result, fullname);
+	break;
     }
-    else if (tl->passed)
-	fprintf(stderr, "PASS %s\n", fullname);
     xfree(fullname);
 }
 
@@ -96,17 +101,10 @@ text_add_event(u4c_listener_t *l __attribute__((unused)),
 }
 
 static void
-text_fail(u4c_listener_t *l)
+text_finished(u4c_listener_t *l, u4c_result_t res)
 {
     u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
-    tl->failed = true;
-}
-
-static void
-text_pass(u4c_listener_t *l)
-{
-    u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
-    tl->passed = true;
+    tl->result = res;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -118,8 +116,7 @@ static u4c_listener_ops_t text_ops =
     .begin_node = text_begin_node,
     .end_node = text_end_node,
     .add_event = text_add_event,
-    .fail = text_fail,
-    .pass = text_pass
+    .finished = text_finished
 };
 
 u4c_listener_t *

@@ -14,6 +14,7 @@ typedef struct u4c_child u4c_child_t;
 typedef struct u4c_event u4c_event_t;
 typedef struct u4c_listener u4c_listener_t;
 typedef struct u4c_listener_ops u4c_listener_ops_t;
+typedef enum u4c_result u4c_result_t;
 
 struct u4c_child
 {
@@ -80,6 +81,16 @@ struct u4c_plan
     int current;
 };
 
+enum u4c_result
+{
+    /* Note ordinal values: we use MAX() to combine
+     * multiple results for a given test */
+    R_UNKNOWN=0,
+    R_PASS,
+    R_NOTAPPLICABLE,
+    R_FAIL
+};
+
 struct u4c_listener_ops
 {
     void (*begin)(u4c_listener_t *);
@@ -87,8 +98,7 @@ struct u4c_listener_ops
     void (*begin_node)(u4c_listener_t *, const u4c_testnode_t *);
     void (*end_node)(u4c_listener_t *, const u4c_testnode_t *);
     void (*add_event)(u4c_listener_t *, const u4c_event_t *, enum u4c_functype ft);
-    void (*fail)(u4c_listener_t *);
-    void (*pass)(u4c_listener_t *);
+    void (*finished)(u4c_listener_t *, u4c_result_t);
 };
 
 struct u4c_listener
@@ -148,14 +158,19 @@ extern void __u4c_set_listener(u4c_globalstate_t *, u4c_listener_t *);
 extern void __u4c_begin(u4c_globalstate_t *);
 extern void __u4c_end(void);
 extern void __u4c_run_tests(u4c_testnode_t *);
-extern void __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
+extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
+#define __u4c_merge(r1, r2) \
+    do { \
+	u4c_result_t _r1 = (r1), _r2 = (r2); \
+	(r1) = (_r1 > _r2 ? _r1 : _r2); \
+    } while(0)
 
 /* textl.c */
 extern u4c_listener_t *__u4c_text_listener(void);
 
 /* proxyl.c */
 extern u4c_listener_t *__u4c_proxy_listener(int fd);
-extern int __u4c_handle_proxy_call(int fd);
+extern bool __u4c_handle_proxy_call(int fd, u4c_result_t *resp);
 
 /* discover.c */
 extern bool __u4c_describe_address(u4c_globalstate_t *state,

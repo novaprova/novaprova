@@ -82,10 +82,22 @@ normalise_event(const u4c_event_t *ev)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-void __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
+u4c_result_t __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
 {
     ev = normalise_event(ev);
     dispatch_listeners(state, add_event, ev, ft);
+
+    switch (ev->which)
+    {
+    case EV_ASSERT:
+    case EV_EXIT:
+    case EV_SIGNAL:
+    case EV_FIXTURE:
+    case EV_VALGRIND:
+	return R_FAIL;
+    default:
+	return R_UNKNOWN;
+    }
 }
 
 static u4c_child_t *
@@ -165,20 +177,20 @@ isolate_end(u4c_child_t *special)
     }
 }
 
-static bool
+static u4c_result_t
 isolate_wait(u4c_child_t *special)
 {
     pid_t pid;
     u4c_child_t **prevp, *child;
     int status;
-    bool fail = false;
-    struct pollfd pfd;
+    u4c_result_t res = R_UNKNOWN;
     int r;
     char msg[1024];
 
     /* Note: too lazy to handle more than 1 child here */
     do
     {
+	struct pollfd pfd;
 	memset(&pfd, 0, sizeof(pfd));
 	pfd.fd = special->event_pipe;
 	pfd.events = POLLIN;
@@ -186,14 +198,11 @@ isolate_wait(u4c_child_t *special)
 	if (r < 0)
 	{
 	    perror("u4c: poll");
-	    return false;
+	    return res;
 	}
 	/* TODO: implement test timeout handling here */
-	r = __u4c_handle_proxy_call(special->event_pipe);
-	if (r > 1)
-	    fail = true;
     }
-    while (!r);
+    while (__u4c_handle_proxy_call(special->event_pipe, &res));
 
     for (;;)
     {
@@ -205,7 +214,7 @@ isolate_wait(u4c_child_t *special)
 			special->pid);
 	    else
 		perror("u4c: waitpid");
-	    return false;
+	    return R_UNKNOWN;
 	}
 	if (WIFSTOPPED(status))
 	{
@@ -232,8 +241,7 @@ isolate_wait(u4c_child_t *special)
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
-		__u4c_raise_event(&ev, FT_UNKNOWN);
-		fail = true;
+		__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -242,8 +250,7 @@ isolate_wait(u4c_child_t *special)
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
-	    __u4c_raise_event(&ev, FT_UNKNOWN);
-	    fail = true;
+	    __u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
 	}
 
 	/* detach and clean up */
@@ -254,7 +261,7 @@ isolate_wait(u4c_child_t *special)
 
 	/* Are you the one that I've been waiting for? */
 	if (child == special)
-	    return fail;
+	    return res;
     }
 }
 
@@ -318,12 +325,12 @@ run_fixtures(u4c_testnode_t *tn,
 	    run_function(state->fixtures[i]);
 }
 
-static bool
+static u4c_result_t
 valgrind_errors(void)
 {
     unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
     unsigned long nerrors;
-    bool fail = false;
+    u4c_result_t res = R_UNKNOWN;
     char msg[1024];
 
     VALGRIND_DO_LEAK_CHECK;
@@ -333,8 +340,7 @@ valgrind_errors(void)
 	u4c_event_t ev = event(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
-	__u4c_raise_event(&ev, FT_UNKNOWN);
-	fail = true;
+	__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
@@ -343,17 +349,16 @@ valgrind_errors(void)
 	u4c_event_t ev = event(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
-	__u4c_raise_event(&ev, FT_UNKNOWN);
-	fail = true;
+	__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
     }
 
-    return fail;
+    return res;
 }
 
-static bool
+static u4c_result_t
 run_test_code(u4c_testnode_t *tn)
 {
-    bool fail = false;
+    u4c_result_t res = R_UNKNOWN;
     const u4c_event_t *ev;
 
     u4c_try
@@ -362,11 +367,10 @@ run_test_code(u4c_testnode_t *tn)
     }
     u4c_catch(ev)
     {
-	__u4c_raise_event(ev, FT_BEFORE);
-	fail = true;
+	__u4c_merge(res, __u4c_raise_event(ev, FT_BEFORE));
     }
 
-    if (!fail)
+    if (res == R_UNKNOWN)
     {
 	u4c_try
 	{
@@ -374,8 +378,7 @@ run_test_code(u4c_testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_raise_event(ev, FT_TEST);
-	    fail = true;
+	    __u4c_merge(res, __u4c_raise_event(ev, FT_TEST));
 	}
 
 	u4c_try
@@ -384,20 +387,23 @@ run_test_code(u4c_testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_raise_event(ev, FT_AFTER);
-	    fail = true;
+	    __u4c_merge(res, __u4c_raise_event(ev, FT_AFTER));
 	}
+
+	/* If we got this far and nothing bad
+	 * happened, we might have passed */
+	__u4c_merge(res, R_PASS);
     }
 
-    fail |= valgrind_errors();
-    return fail;
+    __u4c_merge(res, valgrind_errors());
+    return res;
 }
 
 static void
 run_test(u4c_testnode_t *tn)
 {
     u4c_child_t *child;
-    bool fail = false;
+    u4c_result_t res = R_UNKNOWN;
 
     {
 	static int n = 0;
@@ -411,19 +417,16 @@ run_test(u4c_testnode_t *tn)
     if (!child)
     {
 	/* child process */
-	fail = run_test_code(tn);
+	__u4c_merge(res, run_test_code(tn));
     }
     else
     {
-	fail = isolate_wait(child);
+	__u4c_merge(res, isolate_wait(child));
     }
 
-    state->nfailed += !!fail;
+    state->nfailed += (res == R_FAIL);
     state->nrun++;
-    if (fail)
-	dispatch_listeners(state, fail);
-    else
-	dispatch_listeners(state, pass);
+    dispatch_listeners(state, finished, res);
     dispatch_listeners(state, end_node, tn);
 
     isolate_end(child);

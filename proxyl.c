@@ -15,9 +15,6 @@ enum u4c_proxy_call
     PROXY_FINISHED = 2,
 };
 
-#define PASS 1
-#define FAIL 0
-
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 static void
@@ -56,10 +53,14 @@ deserialise_bytes(int fd, char *p, unsigned int len)
     while (len)
     {
 	r = read(fd, p, len);
-	if (r < 0)
+	if (r < 0) {
+	    perror("u4c: error reading from proxy");
 	    return -errno;
-	if (r == 0)
-	    return EOF;
+	}
+	if (r == 0) {
+	    fprintf(stderr, "u4c: unexpected EOF deserialising from proxy\n");
+	    return -EINVAL;
+	}
 	len -= r;
 	p += r;
     }
@@ -129,26 +130,17 @@ proxy_add_event(u4c_listener_t *l, const u4c_event_t *ev, enum u4c_functype ft)
 }
 
 static void
-proxy_fail(u4c_listener_t *l)
+proxy_finished(u4c_listener_t *l, u4c_result_t res)
 {
     u4c_proxy_listener_t *tl = container_of(l, u4c_proxy_listener_t, super);
     serialise_uint(tl->fd, PROXY_FINISHED);
-    serialise_uint(tl->fd, FAIL);
-}
-
-static void
-proxy_pass(u4c_listener_t *l __attribute__((unused)))
-{
-    u4c_proxy_listener_t *tl = container_of(l, u4c_proxy_listener_t, super);
-    serialise_uint(tl->fd, PROXY_FINISHED);
-    serialise_uint(tl->fd, PASS);
+    serialise_uint(tl->fd, res);
 }
 
 static u4c_listener_ops_t proxy_ops =
 {
     .add_event = proxy_add_event,
-    .fail = proxy_fail,
-    .pass = proxy_pass
+    .finished = proxy_finished
 };
 
 u4c_listener_t *
@@ -163,15 +155,13 @@ __u4c_proxy_listener(int fd)
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 /*
- * Handles input on the read end of the event pipe.
- * Returns:
- *  0 - not finished
- *  1 - finished, passed
- *  2 - finished, failed
- *  <0	error decoding or EOF
+ * Handles input on the read end of the event pipe.  Returns false
+ * when we should stop calling it, which might be due to a normal
+ * end of test condition (FINISHED proxy call) or to some error.
+ * Updates *@resp if necessary.
  */
-int
-__u4c_handle_proxy_call(int fd)
+bool
+__u4c_handle_proxy_call(int fd, u4c_result_t *resp)
 {
     unsigned int which;
     u4c_event_t ev;
@@ -181,28 +171,25 @@ __u4c_handle_proxy_call(int fd)
 
     r = deserialise_uint(fd, &which);
     if (r)
-    {
-	if (r != EOF)
-	    fprintf(stderr, "u4c: can't read proxy call\n");
-	return r;
-    }
+	return false;
     switch (which)
     {
     case PROXY_EVENT:
 	if ((r = deserialise_event(fd, &ev)) ||
 	    (r = deserialise_uint(fd, &ft)))
-	    return r;    /* failed to decode */
-	__u4c_raise_event(&ev, ft);
-	return 0;
+	    return false;    /* failed to decode */
+	__u4c_merge(*resp, __u4c_raise_event(&ev, ft));
+	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))
-	    return r;    /* failed to decode */
-	return (res == PASS ? 1 : 2);
+	    return false;    /* failed to decode */
+	__u4c_merge(*resp, res);
+	return false;	      /* end of test, expect no more calls */
     default:
 	fprintf(stderr,
 		"u4c: can't decode proxy call (which=%u)\n",
 		which);
-	return -EINVAL;
+	return false;
     }
 }
 
