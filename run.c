@@ -95,7 +95,14 @@ u4c_result_t __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
     case EV_FIXTURE:
     case EV_VALGRIND:
 	return R_FAIL;
+    case EV_EXPASS:
+	return R_PASS;
+    case EV_EXFAIL:
+	return R_FAIL;
+    case EV_EXNA:
+	return R_NOTAPPLICABLE;
     default:
+	/* there was an event, but it makes no difference */
 	return R_UNKNOWN;
     }
 }
@@ -446,6 +453,23 @@ __u4c_run_tests(u4c_testnode_t *tn)
 	for (child = tn->children ; child ; child = child->next)
 	    __u4c_run_tests(child);
     }
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+void __u4c_pass(const char *file, int line)
+{
+    u4c_throw(event(EV_EXPASS, "U4C_PASS called", file, line, NULL));
+}
+
+void __u4c_fail(const char *file, int line)
+{
+    u4c_throw(event(EV_EXFAIL, "U4C_FAIL called", file, line, NULL));
+}
+
+void __u4c_notapplicable(const char *file, int line)
+{
+    u4c_throw(event(EV_EXNA, "U4C_NOTAPPLICABLE called", file, line, NULL));
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

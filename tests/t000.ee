@@ -10,4 +10,10 @@ EVENT SYSLOG err: Hello world! at /home/gnb/software/u4c/tests/t000.c:33 in fixt
 PASS u4c.tests.t000.syslog
 EVENT VALGRIND 32 bytes of memory leaked in fixture test_syslog
 FAIL u4c.tests.t000.memleak
+EVENT EXPASS U4C_PASS called at t000.c:43 in test test_syslog
+PASS u4c.tests.t000.pass
+EVENT EXFAIL U4C_FAIL called at t000.c:48 in test test_syslog
+FAIL u4c.tests.t000.fail
+EVENT EXNA U4C_NOTAPPLICABLE called at t000.c:53 in test test_syslog
+N/A u4c.tests.t000.notapplicable
 EXIT 1

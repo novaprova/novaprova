@@ -38,6 +38,21 @@ static void test_memleak(void)
     malloc(32);
 }
 
+static void test_pass(void)
+{
+    U4C_PASS;
+}
+
+static void test_fail(void)
+{
+    U4C_FAIL;
+}
+
+static void test_notapplicable(void)
+{
+    U4C_NOTAPPLICABLE;
+}
+
 int
 main(int argc, char **argv)
 {

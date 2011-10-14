@@ -55,6 +55,8 @@ text_end_node(u4c_listener_t *l __attribute__((unused)),
     case R_PASS:
 	fprintf(stderr, "PASS %s\n", fullname);
 	break;
+    case R_NOTAPPLICABLE:
+	fprintf(stderr, "N/A %s\n", fullname);
 	break;
     case R_FAIL:
 	tl->nfailed++;
@@ -82,6 +84,9 @@ text_add_event(u4c_listener_t *l __attribute__((unused)),
     case EV_SIGNAL: type = "SIGNAL"; break;
     case EV_SYSLOG: type = "SYSLOG"; break;
     case EV_FIXTURE: type = "FIXTURE"; break;
+    case EV_EXPASS: type = "EXPASS"; break;
+    case EV_EXFAIL: type = "EXFAIL"; break;
+    case EV_EXNA: type = "EXNA"; break;
     case EV_VALGRIND: type = "VALGRIND"; break;
     default: type = "unknown"; break;
     }

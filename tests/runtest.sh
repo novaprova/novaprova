@@ -42,7 +42,7 @@ fi
 
 if [ -f $TEST.ee ] ; then
     # compare events logged against expected events
-    egrep '^(EVENT|PASS|FAIL|EXIT|\?\?\?) ' $TEST.log |\
+    egrep '^(EVENT|PASS|FAIL|N/A|EXIT|\?\?\?) ' $TEST.log |\
 	sed -e 's/process [0-9]\+/process %PID%/g' |\
 	diff -u $TEST.ee - || fail
 else

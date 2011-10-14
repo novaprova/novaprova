@@ -8,12 +8,15 @@ typedef struct __u4c_exceptstate __u4c_exceptstate_t;
 
 enum u4c_events
 {
-    EV_ASSERT = 1,
-    EV_EXIT,
-    EV_SIGNAL,
-    EV_SYSLOG,
-    EV_FIXTURE,
-    EV_VALGRIND,
+    EV_ASSERT = 1,	/* CuT failed an assert() */
+    EV_EXIT,		/* CuT called exit() */
+    EV_SIGNAL,		/* CuT caused a fatal signal */
+    EV_SYSLOG,		/* CuT did a syslog() */
+    EV_FIXTURE,		/* fixture code returned an error */
+    EV_EXPASS,		/* CuT explicitly called U4C_PASS */
+    EV_EXFAIL,		/* ... */
+    EV_EXNA,		/* ... */
+    EV_VALGRIND,	/* Valgrind spotted a memleak or error */
 };
 
 struct u4c_event
