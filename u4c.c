@@ -456,25 +456,6 @@ __u4c_testnode_fullname(const u4c_testnode_t *tn)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static void
-list_tests(u4c_globalstate_t *state,
-	   u4c_testnode_t *tn)
-{
-    u4c_testnode_t *child;
-
-    if (tn->funcs[FT_TEST])
-    {
-	char *fullname = __u4c_testnode_fullname(tn);
-	printf("%s\n", fullname);
-	xfree(fullname);
-    }
-    else
-    {
-	for (child = tn->children ; child ; child = child->next)
-	    list_tests(state, child);
-    }
-}
-
 static u4c_testnode_t *
 find_node(u4c_testnode_t *tn, const char *name)
 {
@@ -519,6 +500,10 @@ u4c_plan_new(u4c_globalstate_t *state)
      * memory leaks. */
     plan->next = state->plans;
     state->plans = plan;
+
+    /* initialise iterator */
+    plan->current.idx = -1;
+    plan->current.node = 0;
 
     return plan;
 }
@@ -577,9 +562,30 @@ u4c_plan_enable(u4c_plan_t *plan)
 static u4c_testnode_t *
 u4c_plan_next(u4c_plan_t *plan)
 {
-    if (plan->current == plan->numnodes)
-	return 0;
-    return plan->nodes[plan->current++];
+    u4c_testnode_t *tn;
+
+    u4c_plan_iterator_t *itr = &plan->current;
+
+    tn = itr->node;
+
+    /* advance tn */
+    for (;;)
+    {
+	while (tn)
+	{
+	    if (tn->children)
+		tn = tn->children;
+	    else if (tn->next)
+		tn = tn->next;
+	    else if (tn->parent)
+		tn = tn->parent->next;
+	    if (tn && tn->funcs[FT_TEST])
+		return itr->node = tn;
+	}
+	if (++itr->idx == plan->numnodes)
+	    return itr->node = 0;
+	tn = plan->nodes[itr->idx];
+    }
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -654,7 +660,22 @@ u4c_init(void)
 void
 u4c_list_tests(u4c_globalstate_t *state)
 {
-    list_tests(state, state->root);
+    u4c_plan_t *plan;
+    u4c_testnode_t *tn;
+
+    /* build a default plan with all the tests */
+    plan = u4c_plan_new(state);
+    u4c_plan_add_node(plan, state->root);
+
+    /* iterate over all tests */
+    while ((tn = u4c_plan_next(plan)))
+    {
+	char *fullname = __u4c_testnode_fullname(tn);
+	printf("%s\n", fullname);
+	xfree(fullname);
+    }
+
+    u4c_plan_delete(plan);
 }
 
 int
@@ -675,7 +696,7 @@ u4c_run_tests(u4c_globalstate_t *state)
 
     __u4c_begin(state);
     while ((tn = u4c_plan_next(state->rootplan)))
-	__u4c_run_tests(tn);
+	__u4c_run_test(tn);
     __u4c_end();
     return !!state->nfailed;
 }

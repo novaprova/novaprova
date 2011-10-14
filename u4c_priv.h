@@ -14,6 +14,7 @@ typedef struct u4c_child u4c_child_t;
 typedef struct u4c_event u4c_event_t;
 typedef struct u4c_listener u4c_listener_t;
 typedef struct u4c_listener_ops u4c_listener_ops_t;
+typedef struct u4c_plan_iterator u4c_plan_iterator_t;
 typedef enum u4c_result u4c_result_t;
 
 struct u4c_child
@@ -72,13 +73,19 @@ struct u4c_testnode
     u4c_function_t *funcs[FT_NUM];
 };
 
+struct u4c_plan_iterator
+{
+    int idx;
+    u4c_testnode_t *node;
+};
+
 struct u4c_plan
 {
     u4c_plan_t *next;
     u4c_globalstate_t *state;
     int numnodes;
     u4c_testnode_t **nodes;
-    int current;
+    u4c_plan_iterator_t current;
 };
 
 enum u4c_result
@@ -157,7 +164,7 @@ extern void __u4c_add_listener(u4c_globalstate_t *, u4c_listener_t *);
 extern void __u4c_set_listener(u4c_globalstate_t *, u4c_listener_t *);
 extern void __u4c_begin(u4c_globalstate_t *);
 extern void __u4c_end(void);
-extern void __u4c_run_tests(u4c_testnode_t *);
+extern void __u4c_run_test(u4c_testnode_t *);
 extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 #define __u4c_merge(r1, r2) \
     do { \

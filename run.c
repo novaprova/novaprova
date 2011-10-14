@@ -406,8 +406,8 @@ run_test_code(u4c_testnode_t *tn)
     return res;
 }
 
-static void
-run_test(u4c_testnode_t *tn)
+void
+__u4c_run_test(u4c_testnode_t *tn)
 {
     u4c_child_t *child;
     u4c_result_t res = R_UNKNOWN;
@@ -437,22 +437,6 @@ run_test(u4c_testnode_t *tn)
     dispatch_listeners(state, end_node, tn);
 
     isolate_end(child);
-}
-
-void
-__u4c_run_tests(u4c_testnode_t *tn)
-{
-    u4c_testnode_t *child;
-
-    if (tn->funcs[FT_TEST])
-    {
-	run_test(tn);
-    }
-    else
-    {
-	for (child = tn->children ; child ; child = child->next)
-	    __u4c_run_tests(child);
-    }
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
