@@ -16,6 +16,8 @@ extern void u4c_plan_delete(u4c_plan_t *);
 extern bool u4c_plan_add(u4c_plan_t *, int nspec, const char **spec);
 extern void u4c_plan_enable(u4c_plan_t *);
 
+extern const char *u4c_reltimestamp(void);
+
 /* macros for ending a test immediately with a given result */
 extern void __u4c_pass(const char *file, int line);
 extern void __u4c_fail(const char *file, int line);

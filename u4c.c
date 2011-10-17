@@ -1,7 +1,27 @@
 #include "common.h"
 #include "u4c_priv.h"
 #include "except.h"
+#include <sys/time.h>
 #include <valgrind/valgrind.h>
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+const char *
+u4c_reltimestamp(void)
+{
+    static char buf[32];
+    static struct timeval first;
+    struct timeval now;
+    struct timeval delta;
+    gettimeofday(&now, NULL);
+    if (!first.tv_sec)
+	first = now;
+    timersub(&now, &first, &delta);
+    snprintf(buf, sizeof(buf), "%lu.%06lu",
+	     (unsigned long)delta.tv_sec,
+	     (unsigned long)delta.tv_usec);
+    return buf;
+}
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -644,6 +664,7 @@ u4c_init(void)
     u4c_globalstate_t *state;
 
     be_valground();
+    u4c_reltimestamp();
     state = new_state();
     setup_classifiers(state);
     __u4c_discover_objects(state);
