@@ -12,6 +12,7 @@ DEPS=		../u4c.h ../libu4c.a
 
 TESTS= \
     t000 \
+    t001 \
 
 tests: $(TESTS)
 
@@ -30,3 +31,5 @@ check: $(TESTS)
 %: %.c $(DEPS)
 	$(LINK.c) -o $@ $< $(LIBS)
 
+%.c: %-genc.pl
+	perl $< > $@
