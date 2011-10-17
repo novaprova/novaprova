@@ -37,6 +37,7 @@ main(int argc, char **argv)
 {
     int ec = 0;
     u4c_globalstate_t *state = u4c_init();
+    u4c_set_concurrency(state, /*maximal*/0);
     ec = u4c_run_tests(state);
     u4c_done(state);
     exit(ec);

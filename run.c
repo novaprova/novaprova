@@ -7,6 +7,7 @@
 
 __u4c_exceptstate_t __u4c_exceptstate;
 static u4c_globalstate_t *state;
+static volatile int caught_sigchld = 0;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -31,9 +32,23 @@ __u4c_set_listener(u4c_globalstate_t *st, u4c_listener_t *l)
     l->next = 0;
 }
 
+static void
+handle_sigchld(int sig __attribute__((unused)))
+{
+    caught_sigchld = 1;
+}
+
 void
 __u4c_begin(u4c_globalstate_t *s)
 {
+    static bool init = false;
+
+    if (!init)
+    {
+	signal(SIGCHLD, handle_sigchld);
+	init = true;
+    }
+
     state = s;
     dispatch_listeners(state, begin);
 }
@@ -108,7 +123,7 @@ u4c_result_t __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
 }
 
 static u4c_child_t *
-isolate_begin(void)
+fork_child(u4c_testnode_t *tn)
 {
     pid_t pid;
 #define PIPE_READ 0
@@ -151,16 +166,21 @@ isolate_begin(void)
 	/* child process: return, will run the test */
 	close(pipefd[PIPE_READ]);
 	state->event_pipe = pipefd[PIPE_WRITE];
-	__u4c_set_listener(state, __u4c_proxy_listener(state->event_pipe));
-	return 0;
+	return NULL;
     }
 
     /* parent process */
 
-    fprintf(stderr, "u4c: spawned child process %d\n",
-	    (int)pid);
+    {
+	char *nm = __u4c_testnode_fullname(tn);
+	fprintf(stderr, "u4c: spawned child process %d for %s\n",
+		(int)pid, nm);
+	xfree(nm);
+    }
     child = xmalloc(sizeof(*child));
     child->pid = pid;
+    child->node = tn;
+    child->result = R_UNKNOWN;
     close(pipefd[PIPE_WRITE]);
     child->event_pipe = pipefd[PIPE_READ];
     child->next = state->children;
@@ -172,56 +192,73 @@ isolate_begin(void)
 #undef PIPE_WRITE
 }
 
-
 static void
-isolate_end(u4c_child_t *special)
+handle_events(void)
 {
-    if (!special)
+    u4c_child_t *child;
+    int r;
+    int i;
+
+    if (!state->nchildren)
+	return;
+
+    while (!caught_sigchld)
     {
-	fprintf(stderr, "u4c: child process %d finishing\n",
-		(int)getpid());
-	exit(0);
+	if (state->npfd != state->nchildren)
+	{
+	    state->npfd = state->nchildren;
+	    state->pfd = xrealloc(state->pfd, state->npfd * sizeof(struct pollfd));
+	}
+	memset(state->pfd, 0, state->npfd * sizeof(struct pollfd));
+	for (i = 0, child = state->children ; child ; i++, child = child->next)
+	{
+	    if (child->finished)
+		continue;
+	    state->pfd[i].fd = child->event_pipe;
+	    state->pfd[i].events = POLLIN;
+	}
+
+	r = poll(state->pfd, state->npfd, -1);
+	if (r < 0)
+	{
+	    if (errno == EINTR)
+		continue;
+	    perror("u4c: poll");
+	    return;
+	}
+	/* TODO: implement test timeout handling here */
+
+	for (i = 0, child = state->children ; child ; i++, child = child->next)
+	{
+	    if (child->finished)
+		continue;
+	    if (!(state->pfd[i].revents & POLLIN))
+		continue;
+	    if (!__u4c_handle_proxy_call(child->event_pipe, &child->result))
+		child->finished = true;
+	}
     }
 }
 
-static u4c_result_t
-isolate_wait(u4c_child_t *special)
+static void
+reap_children(void)
 {
     pid_t pid;
     u4c_child_t **prevp, *child;
     int status;
-    u4c_result_t res = R_UNKNOWN;
-    int r;
     char msg[1024];
-
-    /* Note: too lazy to handle more than 1 child here */
-    do
-    {
-	struct pollfd pfd;
-	memset(&pfd, 0, sizeof(pfd));
-	pfd.fd = special->event_pipe;
-	pfd.events = POLLIN;
-	r = poll(&pfd, 1, -1);
-	if (r < 0)
-	{
-	    perror("u4c: poll");
-	    return res;
-	}
-	/* TODO: implement test timeout handling here */
-    }
-    while (__u4c_handle_proxy_call(special->event_pipe, &res));
 
     for (;;)
     {
-	pid = waitpid(-1, &status, 0);
+	pid = waitpid(-1, &status, WNOHANG);
+	if (pid == 0)
+	    break;
 	if (pid < 0)
 	{
 	    if (errno == ESRCH || errno == ECHILD)
-		fprintf(stderr, "u4c: child %d already reaped!?\n",
-			special->pid);
-	    else
-		perror("u4c: waitpid");
-	    return R_UNKNOWN;
+		break;
+	    perror("u4c: waitpid");
+	    return;
 	}
 	if (WIFSTOPPED(status))
 	{
@@ -237,6 +274,7 @@ isolate_wait(u4c_child_t *special)
 	{
 	    /* some other process */
 	    fprintf(stderr, "u4c: reaped stray process %d\n", (int)pid);
+	    /* TODO: this is probably eventworthy */
 	    continue;	    /* whatever */
 	}
 
@@ -248,7 +286,7 @@ isolate_wait(u4c_child_t *special)
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
-		__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
+		__u4c_merge(child->result, __u4c_raise_event(&ev, FT_UNKNOWN));
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -257,19 +295,24 @@ isolate_wait(u4c_child_t *special)
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
-	    __u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
+	    __u4c_merge(child->result, __u4c_raise_event(&ev, FT_UNKNOWN));
 	}
+
+	/* notify listeners */
+	state->nfailed += (child->result == R_FAIL);
+	state->nrun++;
+	dispatch_listeners(state, finished, child->result);
+	dispatch_listeners(state, end_node, child->node);
 
 	/* detach and clean up */
 	*prevp = child->next;
 	state->nchildren--;
 	close(child->event_pipe);
 	free(child);
-
-	/* Are you the one that I've been waiting for? */
-	if (child == special)
-	    return res;
     }
+
+    caught_sigchld = 0;
+    /* nothing to reap here, move along */
 }
 
 static void
@@ -406,37 +449,50 @@ run_test_code(u4c_testnode_t *tn)
     return res;
 }
 
+
 void
-__u4c_run_test(u4c_testnode_t *tn)
+__u4c_begin_test(u4c_testnode_t *tn)
 {
     u4c_child_t *child;
-    u4c_result_t res = R_UNKNOWN;
+    u4c_result_t res;
 
     {
 	static int n = 0;
-	if (++n > 10)
+	if (++n > 60)
 	    return;
+    }
+
+    {
+	char *nm = __u4c_testnode_fullname(tn);
+	fprintf(stderr, "%s: begin test %s\n",
+		u4c_reltimestamp(), nm);
+	xfree(nm);
     }
 
     dispatch_listeners(state, begin_node, tn);
 
-    child = isolate_begin();
-    if (!child)
-    {
-	/* child process */
-	__u4c_merge(res, run_test_code(tn));
-    }
-    else
-    {
-	__u4c_merge(res, isolate_wait(child));
-    }
+    child = fork_child(tn);
+    if (child)
+	return; /* parent process */
 
-    state->nfailed += (res == R_FAIL);
-    state->nrun++;
+    /* child process */
+    __u4c_set_listener(state, __u4c_proxy_listener(state->event_pipe));
+    res = run_test_code(tn);
     dispatch_listeners(state, finished, res);
-    dispatch_listeners(state, end_node, tn);
+    {
+	char *nm = __u4c_testnode_fullname(tn);
+	fprintf(stderr, "u4c: child process %d (%s) finishing\n",
+		(int)getpid(), nm);
+	xfree(nm);
+    }
+    exit(0);
+}
 
-    isolate_end(child);
+void
+__u4c_wait(void)
+{
+    handle_events();
+    reap_children();
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

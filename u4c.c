@@ -50,6 +50,7 @@ new_state(void)
     state->classifiers_tailp = &state->classifiers;
     state->objects_tailp = &state->objects;
     state->funcs_tailp = &state->funcs;
+    state->maxchildren = 1;
 
     return state;
 }
@@ -602,9 +603,9 @@ u4c_plan_next(u4c_plan_t *plan)
 	    if (tn && tn->funcs[FT_TEST])
 		return itr->node = tn;
 	}
-	if (++itr->idx == plan->numnodes)
+	if (itr->idx >= plan->numnodes-1)
 	    return itr->node = 0;
-	tn = plan->nodes[itr->idx];
+	tn = plan->nodes[++itr->idx];
     }
 }
 
@@ -679,6 +680,19 @@ u4c_init(void)
 }
 
 void
+u4c_set_concurrency(u4c_globalstate_t *state, int n)
+{
+    if (n == 0)
+    {
+	/* shorthand for "best possible" */
+	n = sysconf(_SC_NPROCESSORS_ONLN);
+    }
+    if (n < 1)
+	n = 1;
+    state->maxchildren = n;
+}
+
+void
 u4c_list_tests(u4c_globalstate_t *state)
 {
     u4c_plan_t *plan;
@@ -716,8 +730,15 @@ u4c_run_tests(u4c_globalstate_t *state)
 	__u4c_add_listener(state, __u4c_text_listener());
 
     __u4c_begin(state);
-    while ((tn = u4c_plan_next(state->rootplan)))
-	__u4c_run_test(tn);
+    for (;;)
+    {
+	while (state->nchildren < state->maxchildren &&
+	       (tn = u4c_plan_next(state->rootplan)))
+	    __u4c_begin_test(tn);
+	if (!state->nchildren)
+	    break;
+	__u4c_wait();
+    }
     __u4c_end();
     return !!state->nfailed;
 }

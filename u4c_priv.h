@@ -5,6 +5,7 @@
 #include "u4c.h"
 #include <regex.h>
 #include <bfd.h>
+#include <sys/poll.h>
 
 typedef struct u4c_object u4c_object_t;
 typedef struct u4c_classifier u4c_classifier_t;
@@ -17,11 +18,24 @@ typedef struct u4c_listener_ops u4c_listener_ops_t;
 typedef struct u4c_plan_iterator u4c_plan_iterator_t;
 typedef enum u4c_result u4c_result_t;
 
+enum u4c_result
+{
+    /* Note ordinal values: we use MAX() to combine
+     * multiple results for a given test */
+    R_UNKNOWN=0,
+    R_PASS,
+    R_NOTAPPLICABLE,
+    R_FAIL
+};
+
 struct u4c_child
 {
     u4c_child_t *next;
     pid_t pid;
     int event_pipe;	    /* read end of the pipe */
+    u4c_testnode_t *node;
+    u4c_result_t result;
+    bool finished;
 };
 
 struct u4c_object
@@ -88,16 +102,6 @@ struct u4c_plan
     u4c_plan_iterator_t current;
 };
 
-enum u4c_result
-{
-    /* Note ordinal values: we use MAX() to combine
-     * multiple results for a given test */
-    R_UNKNOWN=0,
-    R_PASS,
-    R_NOTAPPLICABLE,
-    R_FAIL
-};
-
 struct u4c_listener_ops
 {
     void (*begin)(u4c_listener_t *);
@@ -133,6 +137,9 @@ struct u4c_globalstate
     int event_pipe;		/* only in child processes */
     u4c_child_t *children;	/* only in the parent process */
     int nchildren;
+    int maxchildren;
+    int npfd;
+    struct pollfd *pfd;
 };
 
 #define dispatch_listeners(st, func, ...) \
@@ -164,7 +171,8 @@ extern void __u4c_add_listener(u4c_globalstate_t *, u4c_listener_t *);
 extern void __u4c_set_listener(u4c_globalstate_t *, u4c_listener_t *);
 extern void __u4c_begin(u4c_globalstate_t *);
 extern void __u4c_end(void);
-extern void __u4c_run_test(u4c_testnode_t *);
+extern void __u4c_begin_test(u4c_testnode_t *);
+extern void __u4c_wait(void);
 extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 #define __u4c_merge(r1, r2) \
     do { \
