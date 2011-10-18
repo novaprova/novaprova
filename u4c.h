@@ -2,6 +2,7 @@
 #define __U4C_H__ 1
 
 #include <stdbool.h>
+#include <string.h>
 
 typedef struct u4c_globalstate u4c_globalstate_t;
 typedef struct u4c_plan u4c_plan_t;
@@ -19,10 +20,12 @@ extern void u4c_plan_enable(u4c_plan_t *);
 
 extern const char *u4c_reltimestamp(void);
 
-/* macros for ending a test immediately with a given result */
+/* Test-callable macros for ending a test with a result */
 extern void __u4c_pass(const char *file, int line);
 extern void __u4c_fail(const char *file, int line);
 extern void __u4c_notapplicable(const char *file, int line);
+extern void __u4c_assert_failed(const char *filename, int lineno,
+				const char *fmt, ...);
 
 #define U4C_PASS  \
     __u4c_pass(__FILE__, __LINE__)
@@ -30,5 +33,82 @@ extern void __u4c_notapplicable(const char *file, int line);
     __u4c_fail(__FILE__, __LINE__)
 #define U4C_NOTAPPLICABLE \
     __u4c_notapplicable(__FILE__, __LINE__)
+
+#define U4C_ASSERT(cc) \
+    do { \
+	if (!(cc)) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT(" #cc ")"); \
+    } while(0)
+#define U4C_ASSERT_TRUE(a) \
+    do { \
+	bool _a = (a); \
+	if (!_a) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_TRUE(" #a "=%u)", _a); \
+    } while(0)
+#define U4C_ASSERT_FALSE(a) \
+    do { \
+	bool _a = (a); \
+	if (_a) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_FALSE(" #a "=%u)", _a); \
+    } while(0)
+#define U4C_ASSERT_EQUAL(a, b) \
+    do { \
+	long long _a = (a), _b = (b); \
+	if (!(_a == _b)) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_EQUAL(" #a "=%lld, " #b "=%lld)", _a, _b); \
+    } while(0)
+#define U4C_ASSERT_NOT_EQUAL(a, b) \
+    do { \
+	long long _a = (a), _b = (b); \
+	if (!(_a != _b)) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_NOT_EQUAL(" #a "=%lld, " #b "=%lld)", _a, _b); \
+    } while(0)
+#define U4C_ASSERT_PTR_EQUAL(a, b) \
+    do { \
+	const void *_a = (a), *_b = (b); \
+	if (!(_a == _b)) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_PTR_EQUAL(" #a "=%p, " #b "=%p)", _a, _b); \
+    } while(0)
+#define U4C_ASSERT_PTR_NOT_EQUAL(a, b) \
+    do { \
+	const void *_a = (a), *_b = (b); \
+	if (!(_a != _b)) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_PTR_NOT_EQUAL(" #a "=%p, " #b "=%p)", _a, _b); \
+    } while(0)
+#define U4C_ASSERT_NULL(a) \
+    do { \
+	const void *_a = (a); \
+	if (!(_a == NULL)) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_NULL(" #a "=%p)", _a); \
+    } while(0)
+#define U4C_ASSERT_NOT_NULL(a) \
+    do { \
+	const void *_a = (a); \
+	if (!(_a != NULL)) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_NOT_NULL(" #a "=%p)", _a); \
+    } while(0)
+#define U4C_ASSERT_STR_EQUAL(a, b) \
+    do { \
+	const char *_a = (a), *_b = (b); \
+	if (strcmp(_a ? _a : "", _b ? _b : "")) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_STR_EQUAL(" #a "=\"%s\", " #b "=\"%s\")", _a, _b); \
+    } while(0)
+#define U4C_ASSERT_STR_NOT_EQUAL(a, b) \
+    do { \
+	const char *_a = (a), *_b = (b); \
+	if (!strcmp(_a ? _a : "", _b ? _b : "")) \
+	    __u4c_assert_failed(__FILE__, __LINE__, \
+	    "U4C_ASSERT_STR_NOT_EQUAL(" #a "=\"%s\", " #b "=\"%s\")", _a, _b); \
+    } while(0)
 
 #endif /* __U4C_H__ */

@@ -496,20 +496,3 @@ __u4c_wait(void)
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
-void __u4c_pass(const char *file, int line)
-{
-    u4c_throw(event(EV_EXPASS, "U4C_PASS called", file, line, NULL));
-}
-
-void __u4c_fail(const char *file, int line)
-{
-    u4c_throw(event(EV_EXFAIL, "U4C_FAIL called", file, line, NULL));
-}
-
-void __u4c_notapplicable(const char *file, int line)
-{
-    u4c_throw(event(EV_EXNA, "U4C_NOTAPPLICABLE called", file, line, NULL));
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
