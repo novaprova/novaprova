@@ -88,6 +88,7 @@ text_add_event(u4c_listener_t *l __attribute__((unused)),
     case EV_EXFAIL: type = "EXFAIL"; break;
     case EV_EXNA: type = "EXNA"; break;
     case EV_VALGRIND: type = "VALGRIND"; break;
+    case EV_SLMATCH: type = "SLMATCH"; break;
     default: type = "unknown"; break;
     }
     snprintf(buf, sizeof(buf), "EVENT %s %s",
@@ -99,7 +100,7 @@ text_add_event(u4c_listener_t *l __attribute__((unused)),
     if (*ev->function)
 	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
 		 " in %s %s",
-		 (ft == FT_TEST ? "test" : "fixture"),
+		 __u4c_functype_as_string(ft),
 		 ev->function);
     strcat(buf, "\n");
     fputs(buf, stderr);

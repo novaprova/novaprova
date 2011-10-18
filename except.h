@@ -17,6 +17,7 @@ enum u4c_events
     EV_EXFAIL,		/* ... */
     EV_EXNA,		/* ... */
     EV_VALGRIND,	/* Valgrind spotted a memleak or error */
+    EV_SLMATCH,		/* syslog matching */
 };
 
 struct u4c_event

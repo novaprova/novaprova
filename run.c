@@ -109,6 +109,7 @@ u4c_result_t __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
     case EV_SIGNAL:
     case EV_FIXTURE:
     case EV_VALGRIND:
+    case EV_SLMATCH:
 	return R_FAIL;
     case EV_EXPASS:
 	return R_PASS;

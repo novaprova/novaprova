@@ -111,4 +111,18 @@ extern void __u4c_assert_failed(const char *filename, int lineno,
 	    "U4C_ASSERT_STR_NOT_EQUAL(" #a "=\"%s\", " #b "=\"%s\")", _a, _b); \
     } while(0)
 
+/* syslog matching support */
+extern void __u4c_syslog_fail(const char *re, const char *, int);
+#define u4c_syslog_fail(re) \
+    __u4c_syslog_fail((re), __FILE__, __LINE__)
+extern void __u4c_syslog_ignore(const char *re, const char *, int);
+#define u4c_syslog_ignore(re) \
+    __u4c_syslog_ignore((re), __FILE__, __LINE__)
+extern void __u4c_syslog_match(const char *re, int tag, const char *, int);
+#define u4c_syslog_match(re, tag) \
+    __u4c_syslog_match((re), (tag), __FILE__, __LINE__)
+extern unsigned int __u4c_syslog_count(int tag, const char *, int);
+#define u4c_syslog_count(tag) \
+    __u4c_syslog_count((tag), __FILE__, __LINE__)
+
 #endif /* __U4C_H__ */

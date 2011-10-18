@@ -14,6 +14,7 @@ TESTS= \
     t000 \
     t001 \
     t002 \
+    t003 \
 
 tests: $(TESTS)
 

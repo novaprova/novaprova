@@ -4,6 +4,7 @@
 #include "except.h"
 #include <syslog.h>
 #include <unistd.h>
+#include <regex.h>
 #include <valgrind/valgrind.h>
 
 /*
@@ -14,6 +15,159 @@
  * This product includes software developed by Computing Services
  * at Carnegie Mellon University (http://www.cmu.edu/computing/).
  */
+typedef enum u4c_sldisposition u4c_sldisposition_t;
+typedef struct u4c_slmatch u4c_slmatch_t;
+
+enum u4c_sldisposition
+{
+    SL_IGNORE,
+    SL_COUNT,
+    SL_FAIL,
+};
+
+struct u4c_slmatch
+{
+    u4c_slmatch_t *next;
+    char *re;
+    unsigned int count;
+    int tag;
+    u4c_sldisposition_t disposition;
+    regex_t compiled_re;
+};
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+static u4c_slmatch_t *slmatches;
+
+static const char *
+slmatch_error(const u4c_slmatch_t *slm, int r)
+{
+    static char buf[2048];
+    int n;
+
+    snprintf(buf, sizeof(buf)-100, "/%s/: ", slm->re);
+    n = strlen(buf);
+    regerror(r, &slm->compiled_re, buf+n, sizeof(buf)-n-1);
+
+    return buf;
+}
+
+static void
+add_slmatch(const char *re, u4c_sldisposition_t dis,
+	    int tag, const char *file, int line)
+{
+    u4c_slmatch_t *slm, **prevp;
+    int r;
+
+    slm = xmalloc(sizeof(*slm));
+    slm->re = xstrdup(re);
+    slm->disposition = dis;
+    slm->tag = tag;
+
+    r = regcomp(&slm->compiled_re, slm->re,
+		REG_EXTENDED|REG_ICASE|REG_NOSUB);
+    if (r)
+    {
+	const char *msg = slmatch_error(slm, r);
+	free(slm->re);
+	free(slm);
+	u4c_throw(event(EV_SLMATCH, msg, file, line, 0));
+    }
+
+    /* order shouldn't matter due to the way we
+     * resolve multiple matches, but let's be
+     * careful to preserve caller order anyway by
+     * always appending. */
+    for (prevp = &slmatches ;
+	 *prevp ;
+	 prevp = &((*prevp)->next))
+	;
+    slm->next = NULL;
+    *prevp = slm;
+}
+
+void
+__u4c_syslog_fail(const char *re, const char *file, int line)
+{
+    add_slmatch(re, SL_FAIL, 0, file, line);
+}
+
+void
+__u4c_syslog_ignore(const char *re, const char *file, int line)
+{
+    add_slmatch(re, SL_IGNORE, 0, file, line);
+}
+
+void
+__u4c_syslog_match(const char *re, int tag, const char *file, int line)
+{
+    add_slmatch(re, SL_COUNT, tag, file, line);
+}
+
+unsigned int
+__u4c_syslog_count(int tag, const char *file, int line)
+{
+    unsigned int count = 0;
+    int nmatches = 0;
+    u4c_slmatch_t *slm;
+
+    for (slm = slmatches ; slm ; slm = slm->next)
+    {
+	if (tag < 0 || slm->tag == tag)
+	{
+	    count += slm->count;
+	    nmatches++;
+	}
+    }
+
+    if (!nmatches)
+    {
+	static char buf[64];
+	snprintf(buf, sizeof(buf), "Unmatched syslog tag %d", tag);
+	u4c_throw(event(EV_SLMATCH, buf, file, line, 0));
+    }
+    return count;
+}
+
+static u4c_sldisposition_t
+find_slmatch(const char **msgp)
+{
+    int r;
+    u4c_slmatch_t *slm;
+    u4c_slmatch_t *most = NULL;
+
+    for (slm = slmatches ; slm ; slm = slm->next)
+    {
+	r = regexec(&slm->compiled_re, *msgp, 0, NULL, 0);
+	if (!r)
+	{
+	    /* found */
+	    if (!most || slm->disposition > most->disposition)
+		most = slm;
+	}
+	else if (r != REG_NOMATCH)
+	{
+	    /* runtime regex error */
+	    *msgp = slmatch_error(slm, r);
+	    return SL_FAIL;
+	}
+    }
+
+    if (!most)
+	return SL_FAIL;
+    if (most->disposition == SL_COUNT)
+	most->count++;
+    return most->disposition;
+}
+
+/*
+ * We don't need a function to reset the syslog matches; thanks
+ * to full fork() based isolation we know they're initialised to
+ * empty when every test starts.
+ */
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
 
 static const char *
 syslog_priority_name(int prio)
@@ -72,6 +226,9 @@ void __syslog_chk(int prio,
 	struct u4c_event ev = eventc(EV_SYSLOG, msg);
 	__u4c_raise_event(&ev, FT_UNKNOWN);
     }
+
+    if (find_slmatch(&msg) == SL_FAIL)
+	u4c_throw(eventc(EV_SLMATCH, msg));
 }
 #endif
 
@@ -90,5 +247,9 @@ void syslog(int prio, const char *fmt, ...)
 	struct u4c_event ev = eventc(EV_SYSLOG, msg);
 	__u4c_raise_event(&ev, FT_UNKNOWN);
     }
+
+    if (find_slmatch(&msg) == SL_FAIL)
+	u4c_throw(eventc(EV_SLMATCH, msg));
 }
 
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
