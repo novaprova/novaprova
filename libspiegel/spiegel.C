@@ -2,9 +2,13 @@
 #include <sys/mman.h>
 #include <sys/fcntl.h>
 #include <bfd.h>
+#include <map>
+#include <vector>
 
 namespace spiegel {
 namespace dwarf {
+
+using namespace std;
 
 class string_table
 {
@@ -753,37 +757,97 @@ static const char * const _attrnames[] = {
 
 static string_table attrnames("DW_AT_", _attrnames);
 
+struct abbrev
+{
+    struct attr_spec
+    {
+	uint32_t name;
+	uint32_t form;
+    };
+
+    // default c'tor
+    abbrev()
+     :  code(0),
+        tag(0),
+        children(0)
+    {}
+
+    // c'tor with code
+    abbrev(uint32_t c)
+     :  code(c),
+        tag(0),
+	children(0)
+    {}
+
+    bool read(reader &r)
+    {
+	if (!r.read_uleb128(tag) ||
+	    !r.read_u8(children))
+	    return false;
+	for (;;)
+	{
+	    attr_spec as;
+	    if (!r.read_uleb128(as.name) ||
+	        !r.read_uleb128(as.form))
+		return false;
+	    if (!as.name && !as.form)
+		break;	    /* name=0, form=0 indicates end
+			     * of attribute specifications */
+	    attr_specs.push_back(as);
+	}
+	return true;
+    }
+
+    uint32_t code;
+    uint32_t tag;
+    uint8_t children;
+    vector<attr_spec> attr_specs;
+};
 
 static void
-dump_abbrevs(uint32_t offset)
+read_abbrevs(uint32_t offset, map<uint32_t, abbrev*> &table)
 {
     reader r(sections[DW_sec_abbrev]);
     r.skip(offset);
 
-    printf("Abbrevs at %u {\n", offset);
     uint32_t code;
-    uint32_t tag;
-    uint8_t children;
+    /* code 0 indicates end of compilation unit */
     while (r.read_uleb128(code) && code)
     {
-	printf("Code %u\n", code);
-	if (!r.read_uleb128(tag) ||
-	    !r.read_u8(children))
+	abbrev *a = new abbrev(code);
+	if (!a->read(r))
+	{
+	    delete a;
 	    break;
-	printf("    tag 0x%x (%s)\n", tag, tagnames.to_name(tag));
+	}
+	table[a->code] = a;
+    }
+}
+
+
+static void
+dump_abbrevs(map<uint32_t, abbrev*> &table)
+{
+    printf("Abbrevs {\n");
+
+    map<uint32_t, abbrev*>::iterator itr;
+    for (itr = table.begin() ; itr != table.end() ; ++itr)
+    {
+	abbrev *a = itr->second;
+	printf("Code %u\n", a->code);
+	printf("    tag 0x%x (%s)\n", a->tag, tagnames.to_name(a->tag));
 	printf("    children %u (%s)\n",
-		(unsigned)children,
-		childvals.to_name(children));
+		(unsigned)a->children,
+		childvals.to_name(a->children));
 	printf("    attribute specifications {\n");
 
-	uint32_t name;
-	uint32_t form;
-	while (r.read_uleb128(name) &&
-	       r.read_uleb128(form) &&
-	       (name && form))
+	vector<abbrev::attr_spec>::iterator i;
+	for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
 	{
-	    printf("        name 0x%x (%s)", name, attrnames.to_name(name));
-	    printf(" form 0x%x (%s)\n", form, formvals.to_name(form));
+	    printf("        name 0x%x (%s)",
+		    i->name, attrnames.to_name(i->name));
+	    printf(" form 0x%x (%s)\n",
+		    i->form, formvals.to_name(i->form));
 	}
 	printf("    }\n");
     }
@@ -810,7 +874,9 @@ dump_info(void)
 	printf("    abbrevs %u\n", (unsigned)cuh.abbrevs);
 	printf("    addrsize %u\n", (unsigned)cuh.addrsize);
 
-	dump_abbrevs(cuh.abbrevs);
+	map<uint32_t, abbrev*> abbrevs;
+	read_abbrevs(cuh.abbrevs, abbrevs);
+	dump_abbrevs(abbrevs);
 
 	r.skip(cuh.length-7);
     }
