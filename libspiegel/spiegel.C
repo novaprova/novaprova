@@ -159,6 +159,8 @@ struct section
 
 class abbrev;
 class reader;
+struct value_t;
+class entry_t;
 class state
 {
 public:
@@ -168,7 +170,9 @@ public:
     void map_sections();
     void read_abbrevs(uint32_t offset);
     void dump_abbrevs();
-    void dump_compilation_unit(reader &r);
+    void read_compilation_unit(reader &r, void (*handler)(const entry_t &));
+    static void info_handler(const entry_t &);
+    static void struct_handler(const entry_t &);
     void dump_info();
 
 private:
@@ -356,6 +360,10 @@ public:
     {
 	return p_ - base_;
     }
+    unsigned long get_remains() const
+    {
+	return end_ - p_;
+    }
 
     bool skip(size_t n)
     {
@@ -395,6 +403,7 @@ public:
 	return true;
     }
 
+#if 0
     bool read_addr(unsigned long &v)
     {
 	if (sizeof(unsigned long) == 4)
@@ -418,6 +427,7 @@ public:
 	    return false;
 	}
     }
+#endif
 
     bool read_uleb128(uint32_t &v)
     {
@@ -504,20 +514,57 @@ private:
     const unsigned char *base_;
 };
 
-struct info_compilation_unit_header
+class compilation_unit
 {
-    uint32_t length;
-    uint16_t version;
-    uint32_t abbrevs;
-    uint8_t addrsize;
+public:
+    compilation_unit()
+    {}
 
-    bool read(reader &r)
+    ~compilation_unit()
+    {}
+
+    bool read_header(reader &r)
     {
-	return (r.read_u32(length) &&
-		r.read_u16(version) &&
-		r.read_u32(abbrevs) &&
-		r.read_u8(addrsize));
-    };
+	if (!r.read_u32(length_))
+	    return false;
+	if (length_ < 7 || length_ > r.get_remains())
+	    fatal("Bad DWARF compilation unit header length %u", length_);
+
+	uint16_t version;
+	uint8_t addrsize;
+	if (!r.read_u16(version) ||
+	    !r.read_u32(abbrevs_) ||
+	    !r.read_u8(addrsize))
+	    return false;
+	if (version != 2)
+	    fatal("Bad DWARF version %u, expecting 2", version);
+	if (addrsize != sizeof(void*))
+	    fatal("Bad DWARF addrsize %u, expecting %u",
+		  addrsize, sizeof(void*));
+
+	printf("compilation unit\n");
+	printf("    length %u\n", (unsigned)length_);
+	printf("    version %u\n", (unsigned)version);
+	printf("    abbrevs %u\n", (unsigned)abbrevs_);
+	printf("    addrsize %u\n", (unsigned)addrsize);
+	return true;
+    }
+
+    reader get_body_reader(reader &r)
+    {
+	return r.leading_subset(length_-7);
+    }
+    void skip_body(reader &r)
+    {
+	r.skip(length_-7);
+    }
+
+    unsigned long get_abbrevs() const { return abbrevs_; }
+
+private:
+    uint32_t length_;
+    uint32_t abbrevs_;
+
 };
 
 enum children_values
@@ -794,7 +841,10 @@ enum attribute_names
     DW_AT_recursive = 0x68,
 
 //     DW_AT_lo_user = 0x2000,
+    DW_AT_wacky_mangled_name = 0x2007,	    // observed in the wild
 //     DW_AT_hi_user = 0x3fff
+
+    DW_AT_max
 };
 
 static const char * const _attrnames[] = {
@@ -955,6 +1005,172 @@ struct abbrev
     vector<attr_spec> attr_specs;
 };
 
+struct value_t
+{
+    enum
+    {
+	T_UNDEF,
+	T_STRING,
+	T_SINT32,
+	T_UINT32,
+	T_SINT64,
+	T_UINT64,
+	T_BYTES,
+	T_REF
+    } type;
+    union
+    {
+	const char *string;
+	int32_t sint32;
+	uint32_t uint32;
+	int64_t sint64;
+	uint64_t uint64;
+	struct {
+	    const unsigned char *buf;
+	    size_t len;
+	} bytes;
+	uint64_t ref;
+    } val;
+
+    value_t() : type(T_UNDEF) {}
+
+    static value_t make_string(const char *v)
+    {
+	value_t val;
+	val.type = T_STRING;
+	val.val.string = v;
+	return val;
+    }
+    static value_t make_uint32(uint32_t v)
+    {
+	value_t val;
+	val.type = T_UINT32;
+	val.val.uint32 = v;
+	return val;
+    }
+    static value_t make_sint32(int32_t v)
+    {
+	value_t val;
+	val.type = T_SINT32;
+	val.val.sint32 = v;
+	return val;
+    }
+    static value_t make_uint64(uint64_t v)
+    {
+	value_t val;
+	val.type = T_UINT64;
+	val.val.uint64 = v;
+	return val;
+    }
+    static value_t make_sint64(int64_t v)
+    {
+	value_t val;
+	val.type = T_SINT64;
+	val.val.sint64 = v;
+	return val;
+    }
+    static value_t make_bytes(const unsigned char *b, size_t l)
+    {
+	value_t val;
+	val.type = T_BYTES;
+	val.val.bytes.buf = b;
+	val.val.bytes.len = l;
+	return val;
+    }
+    static value_t make_ref(uint64_t v)
+    {
+	value_t val;
+	val.type = T_REF;
+	val.val.ref = v;
+	return val;
+    }
+
+    void dump() const
+    {
+	switch (type)
+	{
+	case T_UNDEF:
+	    printf("<undef>");
+	    break;
+	case T_STRING:
+	    printf("\"%s\"", val.string);
+	    break;
+	case T_SINT32:
+	    printf("%d", val.sint32);
+	    break;
+	case T_UINT32:
+	    printf("0x%x", val.uint32);
+	    break;
+	case T_SINT64:
+	    printf("%lld", (long long)val.sint64);
+	    break;
+	case T_UINT64:
+	    printf("0x%llx", (unsigned long long)val.uint64);
+	    break;
+	case T_BYTES:
+	    {
+		const unsigned char *u = val.bytes.buf;
+		unsigned len = val.bytes.len;
+		const char *sep = "";
+		while (len--)
+		{
+		    printf("%s0x%02x", sep, (unsigned)*u++);
+		    sep = " ";
+		}
+	    }
+	    break;
+	case T_REF:
+	    printf("(ref)0x%llx", (unsigned long long)val.ref);
+	    break;
+	}
+    }
+};
+
+class entry_t
+{
+public:
+
+    void setup(size_t offset, unsigned level, const abbrev *a)
+    {
+	offset_ = offset;
+	level_ = level;
+	abbrev_ = a;
+	byattr_.clear();
+	byattr_.resize(DW_AT_max, 0);
+	values_.clear();
+	values_.reserve(a->attr_specs.size());
+    }
+
+    void add_attribute(uint32_t name, value_t val)
+    {
+	values_.push_back(val);
+	byattr_[name] = &values_.back();
+    }
+
+    size_t get_offset() const { return offset_; }
+    unsigned get_level() const { return level_; }
+    const abbrev *get_abbrev() const { return abbrev_; }
+    uint32_t get_tag() const { return abbrev_->tag; }
+
+    const value_t *get_attribute(uint32_t name) const
+    {
+	return (name < byattr_.size() ? byattr_[name] : 0);
+    }
+    const char *get_string_attribute(uint32_t name) const
+    {
+	const value_t *v = get_attribute(name);
+	return (v && v->type == value_t::T_STRING ? v->val.string : 0);
+    }
+
+private:
+    size_t offset_;
+    unsigned level_;
+    const abbrev *abbrev_;
+    vector<value_t> values_;
+    vector<const value_t*> byattr_;
+};
+
+
 void
 state::read_abbrevs(uint32_t offset)
 {
@@ -1007,22 +1223,13 @@ state::dump_abbrevs()
     printf("}\n");
 }
 
-static void
-hexdump(const void *ptr, size_t len)
-{
-    const unsigned char *u = (const unsigned char *)ptr;
-    const char *sep = "";
-    while (len--)
-    {
-	printf("%s0x%02x", sep, (unsigned)*u++);
-	sep = " ";
-    }
-}
 
 void
-state::dump_compilation_unit(reader &r)
+state::read_compilation_unit(reader &r, void (*handler)(const entry_t &))
 {
     unsigned level = 0;
+    entry_t entry;
+
     for (;;)
     {
 	/* Refs are offsets relative to the start of the
@@ -1048,12 +1255,11 @@ state::dump_compilation_unit(reader &r)
 	    return;
 	}
 
-	printf("0x%x [%u] %s {\n", offset, level, tagnames.to_name(a->tag));
+	entry.setup(offset, level, a);
 
 	vector<abbrev::attr_spec>::iterator i;
 	for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
 	{
-	    printf("    %s = ", attrnames.to_name(i->name));
 	    switch (i->form)
 	    {
 	    case DW_FORM_data1:
@@ -1061,7 +1267,7 @@ state::dump_compilation_unit(reader &r)
 		    uint8_t v;
 		    if (!r.read_u8(v))
 			return;
-		    printf("0x%x", (unsigned)v);
+		    entry.add_attribute(i->name, value_t::make_uint32(v));
 		    break;
 		}
 	    case DW_FORM_data2:
@@ -1069,7 +1275,7 @@ state::dump_compilation_unit(reader &r)
 		    uint16_t v;
 		    if (!r.read_u16(v))
 			return;
-		    printf("0x%x", (unsigned)v);
+		    entry.add_attribute(i->name, value_t::make_uint32(v));
 		    break;
 		}
 	    case DW_FORM_data4:
@@ -1077,7 +1283,7 @@ state::dump_compilation_unit(reader &r)
 		    uint32_t v;
 		    if (!r.read_u32(v))
 			return;
-		    printf("0x%x", (unsigned)v);
+		    entry.add_attribute(i->name, value_t::make_uint32(v));
 		    break;
 		}
 	    case DW_FORM_data8:
@@ -1085,7 +1291,7 @@ state::dump_compilation_unit(reader &r)
 		    uint64_t v;
 		    if (!r.read_u64(v))
 			return;
-		    printf("0x%llx", (unsigned long long)v);
+		    entry.add_attribute(i->name, value_t::make_uint64(v));
 		    break;
 		}
 	    case DW_FORM_udata:
@@ -1093,7 +1299,7 @@ state::dump_compilation_unit(reader &r)
 		    uint32_t v;
 		    if (!r.read_uleb128(v))
 			return;
-		    printf("%u", v);
+		    entry.add_attribute(i->name, value_t::make_uint32(v));
 		    break;
 		}
 	    case DW_FORM_sdata:
@@ -1101,15 +1307,29 @@ state::dump_compilation_unit(reader &r)
 		    int32_t v;
 		    if (!r.read_sleb128(v))
 			return;
-		    printf("%d", v);
+		    entry.add_attribute(i->name, value_t::make_sint32(v));
 		    break;
 		}
 	    case DW_FORM_addr:
 		{
-		    unsigned long v;
-		    if (!r.read_addr(v))
-			return;
-		    printf("0x%lx", v);
+		    if (sizeof(unsigned long) == 4)
+		    {
+			uint32_t v;
+			if (!r.read_u32(v))
+			    return;
+			entry.add_attribute(i->name, value_t::make_uint32(v));
+		    }
+		    else if (sizeof(unsigned long) == 8)
+		    {
+			uint64_t v;
+			if (!r.read_u64(v))
+			    return;
+			entry.add_attribute(i->name, value_t::make_uint64(v));
+		    }
+		    else
+		    {
+			fatal("Strange addrsize %u", sizeof(unsigned long));
+		    }
 		    break;
 		}
 	    case DW_FORM_flag:
@@ -1117,7 +1337,7 @@ state::dump_compilation_unit(reader &r)
 		    uint8_t v;
 		    if (!r.read_u8(v))
 			return;
-		    printf("0x%x", (unsigned)v);
+		    entry.add_attribute(i->name, value_t::make_uint32(v));
 		    break;
 		}
 	    case DW_FORM_ref1:
@@ -1125,7 +1345,7 @@ state::dump_compilation_unit(reader &r)
 		    uint8_t off;
 		    if (!r.read_u8(off))
 			return;
-		    printf("(ref)0x%x", (unsigned)off);
+		    entry.add_attribute(i->name, value_t::make_ref(off));
 		    break;
 		}
 	    case DW_FORM_ref2:
@@ -1133,7 +1353,7 @@ state::dump_compilation_unit(reader &r)
 		    uint16_t off;
 		    if (!r.read_u16(off))
 			return;
-		    printf("(ref)0x%x", (unsigned)off);
+		    entry.add_attribute(i->name, value_t::make_ref(off));
 		    break;
 		}
 	    case DW_FORM_ref4:
@@ -1141,7 +1361,7 @@ state::dump_compilation_unit(reader &r)
 		    uint32_t off;
 		    if (!r.read_u32(off))
 			return;
-		    printf("(ref)0x%x", (unsigned)off);
+		    entry.add_attribute(i->name, value_t::make_ref(off));
 		    break;
 		}
 	    case DW_FORM_ref8:
@@ -1149,7 +1369,7 @@ state::dump_compilation_unit(reader &r)
 		    uint64_t off;
 		    if (!r.read_u64(off))
 			return;
-		    printf("(ref)0x%llx", (unsigned long long)off);
+		    entry.add_attribute(i->name, value_t::make_ref(off));
 		    break;
 		}
 	    case DW_FORM_string:
@@ -1157,7 +1377,7 @@ state::dump_compilation_unit(reader &r)
 		    const char *v;
 		    if (!r.read_string(v))
 			return;
-		    printf("\"%s\"", v);
+		    entry.add_attribute(i->name, value_t::make_string(v));
 		    break;
 		}
 	    case DW_FORM_strp:
@@ -1168,7 +1388,7 @@ state::dump_compilation_unit(reader &r)
 		    const char *v = sections_[DW_sec_str].offset_as_string(off);
 		    if (!v)
 			return;
-		    printf("\"%s\"", v);
+		    entry.add_attribute(i->name, value_t::make_string(v));
 		    break;
 		}
 	    case DW_FORM_block1:
@@ -1178,7 +1398,7 @@ state::dump_compilation_unit(reader &r)
 		    if (!r.read_u8(len) ||
 			!r.read_bytes(v, len))
 			return;
-		    hexdump(v, len);
+		    entry.add_attribute(i->name, value_t::make_bytes(v, len));
 		    break;
 		}
 	    case DW_FORM_block2:
@@ -1188,7 +1408,7 @@ state::dump_compilation_unit(reader &r)
 		    if (!r.read_u16(len) ||
 			!r.read_bytes(v, len))
 			return;
-		    hexdump(v, len);
+		    entry.add_attribute(i->name, value_t::make_bytes(v, len));
 		    break;
 		}
 	    case DW_FORM_block4:
@@ -1198,7 +1418,7 @@ state::dump_compilation_unit(reader &r)
 		    if (!r.read_u32(len) ||
 			!r.read_bytes(v, len))
 			return;
-		    hexdump(v, len);
+		    entry.add_attribute(i->name, value_t::make_bytes(v, len));
 		    break;
 		}
 	    case DW_FORM_block:
@@ -1208,7 +1428,7 @@ state::dump_compilation_unit(reader &r)
 		    if (!r.read_uleb128(len) ||
 			!r.read_bytes(v, len))
 			return;
-		    hexdump(v, len);
+		    entry.add_attribute(i->name, value_t::make_bytes(v, len));
 		    break;
 		}
 	    default:
@@ -1216,12 +1436,56 @@ state::dump_compilation_unit(reader &r)
 		       formvals.to_name(i->form));
 		return;
 	    }
-	    printf("\n");
 	}
-	printf("}\n");
+
+	handler(entry);
+
 	if (a->children)
 	    level++;
     }
+}
+
+void
+state::info_handler(const entry_t &entry)
+{
+    printf("0x%x [%u] %s {\n",
+	entry.get_offset(),
+	entry.get_level(),
+	tagnames.to_name(entry.get_tag()));
+
+    const abbrev *a = entry.get_abbrev();
+    vector<abbrev::attr_spec>::const_iterator i;
+    for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
+    {
+	printf("    %s = ", attrnames.to_name(i->name));
+	const value_t *v = entry.get_attribute(i->name);
+	if (v)
+	    v->dump();
+	else
+	    printf("XXX wtf? - no value");
+	printf("\n");
+    }
+    printf("}\n");
+}
+
+void
+state::struct_handler(const entry_t &entry)
+{
+    const char *keyword;
+
+    switch (entry.get_tag())
+    {
+    case DW_TAG_structure_type: keyword = "struct"; break;
+    case DW_TAG_union_type: keyword = "union"; break;
+    case DW_TAG_class_type: keyword = "class"; break;
+    default: return;
+    }
+
+    const char *name = entry.get_string_attribute(DW_AT_name);
+    if (!name)
+	printf("XXX wtf - no DW_AT_name\n");
+    else
+	printf("ZZZ %s %s;\n", keyword, name);
 }
 
 void
@@ -1230,27 +1494,19 @@ state::dump_info()
     reader r(sections_[DW_sec_info]);
 
     printf(".debug_info section:\n");
-    info_compilation_unit_header cuh;
-    while (cuh.read(r))
+    compilation_unit cu;
+    while (cu.read_header(r))
     {
-	if (cuh.version != 2)
-	    fatal("Bad DWARF version %u, expecting 2", cuh.version);
-	if (cuh.addrsize != sizeof(void*))
-	    fatal("Bad DWARF addrsize %u, expecting %u",
-		  cuh.addrsize, sizeof(void*));
-	printf("compilation unit\n");
-	printf("    length %u\n", (unsigned)cuh.length);
-	printf("    version %u\n", (unsigned)cuh.version);
-	printf("    abbrevs %u\n", (unsigned)cuh.abbrevs);
-	printf("    addrsize %u\n", (unsigned)cuh.addrsize);
+	read_abbrevs(cu.get_abbrevs());
+// 	dump_abbrevs();
 
-	read_abbrevs(cuh.abbrevs);
-	dump_abbrevs();
+// 	reader r2 = cu.get_body_reader(r);
+// 	read_compilation_unit(r2, info_handler);
 
-	reader r2 = r.leading_subset(cuh.length-7);
-	dump_compilation_unit(r2);
+	reader r3 = cu.get_body_reader(r);
+	read_compilation_unit(r3, struct_handler);
 
-	r.skip(cuh.length-7);
+	cu.skip_body(r);
     }
     printf("\n\n");
 }
