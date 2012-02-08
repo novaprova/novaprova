@@ -143,29 +143,70 @@ struct section
 	const struct section **s2 = (const struct section **)v2;
 	return u64cmp((*s1)->offset, (*s2)->offset);
     }
+
+    const char *
+    offset_as_string(unsigned long off) const
+    {
+	if (off >= size)
+	    return 0;
+	const char *v = (const char *)map + off;
+	// check that there's a \0 terminator
+	if (!memchr(v, '\0', size-off))
+	    return 0;
+	return v;
+    }
 };
 
-static struct section sections[DW_sec_num];
-static struct section mappings[DW_sec_num];
-static int nmappings;
+class abbrev;
+class reader;
+class state
+{
+public:
+    state(const char *filename);
+    ~state();
 
-static void
-map_sections(const char *filename)
+    void map_sections();
+    void read_abbrevs(uint32_t offset);
+    void dump_abbrevs();
+    void dump_compilation_unit(reader &r);
+    void dump_info();
+
+private:
+    char *filename_;
+    section sections_[DW_sec_num];
+    vector<section> mappings_;
+    map<uint32_t, abbrev*> abbrevs_;
+};
+
+state::state(const char *filename)
+ :  filename_(xstrdup(filename))
+{
+    memset(sections_, 0, sizeof(sections_));
+}
+
+state::~state()
+{
+    free(filename_);
+}
+
+void
+state::map_sections()
 {
     int fd = -1;
+    vector<section>::iterator m;
 
     bfd_init();
 
     /* Open a BFD */
-    bfd *b = bfd_openr(filename, NULL);
+    bfd *b = bfd_openr(filename_, NULL);
     if (!b)
     {
-	bfd_perror(filename);
+	bfd_perror(filename_);
 	return;
     }
     if (!bfd_check_format(b, bfd_object))
     {
-	fprintf(stderr, "spiegel: %s: not an object\n", filename);
+	fprintf(stderr, "spiegel: %s: not an object\n", filename_);
 	goto error;
     }
 
@@ -179,94 +220,94 @@ map_sections(const char *filename)
 	printf("Section [%d], name=%s size=%lx filepos=%lx\n",
 	    idx, sec->name, (unsigned long)sec->size,
 	    (unsigned long)sec->filepos);
-	sections[idx].offset = (unsigned long)sec->filepos;
-	sections[idx].size = (unsigned long)sec->size;
+	sections_[idx].offset = (unsigned long)sec->filepos;
+	sections_[idx].size = (unsigned long)sec->size;
     }
 
     /* Coalesce sections into a minimal number of mappings */
     struct section *tsec[DW_sec_num];
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
-	tsec[idx] = &sections[idx];
-    qsort(tsec, DW_sec_num, sizeof(struct section *),
-	  section::compare_ptrs);
+	tsec[idx] = &sections_[idx];
+    qsort(tsec, DW_sec_num, sizeof(section *), section::compare_ptrs);
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
-	if (nmappings &&
-	    page_round_up(mappings[nmappings-1].get_end()) >= tsec[idx]->offset)
+	if (!tsec[idx]->size)
+	    continue;
+	if (mappings_.size() &&
+	    page_round_up(mappings_.back().get_end()) >= tsec[idx]->offset)
 	{
 	    /* section abuts the last mapping, extend it */
-	    mappings[nmappings-1].set_end(tsec[idx]->get_end());
+	    mappings_.back().set_end(tsec[idx]->get_end());
 	}
 	else
 	{
 	    /* create a new mapping */
-	    mappings[nmappings++] = *tsec[idx];
+	    mappings_.push_back(*tsec[idx]);
 	}
     }
 
     printf("Mappings:\n");
-    for (int m = 0 ; m < nmappings ; m++)
+    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
-	printf("[%d] offset=%lx size=%lx end=%lx\n",
-	    m, mappings[m].offset, mappings[m].size,
-	    mappings[m].get_end());
+	printf("offset=%lx size=%lx end=%lx\n",
+	       m->offset, m->size, m->get_end());
     }
 
     /* mmap() the mappings */
-    fd = open(filename, O_RDONLY, 0);
+    fd = open(filename_, O_RDONLY, 0);
     if (fd < 0)
     {
-	perror(filename);
+	perror(filename_);
 	goto error;
     }
 
-    for (int m = 0 ; m < nmappings ; m++)
+    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
-	mappings[m].expand_to_pages();
-	void *map = mmap(NULL, mappings[m].size,
+	m->expand_to_pages();
+	void *map = mmap(NULL, m->size,
 			 PROT_READ, MAP_SHARED, fd,
-			 mappings[m].offset);
+			 m->offset);
 	if (map == MAP_FAILED)
 	{
 	    perror("mmap");
 	    goto error;
 	}
-	mappings[m].map = map;
+	m->map = map;
     }
 
     /* setup sections[].map */
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
-	for (int m = 0 ; m < nmappings ; m++)
+	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
 	{
-	    if (mappings[m].contains(sections[idx]))
+	    if (m->contains(sections_[idx]))
 	    {
-		sections[idx].map = (void *)(
-		    (char *)mappings[m].map +
-		    sections[idx].offset -
-		    mappings[m].offset);
+		sections_[idx].map = (void *)(
+		    (char *)m->map +
+		    sections_[idx].offset -
+		    m->offset);
 		break;
 	    }
 	}
-	assert(sections[idx].map);
+	assert(sections_[idx].map);
     }
 
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
 	printf("[%d] name=.debug_%s map=0x%lx size=0x%lx\n",
 		idx, secnames.to_name(idx),
-		(unsigned long)sections[idx].map,
-		sections[idx].size);
+		(unsigned long)sections_[idx].map,
+		sections_[idx].size);
     }
 
     goto out;
 error:
-    for (int m = 0 ; m < nmappings ; m++)
+    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
-	if (mappings[m].map)
+	if (m->map)
 	{
-	    munmap(mappings[m].map, mappings[m].size);
-	    mappings[m].map = NULL;
+	    munmap(m->map, m->size);
+	    m->map = NULL;
 	}
     }
 out:
@@ -279,17 +320,42 @@ class reader
 {
 public:
     reader()
-     :  p_(0), end_(0) {}
+     :  p_(0), end_(0), base_(0) {}
 
-    reader(void *base, size_t len)
+    reader(const void *base, size_t len)
      :  p_((unsigned char *)base),
-        end_(((unsigned char *)base) + len)
+        end_(((unsigned char *)base) + len),
+        base_((unsigned char *)base)
     {}
 
     reader(const section &s)
      :  p_((unsigned char *)s.map),
-        end_(((unsigned char *)s.map) + s.size)
+        end_(((unsigned char *)s.map) + s.size),
+        base_((unsigned char *)s.map)
     {}
+
+//     reader subset(size_t off, size_t len)
+//     {
+// 	size_t remain = (end_ - p_);
+// 	if (off > remain)
+// 	    off = remain;
+// 	if (off + len > remain)
+// 	    len = remain - off;
+// 	return reader((void *)(p_ + off), len);
+//     }
+
+    reader leading_subset(size_t len) const
+    {
+	size_t remain = (end_ - p_);
+	if (len > remain)
+	    len = remain;
+	return reader((void *)p_, len);
+    }
+
+    unsigned long get_offset() const
+    {
+	return p_ - base_;
+    }
 
     bool skip(size_t n)
     {
@@ -305,28 +371,91 @@ public:
     {
 	if (p_ + 4 > end_)
 	    return false;
-	v = (p_[0]) |
-	    (p_[1] << 8) |
-	    (p_[2] << 16) |
-	    (p_[3] << 24);
+	v = ((uint32_t)p_[0]) |
+	    ((uint32_t)p_[1] << 8) |
+	    ((uint32_t)p_[2] << 16) |
+	    ((uint32_t)p_[3] << 24);
 	p_ += 4;
 	return true;
     }
 
+    bool read_u64(uint64_t &v)
+    {
+	if (p_ + 8 > end_)
+	    return false;
+	v = ((uint64_t)p_[0]) |
+	    ((uint64_t)p_[1] << 8) |
+	    ((uint64_t)p_[2] << 16) |
+	    ((uint64_t)p_[3] << 24) |
+	    ((uint64_t)p_[4] << 32) |
+	    ((uint64_t)p_[5] << 40) |
+	    ((uint64_t)p_[6] << 48) |
+	    ((uint64_t)p_[7] << 56);
+	p_ += 8;
+	return true;
+    }
+
+    bool read_addr(unsigned long &v)
+    {
+	if (sizeof(unsigned long) == 4)
+	{
+	    uint32_t vv;
+	    if (!read_u32(vv))
+		return false;
+	    v = vv;
+	    return true;
+	}
+	else if (sizeof(unsigned long) == 8)
+	{
+	    uint64_t vv;
+	    if (!read_u64(vv))
+		return false;
+	    v = vv;
+	    return true;
+	}
+	else
+	{
+	    return false;
+	}
+    }
+
     bool read_uleb128(uint32_t &v)
     {
-	unsigned char *pp = p_;
+	const unsigned char *pp = p_;
 	uint32_t vv = 0;
-	for (;;)
+	unsigned shift = 0;
+	do
 	{
 	    if (pp == end_)
 		return false;
-	    vv = (vv << 7) | ((*pp) & 0x7f);
-	    if (!((*pp++) & 0x80))
-		break;
-	}
+	    vv |= ((*pp) & 0x7f) << shift;
+	    shift += 7;
+	} while ((*pp++) & 0x80);
 	p_ = pp;
 	v = vv;
+	return true;
+    }
+
+    bool read_sleb128(int32_t &v)
+    {
+	const unsigned char *pp = p_;
+	uint32_t vv = 0;
+	unsigned shift = 0;
+
+	do
+	{
+	    if (pp == end_)
+		return false;
+	    vv |= ((*pp) & 0x7f) << shift;
+	    shift += 7;
+	} while ((*pp++) & 0x80);
+
+	// sign extend the result, from the last encoded bit
+	if (pp[-1] & 0x40)
+	    v = vv | (~0U << shift);
+	else
+	    v = vv;
+	p_ = pp;
 	return true;
     }
 
@@ -334,8 +463,8 @@ public:
     {
 	if (p_ + 2 > end_)
 	    return false;
-	v = (p_[0]) |
-	    (p_[1] << 8);
+	v = ((uint16_t)p_[0]) |
+	    ((uint16_t)p_[1] << 8);
 	p_ += 2;
 	return true;
     }
@@ -348,9 +477,31 @@ public:
 	return true;
     }
 
+    bool read_string(const char *&v)
+    {
+	const unsigned char *e =
+	    (const unsigned char *)memchr(p_, '\0', (end_ - p_));
+	if (!e)
+	    return false;
+	v = (const char *)p_;
+	p_ = e + 1;
+	return true;
+    }
+
+    bool read_bytes(const unsigned char *&v, size_t len)
+    {
+	const unsigned char *e = p_ + len;
+	if (e >= end_)
+	    return false;
+	v = (const unsigned char *)p_;
+	p_ = e;
+	return true;
+    }
+
 private:
-    unsigned char *p_;
-    unsigned char *end_;
+    const unsigned char *p_;
+    const unsigned char *end_;
+    const unsigned char *base_;
 };
 
 struct info_compilation_unit_header
@@ -804,10 +955,12 @@ struct abbrev
     vector<attr_spec> attr_specs;
 };
 
-static void
-read_abbrevs(uint32_t offset, map<uint32_t, abbrev*> &table)
+void
+state::read_abbrevs(uint32_t offset)
 {
-    reader r(sections[DW_sec_abbrev]);
+    abbrevs_.clear();	    /* TODO: memleak */
+
+    reader r(sections_[DW_sec_abbrev]);
     r.skip(offset);
 
     uint32_t code;
@@ -820,18 +973,18 @@ read_abbrevs(uint32_t offset, map<uint32_t, abbrev*> &table)
 	    delete a;
 	    break;
 	}
-	table[a->code] = a;
+	abbrevs_[a->code] = a;
     }
 }
 
 
-static void
-dump_abbrevs(map<uint32_t, abbrev*> &table)
+void
+state::dump_abbrevs()
 {
     printf("Abbrevs {\n");
 
     map<uint32_t, abbrev*>::iterator itr;
-    for (itr = table.begin() ; itr != table.end() ; ++itr)
+    for (itr = abbrevs_.begin() ; itr != abbrevs_.end() ; ++itr)
     {
 	abbrev *a = itr->second;
 	printf("Code %u\n", a->code);
@@ -855,9 +1008,226 @@ dump_abbrevs(map<uint32_t, abbrev*> &table)
 }
 
 static void
-dump_info(void)
+hexdump(const void *ptr, size_t len)
 {
-    reader r(sections[DW_sec_info]);
+    const unsigned char *u = (const unsigned char *)ptr;
+    const char *sep = "";
+    while (len--)
+    {
+	printf("%s0x%02x", sep, (unsigned)*u++);
+	sep = " ";
+    }
+}
+
+void
+state::dump_compilation_unit(reader &r)
+{
+    unsigned level = 0;
+    for (;;)
+    {
+	/* Refs are offsets relative to the start of the
+	 * compilation unit header, but the reader starts
+	 * at the first byte after that header. */
+	size_t offset = r.get_offset() + 11;
+	uint32_t acode;
+
+	if (!r.read_uleb128(acode))
+	    break;
+
+	if (!acode)
+	{
+	    if (!level--)
+		return;
+	    continue;
+	}
+
+	abbrev *a = abbrevs_[acode];
+	if (!a)
+	{
+	    printf("XXX wtf - no abbrev for code 0x%x\n", acode);
+	    return;
+	}
+
+	printf("0x%x [%u] %s {\n", offset, level, tagnames.to_name(a->tag));
+
+	vector<abbrev::attr_spec>::iterator i;
+	for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
+	{
+	    printf("    %s = ", attrnames.to_name(i->name));
+	    switch (i->form)
+	    {
+	    case DW_FORM_data1:
+		{
+		    uint8_t v;
+		    if (!r.read_u8(v))
+			return;
+		    printf("0x%x", (unsigned)v);
+		    break;
+		}
+	    case DW_FORM_data2:
+		{
+		    uint16_t v;
+		    if (!r.read_u16(v))
+			return;
+		    printf("0x%x", (unsigned)v);
+		    break;
+		}
+	    case DW_FORM_data4:
+		{
+		    uint32_t v;
+		    if (!r.read_u32(v))
+			return;
+		    printf("0x%x", (unsigned)v);
+		    break;
+		}
+	    case DW_FORM_data8:
+		{
+		    uint64_t v;
+		    if (!r.read_u64(v))
+			return;
+		    printf("0x%llx", (unsigned long long)v);
+		    break;
+		}
+	    case DW_FORM_udata:
+		{
+		    uint32_t v;
+		    if (!r.read_uleb128(v))
+			return;
+		    printf("%u", v);
+		    break;
+		}
+	    case DW_FORM_sdata:
+		{
+		    int32_t v;
+		    if (!r.read_sleb128(v))
+			return;
+		    printf("%d", v);
+		    break;
+		}
+	    case DW_FORM_addr:
+		{
+		    unsigned long v;
+		    if (!r.read_addr(v))
+			return;
+		    printf("0x%lx", v);
+		    break;
+		}
+	    case DW_FORM_flag:
+		{
+		    uint8_t v;
+		    if (!r.read_u8(v))
+			return;
+		    printf("0x%x", (unsigned)v);
+		    break;
+		}
+	    case DW_FORM_ref1:
+		{
+		    uint8_t off;
+		    if (!r.read_u8(off))
+			return;
+		    printf("(ref)0x%x", (unsigned)off);
+		    break;
+		}
+	    case DW_FORM_ref2:
+		{
+		    uint16_t off;
+		    if (!r.read_u16(off))
+			return;
+		    printf("(ref)0x%x", (unsigned)off);
+		    break;
+		}
+	    case DW_FORM_ref4:
+		{
+		    uint32_t off;
+		    if (!r.read_u32(off))
+			return;
+		    printf("(ref)0x%x", (unsigned)off);
+		    break;
+		}
+	    case DW_FORM_ref8:
+		{
+		    uint64_t off;
+		    if (!r.read_u64(off))
+			return;
+		    printf("(ref)0x%llx", (unsigned long long)off);
+		    break;
+		}
+	    case DW_FORM_string:
+		{
+		    const char *v;
+		    if (!r.read_string(v))
+			return;
+		    printf("\"%s\"", v);
+		    break;
+		}
+	    case DW_FORM_strp:
+		{
+		    uint32_t off;
+		    if (!r.read_u32(off))
+			return;
+		    const char *v = sections_[DW_sec_str].offset_as_string(off);
+		    if (!v)
+			return;
+		    printf("\"%s\"", v);
+		    break;
+		}
+	    case DW_FORM_block1:
+		{
+		    uint8_t len;
+		    const unsigned char *v;
+		    if (!r.read_u8(len) ||
+			!r.read_bytes(v, len))
+			return;
+		    hexdump(v, len);
+		    break;
+		}
+	    case DW_FORM_block2:
+		{
+		    uint16_t len;
+		    const unsigned char *v;
+		    if (!r.read_u16(len) ||
+			!r.read_bytes(v, len))
+			return;
+		    hexdump(v, len);
+		    break;
+		}
+	    case DW_FORM_block4:
+		{
+		    uint32_t len;
+		    const unsigned char *v;
+		    if (!r.read_u32(len) ||
+			!r.read_bytes(v, len))
+			return;
+		    hexdump(v, len);
+		    break;
+		}
+	    case DW_FORM_block:
+		{
+		    uint32_t len;
+		    const unsigned char *v;
+		    if (!r.read_uleb128(len) ||
+			!r.read_bytes(v, len))
+			return;
+		    hexdump(v, len);
+		    break;
+		}
+	    default:
+		printf("XXX can't handle %s\n",
+		       formvals.to_name(i->form));
+		return;
+	    }
+	    printf("\n");
+	}
+	printf("}\n");
+	if (a->children)
+	    level++;
+    }
+}
+
+void
+state::dump_info()
+{
+    reader r(sections_[DW_sec_info]);
 
     printf(".debug_info section:\n");
     info_compilation_unit_header cuh;
@@ -874,9 +1244,11 @@ dump_info(void)
 	printf("    abbrevs %u\n", (unsigned)cuh.abbrevs);
 	printf("    addrsize %u\n", (unsigned)cuh.addrsize);
 
-	map<uint32_t, abbrev*> abbrevs;
-	read_abbrevs(cuh.abbrevs, abbrevs);
-	dump_abbrevs(abbrevs);
+	read_abbrevs(cuh.abbrevs);
+	dump_abbrevs();
+
+	reader r2 = r.leading_subset(cuh.length-7);
+	dump_compilation_unit(r2);
 
 	r.skip(cuh.length-7);
     }
@@ -886,14 +1258,72 @@ dump_info(void)
 // close namespaces
 } }
 
+#if 0
+
+int
+main(int argc, char **argv)
+{
+#define TESTCASE(in, out) \
+    { \
+	printf(". read_uleb128(%u) ", out); fflush(stdout); \
+	spiegel::dwarf::reader r(in, sizeof(in)-1); \
+	uint32_t v; \
+	if (!r.read_uleb128(v) || v != out) \
+	{ \
+	    printf("FAIL\n"); \
+	    return 1; \
+	} \
+	printf("PASS\n"); \
+    }
+
+    TESTCASE("\x02", 2);
+    TESTCASE("\x7f", 127);
+    TESTCASE("\x80\x01", 128);
+    TESTCASE("\x81\x01", 129);
+    TESTCASE("\x82\x01", 130);
+    TESTCASE("\xb9\x64", 12857);
+#undef TESTCASE
+
+#define TESTCASE(in, out) \
+    { \
+	printf(". read_sleb128(%d) ", out); fflush(stdout); \
+	spiegel::dwarf::reader r(in, sizeof(in)-1); \
+	int32_t v; \
+	if (!r.read_sleb128(v) || v != out) \
+	{ \
+	    printf("FAIL\n"); \
+	    return 1; \
+	} \
+	printf("PASS\n"); \
+    }
+
+    TESTCASE("\x02", 2);
+    TESTCASE("\x7e", -2);
+    TESTCASE("\xff\x00", 127);
+    TESTCASE("\x81\x7f", -127);
+    TESTCASE("\x80\x01", 128);
+    TESTCASE("\x80\x7f", -128);
+    TESTCASE("\x81\x01", 129);
+    TESTCASE("\xff\x7e", -129);
+
+#undef TESTCASE
+    return 0;
+}
+
+
+#else
+
 int
 main(int argc, char **argv)
 {
     argv0 = argv[0];
     if (argc != 2)
 	fatal("Usage: spiegel EXE\n");
-    spiegel::dwarf::map_sections(argv[1]);
-    spiegel::dwarf::dump_info();
+
+    spiegel::dwarf::state state(argv[1]);
+    state.map_sections();
+    state.dump_info();
     return 0;
 }
 
+#endif
