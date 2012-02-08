@@ -161,6 +161,7 @@ class abbrev;
 class reader;
 struct value_t;
 class entry_t;
+struct info_scanner_t;
 class state
 {
 public:
@@ -170,9 +171,10 @@ public:
     void map_sections();
     void read_abbrevs(uint32_t offset);
     void dump_abbrevs();
-    void read_compilation_unit(reader &r, void (*handler)(const entry_t &));
-    static void info_handler(const entry_t &);
-    static void struct_handler(const entry_t &);
+//     void read_compilation_unit(reader &r, void (*handler)(const entry_t &));
+    bool visit_info(info_scanner_t &s);
+//     static void info_handler(const entry_t &);
+//     static void struct_handler(const entry_t &);
     void dump_info();
 
 private:
@@ -1223,7 +1225,255 @@ state::dump_abbrevs()
     printf("}\n");
 }
 
+class info_scanner_t
+{
+public:
+    info_scanner_t(reader r)
+     :  reader_(r),
+	level_(0),
+	min_level_(0),
+	max_level_(0)
+    {
+    }
 
+    void set_level_bounds(unsigned min_level, unsigned max_level)
+    {
+	min_level_ = min_level;
+	max_level_ = max_level;
+    }
+
+    virtual void handle(const entry_t &) = 0;
+
+private:
+    reader reader_;
+    entry_t entry_;
+    unsigned level_;
+    unsigned min_level_;
+    unsigned max_level_;
+
+    friend class state;
+};
+
+bool
+state::visit_info(info_scanner_t &s)
+{
+    for (;;)
+    {
+	/* Refs are offsets relative to the start of the
+	 * compilation unit header, but the reader starts
+	 * at the first byte after that header. */
+	size_t offset = s.reader_.get_offset() + 11;
+	uint32_t acode;
+
+	if (!s.reader_.read_uleb128(acode))
+	    return false;    // end of section
+
+	if (!acode)
+	{
+	    if (!s.level_)
+		return false;   // end of subtree at this level
+	    s.level_--;
+	    continue;
+	}
+
+	abbrev *a = abbrevs_[acode];
+	if (!a)
+	{
+	    printf("XXX wtf - no abbrev for code 0x%x\n", acode);
+	    return false;
+	}
+
+	s.entry_.setup(offset, s.level_, a);
+
+	vector<abbrev::attr_spec>::iterator i;
+	for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
+	{
+	    switch (i->form)
+	    {
+	    case DW_FORM_data1:
+		{
+		    uint8_t v;
+		    if (!s.reader_.read_u8(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_uint32(v));
+		    break;
+		}
+	    case DW_FORM_data2:
+		{
+		    uint16_t v;
+		    if (!s.reader_.read_u16(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_uint32(v));
+		    break;
+		}
+	    case DW_FORM_data4:
+		{
+		    uint32_t v;
+		    if (!s.reader_.read_u32(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_uint32(v));
+		    break;
+		}
+	    case DW_FORM_data8:
+		{
+		    uint64_t v;
+		    if (!s.reader_.read_u64(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_uint64(v));
+		    break;
+		}
+	    case DW_FORM_udata:
+		{
+		    uint32_t v;
+		    if (!s.reader_.read_uleb128(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_uint32(v));
+		    break;
+		}
+	    case DW_FORM_sdata:
+		{
+		    int32_t v;
+		    if (!s.reader_.read_sleb128(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_sint32(v));
+		    break;
+		}
+	    case DW_FORM_addr:
+		{
+		    if (sizeof(unsigned long) == 4)
+		    {
+			uint32_t v;
+			if (!s.reader_.read_u32(v))
+			    return false;
+			s.entry_.add_attribute(i->name, value_t::make_uint32(v));
+		    }
+		    else if (sizeof(unsigned long) == 8)
+		    {
+			uint64_t v;
+			if (!s.reader_.read_u64(v))
+			    return false;
+			s.entry_.add_attribute(i->name, value_t::make_uint64(v));
+		    }
+		    else
+		    {
+			fatal("Strange addrsize %u", sizeof(unsigned long));
+		    }
+		    break;
+		}
+	    case DW_FORM_flag:
+		{
+		    uint8_t v;
+		    if (!s.reader_.read_u8(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_uint32(v));
+		    break;
+		}
+	    case DW_FORM_ref1:
+		{
+		    uint8_t off;
+		    if (!s.reader_.read_u8(off))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_ref(off));
+		    break;
+		}
+	    case DW_FORM_ref2:
+		{
+		    uint16_t off;
+		    if (!s.reader_.read_u16(off))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_ref(off));
+		    break;
+		}
+	    case DW_FORM_ref4:
+		{
+		    uint32_t off;
+		    if (!s.reader_.read_u32(off))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_ref(off));
+		    break;
+		}
+	    case DW_FORM_ref8:
+		{
+		    uint64_t off;
+		    if (!s.reader_.read_u64(off))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_ref(off));
+		    break;
+		}
+	    case DW_FORM_string:
+		{
+		    const char *v;
+		    if (!s.reader_.read_string(v))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_string(v));
+		    break;
+		}
+	    case DW_FORM_strp:
+		{
+		    uint32_t off;
+		    if (!s.reader_.read_u32(off))
+			return false;
+		    const char *v = sections_[DW_sec_str].offset_as_string(off);
+		    if (!v)
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_string(v));
+		    break;
+		}
+	    case DW_FORM_block1:
+		{
+		    uint8_t len;
+		    const unsigned char *v;
+		    if (!s.reader_.read_u8(len) ||
+			!s.reader_.read_bytes(v, len))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_bytes(v, len));
+		    break;
+		}
+	    case DW_FORM_block2:
+		{
+		    uint16_t len;
+		    const unsigned char *v;
+		    if (!s.reader_.read_u16(len) ||
+			!s.reader_.read_bytes(v, len))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_bytes(v, len));
+		    break;
+		}
+	    case DW_FORM_block4:
+		{
+		    uint32_t len;
+		    const unsigned char *v;
+		    if (!s.reader_.read_u32(len) ||
+			!s.reader_.read_bytes(v, len))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_bytes(v, len));
+		    break;
+		}
+	    case DW_FORM_block:
+		{
+		    uint32_t len;
+		    const unsigned char *v;
+		    if (!s.reader_.read_uleb128(len) ||
+			!s.reader_.read_bytes(v, len))
+			return false;
+		    s.entry_.add_attribute(i->name, value_t::make_bytes(v, len));
+		    break;
+		}
+	    default:
+		printf("XXX can't handle %s\n",
+		       formvals.to_name(i->form));
+		return false;
+	    }
+	}
+	if (!(s.max_level_ && s.level_ > s.max_level_) &&
+	    !(s.min_level_ && s.level_ < s.min_level_))
+	    s.handle(s.entry_);
+	if (a->children)
+	    s.level_++;
+    }
+}
+
+#if 0
 void
 state::read_compilation_unit(reader &r, void (*handler)(const entry_t &))
 {
@@ -1438,15 +1688,32 @@ state::read_compilation_unit(reader &r, void (*handler)(const entry_t &))
 	    }
 	}
 
-	handler(entry);
+	scanner.handle(entry);
 
 	if (a->children)
 	    level++;
     }
 }
+#else
+// void
+// state::read_compilation_unit(reader &r, void (*handler)(const entry_t &))
+// {
+//     scanner.seek(r, 0);
+//     while (next(scanner))
+//     {
+// 	handler(scanner.entry_);
+//     }
+// }
+#endif
 
-void
-state::info_handler(const entry_t &entry)
+class dump_scanner_t : public info_scanner_t
+{
+public:
+    dump_scanner_t(reader r) : info_scanner_t(r) {}
+    void handle(const entry_t &entry);
+};
+
+void dump_scanner_t::handle(const entry_t &entry)
 {
     printf("0x%x [%u] %s {\n",
 	entry.get_offset(),
@@ -1468,8 +1735,19 @@ state::info_handler(const entry_t &entry)
     printf("}\n");
 }
 
+class struct_scanner_t : public info_scanner_t
+{
+public:
+    struct_scanner_t(reader r)
+     :  info_scanner_t(r)
+    {
+	set_level_bounds(1, 2);
+    }
+    void handle(const entry_t &entry);
+};
+
 void
-state::struct_handler(const entry_t &entry)
+struct_scanner_t::handle(const entry_t &entry)
 {
     const char *keyword;
 
@@ -1478,14 +1756,18 @@ state::struct_handler(const entry_t &entry)
     case DW_TAG_structure_type: keyword = "struct"; break;
     case DW_TAG_union_type: keyword = "union"; break;
     case DW_TAG_class_type: keyword = "class"; break;
+    case DW_TAG_member: keyword = "member"; break;
+    case DW_TAG_subprogram: keyword = "function"; break;
     default: return;
     }
 
     const char *name = entry.get_string_attribute(DW_AT_name);
     if (!name)
-	printf("XXX wtf - no DW_AT_name\n");
-    else
-	printf("ZZZ %s %s;\n", keyword, name);
+	name = "<wtf? no AT_name>";
+    printf("ZZZ");
+    for (unsigned i = 1 ; i < entry.get_level() ; i++)
+	printf("    ");
+    printf("%s %s;\n", keyword, name);
 }
 
 void
@@ -1500,11 +1782,11 @@ state::dump_info()
 	read_abbrevs(cu.get_abbrevs());
 // 	dump_abbrevs();
 
-// 	reader r2 = cu.get_body_reader(r);
-// 	read_compilation_unit(r2, info_handler);
+// 	dump_scanner_t s2(cu.get_body_reader(r));
+// 	visit_info(s2);
 
-	reader r3 = cu.get_body_reader(r);
-	read_compilation_unit(r3, struct_handler);
+	struct_scanner_t s3(cu.get_body_reader(r));
+	visit_info(s3);
 
 	cu.skip_body(r);
     }
