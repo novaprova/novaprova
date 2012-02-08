@@ -10,10 +10,10 @@ namespace dwarf {
 
 using namespace std;
 
-class string_table
+class string_table_t
 {
 public:
-    string_table(const char *prefix, const char * const *names)
+    string_table_t(const char *prefix, const char * const *names)
      :  prefix_(prefix),
         names_(names),
 	prefix_len_(prefix ? strlen(prefix) : 0)
@@ -90,7 +90,7 @@ static const char * const _secnames[DW_sec_num+1] = {
     "str", "loc", "ranges", 0
 };
 
-static string_table secnames(".debug_", _secnames);
+static string_table_t secnames(".debug_", _secnames);
 
 static unsigned long
 pagesize(void)
@@ -115,7 +115,7 @@ page_round_down(unsigned long x)
     return (x / ps) * ps;
 }
 
-struct section
+struct section_t
 {
     unsigned long offset;
     unsigned long size;
@@ -123,7 +123,7 @@ struct section
 
     unsigned long get_end() const { return offset + size; }
     void set_end(unsigned long e) { size = e - offset; }
-    bool contains(const section &o)
+    bool contains(const section_t &o)
     {
 	return (offset <= o.offset &&
 		get_end() >= o.get_end());
@@ -139,8 +139,8 @@ struct section
     static int
     compare_ptrs(const void *v1, const void *v2)
     {
-	const struct section **s1 = (const struct section **)v1;
-	const struct section **s2 = (const struct section **)v2;
+	const struct section_t **s1 = (const struct section_t **)v1;
+	const struct section_t **s2 = (const struct section_t **)v2;
 	return u64cmp((*s1)->offset, (*s2)->offset);
     }
 
@@ -157,16 +157,16 @@ struct section
     }
 };
 
-class abbrev;
-class reader;
+class abbrev_t;
+class reader_t;
 struct value_t;
 class entry_t;
 struct info_scanner_t;
-class state
+class state_t
 {
 public:
-    state(const char *filename);
-    ~state();
+    state_t(const char *filename);
+    ~state_t();
 
     void map_sections();
     void read_abbrevs(uint32_t offset);
@@ -176,27 +176,27 @@ public:
 
 private:
     char *filename_;
-    section sections_[DW_sec_num];
-    vector<section> mappings_;
-    map<uint32_t, abbrev*> abbrevs_;
+    section_t sections_[DW_sec_num];
+    vector<section_t> mappings_;
+    map<uint32_t, abbrev_t*> abbrevs_;
 };
 
-state::state(const char *filename)
+state_t::state_t(const char *filename)
  :  filename_(xstrdup(filename))
 {
     memset(sections_, 0, sizeof(sections_));
 }
 
-state::~state()
+state_t::~state_t()
 {
     free(filename_);
 }
 
 void
-state::map_sections()
+state_t::map_sections()
 {
     int fd = -1;
-    vector<section>::iterator m;
+    vector<section_t>::iterator m;
 
     bfd_init();
 
@@ -228,10 +228,10 @@ state::map_sections()
     }
 
     /* Coalesce sections into a minimal number of mappings */
-    struct section *tsec[DW_sec_num];
+    struct section_t *tsec[DW_sec_num];
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
 	tsec[idx] = &sections_[idx];
-    qsort(tsec, DW_sec_num, sizeof(section *), section::compare_ptrs);
+    qsort(tsec, DW_sec_num, sizeof(section_t *), section_t::compare_ptrs);
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
 	if (!tsec[idx]->size)
@@ -319,30 +319,30 @@ out:
     bfd_close(b);
 }
 
-class reader
+class reader_t
 {
 public:
-    reader()
+    reader_t()
      :  p_(0), end_(0), base_(0) {}
 
-    reader(const void *base, size_t len)
+    reader_t(const void *base, size_t len)
      :  p_((unsigned char *)base),
         end_(((unsigned char *)base) + len),
         base_((unsigned char *)base)
     {}
 
-    reader(const section &s)
+    reader_t(const section_t &s)
      :  p_((unsigned char *)s.map),
         end_(((unsigned char *)s.map) + s.size),
         base_((unsigned char *)s.map)
     {}
 
-    reader leading_subset(size_t len) const
+    reader_t leading_subset(size_t len) const
     {
 	size_t remain = (end_ - p_);
 	if (len > remain)
 	    len = remain;
-	return reader((void *)p_, len);
+	return reader_t((void *)p_, len);
     }
 
     unsigned long get_offset() const
@@ -477,16 +477,16 @@ private:
     const unsigned char *base_;
 };
 
-class compilation_unit
+class compilation_unit_t
 {
 public:
-    compilation_unit()
+    compilation_unit_t()
     {}
 
-    ~compilation_unit()
+    ~compilation_unit_t()
     {}
 
-    bool read_header(reader &r)
+    bool read_header(reader_t &r)
     {
 	if (!r.read_u32(length_))
 	    return false;
@@ -513,11 +513,11 @@ public:
 	return true;
     }
 
-    reader get_body_reader(reader &r)
+    reader_t get_body_reader(reader_t &r)
     {
 	return r.leading_subset(length_-7);
     }
-    void skip_body(reader &r)
+    void skip_body(reader_t &r)
     {
 	r.skip(length_-7);
     }
@@ -540,7 +540,7 @@ static const char * const _childvals[] = {
     "no", "yes", 0
 };
 
-static string_table childvals("DW_CHILDREN_", _childvals);
+static string_table_t childvals("DW_CHILDREN_", _childvals);
 
 enum form_values
 {
@@ -594,7 +594,7 @@ static const char * const _formvals[] = {
     0
 };
 
-static string_table formvals("DW_FORM_", _formvals);
+static string_table_t formvals("DW_FORM_", _formvals);
 
 enum tag_names
 {
@@ -708,7 +708,7 @@ static const char * const _tagnames[] = {
     0
 };
 
-static string_table tagnames("DW_TAG_", _tagnames);
+static string_table_t tagnames("DW_TAG_", _tagnames);
 
 enum attribute_names
 {
@@ -919,38 +919,38 @@ static const char * const _attrnames[] = {
     0,
 };
 
-static string_table attrnames("DW_AT_", _attrnames);
+static string_table_t attrnames("DW_AT_", _attrnames);
 
-struct abbrev
+struct abbrev_t
 {
-    struct attr_spec
+    struct attr_spec_t
     {
 	uint32_t name;
 	uint32_t form;
     };
 
     // default c'tor
-    abbrev()
+    abbrev_t()
      :  code(0),
         tag(0),
         children(0)
     {}
 
     // c'tor with code
-    abbrev(uint32_t c)
+    abbrev_t(uint32_t c)
      :  code(c),
         tag(0),
 	children(0)
     {}
 
-    bool read(reader &r)
+    bool read(reader_t &r)
     {
 	if (!r.read_uleb128(tag) ||
 	    !r.read_u8(children))
 	    return false;
 	for (;;)
 	{
-	    attr_spec as;
+	    attr_spec_t as;
 	    if (!r.read_uleb128(as.name) ||
 	        !r.read_uleb128(as.form))
 		return false;
@@ -965,7 +965,7 @@ struct abbrev
     uint32_t code;
     uint32_t tag;
     uint8_t children;
-    vector<attr_spec> attr_specs;
+    vector<attr_spec_t> attr_specs;
 };
 
 struct value_t
@@ -1093,7 +1093,7 @@ class entry_t
 {
 public:
 
-    void setup(size_t offset, unsigned level, const abbrev *a)
+    void setup(size_t offset, unsigned level, const abbrev_t *a)
     {
 	offset_ = offset;
 	level_ = level;
@@ -1112,7 +1112,7 @@ public:
 
     size_t get_offset() const { return offset_; }
     unsigned get_level() const { return level_; }
-    const abbrev *get_abbrev() const { return abbrev_; }
+    const abbrev_t *get_abbrev() const { return abbrev_; }
     uint32_t get_tag() const { return abbrev_->tag; }
 
     const value_t *get_attribute(uint32_t name) const
@@ -1128,25 +1128,25 @@ public:
 private:
     size_t offset_;
     unsigned level_;
-    const abbrev *abbrev_;
+    const abbrev_t *abbrev_;
     vector<value_t> values_;
     vector<const value_t*> byattr_;
 };
 
 
 void
-state::read_abbrevs(uint32_t offset)
+state_t::read_abbrevs(uint32_t offset)
 {
     abbrevs_.clear();	    /* TODO: memleak */
 
-    reader r(sections_[DW_sec_abbrev]);
+    reader_t r(sections_[DW_sec_abbrev]);
     r.skip(offset);
 
     uint32_t code;
     /* code 0 indicates end of compilation unit */
     while (r.read_uleb128(code) && code)
     {
-	abbrev *a = new abbrev(code);
+	abbrev_t *a = new abbrev_t(code);
 	if (!a->read(r))
 	{
 	    delete a;
@@ -1158,14 +1158,14 @@ state::read_abbrevs(uint32_t offset)
 
 
 void
-state::dump_abbrevs()
+state_t::dump_abbrevs()
 {
     printf("Abbrevs {\n");
 
-    map<uint32_t, abbrev*>::iterator itr;
+    map<uint32_t, abbrev_t*>::iterator itr;
     for (itr = abbrevs_.begin() ; itr != abbrevs_.end() ; ++itr)
     {
-	abbrev *a = itr->second;
+	abbrev_t *a = itr->second;
 	printf("Code %u\n", a->code);
 	printf("    tag 0x%x (%s)\n", a->tag, tagnames.to_name(a->tag));
 	printf("    children %u (%s)\n",
@@ -1173,7 +1173,7 @@ state::dump_abbrevs()
 		childvals.to_name(a->children));
 	printf("    attribute specifications {\n");
 
-	vector<abbrev::attr_spec>::iterator i;
+	vector<abbrev_t::attr_spec_t>::iterator i;
 	for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
 	{
 	    printf("        name 0x%x (%s)",
@@ -1189,7 +1189,7 @@ state::dump_abbrevs()
 class info_scanner_t
 {
 public:
-    info_scanner_t(reader r)
+    info_scanner_t(reader_t r)
      :  reader_(r),
 	level_(0),
 	min_level_(0),
@@ -1206,17 +1206,17 @@ public:
     virtual void handle(const entry_t &) = 0;
 
 private:
-    reader reader_;
+    reader_t reader_;
     entry_t entry_;
     unsigned level_;
     unsigned min_level_;
     unsigned max_level_;
 
-    friend class state;
+    friend class state_t;
 };
 
 bool
-state::visit_info(info_scanner_t &s)
+state_t::visit_info(info_scanner_t &s)
 {
     for (;;)
     {
@@ -1237,7 +1237,7 @@ state::visit_info(info_scanner_t &s)
 	    continue;
 	}
 
-	abbrev *a = abbrevs_[acode];
+	abbrev_t *a = abbrevs_[acode];
 	if (!a)
 	{
 	    printf("XXX wtf - no abbrev for code 0x%x\n", acode);
@@ -1246,7 +1246,7 @@ state::visit_info(info_scanner_t &s)
 
 	s.entry_.setup(offset, s.level_, a);
 
-	vector<abbrev::attr_spec>::iterator i;
+	vector<abbrev_t::attr_spec_t>::iterator i;
 	for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
 	{
 	    switch (i->form)
@@ -1437,7 +1437,7 @@ state::visit_info(info_scanner_t &s)
 class dump_scanner_t : public info_scanner_t
 {
 public:
-    dump_scanner_t(reader r) : info_scanner_t(r) {}
+    dump_scanner_t(reader_t r) : info_scanner_t(r) {}
     void handle(const entry_t &entry);
 };
 
@@ -1448,8 +1448,8 @@ void dump_scanner_t::handle(const entry_t &entry)
 	entry.get_level(),
 	tagnames.to_name(entry.get_tag()));
 
-    const abbrev *a = entry.get_abbrev();
-    vector<abbrev::attr_spec>::const_iterator i;
+    const abbrev_t *a = entry.get_abbrev();
+    vector<abbrev_t::attr_spec_t>::const_iterator i;
     for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
     {
 	printf("    %s = ", attrnames.to_name(i->name));
@@ -1466,7 +1466,7 @@ void dump_scanner_t::handle(const entry_t &entry)
 class struct_scanner_t : public info_scanner_t
 {
 public:
-    struct_scanner_t(reader r)
+    struct_scanner_t(reader_t r)
      :  info_scanner_t(r)
     {
 	set_level_bounds(1, 2);
@@ -1499,12 +1499,12 @@ struct_scanner_t::handle(const entry_t &entry)
 }
 
 void
-state::dump_info()
+state_t::dump_info()
 {
-    reader r(sections_[DW_sec_info]);
+    reader_t r(sections_[DW_sec_info]);
 
     printf(".debug_info section:\n");
-    compilation_unit cu;
+    compilation_unit_t cu;
     while (cu.read_header(r))
     {
 	read_abbrevs(cu.get_abbrevs());
@@ -1532,7 +1532,7 @@ main(int argc, char **argv)
 #define TESTCASE(in, out) \
     { \
 	printf(". read_uleb128(%u) ", out); fflush(stdout); \
-	spiegel::dwarf::reader r(in, sizeof(in)-1); \
+	spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
 	uint32_t v; \
 	if (!r.read_uleb128(v) || v != out) \
 	{ \
@@ -1553,7 +1553,7 @@ main(int argc, char **argv)
 #define TESTCASE(in, out) \
     { \
 	printf(". read_sleb128(%d) ", out); fflush(stdout); \
-	spiegel::dwarf::reader r(in, sizeof(in)-1); \
+	spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
 	int32_t v; \
 	if (!r.read_sleb128(v) || v != out) \
 	{ \
@@ -1586,7 +1586,7 @@ main(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegel EXE\n");
 
-    spiegel::dwarf::state state(argv[1]);
+    spiegel::dwarf::state_t state(argv[1]);
     state.map_sections();
     state.dump_info();
     return 0;
