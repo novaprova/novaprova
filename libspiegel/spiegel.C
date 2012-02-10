@@ -92,465 +92,6 @@ static const char * const _secnames[DW_sec_num+1] = {
 
 static string_table_t secnames(".debug_", _secnames);
 
-static unsigned long
-pagesize(void)
-{
-    static unsigned long ps;
-    if (!ps)
-	ps = sysconf(_SC_PAGESIZE);
-    return ps;
-}
-
-static unsigned long
-page_round_up(unsigned long x)
-{
-    unsigned long ps = pagesize();
-    return ((x + ps - 1) / ps) * ps;
-}
-
-static unsigned long
-page_round_down(unsigned long x)
-{
-    unsigned long ps = pagesize();
-    return (x / ps) * ps;
-}
-
-struct section_t
-{
-    unsigned long offset;
-    unsigned long size;
-    void *map;
-
-    unsigned long get_end() const { return offset + size; }
-    void set_end(unsigned long e) { size = e - offset; }
-    bool contains(const section_t &o)
-    {
-	return (offset <= o.offset &&
-		get_end() >= o.get_end());
-    }
-
-    void expand_to_pages()
-    {
-	unsigned long end = page_round_up(offset + size);
-	offset = page_round_down(offset);
-	size = end - offset;
-    }
-
-    static int
-    compare_ptrs(const void *v1, const void *v2)
-    {
-	const struct section_t **s1 = (const struct section_t **)v1;
-	const struct section_t **s2 = (const struct section_t **)v2;
-	return u64cmp((*s1)->offset, (*s2)->offset);
-    }
-
-    const char *
-    offset_as_string(unsigned long off) const
-    {
-	if (off >= size)
-	    return 0;
-	const char *v = (const char *)map + off;
-	// check that there's a \0 terminator
-	if (!memchr(v, '\0', size-off))
-	    return 0;
-	return v;
-    }
-};
-
-class compile_unit_t;
-class abbrev_t;
-class reader_t;
-struct value_t;
-class entry_t;
-struct walker_t;
-class state_t
-{
-public:
-    state_t(const char *filename);
-    ~state_t();
-
-    void map_sections();
-    void read_abbrevs(uint32_t offset);
-    void dump_abbrevs();
-    void dump_info();
-    void dump_structs(walker_t &w);
-
-private:
-
-    char *filename_;
-    section_t sections_[DW_sec_num];
-    vector<section_t> mappings_;
-    map<uint32_t, abbrev_t*> abbrevs_;
-    vector<compile_unit_t> compile_units_;
-
-    friend class walker_t;
-};
-
-state_t::state_t(const char *filename)
- :  filename_(xstrdup(filename))
-{
-    memset(sections_, 0, sizeof(sections_));
-}
-
-state_t::~state_t()
-{
-    free(filename_);
-}
-
-void
-state_t::map_sections()
-{
-    int fd = -1;
-    vector<section_t>::iterator m;
-
-    bfd_init();
-
-    /* Open a BFD */
-    bfd *b = bfd_openr(filename_, NULL);
-    if (!b)
-    {
-	bfd_perror(filename_);
-	return;
-    }
-    if (!bfd_check_format(b, bfd_object))
-    {
-	fprintf(stderr, "spiegel: %s: not an object\n", filename_);
-	goto error;
-    }
-
-    /* Extract the file shape of the DWARF sections */
-    asection *sec;
-    for (sec = b->sections ; sec ; sec = sec->next)
-    {
-	int idx = secnames.to_index(sec->name);
-	if (idx == DW_sec_none)
-	    continue;
-	printf("Section [%d], name=%s size=%lx filepos=%lx\n",
-	    idx, sec->name, (unsigned long)sec->size,
-	    (unsigned long)sec->filepos);
-	sections_[idx].offset = (unsigned long)sec->filepos;
-	sections_[idx].size = (unsigned long)sec->size;
-    }
-
-    /* Coalesce sections into a minimal number of mappings */
-    struct section_t *tsec[DW_sec_num];
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
-	tsec[idx] = &sections_[idx];
-    qsort(tsec, DW_sec_num, sizeof(section_t *), section_t::compare_ptrs);
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
-    {
-	if (!tsec[idx]->size)
-	    continue;
-	if (mappings_.size() &&
-	    page_round_up(mappings_.back().get_end()) >= tsec[idx]->offset)
-	{
-	    /* section abuts the last mapping, extend it */
-	    mappings_.back().set_end(tsec[idx]->get_end());
-	}
-	else
-	{
-	    /* create a new mapping */
-	    mappings_.push_back(*tsec[idx]);
-	}
-    }
-
-    printf("Mappings:\n");
-    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-    {
-	printf("offset=%lx size=%lx end=%lx\n",
-	       m->offset, m->size, m->get_end());
-    }
-
-    /* mmap() the mappings */
-    fd = open(filename_, O_RDONLY, 0);
-    if (fd < 0)
-    {
-	perror(filename_);
-	goto error;
-    }
-
-    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-    {
-	m->expand_to_pages();
-	void *map = mmap(NULL, m->size,
-			 PROT_READ, MAP_SHARED, fd,
-			 m->offset);
-	if (map == MAP_FAILED)
-	{
-	    perror("mmap");
-	    goto error;
-	}
-	m->map = map;
-    }
-
-    /* setup sections[].map */
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
-    {
-	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-	{
-	    if (m->contains(sections_[idx]))
-	    {
-		sections_[idx].map = (void *)(
-		    (char *)m->map +
-		    sections_[idx].offset -
-		    m->offset);
-		break;
-	    }
-	}
-	assert(sections_[idx].map);
-    }
-
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
-    {
-	printf("[%d] name=.debug_%s map=0x%lx size=0x%lx\n",
-		idx, secnames.to_name(idx),
-		(unsigned long)sections_[idx].map,
-		sections_[idx].size);
-    }
-
-    goto out;
-error:
-    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-    {
-	if (m->map)
-	{
-	    munmap(m->map, m->size);
-	    m->map = NULL;
-	}
-    }
-out:
-    if (fd >= 0)
-	close(fd);
-    bfd_close(b);
-}
-
-class reader_t
-{
-public:
-    reader_t()
-     :  p_(0), end_(0), base_(0) {}
-
-    reader_t(const void *base, size_t len)
-     :  p_((unsigned char *)base),
-        end_(((unsigned char *)base) + len),
-        base_((unsigned char *)base)
-    {}
-
-    reader_t(const section_t &s)
-     :  p_((unsigned char *)s.map),
-        end_(((unsigned char *)s.map) + s.size),
-        base_((unsigned char *)s.map)
-    {}
-
-    reader_t initial_subset(size_t len) const
-    {
-	size_t remain = (end_ - p_);
-	if (len > remain)
-	    len = remain;
-	return reader_t((void *)p_, len);
-    }
-
-    unsigned long get_offset() const
-    {
-	return p_ - base_;
-    }
-    unsigned long get_remains() const
-    {
-	return end_ - p_;
-    }
-
-    bool skip(size_t n)
-    {
-	if (p_ + n > end_)
-	{
-	    return false;
-	}
-	p_ += n;
-	return true;
-    }
-
-    bool read_u32(uint32_t &v)
-    {
-	if (p_ + 4 > end_)
-	    return false;
-	v = ((uint32_t)p_[0]) |
-	    ((uint32_t)p_[1] << 8) |
-	    ((uint32_t)p_[2] << 16) |
-	    ((uint32_t)p_[3] << 24);
-	p_ += 4;
-	return true;
-    }
-
-    bool read_u64(uint64_t &v)
-    {
-	if (p_ + 8 > end_)
-	    return false;
-	v = ((uint64_t)p_[0]) |
-	    ((uint64_t)p_[1] << 8) |
-	    ((uint64_t)p_[2] << 16) |
-	    ((uint64_t)p_[3] << 24) |
-	    ((uint64_t)p_[4] << 32) |
-	    ((uint64_t)p_[5] << 40) |
-	    ((uint64_t)p_[6] << 48) |
-	    ((uint64_t)p_[7] << 56);
-	p_ += 8;
-	return true;
-    }
-
-    bool read_uleb128(uint32_t &v)
-    {
-	const unsigned char *pp = p_;
-	uint32_t vv = 0;
-	unsigned shift = 0;
-	do
-	{
-	    if (pp == end_)
-		return false;
-	    vv |= ((*pp) & 0x7f) << shift;
-	    shift += 7;
-	} while ((*pp++) & 0x80);
-	p_ = pp;
-	v = vv;
-	return true;
-    }
-
-    bool read_sleb128(int32_t &v)
-    {
-	const unsigned char *pp = p_;
-	uint32_t vv = 0;
-	unsigned shift = 0;
-
-	do
-	{
-	    if (pp == end_)
-		return false;
-	    vv |= ((*pp) & 0x7f) << shift;
-	    shift += 7;
-	} while ((*pp++) & 0x80);
-
-	// sign extend the result, from the last encoded bit
-	if (pp[-1] & 0x40)
-	    v = vv | (~0U << shift);
-	else
-	    v = vv;
-	p_ = pp;
-	return true;
-    }
-
-    bool read_u16(uint16_t &v)
-    {
-	if (p_ + 2 > end_)
-	    return false;
-	v = ((uint16_t)p_[0]) |
-	    ((uint16_t)p_[1] << 8);
-	p_ += 2;
-	return true;
-    }
-
-    bool read_u8(uint8_t &v)
-    {
-	if (p_ >= end_)
-	    return false;
-	v = *p_++;
-	return true;
-    }
-
-    bool read_string(const char *&v)
-    {
-	const unsigned char *e =
-	    (const unsigned char *)memchr(p_, '\0', (end_ - p_));
-	if (!e)
-	    return false;
-	v = (const char *)p_;
-	p_ = e + 1;
-	return true;
-    }
-
-    bool read_bytes(const unsigned char *&v, size_t len)
-    {
-	const unsigned char *e = p_ + len;
-	if (e >= end_)
-	    return false;
-	v = (const unsigned char *)p_;
-	p_ = e;
-	return true;
-    }
-
-private:
-    const unsigned char *p_;
-    const unsigned char *end_;
-    const unsigned char *base_;
-};
-
-class compile_unit_t
-{
-private:
-    enum { header_length = 11 };	    // this might depend on version
-public:
-    compile_unit_t()
-    {}
-
-    ~compile_unit_t()
-    {}
-
-    bool read_header(reader_t &r)
-    {
-	reader_ = r;	    // sample offset of start of header
-
-	uint32_t length;
-	uint16_t version;
-	if (!r.read_u32(length))
-	    return false;
-	if (length > r.get_remains())
-	    fatal("Bad DWARF compilation unit length %u", length);
-
-	if (!r.read_u16(version))
-	    return false;
-	if (version != 2)
-	    fatal("Bad DWARF version %u, expecting 2", version);
-	if (length < header_length-6/*read so far*/)
-	    fatal("Bad DWARF compilation unit length %u", length);
-
-	uint8_t addrsize;
-	if (!r.read_u32(abbrevs_) ||
-	    !r.read_u8(addrsize))
-	    return false;
-	if (addrsize != sizeof(void*))
-	    fatal("Bad DWARF addrsize %u, expecting %u",
-		  addrsize, sizeof(void*));
-
-	printf("compilation unit\n");
-	printf("    length %u\n", (unsigned)length);
-	printf("    version %u\n", (unsigned)version);
-	printf("    abbrevs %u\n", (unsigned)abbrevs_);
-	printf("    addrsize %u\n", (unsigned)addrsize);
-
-	length += 4;	// account for the `length' field of the header
-
-	// setup reader_ to point to the whole compile
-	// unit but not any bytes of the next one
-	reader_ = reader_.initial_subset(length);
-
-	// skip the outer reader over the body
-	r.skip(length - header_length);
-
-	return true;
-    }
-
-    reader_t get_body_reader() const
-    {
-	reader_t r = reader_;
-	r.skip(header_length);
-	return r;
-    }
-
-    unsigned long get_abbrevs() const { return abbrevs_; }
-
-private:
-    reader_t reader_;	    // for whole including header
-    uint32_t abbrevs_;
-};
-
 enum children_values
 {
     DW_CHILDREN_no = 0,
@@ -942,52 +483,244 @@ static const char * const _attrnames[] = {
 
 static string_table_t attrnames("DW_AT_", _attrnames);
 
-struct abbrev_t
+
+static unsigned long
+pagesize(void)
 {
-    struct attr_spec_t
-    {
-	uint32_t name;
-	uint32_t form;
-    };
+    static unsigned long ps;
+    if (!ps)
+	ps = sysconf(_SC_PAGESIZE);
+    return ps;
+}
 
-    // default c'tor
-    abbrev_t()
-     :  code(0),
-        tag(0),
-        children(0)
+static unsigned long
+page_round_up(unsigned long x)
+{
+    unsigned long ps = pagesize();
+    return ((x + ps - 1) / ps) * ps;
+}
+
+static unsigned long
+page_round_down(unsigned long x)
+{
+    unsigned long ps = pagesize();
+    return (x / ps) * ps;
+}
+
+class compile_unit_t;
+class abbrev_t;
+class reader_t;
+struct value_t;
+class entry_t;
+class walker_t;
+class section_t;
+
+class reader_t
+{
+public:
+    reader_t()
+     :  p_(0), end_(0), base_(0) {}
+
+    reader_t(const void *base, size_t len)
+     :  p_((unsigned char *)base),
+        end_(((unsigned char *)base) + len),
+        base_((unsigned char *)base)
     {}
 
-    // c'tor with code
-    abbrev_t(uint32_t c)
-     :  code(c),
-        tag(0),
-	children(0)
-    {}
-
-    bool read(reader_t &r)
+    reader_t initial_subset(size_t len) const
     {
-	if (!r.read_uleb128(tag) ||
-	    !r.read_u8(children))
+	size_t remain = (end_ - p_);
+	if (len > remain)
+	    len = remain;
+	return reader_t((void *)p_, len);
+    }
+
+    unsigned long get_offset() const
+    {
+	return p_ - base_;
+    }
+    unsigned long get_remains() const
+    {
+	return end_ - p_;
+    }
+
+    bool seek(size_t n)
+    {
+	if (base_ + n > end_)
 	    return false;
-	for (;;)
-	{
-	    attr_spec_t as;
-	    if (!r.read_uleb128(as.name) ||
-	        !r.read_uleb128(as.form))
-		return false;
-	    if (!as.name && !as.form)
-		break;	    /* name=0, form=0 indicates end
-			     * of attribute specifications */
-	    attr_specs.push_back(as);
-	}
+	p_ = base_ + n;
 	return true;
     }
 
-    uint32_t code;
-    uint32_t tag;
-    uint8_t children;
-    vector<attr_spec_t> attr_specs;
+    bool skip(size_t n)
+    {
+	if (p_ + n > end_)
+	    return false;
+	p_ += n;
+	return true;
+    }
+
+    bool read_u32(uint32_t &v)
+    {
+	if (p_ + 4 > end_)
+	    return false;
+	v = ((uint32_t)p_[0]) |
+	    ((uint32_t)p_[1] << 8) |
+	    ((uint32_t)p_[2] << 16) |
+	    ((uint32_t)p_[3] << 24);
+	p_ += 4;
+	return true;
+    }
+
+    bool read_u64(uint64_t &v)
+    {
+	if (p_ + 8 > end_)
+	    return false;
+	v = ((uint64_t)p_[0]) |
+	    ((uint64_t)p_[1] << 8) |
+	    ((uint64_t)p_[2] << 16) |
+	    ((uint64_t)p_[3] << 24) |
+	    ((uint64_t)p_[4] << 32) |
+	    ((uint64_t)p_[5] << 40) |
+	    ((uint64_t)p_[6] << 48) |
+	    ((uint64_t)p_[7] << 56);
+	p_ += 8;
+	return true;
+    }
+
+    bool read_uleb128(uint32_t &v)
+    {
+	const unsigned char *pp = p_;
+	uint32_t vv = 0;
+	unsigned shift = 0;
+	do
+	{
+	    if (pp == end_)
+		return false;
+	    vv |= ((*pp) & 0x7f) << shift;
+	    shift += 7;
+	} while ((*pp++) & 0x80);
+	p_ = pp;
+	v = vv;
+	return true;
+    }
+
+    bool read_sleb128(int32_t &v)
+    {
+	const unsigned char *pp = p_;
+	uint32_t vv = 0;
+	unsigned shift = 0;
+
+	do
+	{
+	    if (pp == end_)
+		return false;
+	    vv |= ((*pp) & 0x7f) << shift;
+	    shift += 7;
+	} while ((*pp++) & 0x80);
+
+	// sign extend the result, from the last encoded bit
+	if (pp[-1] & 0x40)
+	    v = vv | (~0U << shift);
+	else
+	    v = vv;
+	p_ = pp;
+	return true;
+    }
+
+    bool read_u16(uint16_t &v)
+    {
+	if (p_ + 2 > end_)
+	    return false;
+	v = ((uint16_t)p_[0]) |
+	    ((uint16_t)p_[1] << 8);
+	p_ += 2;
+	return true;
+    }
+
+    bool read_u8(uint8_t &v)
+    {
+	if (p_ >= end_)
+	    return false;
+	v = *p_++;
+	return true;
+    }
+
+    bool read_string(const char *&v)
+    {
+	const unsigned char *e =
+	    (const unsigned char *)memchr(p_, '\0', (end_ - p_));
+	if (!e)
+	    return false;
+	v = (const char *)p_;
+	p_ = e + 1;
+	return true;
+    }
+
+    bool read_bytes(const unsigned char *&v, size_t len)
+    {
+	const unsigned char *e = p_ + len;
+	if (e >= end_)
+	    return false;
+	v = (const unsigned char *)p_;
+	p_ = e;
+	return true;
+    }
+
+private:
+    const unsigned char *p_;
+    const unsigned char *end_;
+    const unsigned char *base_;
 };
+
+struct section_t
+{
+    unsigned long offset;
+    unsigned long size;
+    void *map;
+
+    unsigned long get_end() const { return offset + size; }
+    void set_end(unsigned long e) { size = e - offset; }
+    bool contains(const section_t &o)
+    {
+	return (offset <= o.offset &&
+		get_end() >= o.get_end());
+    }
+
+    void expand_to_pages()
+    {
+	unsigned long end = page_round_up(offset + size);
+	offset = page_round_down(offset);
+	size = end - offset;
+    }
+
+    reader_t get_contents() const
+    {
+	reader_t r(map, size);
+	return r;
+    }
+
+    static int
+    compare_ptrs(const void *v1, const void *v2)
+    {
+	const struct section_t **s1 = (const struct section_t **)v1;
+	const struct section_t **s2 = (const struct section_t **)v2;
+	return u64cmp((*s1)->offset, (*s2)->offset);
+    }
+
+    const char *
+    offset_as_string(unsigned long off) const
+    {
+	if (off >= size)
+	    return 0;
+	const char *v = (const char *)map + off;
+	// check that there's a \0 terminator
+	if (!memchr(v, '\0', size-off))
+	    return 0;
+	return v;
+    }
+};
+
 
 struct reference_t
 {
@@ -1075,46 +808,197 @@ struct value_t
 	return val;
     }
 
-    void dump() const
+    void dump() const;
+};
+
+struct abbrev_t
+{
+    struct attr_spec_t
     {
-	switch (type)
+	uint32_t name;
+	uint32_t form;
+    };
+
+    // default c'tor
+    abbrev_t()
+     :  code(0),
+        tag(0),
+        children(0)
+    {}
+
+    // c'tor with code
+    abbrev_t(uint32_t c)
+     :  code(c),
+        tag(0),
+	children(0)
+    {}
+
+    bool read(reader_t &r);
+
+    uint32_t code;
+    uint32_t tag;
+    uint8_t children;
+    vector<attr_spec_t> attr_specs;
+};
+
+class state_t
+{
+public:
+    state_t(const char *filename);
+    ~state_t();
+
+    void map_sections();
+    void read_compile_units();
+    void dump_info();
+    void dump_structs(walker_t &w);
+
+private:
+
+    char *filename_;
+    section_t sections_[DW_sec_num];
+    vector<section_t> mappings_;
+    vector<compile_unit_t*> compile_units_;
+
+    friend class walker_t;
+};
+
+state_t::state_t(const char *filename)
+ :  filename_(xstrdup(filename))
+{
+    memset(sections_, 0, sizeof(sections_));
+}
+
+state_t::~state_t()
+{
+    free(filename_);
+}
+
+void
+state_t::map_sections()
+{
+    int fd = -1;
+    vector<section_t>::iterator m;
+
+    bfd_init();
+
+    /* Open a BFD */
+    bfd *b = bfd_openr(filename_, NULL);
+    if (!b)
+    {
+	bfd_perror(filename_);
+	return;
+    }
+    if (!bfd_check_format(b, bfd_object))
+    {
+	fprintf(stderr, "spiegel: %s: not an object\n", filename_);
+	goto error;
+    }
+
+    /* Extract the file shape of the DWARF sections */
+    asection *sec;
+    for (sec = b->sections ; sec ; sec = sec->next)
+    {
+	int idx = secnames.to_index(sec->name);
+	if (idx == DW_sec_none)
+	    continue;
+	printf("Section [%d], name=%s size=%lx filepos=%lx\n",
+	    idx, sec->name, (unsigned long)sec->size,
+	    (unsigned long)sec->filepos);
+	sections_[idx].offset = (unsigned long)sec->filepos;
+	sections_[idx].size = (unsigned long)sec->size;
+    }
+
+    /* Coalesce sections into a minimal number of mappings */
+    struct section_t *tsec[DW_sec_num];
+    for (int idx = 0 ; idx < DW_sec_num ; idx++)
+	tsec[idx] = &sections_[idx];
+    qsort(tsec, DW_sec_num, sizeof(section_t *), section_t::compare_ptrs);
+    for (int idx = 0 ; idx < DW_sec_num ; idx++)
+    {
+	if (!tsec[idx]->size)
+	    continue;
+	if (mappings_.size() &&
+	    page_round_up(mappings_.back().get_end()) >= tsec[idx]->offset)
 	{
-	case T_UNDEF:
-	    printf("<undef>");
-	    break;
-	case T_STRING:
-	    printf("\"%s\"", val.string);
-	    break;
-	case T_SINT32:
-	    printf("%d", val.sint32);
-	    break;
-	case T_UINT32:
-	    printf("0x%x", val.uint32);
-	    break;
-	case T_SINT64:
-	    printf("%lld", (long long)val.sint64);
-	    break;
-	case T_UINT64:
-	    printf("0x%llx", (unsigned long long)val.uint64);
-	    break;
-	case T_BYTES:
-	    {
-		const unsigned char *u = val.bytes.buf;
-		unsigned len = val.bytes.len;
-		const char *sep = "";
-		while (len--)
-		{
-		    printf("%s0x%02x", sep, (unsigned)*u++);
-		    sep = " ";
-		}
-	    }
-	    break;
-	case T_REF:
-	    printf("(ref)0x%llx", (unsigned long long)val.ref);
-	    break;
+	    /* section abuts the last mapping, extend it */
+	    mappings_.back().set_end(tsec[idx]->get_end());
+	}
+	else
+	{
+	    /* create a new mapping */
+	    mappings_.push_back(*tsec[idx]);
 	}
     }
-};
+
+    printf("Mappings:\n");
+    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+    {
+	printf("offset=%lx size=%lx end=%lx\n",
+	       m->offset, m->size, m->get_end());
+    }
+
+    /* mmap() the mappings */
+    fd = open(filename_, O_RDONLY, 0);
+    if (fd < 0)
+    {
+	perror(filename_);
+	goto error;
+    }
+
+    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+    {
+	m->expand_to_pages();
+	void *map = mmap(NULL, m->size,
+			 PROT_READ, MAP_SHARED, fd,
+			 m->offset);
+	if (map == MAP_FAILED)
+	{
+	    perror("mmap");
+	    goto error;
+	}
+	m->map = map;
+    }
+
+    /* setup sections[].map */
+    for (int idx = 0 ; idx < DW_sec_num ; idx++)
+    {
+	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+	{
+	    if (m->contains(sections_[idx]))
+	    {
+		sections_[idx].map = (void *)(
+		    (char *)m->map +
+		    sections_[idx].offset -
+		    m->offset);
+		break;
+	    }
+	}
+	assert(sections_[idx].map);
+    }
+
+    for (int idx = 0 ; idx < DW_sec_num ; idx++)
+    {
+	printf("[%d] name=.debug_%s map=0x%lx size=0x%lx\n",
+		idx, secnames.to_name(idx),
+		(unsigned long)sections_[idx].map,
+		sections_[idx].size);
+    }
+
+    goto out;
+error:
+    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+    {
+	if (m->map)
+	{
+	    munmap(m->map, m->size);
+	    m->map = NULL;
+	}
+    }
+out:
+    if (fd >= 0)
+	close(fd);
+    bfd_close(b);
+}
 
 class entry_t
 {
@@ -1158,6 +1042,28 @@ public:
 	const value_t *v = get_attribute(name);
 	return (v && v->type == value_t::T_STRING ? v->val.string : 0);
     }
+    uint32_t get_uint32_attribute(uint32_t name) const
+    {
+	const value_t *v = get_attribute(name);
+	if (!v)
+	    return 0;
+	else if (v->type == value_t::T_UINT32)
+	    return v->val.uint32;
+	else
+	    return 0;
+    }
+    uint64_t get_uint64_attribute(uint32_t name) const
+    {
+	const value_t *v = get_attribute(name);
+	if (!v)
+	    return 0;
+	else if (v->type == value_t::T_UINT32)
+	    return v->val.uint32;
+	else if (v->type == value_t::T_UINT64)
+	    return v->val.uint64;
+	else
+	    return 0;
+    }
 
 private:
     size_t offset_;
@@ -1166,6 +1072,206 @@ private:
     vector<value_t> values_;
     vector<const value_t*> byattr_;
 };
+
+
+class compile_unit_t
+{
+private:
+    enum { header_length = 11 };	    // this might depend on version
+public:
+    compile_unit_t()
+    {}
+
+    ~compile_unit_t()
+    {}
+
+    bool read_header(reader_t &r);
+    bool read_compile_unit_entry(walker_t &w);
+    void read_abbrevs(reader_t &r);
+    void dump_abbrevs() const;
+
+    reader_t get_contents() const
+    {
+	reader_t r = reader_;
+	r.skip(header_length);
+	return r;
+    }
+
+    const abbrev_t *get_abbrev(uint32_t code) const
+    {
+	map<uint32_t, abbrev_t*>::const_iterator i = abbrevs_.find(code);
+	if (i == abbrevs_.end())
+	    return 0;
+	return i->second;
+    }
+
+private:
+    reader_t reader_;	    // for whole including header
+    uint32_t abbrevs_offset_;
+    map<uint32_t, abbrev_t*> abbrevs_;
+    const char *name_;
+    const char *comp_dir_;
+    uint64_t low_pc_;	    // TODO: should be an addr_t
+    uint64_t high_pc_;
+    uint32_t language_;
+};
+
+class walker_t
+{
+public:
+    walker_t(state_t &s, compile_unit_t &cu)
+     :  state_(s),
+	compile_unit_(cu),
+	reader_(cu.get_contents()),
+	level_(0)
+    {
+    }
+
+    const entry_t &get_entry() const { return entry_; }
+
+    bool move_to_sibling();
+    bool move_to_children();
+    bool move_preorder();
+//     bool move_to(reference_t);
+
+private:
+    int read_entry();
+
+    state_t &state_;
+    compile_unit_t &compile_unit_;
+    reader_t reader_;
+    entry_t entry_;
+    unsigned level_;
+};
+
+
+bool
+compile_unit_t::read_header(reader_t &r)
+{
+    reader_ = r;	    // sample offset of start of header
+
+    uint32_t length;
+    uint16_t version;
+    if (!r.read_u32(length))
+	return false;
+    if (length > r.get_remains())
+	fatal("Bad DWARF compilation unit length %u", length);
+
+    if (!r.read_u16(version))
+	return false;
+    if (version != 2)
+	fatal("Bad DWARF version %u, expecting 2", version);
+    if (length < header_length-6/*read so far*/)
+	fatal("Bad DWARF compilation unit length %u", length);
+
+    uint8_t addrsize;
+    if (!r.read_u32(abbrevs_offset_) ||
+	!r.read_u8(addrsize))
+	return false;
+    if (addrsize != sizeof(void*))
+	fatal("Bad DWARF addrsize %u, expecting %u",
+	      addrsize, sizeof(void*));
+
+    printf("compilation unit\n");
+    printf("    length %u\n", (unsigned)length);
+    printf("    version %u\n", (unsigned)version);
+    printf("    abbrevs %u\n", (unsigned)abbrevs_offset_);
+    printf("    addrsize %u\n", (unsigned)addrsize);
+
+    length += 4;	// account for the `length' field of the header
+
+    // setup reader_ to point to the whole compile
+    // unit but not any bytes of the next one
+    reader_ = reader_.initial_subset(length);
+
+    // skip the outer reader over the body
+    r.skip(length - header_length);
+
+    return true;
+}
+
+bool
+compile_unit_t::read_compile_unit_entry(walker_t &w)
+{
+    if (!w.move_to_sibling())
+	return false;
+
+    const entry_t &e = w.get_entry();
+    name_ = e.get_string_attribute(DW_AT_name);
+    comp_dir_ = e.get_string_attribute(DW_AT_comp_dir);
+    low_pc_ = e.get_uint64_attribute(DW_AT_low_pc);
+    high_pc_ = e.get_uint64_attribute(DW_AT_high_pc);
+    language_ = e.get_uint32_attribute(DW_AT_language);
+
+    printf("    name %s\n", name_);
+    printf("    comp_dir %s\n", comp_dir_);
+    printf("    low_pc 0x%llx\n", (unsigned long long)low_pc_);
+    printf("    high_pc 0x%llx\n", (unsigned long long)high_pc_);
+    printf("    language %u\n", (unsigned)language_);
+
+    return true;
+}
+
+bool
+abbrev_t::read(reader_t &r)
+{
+    if (!r.read_uleb128(tag) ||
+	!r.read_u8(children))
+	return false;
+    for (;;)
+    {
+	attr_spec_t as;
+	if (!r.read_uleb128(as.name) ||
+	    !r.read_uleb128(as.form))
+	    return false;
+	if (!as.name && !as.form)
+	    break;	    /* name=0, form=0 indicates end
+			 * of attribute specifications */
+	attr_specs.push_back(as);
+    }
+    return true;
+}
+
+void
+value_t::dump() const
+{
+    switch (type)
+    {
+    case T_UNDEF:
+	printf("<undef>");
+	break;
+    case T_STRING:
+	printf("\"%s\"", val.string);
+	break;
+    case T_SINT32:
+	printf("%d", val.sint32);
+	break;
+    case T_UINT32:
+	printf("0x%x", val.uint32);
+	break;
+    case T_SINT64:
+	printf("%lld", (long long)val.sint64);
+	break;
+    case T_UINT64:
+	printf("0x%llx", (unsigned long long)val.uint64);
+	break;
+    case T_BYTES:
+	{
+	    const unsigned char *u = val.bytes.buf;
+	    unsigned len = val.bytes.len;
+	    const char *sep = "";
+	    while (len--)
+	    {
+		printf("%s0x%02x", sep, (unsigned)*u++);
+		sep = " ";
+	    }
+	}
+	break;
+    case T_REF:
+	printf("(ref)0x%llx", (unsigned long long)val.ref);
+	break;
+    }
+}
 
 void entry_t::dump() const
 {
@@ -1191,12 +1297,9 @@ void entry_t::dump() const
 
 
 void
-state_t::read_abbrevs(uint32_t offset)
+compile_unit_t::read_abbrevs(reader_t &r)
 {
-    abbrevs_.clear();	    /* TODO: memleak */
-
-    reader_t r(sections_[DW_sec_abbrev]);
-    r.skip(offset);
+    r.seek(abbrevs_offset_);
 
     uint32_t code;
     /* code 0 indicates end of compile unit */
@@ -1214,11 +1317,11 @@ state_t::read_abbrevs(uint32_t offset)
 
 
 void
-state_t::dump_abbrevs()
+compile_unit_t::dump_abbrevs() const
 {
     printf("Abbrevs {\n");
 
-    map<uint32_t, abbrev_t*>::iterator itr;
+    map<uint32_t, abbrev_t*>::const_iterator itr;
     for (itr = abbrevs_.begin() ; itr != abbrevs_.end() ; ++itr)
     {
 	abbrev_t *a = itr->second;
@@ -1242,32 +1345,6 @@ state_t::dump_abbrevs()
     printf("}\n");
 }
 
-class walker_t
-{
-public:
-    walker_t(state_t &s, reader_t r)
-     :  state_(s),
-	reader_(r),
-	level_(0)
-    {
-    }
-
-    const entry_t &get_entry() const { return entry_; }
-
-    bool move_to_sibling();
-    bool move_to_children();
-    bool move_preorder();
-//     bool move_to(reference_t);
-
-private:
-    int read_entry();
-
-    state_t &state_;
-    reader_t reader_;
-    entry_t entry_;
-    unsigned level_;
-};
-
 int
 walker_t::read_entry()
 {
@@ -1290,7 +1367,7 @@ walker_t::read_entry()
 	return 0;
     }
 
-    abbrev_t *a = state_.abbrevs_[acode];
+    const abbrev_t *a = compile_unit_.get_abbrev(acode);
     if (!a)
     {
 	// TODO: bad DWARF info - throw an exception
@@ -1299,7 +1376,7 @@ walker_t::read_entry()
 
     entry_.setup(offset, level_, a);
 
-    vector<abbrev_t::attr_spec_t>::iterator i;
+    vector<abbrev_t::attr_spec_t>::const_iterator i;
     for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
     {
 	switch (i->form)
@@ -1601,32 +1678,43 @@ preorder_dump(walker_t &w)
 #endif
 
 void
-state_t::dump_info()
+state_t::read_compile_units()
 {
-    reader_t r(sections_[DW_sec_info]);
+    reader_t infor = sections_[DW_sec_info].get_contents();
+    reader_t abbrevr = sections_[DW_sec_abbrev].get_contents();
 
-    printf(".debug_info section:\n");
-
-    printf("Compile units:\n");
-    compile_unit_t cu;
-    while (cu.read_header(r))
+    compile_unit_t *cu = 0;
+    for (;;)
     {
+	cu = new compile_unit_t;
+	if (!cu->read_header(infor))
+	    break;
+
+	cu->read_abbrevs(abbrevr);
+
+	walker_t w(*this, *cu);
+	if (!cu->read_compile_unit_entry(w))
+	    break;
+
 	compile_units_.push_back(cu);
     }
-    printf("\n");
+    delete cu;
+}
 
-    vector<compile_unit_t>::iterator i;
+void
+state_t::dump_info()
+{
+    vector<compile_unit_t*>::iterator i;
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
 	printf("compile_unit {\n");
 
-	read_abbrevs(i->get_abbrevs());
-// 	dump_abbrevs();
+	(*i)->dump_abbrevs();
 
-	walker_t w(*this, i->get_body_reader());
+	walker_t w(*this, **i);
 	preorder_dump(w);
 
-// 	walker_t w2(*this, i->get_body_reader());
+// 	walker_t w(*this, **i);
 // 	dump_structs(w2);
 
 	printf("} compile_unit\n");
@@ -1701,6 +1789,7 @@ main(int argc, char **argv)
 
     spiegel::dwarf::state_t state(argv[1]);
     state.map_sections();
+    state.read_compile_units();
     state.dump_info();
     return 0;
 }
