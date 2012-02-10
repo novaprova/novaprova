@@ -157,6 +157,7 @@ struct section_t
     }
 };
 
+class compile_unit_t;
 class abbrev_t;
 class reader_t;
 struct value_t;
@@ -180,6 +181,7 @@ private:
     section_t sections_[DW_sec_num];
     vector<section_t> mappings_;
     map<uint32_t, abbrev_t*> abbrevs_;
+    vector<compile_unit_t> compile_units_;
 
     friend class walker_t;
 };
@@ -340,7 +342,7 @@ public:
         base_((unsigned char *)s.map)
     {}
 
-    reader_t leading_subset(size_t len) const
+    reader_t initial_subset(size_t len) const
     {
 	size_t remain = (end_ - p_);
 	if (len > remain)
@@ -480,57 +482,73 @@ private:
     const unsigned char *base_;
 };
 
-class compilation_unit_t
+class compile_unit_t
 {
+private:
+    enum { header_length = 11 };	    // this might depend on version
 public:
-    compilation_unit_t()
+    compile_unit_t()
     {}
 
-    ~compilation_unit_t()
+    ~compile_unit_t()
     {}
 
     bool read_header(reader_t &r)
     {
-	if (!r.read_u32(length_))
-	    return false;
-	if (length_ < 7 || length_ > r.get_remains())
-	    fatal("Bad DWARF compilation unit header length %u", length_);
+	reader_ = r;	    // sample offset of start of header
 
+	uint32_t length;
 	uint16_t version;
-	uint8_t addrsize;
-	if (!r.read_u16(version) ||
-	    !r.read_u32(abbrevs_) ||
-	    !r.read_u8(addrsize))
+	if (!r.read_u32(length))
+	    return false;
+	if (length > r.get_remains())
+	    fatal("Bad DWARF compilation unit length %u", length);
+
+	if (!r.read_u16(version))
 	    return false;
 	if (version != 2)
 	    fatal("Bad DWARF version %u, expecting 2", version);
+	if (length < header_length-6/*read so far*/)
+	    fatal("Bad DWARF compilation unit length %u", length);
+
+	uint8_t addrsize;
+	if (!r.read_u32(abbrevs_) ||
+	    !r.read_u8(addrsize))
+	    return false;
 	if (addrsize != sizeof(void*))
 	    fatal("Bad DWARF addrsize %u, expecting %u",
 		  addrsize, sizeof(void*));
 
 	printf("compilation unit\n");
-	printf("    length %u\n", (unsigned)length_);
+	printf("    length %u\n", (unsigned)length);
 	printf("    version %u\n", (unsigned)version);
 	printf("    abbrevs %u\n", (unsigned)abbrevs_);
 	printf("    addrsize %u\n", (unsigned)addrsize);
+
+	length += 4;	// account for the `length' field of the header
+
+	// setup reader_ to point to the whole compile
+	// unit but not any bytes of the next one
+	reader_ = reader_.initial_subset(length);
+
+	// skip the outer reader over the body
+	r.skip(length - header_length);
+
 	return true;
     }
 
-    reader_t get_body_reader(reader_t &r)
+    reader_t get_body_reader() const
     {
-	return r.leading_subset(length_-7);
-    }
-    void skip_body(reader_t &r)
-    {
-	r.skip(length_-7);
+	reader_t r = reader_;
+	r.skip(header_length);
+	return r;
     }
 
     unsigned long get_abbrevs() const { return abbrevs_; }
 
 private:
-    uint32_t length_;
+    reader_t reader_;	    // for whole including header
     uint32_t abbrevs_;
-
 };
 
 enum children_values
@@ -971,6 +989,12 @@ struct abbrev_t
     vector<attr_spec_t> attr_specs;
 };
 
+struct reference_t
+{
+    uint32_t cu;	// index into compile unit table
+    uint32_t offset;	// byte offset from start of compile unit
+};
+
 struct value_t
 {
     enum
@@ -1175,7 +1199,7 @@ state_t::read_abbrevs(uint32_t offset)
     r.skip(offset);
 
     uint32_t code;
-    /* code 0 indicates end of compilation unit */
+    /* code 0 indicates end of compile unit */
     while (r.read_uleb128(code) && code)
     {
 	abbrev_t *a = new abbrev_t(code);
@@ -1248,9 +1272,9 @@ int
 walker_t::read_entry()
 {
     /* Refs are offsets relative to the start of the
-     * compilation unit header, but the reader starts
+     * compile unit header, but the reader starts
      * at the first byte after that header. */
-    size_t offset = reader_.get_offset() + 11;
+    size_t offset = reader_.get_offset();
     uint32_t acode;
 
     if (!reader_.read_uleb128(acode))
@@ -1543,7 +1567,7 @@ state_t::dump_structs(walker_t &w)
     } while (w.move_to_sibling());
 }
 
-#if 0
+#if 1
 #if 1
 static void
 preorder_dump2(walker_t &w, unsigned depth)
@@ -1582,19 +1606,30 @@ state_t::dump_info()
     reader_t r(sections_[DW_sec_info]);
 
     printf(".debug_info section:\n");
-    compilation_unit_t cu;
+
+    printf("Compile units:\n");
+    compile_unit_t cu;
     while (cu.read_header(r))
     {
-	read_abbrevs(cu.get_abbrevs());
+	compile_units_.push_back(cu);
+    }
+    printf("\n");
+
+    vector<compile_unit_t>::iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    {
+	printf("compile_unit {\n");
+
+	read_abbrevs(i->get_abbrevs());
 // 	dump_abbrevs();
 
-// 	walker_t w(*this, cu.get_body_reader(r));
-// 	preorder_dump(w);
+	walker_t w(*this, i->get_body_reader());
+	preorder_dump(w);
 
-	walker_t w2(*this, cu.get_body_reader(r));
-	dump_structs(w2);
+// 	walker_t w2(*this, i->get_body_reader());
+// 	dump_structs(w2);
 
-	cu.skip_body(r);
+	printf("} compile_unit\n");
     }
     printf("\n\n");
 }
