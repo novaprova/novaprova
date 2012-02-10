@@ -122,4 +122,29 @@ u64cmp(uint64_t ull1, uint64_t ull2)
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+unsigned long
+page_size(void)
+{
+    static unsigned long ps;
+    if (!ps)
+	ps = sysconf(_SC_PAGESIZE);
+    return ps;
+}
+
+unsigned long
+page_round_up(unsigned long x)
+{
+    unsigned long ps = page_size();
+    return ((x + ps - 1) / ps) * ps;
+}
+
+unsigned long
+page_round_down(unsigned long x)
+{
+    unsigned long ps = page_size();
+    return (x / ps) * ps;
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 /*END*/

@@ -121,6 +121,12 @@ extern char *xstrdup(const char *s);
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+extern unsigned long page_size(void);
+extern unsigned long page_round_up(unsigned long x);
+extern unsigned long page_round_down(unsigned long x);
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
 #ifdef _
 #undef _
 #endif
