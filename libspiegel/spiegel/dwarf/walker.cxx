@@ -27,7 +27,7 @@ walker_t::read_entry()
 	return 0;
     }
 
-    const abbrev_t *a = compile_unit_.get_abbrev(acode);
+    const abbrev_t *a = compile_unit_->get_abbrev(acode);
     if (!a)
     {
 	// TODO: bad DWARF info - throw an exception
@@ -124,7 +124,8 @@ walker_t::read_entry()
 		uint8_t off;
 		if (!reader_.read_u8(off))
 		    return EOF;
-		entry_.add_attribute(i->name, value_t::make_ref(off));
+		entry_.add_attribute(i->name,
+			value_t::make_ref(compile_unit_->get_index(), off));
 		break;
 	    }
 	case DW_FORM_ref2:
@@ -132,7 +133,8 @@ walker_t::read_entry()
 		uint16_t off;
 		if (!reader_.read_u16(off))
 		    return EOF;
-		entry_.add_attribute(i->name, value_t::make_ref(off));
+		entry_.add_attribute(i->name,
+			value_t::make_ref(compile_unit_->get_index(), off));
 		break;
 	    }
 	case DW_FORM_ref4:
@@ -140,7 +142,8 @@ walker_t::read_entry()
 		uint32_t off;
 		if (!reader_.read_u32(off))
 		    return EOF;
-		entry_.add_attribute(i->name, value_t::make_ref(off));
+		entry_.add_attribute(i->name,
+			value_t::make_ref(compile_unit_->get_index(), off));
 		break;
 	    }
 	case DW_FORM_ref8:
@@ -148,7 +151,9 @@ walker_t::read_entry()
 		uint64_t off;
 		if (!reader_.read_u64(off))
 		    return EOF;
-		entry_.add_attribute(i->name, value_t::make_ref(off));
+		// TODO: detect truncation
+		entry_.add_attribute(i->name,
+			value_t::make_ref(compile_unit_->get_index(), (uint32_t)off));
 		break;
 	    }
 	case DW_FORM_string:
@@ -272,6 +277,16 @@ bool
 walker_t::move_to_children()
 {
     return (entry_.has_children() && read_entry() != EOF);
+}
+
+bool
+walker_t::move_to(reference_t ref)
+{
+    compile_unit_ = state_.compile_units_[ref.cu];
+    reader_ = compile_unit_->get_contents();
+    reader_.seek(ref.offset);
+    level_ = 0;
+    return (read_entry() == 1);
 }
 
 // close namespace

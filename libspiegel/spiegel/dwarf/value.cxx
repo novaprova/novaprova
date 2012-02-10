@@ -39,7 +39,9 @@ value_t::dump() const
 	}
 	break;
     case T_REF:
-	printf("(ref)0x%llx", (unsigned long long)val.ref);
+	printf("(ref){0x%x,0x%x}",
+	       val.ref.cu,
+	       val.ref.offset);
 	break;
     }
 }

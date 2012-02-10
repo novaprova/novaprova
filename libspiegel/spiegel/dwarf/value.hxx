@@ -2,6 +2,7 @@
 #define __libspiegel_dwarf_value_hxx__ 1
 
 #include "spiegel/commonp.hxx"
+#include "reference.hxx"
 
 namespace spiegel {
 namespace dwarf {
@@ -30,7 +31,7 @@ struct value_t
 	    const unsigned char *buf;
 	    size_t len;
 	} bytes;
-	uint64_t ref;
+	reference_t ref;
     } val;
 
     value_t() : type(T_UNDEF) {}
@@ -78,11 +79,12 @@ struct value_t
 	val.val.bytes.len = l;
 	return val;
     }
-    static value_t make_ref(uint64_t v)
+    static value_t make_ref(uint32_t cu, uint32_t off)
     {
 	value_t val;
 	val.type = T_REF;
-	val.val.ref = v;
+	val.val.ref.cu = cu;
+	val.val.ref.offset = off;
 	return val;
     }
 

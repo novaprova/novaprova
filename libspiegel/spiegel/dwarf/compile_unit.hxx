@@ -16,7 +16,8 @@ class compile_unit_t
 private:
     enum { header_length = 11 };	    // this might depend on version
 public:
-    compile_unit_t()
+    compile_unit_t(uint32_t idx)
+     : index_(idx)
     {}
 
     ~compile_unit_t()
@@ -26,6 +27,8 @@ public:
     bool read_compile_unit_entry(walker_t &w);
     void read_abbrevs(reader_t &r);
     void dump_abbrevs() const;
+
+    uint32_t get_index() const { return index_; }
 
     reader_t get_contents() const
     {
@@ -43,6 +46,7 @@ public:
     }
 
 private:
+    uint32_t index_;
     reader_t reader_;	    // for whole including header
     uint32_t abbrevs_offset_;
     std::map<uint32_t, abbrev_t*> abbrevs_;

@@ -203,13 +203,13 @@ state_t::read_compile_units()
     compile_unit_t *cu = 0;
     for (;;)
     {
-	cu = new compile_unit_t;
+	cu = new compile_unit_t(compile_units_.size());
 	if (!cu->read_header(infor))
 	    break;
 
 	cu->read_abbrevs(abbrevr);
 
-	walker_t w(*this, *cu);
+	walker_t w(*this, cu);
 	if (!cu->read_compile_unit_entry(w))
 	    break;
 
@@ -259,11 +259,8 @@ state_t::dump_info()
 
 	(*i)->dump_abbrevs();
 
-	walker_t w(*this, **i);
+	walker_t w(*this, *i);
 	preorder_dump(w);
-
-// 	walker_t w(*this, **i);
-// 	dump_structs(w2);
 
 	printf("} compile_unit\n");
     }
