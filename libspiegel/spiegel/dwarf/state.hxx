@@ -21,10 +21,9 @@ public:
     void map_sections();
     void read_compile_units();
     void dump_info();
-    void dump_structs(walker_t &w);
+    void dump_structs();
 
 private:
-
     char *filename_;
     section_t sections_[DW_sec_num];
     std::vector<section_t> mappings_;

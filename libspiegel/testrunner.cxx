@@ -2,15 +2,29 @@
 using namespace std;
 
 static int
-test_dump(int argc, char **argv)
+test_info(int argc, char **argv)
 {
     if (argc != 2)
-	fatal("Usage: spiegtest dump EXE\n");
+	fatal("Usage: spiegtest info EXE\n");
 
     spiegel::dwarf::state_t state(argv[1]);
     state.map_sections();
     state.read_compile_units();
     state.dump_info();
+
+    return 0;
+}
+
+static int
+test_structs(int argc, char **argv)
+{
+    if (argc != 2)
+	fatal("Usage: spiegtest structs EXE\n");
+
+    spiegel::dwarf::state_t state(argv[1]);
+    state.map_sections();
+    state.read_compile_units();
+    state.dump_structs();
 
     return 0;
 }
@@ -74,8 +88,10 @@ int
 main(int argc, char **argv)
 {
     argv0 = argv[0];
-    if (!strcmp(argv[1], "dump"))
-	return test_dump(argc-1, argv+1);
+    if (!strcmp(argv[1], "info"))
+	return test_info(argc-1, argv+1);
+    if (!strcmp(argv[1], "structs"))
+	return test_structs(argc-1, argv+1);
     if (!strcmp(argv[1], "read_uleb128"))
 	return test_read_uleb128(argc-1, argv+1);
     if (!strcmp(argv[1], "read_sleb128"))

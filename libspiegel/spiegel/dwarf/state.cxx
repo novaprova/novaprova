@@ -149,49 +149,130 @@ out:
     bfd_close(b);
 }
 
+static void
+describe_type(const walker_t &ow, const reference_t *ref)
+{
+    if (!ref)
+    {
+	printf("??? ");
+	return;
+    }
+    walker_t w = ow;
+    if (!w.move_to(*ref))
+    {
+	printf("??? ");
+	return;
+    }
+    const entry_t &e = w.get_entry();
+
+    const char *name = e.get_string_attribute(DW_AT_name);
+    switch (e.get_tag())
+    {
+    case DW_TAG_base_type:
+    case DW_TAG_typedef:
+	printf("%s ", name);
+	break;
+    case DW_TAG_pointer_type:
+	describe_type(w, e.get_reference_attribute(DW_AT_type));
+	printf("* ");
+	break;
+    case DW_TAG_volatile_type:
+	describe_type(w, e.get_reference_attribute(DW_AT_type));
+	printf("volatile ");
+	break;
+    case DW_TAG_const_type:
+	describe_type(w, e.get_reference_attribute(DW_AT_type));
+	printf("const ");
+	break;
+    case DW_TAG_structure_type:
+	printf("struct %s ", (name ? name : "{...}"));
+	break;
+    case DW_TAG_union_type:
+	printf("union %s ", (name ? name : "{...}"));
+	break;
+    case DW_TAG_enumeration_type:
+	printf("enum %s ", (name ? name : "{...}"));
+	break;
+    case DW_TAG_array_type:
+	describe_type(w, e.get_reference_attribute(DW_AT_type));
+	if (w.move_to_children())
+	{
+	    do
+	    {
+		const entry_t &e = w.get_entry();
+		uint32_t count;
+		if (e.get_tag() == DW_TAG_subrange_type &&
+		    ((count = e.get_uint32_attribute(DW_AT_count)) ||
+		     (count = e.get_uint32_attribute(DW_AT_upper_bound))))
+		    printf("[%u]", count);
+	    } while (w.move_to_sibling());
+	}
+	printf(" ");
+	break;
+    default:
+	printf("%s ", tagnames.to_name(e.get_tag()));
+	break;
+    }
+}
+
 void
-state_t::dump_structs(walker_t &w)
+state_t::dump_structs()
 {
     const char *keyword;
 
-    w.move_to_sibling();
-    w.move_to_children();
-
-    do
+    vector<compile_unit_t*>::iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
-	switch (w.get_entry().get_tag())
-	{
-	case DW_TAG_structure_type: keyword = "struct"; break;
-	case DW_TAG_union_type: keyword = "union"; break;
-	case DW_TAG_class_type: keyword = "class"; break;
-	default: continue;
-	}
+	printf("compile_unit {\n");
 
-	const char *name = w.get_entry().get_string_attribute(DW_AT_name);
-	if (!name)
-	    continue;
-	printf("ZZZ %s %s;\n", keyword, name);
+	walker_t w(*this, *i);
+	w.move_to_sibling();
+	w.move_to_children();
 
-	// print members
-	if (!w.move_to_children())
-	    continue;
 	do
 	{
-	    const char *name = w.get_entry().get_string_attribute(DW_AT_name);
-	    if (!name)
-		continue;
-
-	    switch (w.get_entry().get_tag())
+	    const entry_t &e = w.get_entry();
+	    switch (e.get_tag())
 	    {
-	    case DW_TAG_member: keyword = "member"; break;
-	    case DW_TAG_subprogram: keyword = "function"; break;
+	    case DW_TAG_structure_type: keyword = "struct"; break;
+	    case DW_TAG_union_type: keyword = "union"; break;
+	    case DW_TAG_class_type: keyword = "class"; break;
 	    default: continue;
 	    }
-	    printf("    %s %s;\n", keyword, name);
+
+	    const char *name = e.get_string_attribute(DW_AT_name);
+	    if (!name)
+		continue;
+	    printf("ZZZ %s %s;\n", keyword, name);
+
+	    // print members
+	    if (!w.move_to_children())
+		continue;
+	    do
+	    {
+		const entry_t &e = w.get_entry();
+		const char *name = e.get_string_attribute(DW_AT_name);
+		if (!name)
+		    continue;
+
+		switch (e.get_tag())
+		{
+		case DW_TAG_member: keyword = "member"; break;
+		case DW_TAG_subprogram: keyword = "function"; break;
+		default: continue;
+		}
+		printf("    %s ", keyword);
+		describe_type(w, e.get_reference_attribute(DW_AT_type));
+		printf(" %s;\n", name);
+
+	    } while (w.move_to_sibling());
+	    w.move_preorder();
 
 	} while (w.move_to_sibling());
 
-    } while (w.move_to_sibling());
+	printf("} compile_unit\n");
+    }
+    printf("\n\n");
 }
 
 void
