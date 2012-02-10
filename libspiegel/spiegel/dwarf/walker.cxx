@@ -220,6 +220,11 @@ walker_t::read_entry()
     if (a->children)
 	level_++;
 
+// printf("XXX read_entry => tag=%s level=%u offset=0x%x\n",
+// tagnames.to_name(entry_.get_tag()),
+// entry_.get_level(),
+// entry_.get_offset());
+
     return 1;
 }
 
@@ -245,12 +250,22 @@ walker_t::move_to_sibling()
     // TODO: use the DW_AT_sibling attribute if present
     unsigned target_level = entry_.get_level();
     int r;
-    do
+    for (;;)
     {
-	if ((r = read_entry()) == EOF)
+	r = read_entry();
+	if (r == EOF)
+	{
 	    return false;
-    } while (r && entry_.get_level() > target_level);
-    return !!r;
+	}
+	if (r && entry_.get_level() == target_level)
+	{
+	    return true;
+	}
+	if (!r && level_ < target_level)
+	{
+	    return false;
+	}
+    }
 }
 
 bool
