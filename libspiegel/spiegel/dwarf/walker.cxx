@@ -237,19 +237,19 @@ walker_t::read_entry()
 // at which the walker was initialised or seeked to,
 // of the next entry to be read from the file
 
-bool
+const entry_t *
 walker_t::move_preorder()
 {
     int r;
     do
     {
 	if ((r = read_entry()) == EOF)
-	    return false;
+	    return 0;
     } while (!r);
-    return true;
+    return &entry_;
 }
 
-bool
+const entry_t *
 walker_t::move_to_sibling()
 {
     // TODO: use the DW_AT_sibling attribute if present
@@ -260,33 +260,34 @@ walker_t::move_to_sibling()
 	r = read_entry();
 	if (r == EOF)
 	{
-	    return false;
+	    return 0;
 	}
 	if (r && entry_.get_level() == target_level)
 	{
-	    return true;
+	    return &entry_;
 	}
 	if (!r && level_ < target_level)
 	{
-	    return false;
+	    return 0;
 	}
     }
 }
 
-bool
+const entry_t *
 walker_t::move_to_children()
 {
-    return (entry_.has_children() && read_entry() != EOF);
+    return (entry_.has_children() &&
+	    read_entry() == 1 ? &entry_ : 0);
 }
 
-bool
+const entry_t *
 walker_t::move_to(reference_t ref)
 {
     compile_unit_ = state_.compile_units_[ref.cu];
     reader_ = compile_unit_->get_contents();
     reader_.seek(ref.offset);
     level_ = 0;
-    return (read_entry() == 1);
+    return (read_entry() == 1 ? &entry_ : 0);
 }
 
 // close namespace

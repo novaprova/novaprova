@@ -54,15 +54,15 @@ compile_unit_t::read_header(reader_t &r)
 bool
 compile_unit_t::read_compile_unit_entry(walker_t &w)
 {
-    if (!w.move_to_sibling())
+    const entry_t *e = w.move_to_sibling();
+    if (!e)
 	return false;
 
-    const entry_t &e = w.get_entry();
-    name_ = e.get_string_attribute(DW_AT_name);
-    comp_dir_ = e.get_string_attribute(DW_AT_comp_dir);
-    low_pc_ = e.get_uint64_attribute(DW_AT_low_pc);
-    high_pc_ = e.get_uint64_attribute(DW_AT_high_pc);
-    language_ = e.get_uint32_attribute(DW_AT_language);
+    name_ = e->get_string_attribute(DW_AT_name);
+    comp_dir_ = e->get_string_attribute(DW_AT_comp_dir);
+    low_pc_ = e->get_uint64_attribute(DW_AT_low_pc);
+    high_pc_ = e->get_uint64_attribute(DW_AT_high_pc);
+    language_ = e->get_uint32_attribute(DW_AT_language);
 
     printf("    name %s\n", name_);
     printf("    comp_dir %s\n", comp_dir_);

@@ -39,10 +39,10 @@ public:
 
     const entry_t &get_entry() const { return entry_; }
 
-    bool move_to_sibling();
-    bool move_to_children();
-    bool move_preorder();
-    bool move_to(reference_t);
+    const entry_t *move_to_sibling();
+    const entry_t *move_to_children();
+    const entry_t *move_preorder();
+    const entry_t *move_to(reference_t);
 
 private:
     int read_entry();
