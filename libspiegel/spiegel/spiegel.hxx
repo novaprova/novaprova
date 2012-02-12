@@ -1,11 +1,17 @@
 #ifndef __spiegel_spiegel_hxx__
 #define __spiegel_spiegel_hxx__ 1
 
+#include <stdint.h>
 #include <vector>
 
 #define SPIEGEL_DYNAMIC 0
 
 namespace spiegel {
+
+namespace dwarf {
+class walker_t;
+class compile_unit_t;
+};
 
 #if SPIEGEL_DYNAMIC
 union value_t
@@ -21,36 +27,52 @@ union value_t
 class compile_unit_t
 {
 public:
-    const char *get_name() const;
+    // TODO: make ctor private and add a factory class
+    compile_unit_t() {}
+    ~compile_unit_t() {}
+
+    bool populate(spiegel::dwarf::walker_t &);
+
+    const char *get_name() const { return name_; }
+    const char *get_compile_dir() const { return comp_dir_; }
 //     static compile_unit_t *for_name(const char *name);
+
+private:
+    spiegel::dwarf::compile_unit_t *impl_;
+    const char *name_;
+    const char *comp_dir_;
+    uint64_t low_pc_;	    // TODO: should be an addr_t
+    uint64_t high_pc_;
+    uint32_t language_;
 };
 
+#if 0
 class type_t
 {
 public:
     // all the types including primitives like int
-    vector<type_t*> get_classes() const;
+    std::vector<type_t*> get_classes() const;
     type_t *get_component_type() const;	// component of an array
-    constructor_t *get_constructor(vector<type_t*> types) const;
-    vector<constructor_t*> get_constructors() const;
+    constructor_t *get_constructor(std::vector<type_t*> types) const;
+    std::vector<constructor_t*> get_constructors() const;
     destructor_t *get_destructor() const;
-    vector<type_t*> get_declared_classes() const;
+    std::vector<type_t*> get_declared_classes() const;
 
     compile_unit_t *get_compile_unit() const;
 
     // fields declared by this class
     field_t *get_declared_field(const char *name) const;
-    vector<field_t*> get_declared_fields() const;
+    std::vector<field_t*> get_declared_fields() const;
     // fields declared by this class or any of its ancestors
     field_t *get_field(const char *name) const;
-    vector<field_t*> get_fields() const;
+    std::vector<field_t*> get_fields() const;
 
     // methods declared by this class
     method_t *get_declared_method(const char *name) const;
-    vector<method_t*> get_declared_methods() const;
+    std::vector<method_t*> get_declared_methods() const;
     // methods declared by this class or any of its ancestors
     method_t *get_method(const char *name) const;
-    vector<method_t*> get_methods() const;
+    std::vector<method_t*> get_methods() const;
 
     int get_modifiers() const;
 
@@ -106,10 +128,10 @@ public:
 class constructor_t : public member_t
 {
 public:
-    vector<type_t*> get_exception_types() const;
-    vector<type_t*> get_parameter_types() const;
+    std::vector<type_t*> get_exception_types() const;
+    std::vector<type_t*> get_parameter_types() const;
 #if SPIEGEL_DYNAMIC
-    void *new_instance(vector<value_t> initargs);
+    void *new_instance(std::vector<value_t> initargs);
 #endif
     char *to_string() const;
 };
@@ -127,13 +149,14 @@ class method_t : public member_t
 {
 public:
     type_t *get_return_type() const;
-    vector<type_t*> get_parameter_types() const;
-    vector<type_t*> get_exception_types() const;
+    std::vector<type_t*> get_parameter_types() const;
+    std::vector<type_t*> get_exception_types() const;
 #if SPIEGEL_DYNAMIC
-    value_t invoke(void *obj, vector<value_t> args);
+    value_t invoke(void *obj, std::vector<value_t> args);
 #endif
     char *to_string() const;
 };
+#endif
 
 }; // namespace spiegel
 

@@ -33,6 +33,7 @@ libspiegel_SOURCES= \
 	spiegel/dwarf/walker.cxx \
 	spiegel/common.c \
 	spiegel/commonp.cxx \
+	spiegel/spiegel.cxx \
 
 libspiegel_PRIVHEADERS= \
 	spiegel/dwarf/abbrev.hxx \

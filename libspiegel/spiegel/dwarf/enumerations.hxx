@@ -4,9 +4,6 @@
 #include "spiegel/commonp.hxx"
 #include "string_table.hxx"
 
-namespace spiegel {
-namespace dwarf {
-
 enum section_names
 {
     /* These names are not defined in the DWARF standard
@@ -24,14 +21,12 @@ enum section_names
 
     DW_sec_num
 };
-extern string_table_t secnames;
 
 enum children_values
 {
     DW_CHILDREN_no = 0,
     DW_CHILDREN_yes = 1
 };
-extern string_table_t childvals;
 
 enum form_values
 {
@@ -57,7 +52,6 @@ enum form_values
     DW_FORM_ref_udata = 0x15,
     DW_FORM_indirect = 0x16
 };
-extern string_table_t formvals;
 
 enum tag_names
 {
@@ -112,7 +106,6 @@ enum tag_names
 // DW_TAG_lo_user = 0x4080,
 // DW_TAG_hi_user = 0xffff
 };
-extern string_table_t tagnames;
 
 enum attribute_names
 {
@@ -213,10 +206,17 @@ enum attribute_names
 
     DW_AT_max
 };
+
+namespace spiegel {
+namespace dwarf {
+
+extern string_table_t secnames;
+extern string_table_t childvals;
+extern string_table_t formvals;
+extern string_table_t tagnames;
 extern string_table_t attrnames;
 
-
 // close namespaces
-} }
+}; };
 
 #endif // __libspiegel_dwarf_enumerations_hxx__

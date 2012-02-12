@@ -59,11 +59,6 @@ private:
     reader_t reader_;	    // for whole including header
     uint32_t abbrevs_offset_;
     std::map<uint32_t, abbrev_t*> abbrevs_;
-    const char *name_;
-    const char *comp_dir_;
-    uint64_t low_pc_;	    // TODO: should be an addr_t
-    uint64_t high_pc_;
-    uint32_t language_;
 };
 
 // close namespaces

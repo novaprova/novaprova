@@ -2,6 +2,7 @@
 #define __libspiegel_dwarf_state_hxx__ 1
 
 #include "spiegel/commonp.hxx"
+#include "spiegel/spiegel.hxx"
 #include <vector>
 #include "section.hxx"
 #include "reference.hxx"
@@ -26,6 +27,8 @@ public:
     void dump_variables();
     void dump_info(bool preorder);
     void dump_abbrevs();
+
+    std::vector<spiegel::compile_unit_t *> get_compile_units();
 
 private:
     compile_unit_t *get_compile_unit(reference_t ref) const

@@ -1,3 +1,4 @@
+#include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
 using namespace std;
 
@@ -150,6 +151,33 @@ test_read_sleb128(int argc __attribute__((unused)),
     return 0;
 }
 
+static int
+test_compile_units(int argc, char **argv)
+{
+    if (argc != 2)
+	fatal("Usage: spiegtest compile_units EXE\n");
+
+    spiegel::dwarf::state_t state(argv[1]);
+    state.map_sections();
+    state.read_compile_units();
+
+    printf("Compile Units\n");
+    printf("=============\n");
+
+    vector<spiegel::compile_unit_t *> units = state.get_compile_units();
+    vector<spiegel::compile_unit_t *>::iterator i;
+    for (i = units.begin() ; i != units.end() ; ++i)
+    {
+	printf("%s/%s\n", (*i)->get_compile_dir(), (*i)->get_name());
+    }
+
+    printf("\n\n");
+
+    return 0;
+}
+
+
+
 int
 main(int argc, char **argv)
 {
@@ -168,6 +196,8 @@ main(int argc, char **argv)
 	return test_read_uleb128(argc-1, argv+1);
     if (!strcmp(argv[1], "read_sleb128"))
 	return test_read_sleb128(argc-1, argv+1);
+    if (!strcmp(argv[1], "compile_units"))
+	return test_compile_units(argc-1, argv+1);
     fatal("Usage: spiegel command args...\n");
     return 1;
 }
