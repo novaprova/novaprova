@@ -3,6 +3,7 @@
 
 #include "spiegel/commonp.hxx"
 #include <map>
+#include "reference.hxx"
 #include "reader.hxx"
 
 namespace spiegel {
@@ -29,6 +30,14 @@ public:
     void dump_abbrevs() const;
 
     uint32_t get_index() const { return index_; }
+
+    reference_t make_reference(uint32_t off) const
+    {
+	reference_t ref;
+	ref.cu = index_;
+	ref.offset = off;
+	return ref;
+    }
 
     reader_t get_contents() const
     {

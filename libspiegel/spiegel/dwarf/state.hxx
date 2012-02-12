@@ -4,6 +4,7 @@
 #include "spiegel/commonp.hxx"
 #include <vector>
 #include "section.hxx"
+#include "reference.hxx"
 #include "enumerations.hxx"
 
 namespace spiegel {
@@ -27,6 +28,11 @@ public:
     void dump_abbrevs();
 
 private:
+    compile_unit_t *get_compile_unit(reference_t ref) const
+    {
+	return compile_units_[ref.cu];
+    }
+
     char *filename_;
     section_t sections_[DW_sec_num];
     std::vector<section_t> mappings_;

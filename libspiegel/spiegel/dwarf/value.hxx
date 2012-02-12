@@ -79,12 +79,11 @@ struct value_t
 	val.val.bytes.len = l;
 	return val;
     }
-    static value_t make_ref(uint32_t cu, uint32_t off)
+    static value_t make_ref(reference_t ref)
     {
 	value_t val;
 	val.type = T_REF;
-	val.val.ref.cu = cu;
-	val.val.ref.offset = off;
+	val.val.ref = ref;
 	return val;
     }
 
