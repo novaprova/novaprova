@@ -1,7 +1,7 @@
-#ifndef __SPIEGEL_H__
-#define __SPIEGEL_H__ 1
+#ifndef __spiegel_spiegel_hxx__
+#define __spiegel_spiegel_hxx__ 1
 
-#include "vector"
+#include <vector>
 
 namespace Spiegel
 {
@@ -118,5 +118,5 @@ public:
 
 };
 
-#endif __SPIEGEL_H__
+#endif // __spiegel_spiegel_hxx__
 
