@@ -50,9 +50,11 @@ state_t::map_sections()
 	int idx = secnames.to_index(sec->name);
 	if (idx == DW_sec_none)
 	    continue;
+#if 0
 	printf("Section [%d], name=%s size=%lx filepos=%lx\n",
 	    idx, sec->name, (unsigned long)sec->size,
 	    (unsigned long)sec->filepos);
+#endif
 	sections_[idx].offset = (unsigned long)sec->filepos;
 	sections_[idx].size = (unsigned long)sec->size;
     }
@@ -79,12 +81,14 @@ state_t::map_sections()
 	}
     }
 
+#if 0
     printf("Mappings:\n");
     for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
 	printf("offset=%lx size=%lx end=%lx\n",
 	       m->offset, m->size, m->get_end());
     }
+#endif
 
     /* mmap() the mappings */
     fd = open(filename_, O_RDONLY, 0);
@@ -125,6 +129,7 @@ state_t::map_sections()
 	assert(sections_[idx].map);
     }
 
+#if 0
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
 	printf("[%d] name=.debug_%s map=0x%lx size=0x%lx\n",
@@ -132,6 +137,7 @@ state_t::map_sections()
 		(unsigned long)sections_[idx].map,
 		sections_[idx].size);
     }
+#endif
 
     goto out;
 error:
