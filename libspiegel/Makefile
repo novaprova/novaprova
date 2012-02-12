@@ -50,6 +50,7 @@ libspiegel_PRIVHEADERS= \
 	spiegel/commonp.hxx \
 
 libspiegel_HEADERS= \
+	spiegel/spiegel.hxx \
 
 libspiegel_OBJS= \
 	$(patsubst %.c,%.o,$(filter %.c,$(libspiegel_SOURCES))) \
