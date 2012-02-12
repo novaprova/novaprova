@@ -155,6 +155,30 @@ out:
     bfd_close(b);
 }
 
+void
+state_t::read_compile_units()
+{
+    reader_t infor = sections_[DW_sec_info].get_contents();
+    reader_t abbrevr = sections_[DW_sec_abbrev].get_contents();
+
+    compile_unit_t *cu = 0;
+    for (;;)
+    {
+	cu = new compile_unit_t(compile_units_.size());
+	if (!cu->read_header(infor))
+	    break;
+
+	cu->read_abbrevs(abbrevr);
+
+	walker_t w(*this, cu);
+	if (!cu->read_compile_unit_entry(w))
+	    break;
+
+	compile_units_.push_back(cu);
+    }
+    delete cu;
+}
+
 static void
 describe_type(const walker_t &ow, const reference_t *ref)
 {
@@ -220,6 +244,33 @@ describe_type(const walker_t &ow, const reference_t *ref)
     }
 }
 
+static void
+describe_function_parameters(walker_t &w)
+{
+    printf("(");
+    int nparams = 0;
+    bool got_ellipsis = false;
+    for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
+    {
+	if (got_ellipsis)
+	    continue;
+	if (e->get_tag() == DW_TAG_formal_parameter)
+	{
+	    if (nparams++)
+		printf(", ");
+	    describe_type(w, e->get_reference_attribute(DW_AT_type));
+	}
+	else if (e->get_tag() == DW_TAG_unspecified_parameters)
+	{
+	    if (nparams++)
+		printf(", ");
+	    printf("...");
+	    got_ellipsis = true;
+	}
+    }
+    printf(")");
+}
+
 void
 state_t::dump_structs()
 {
@@ -276,18 +327,9 @@ state_t::dump_structs()
 			    printf("    /*function*/ ");
 			    describe_type(w, e->get_reference_attribute(DW_AT_type));
 			}
-			printf("%s(", name);
-			int nparams = 0;
-			for (e = w.move_down() ; e ; e = w.move_next())
-			{
-			    if (e->get_tag() == DW_TAG_formal_parameter)
-			    {
-				if (nparams++)
-				    printf(", ");
-				describe_type(w, e->get_reference_attribute(DW_AT_type));
-			    }
-			}
-			printf(")\n");
+			printf("%s", name);
+			describe_function_parameters(w);
+			printf("\n");
 		    }
 		    break;
 		default:
@@ -303,28 +345,69 @@ state_t::dump_structs()
 }
 
 void
-state_t::read_compile_units()
+state_t::dump_functions()
 {
-    reader_t infor = sections_[DW_sec_info].get_contents();
-    reader_t abbrevr = sections_[DW_sec_abbrev].get_contents();
+    printf("Functions\n");
+    printf("=========\n");
 
-    compile_unit_t *cu = 0;
-    for (;;)
+    vector<compile_unit_t*>::iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
-	cu = new compile_unit_t(compile_units_.size());
-	if (!cu->read_header(infor))
-	    break;
+	printf("compile_unit {\n");
 
-	cu->read_abbrevs(abbrevr);
+	walker_t w(*this, *i);
+	w.move_next();	// at the DW_TAG_compile_unit
+	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
+	{
+	    if (e->get_tag() != DW_TAG_subprogram)
+		continue;
 
-	walker_t w(*this, cu);
-	if (!cu->read_compile_unit_entry(w))
-	    break;
+	    const char *name = e->get_string_attribute(DW_AT_name);
+	    if (!name)
+		continue;
 
-	compile_units_.push_back(cu);
+	    describe_type(w, e->get_reference_attribute(DW_AT_type));
+	    printf("%s", name);
+	    describe_function_parameters(w);
+	    printf("\n");
+	}
+
+	printf("} compile_unit\n");
     }
-    delete cu;
+    printf("\n\n");
 }
+
+void
+state_t::dump_variables()
+{
+    printf("Variables\n");
+    printf("=========\n");
+
+    vector<compile_unit_t*>::iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    {
+	printf("compile_unit {\n");
+
+	walker_t w(*this, *i);
+	w.move_next();	// at the DW_TAG_compile_unit
+	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
+	{
+	    if (e->get_tag() != DW_TAG_variable)
+		continue;
+
+	    const char *name = e->get_string_attribute(DW_AT_name);
+	    if (!name)
+		continue;
+
+	    describe_type(w, e->get_reference_attribute(DW_AT_type));
+	    printf("%s;\n", name);
+	}
+
+	printf("} compile_unit\n");
+    }
+    printf("\n\n");
+}
+
 
 static void
 recursive_dump(const entry_t *e, walker_t &w, unsigned depth)

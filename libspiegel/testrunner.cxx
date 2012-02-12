@@ -52,6 +52,34 @@ test_abbrevs(int argc, char **argv)
 }
 
 static int
+test_functions(int argc, char **argv)
+{
+    if (argc != 2)
+	fatal("Usage: spiegtest functions EXE\n");
+
+    spiegel::dwarf::state_t state(argv[1]);
+    state.map_sections();
+    state.read_compile_units();
+    state.dump_functions();
+
+    return 0;
+}
+
+static int
+test_variables(int argc, char **argv)
+{
+    if (argc != 2)
+	fatal("Usage: spiegtest variables EXE\n");
+
+    spiegel::dwarf::state_t state(argv[1]);
+    state.map_sections();
+    state.read_compile_units();
+    state.dump_variables();
+
+    return 0;
+}
+
+static int
 test_structs(int argc, char **argv)
 {
     if (argc != 2)
@@ -130,6 +158,10 @@ main(int argc, char **argv)
 	return test_info(argc-1, argv+1);
     if (!strcmp(argv[1], "abbrevs"))
 	return test_abbrevs(argc-1, argv+1);
+    if (!strcmp(argv[1], "functions"))
+	return test_functions(argc-1, argv+1);
+    if (!strcmp(argv[1], "variables"))
+	return test_variables(argc-1, argv+1);
     if (!strcmp(argv[1], "structs"))
 	return test_structs(argc-1, argv+1);
     if (!strcmp(argv[1], "read_uleb128"))

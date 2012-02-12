@@ -20,9 +20,11 @@ public:
 
     void map_sections();
     void read_compile_units();
-    void dump_abbrevs();
-    void dump_info(bool preorder);
     void dump_structs();
+    void dump_functions();
+    void dump_variables();
+    void dump_info(bool preorder);
+    void dump_abbrevs();
 
 private:
     char *filename_;
