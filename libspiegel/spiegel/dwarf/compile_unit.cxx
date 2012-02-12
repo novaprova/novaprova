@@ -54,7 +54,7 @@ compile_unit_t::read_header(reader_t &r)
 bool
 compile_unit_t::read_compile_unit_entry(walker_t &w)
 {
-    const entry_t *e = w.move_to_sibling();
+    const entry_t *e = w.move_next();
     if (!e)
 	return false;
 

@@ -15,7 +15,8 @@ class walker_t
 {
 public:
     walker_t(state_t &s, compile_unit_t *cu)
-     :  state_(s),
+     :  id_(next_id_++),
+	state_(s),
 	compile_unit_(cu),
 	reader_(cu->get_contents()),
 	level_(0)
@@ -23,7 +24,8 @@ public:
     }
 
     walker_t(const walker_t &o)
-     :  state_(o.state_),
+     :  id_(next_id_++),
+        state_(o.state_),
 	compile_unit_(o.compile_unit_),
 	reader_(o.reader_),
 	// Note: we don't clone the entry, on the assumption
@@ -32,20 +34,28 @@ public:
     {
 	// but we need the entry's level for the move
 	// operations to work correctly
-	entry_.setup(o.entry_.get_offset(),
-		     o.entry_.get_level(),
-		     o.entry_.get_abbrev());
+	entry_.partial_setup(o.entry_);
     }
 
-    const entry_t &get_entry() const { return entry_; }
+    const entry_t *get_entry() const { return &entry_; }
 
-    const entry_t *move_to_sibling();
-    const entry_t *move_to_children();
+    // move in preorder: to next sibling or to
+    // next available ancestor's sibling
     const entry_t *move_preorder();
+    // move to next sibling and return it, or
+    // return 0 and move back up
+    const entry_t *move_next();
+    // move to first child and return it, or
+    // return 0 if has no children
+    const entry_t *move_down();
     const entry_t *move_to(reference_t);
 
 private:
     int read_entry();
+
+    // for debugging only
+    static uint32_t next_id_;
+    uint32_t id_;
 
     state_t &state_;
     compile_unit_t *compile_unit_;

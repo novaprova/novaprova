@@ -5,6 +5,10 @@
 namespace spiegel { namespace dwarf {
 using namespace std;
 
+#define DEBUG_WALK 0
+
+uint32_t walker_t::next_id_ = 1;
+
 int
 walker_t::read_entry()
 {
@@ -24,6 +28,10 @@ walker_t::read_entry()
 	if (!level_)
 	    return EOF;   // end of subtree in scope
 	level_--;
+#if DEBUG_WALK
+	printf("\n# XXX [%u] %s:%d level=%u return 0\n",
+	       id_, __FUNCTION__, __LINE__, level_);
+#endif
 	return 0;
     }
 
@@ -225,13 +233,34 @@ walker_t::read_entry()
     if (a->children)
 	level_++;
 
-// printf("XXX read_entry => tag=%s level=%u offset=0x%x\n",
-// tagnames.to_name(entry_.get_tag()),
-// entry_.get_level(),
-// entry_.get_offset());
+#if DEBUG_WALK
+    printf("\n# XXX [%u]%s:%d level=%u entry={tag=%s level=%u offset=0x%x} return 1\n",
+	   id_, __FUNCTION__, __LINE__,
+	   level_,
+	   tagnames.to_name(entry_.get_tag()),
+	   entry_.get_level(),
+	   entry_.get_offset());
+#endif
 
     return 1;
 }
+
+#if DEBUG_WALK
+#define BEGIN \
+    printf("\n# [%u] XXX %s:%d level=%u entry.level=%u\n", \
+	   id_, __FUNCTION__, __LINE__, level_, entry_.get_level());
+#define RETURN(ret) \
+    do { \
+	const entry_t *_ret = (ret); \
+	printf("\n# XXX [%u]%s:%d r=%d level %u entry.level=%u return %p\n", \
+	       id_, __FUNCTION__, __LINE__, r, \
+	       level_, entry_.get_level(), _ret); \
+	return _ret; \
+    } while(0)
+#else
+#define RETURN(ret) \
+    return (ret)
+#endif
 
 // level_ is the level relative to the very first entry
 // at which the walker was initialised or seeked to,
@@ -244,40 +273,42 @@ walker_t::move_preorder()
     do
     {
 	if ((r = read_entry()) == EOF)
-	    return 0;
+	    RETURN(0);
     } while (!r);
-    return &entry_;
+    RETURN(&entry_);
 }
 
 const entry_t *
-walker_t::move_to_sibling()
+walker_t::move_next()
 {
     // TODO: use the DW_AT_sibling attribute if present
     unsigned target_level = entry_.get_level();
-    int r;
+    int r = 0;
     for (;;)
     {
+	if (level_ < target_level)
+	{
+	    if (target_level)
+		entry_.partial_setup(entry_.get_offset(),
+				     target_level-1);
+	    RETURN(0);
+	}
 	r = read_entry();
 	if (r == EOF)
-	{
-	    return 0;
-	}
+	    RETURN(0);
 	if (r && entry_.get_level() == target_level)
-	{
-	    return &entry_;
-	}
-	if (!r && level_ < target_level)
-	{
-	    return 0;
-	}
+	    RETURN(&entry_);
     }
 }
 
 const entry_t *
-walker_t::move_to_children()
+walker_t::move_down()
 {
-    return (entry_.has_children() &&
-	    read_entry() == 1 ? &entry_ : 0);
+    int r = 0;
+    if (!entry_.has_children())
+	RETURN(0);
+    r = read_entry();
+    RETURN(r == 1 ? &entry_ : 0);
 }
 
 const entry_t *
@@ -287,8 +318,11 @@ walker_t::move_to(reference_t ref)
     reader_ = compile_unit_->get_contents();
     reader_.seek(ref.offset);
     level_ = 0;
-    return (read_entry() == 1 ? &entry_ : 0);
+    int r = read_entry();
+    RETURN(r == 1 ? &entry_ : 0);
 }
+
+#undef RETURN
 
 // close namespace
 } }

@@ -21,6 +21,18 @@ public:
     {}
 
     void setup(size_t offset, unsigned level, const abbrev_t *a);
+    void partial_setup(const entry_t &o)
+    {
+	offset_ = o.offset_;
+	level_ = o.level_;
+	abbrev_ = 0;
+    }
+    void partial_setup(uint32_t off, uint32_t lev)
+    {
+	offset_ = off;
+	level_ = lev;
+	abbrev_ = 0;
+    }
 
     void add_attribute(uint32_t name, value_t val)
     {

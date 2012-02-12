@@ -20,7 +20,8 @@ public:
 
     void map_sections();
     void read_compile_units();
-    void dump_info();
+    void dump_abbrevs();
+    void dump_info(bool preorder);
     void dump_structs();
 
 private:

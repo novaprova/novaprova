@@ -154,7 +154,7 @@ describe_type(const walker_t &ow, const reference_t *ref)
 {
     if (!ref)
     {
-	printf("??? ");
+	printf("void ");
 	return;
     }
     walker_t w = ow;
@@ -190,21 +190,21 @@ describe_type(const walker_t &ow, const reference_t *ref)
     case DW_TAG_union_type:
 	printf("union %s ", (name ? name : "{...}"));
 	break;
+    case DW_TAG_class_type:
+	printf("class %s ", (name ? name : "{...}"));
+	break;
     case DW_TAG_enumeration_type:
 	printf("enum %s ", (name ? name : "{...}"));
 	break;
     case DW_TAG_array_type:
 	describe_type(w, e->get_reference_attribute(DW_AT_type));
-	if ((e = w.move_to_children()))
+	for (e = w.move_down() ; e ; e = w.move_next())
 	{
-	    do
-	    {
-		uint32_t count;
-		if (e->get_tag() == DW_TAG_subrange_type &&
-		    ((count = e->get_uint32_attribute(DW_AT_count)) ||
-		     (count = e->get_uint32_attribute(DW_AT_upper_bound))))
-		    printf("[%u]", count);
-	    } while ((e = w.move_to_sibling()));
+	    uint32_t count;
+	    if (e->get_tag() == DW_TAG_subrange_type &&
+		((count = e->get_uint32_attribute(DW_AT_count)) ||
+		 (count = e->get_uint32_attribute(DW_AT_upper_bound))))
+		printf("[%u]", count);
 	}
 	printf(" ");
 	break;
@@ -225,8 +225,8 @@ state_t::dump_structs()
 	printf("compile_unit {\n");
 
 	walker_t w(*this, *i);
-	w.move_to_sibling();	// at the DW_TAG_compile_unit
-	for (const entry_t *e = w.move_to_children() ; e ; e = w.move_to_sibling())
+	w.move_next();	// at the DW_TAG_compile_unit
+	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
 	{
 	    switch (e->get_tag())
 	    {
@@ -236,15 +236,13 @@ state_t::dump_structs()
 	    default: continue;
 	    }
 
-	    const char *name = e->get_string_attribute(DW_AT_name);
-	    if (!name)
+	    const char *structname = e->get_string_attribute(DW_AT_name);
+	    if (!structname)
 		continue;
-	    printf("ZZZ %s %s;\n", keyword, name);
+	    printf("ZZZ %s %s;\n", keyword, structname);
 
 	    // print members
-	    if (!(e = w.move_to_children()))
-		continue;
-	    do
+	    for (e = w.move_down() ; e ; e = w.move_next())
 	    {
 		const char *name = e->get_string_attribute(DW_AT_name);
 		if (!name)
@@ -252,17 +250,45 @@ state_t::dump_structs()
 
 		switch (e->get_tag())
 		{
-		case DW_TAG_member: keyword = "member"; break;
-		case DW_TAG_subprogram: keyword = "function"; break;
-		default: continue;
+		case DW_TAG_member:
+		    printf("    /*member*/ ");
+		    describe_type(w, e->get_reference_attribute(DW_AT_type));
+		    printf(" %s;\n", name);
+		    break;
+		case DW_TAG_subprogram:
+		    {
+			if (!strcmp(name, structname))
+			{
+			    printf("    /*constructor*/ ");
+			}
+			else if (name[0] == '~' && !strcmp(name+1, structname))
+			{
+			    printf("    /*destructor*/ ");
+			}
+			else
+			{
+			    printf("    /*function*/ ");
+			    describe_type(w, e->get_reference_attribute(DW_AT_type));
+			}
+			printf("%s(", name);
+			int nparams = 0;
+			for (e = w.move_down() ; e ; e = w.move_next())
+			{
+			    if (e->get_tag() == DW_TAG_formal_parameter)
+			    {
+				if (nparams++)
+				    printf(", ");
+				describe_type(w, e->get_reference_attribute(DW_AT_type));
+			    }
+			}
+			printf(")\n");
+		    }
+		    break;
+		default:
+		    printf("    /* %s */\n", tagnames.to_name(e->get_tag()));
+		    continue;
 		}
-		printf("    %s ", keyword);
-		describe_type(w, e->get_reference_attribute(DW_AT_type));
-		printf(" %s;\n", name);
-
-	    } while ((e = w.move_to_sibling()));
-	    w.move_preorder();
-
+	    }
 	}
 
 	printf("} compile_unit\n");
@@ -294,50 +320,49 @@ state_t::read_compile_units()
     delete cu;
 }
 
-#if 1
 static void
-preorder_dump2(walker_t &w, unsigned depth)
+recursive_dump(const entry_t *e, walker_t &w, unsigned depth)
 {
-    do
-    {
-	assert(w.get_entry().get_abbrev());
-	assert(depth == w.get_entry().get_level());
-	w.get_entry().dump();
-	if (w.move_to_children())
-	    preorder_dump2(w, depth+1);
-    } while (w.move_to_sibling());
+    assert(e->get_level() == depth);
+    e->dump();
+    for (e = w.move_down() ; e ; e = w.move_next())
+	recursive_dump(e, w, depth+1);
 }
-
-static void
-preorder_dump(walker_t &w)
-{
-    w.move_to_sibling();
-    preorder_dump2(w, 0);
-}
-
-#else
-static void
-preorder_dump(walker_t &w)
-{
-    while (w.move_preorder())
-	w.get_entry().dump();
-}
-
-#endif
 
 void
-state_t::dump_info()
+state_t::dump_info(bool preorder)
 {
+    printf("Info\n");
+    printf("====\n");
     vector<compile_unit_t*>::iterator i;
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
 	printf("compile_unit {\n");
-
-	(*i)->dump_abbrevs();
-
 	walker_t w(*this, *i);
-	preorder_dump(w);
+	if (preorder)
+	{
+	    while (const entry_t *e = w.move_preorder())
+		e->dump();
+	}
+	else
+	{
+	    recursive_dump(w.move_next(), w, 0);
+	}
+	printf("} compile_unit\n");
+    }
+    printf("\n\n");
+}
 
+void
+state_t::dump_abbrevs()
+{
+    printf("Abbrevs\n");
+    printf("=======\n");
+    vector<compile_unit_t*>::iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    {
+	printf("compile_unit {\n");
+	(*i)->dump_abbrevs();
 	printf("} compile_unit\n");
     }
     printf("\n\n");
