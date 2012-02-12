@@ -3,10 +3,12 @@
 
 #include <vector>
 
-namespace Spiegel
-{
+#define SPIEGEL_DYNAMIC 0
 
-union Value
+namespace spiegel {
+
+#if SPIEGEL_DYNAMIC
+union value_t
 {
     void *vpointer;
     unsigned long long vuint;
@@ -14,109 +16,126 @@ union Value
     double vdouble;
     float vfloat;
 };
+#endif
 
-class CompileUnit
+class compile_unit_t
 {
 public:
-    const char *getName() const;
+    const char *get_name() const;
+//     static compile_unit_t *for_name(const char *name);
 };
 
-class Type
+class type_t
 {
 public:
     // all the types including primitives like int
-    static Type *forName(const char *name);
-    vector<Type*> getClasses() const;
-    Type *getComponentType() const;	// component of an array
-    Constructor *getConstructor(vector<Type*> types) const;
-    vector<Constructor*> getConstructors() const;
-    vector<Type*> getDeclaredClasses() const;
-    Destructor *getDestructor() const;
+    vector<type_t*> get_classes() const;
+    type_t *get_component_type() const;	// component of an array
+    constructor_t *get_constructor(vector<type_t*> types) const;
+    vector<constructor_t*> get_constructors() const;
+    destructor_t *get_destructor() const;
+    vector<type_t*> get_declared_classes() const;
 
-    CompileUnit *getDeclaringCompileUnit() const;
+    compile_unit_t *get_compile_unit() const;
 
     // fields declared by this class
-    Field *getDeclaredField(const char *name) const;
-    vector<Field*> getDeclaredFields() const;
+    field_t *get_declared_field(const char *name) const;
+    vector<field_t*> get_declared_fields() const;
     // fields declared by this class or any of its ancestors
-    Field *getField(const char *name) const;
-    vector<Field*> getFields() const;
+    field_t *get_field(const char *name) const;
+    vector<field_t*> get_fields() const;
 
-    // ditto for methods
+    // methods declared by this class
+    method_t *get_declared_method(const char *name) const;
+    vector<method_t*> get_declared_methods() const;
+    // methods declared by this class or any of its ancestors
+    method_t *get_method(const char *name) const;
+    vector<method_t*> get_methods() const;
 
-    int getModifiers() const;
+    int get_modifiers() const;
 
-    Type *getSuperclass() const;
+    type_t *get_superclass() const;
 
-    boolean isArray() const;
-    boolean isPrimitive() const;
+    boolean is_array() const;
+    boolean is_primitive() const;
 
-    // Object newInstance();
-    char *toString() const;
+#if SPIEGEL_DYNAMIC
+    void *new_instance() const;
+#endif
+    char *to_string() const;
 };
 
-class Member
+class member_t
 {
 public:
-    const char *getName() const;
-    Type *getDeclaringClass() const;
-    int getModifiers() const;
+    const char *get_ame() const;
+    type_t *get_declaring_class() const;
+    int get_modifiers() const;
 };
 
-class Field : public Member
+class field_t : public member_t
 {
 public:
-    Type *getType() const;
+    type_t *get_type() const;
 
-    Value get(void *) const;
-    boolean getBoolean(void *) const;
-    char getByte(void *) const;
-    char getChar(void *) const;
-    double getDouble(void *) const;
-    float getFloat(void *) const;
-    int getInt(void *) const;
-    long getLong(void *) const;
-    short getShort(void *) const;
+#if SPIEGEL_DYNAMIC
+    value_t get(void *) const;
+    boolean get_boolean(void *) const;
+    char get_char(void *) const;
+    double get_double(void *) const;
+    float get_float(void *) const;
+    int get_int(void *) const;
+    long get_long(void *) const;
+    long long get_long_long(void *) const;
+    short get_short(void *) const;
 
-    void set(void *, Value) const;
-    void setBoolean(void *, boolean) const;
-    void setByte(void *, char) const;
-    void setChar(void *, char) const;
-    void setDouble(void *, double) const;
-    void setFloat(void *, float) const;
-    void setInt(void *, int) const;
-    void setLong(void *, long) const;
-    void setShort(void *, short) const;
+    void set(void *, value_t) const;
+    void set_boolean(void *, boolean) const;
+    void set_char(void *, char) const;
+    void set_double(void *, double) const;
+    void set_float(void *, float) const;
+    void set_int(void *, int) const;
+    void set_long(void *, long) const;
+    void set_long_long(void *, long) const;
+    void set_short(void *, short) const;
+#endif
 
-    char *toString() const;
+    char *to_string() const;
 };
 
-class Constructor : public Member
+class constructor_t : public member_t
 {
 public:
-    vector<Type*> getExceptionTypes() const;
-    vector<Type*> getParameterTypes() const;
-    void *newInstance(vector<Value> initargs);
-    char *toString() const;
+    vector<type_t*> get_exception_types() const;
+    vector<type_t*> get_parameter_types() const;
+#if SPIEGEL_DYNAMIC
+    void *new_instance(vector<value_t> initargs);
+#endif
+    char *to_string() const;
 };
 
-class Destructor : public Member
-{
-    // ???
-};
-
-class Method : public Member
+class destructor_t : public member_t
 {
 public:
-    Type *getReturnType() const;
-    vector<Type*> getParameterTypes() const;
-    vector<Type*> getExceptionTypes() const;
-    vector<Type*> getParameterTypes() const;
-    Value invoke(void *obj, vector<Value> args);
-    char *toString() const;
+#if SPIEGEL_DYNAMIC
+    void delete_instance(void *);
+#endif
+    char *to_string() const;
 };
 
+class method_t : public member_t
+{
+public:
+    type_t *get_return_type() const;
+    vector<type_t*> get_parameter_types() const;
+    vector<type_t*> get_exception_types() const;
+#if SPIEGEL_DYNAMIC
+    value_t invoke(void *obj, vector<value_t> args);
+#endif
+    char *to_string() const;
 };
+
+}; // namespace spiegel
 
 #endif // __spiegel_spiegel_hxx__
 
