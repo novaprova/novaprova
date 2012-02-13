@@ -11,6 +11,7 @@ namespace spiegel {
 namespace dwarf {
 class walker_t;
 class compile_unit_t;
+class state_t;
 };
 
 #if SPIEGEL_DYNAMIC
@@ -27,23 +28,23 @@ union value_t
 class compile_unit_t
 {
 public:
-    // TODO: make ctor private and add a factory class
-    compile_unit_t() {}
-    ~compile_unit_t() {}
-
-    bool populate(spiegel::dwarf::walker_t &);
-
     const char *get_name() const { return name_; }
     const char *get_compile_dir() const { return comp_dir_; }
 //     static compile_unit_t *for_name(const char *name);
 
 private:
-    spiegel::dwarf::compile_unit_t *impl_;
+    compile_unit_t() {}
+    ~compile_unit_t() {}
+
+    bool populate(spiegel::dwarf::walker_t &);
+
     const char *name_;
     const char *comp_dir_;
     uint64_t low_pc_;	    // TODO: should be an addr_t
     uint64_t high_pc_;
     uint32_t language_;
+
+    friend class spiegel::dwarf::state_t;
 };
 
 #if 0
