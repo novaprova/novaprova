@@ -186,7 +186,7 @@ public:
 #if SPIEGEL_DYNAMIC
     value_t invoke(void *obj, std::vector<value_t> args);
 #endif
-//     char *to_string() const;
+    std::string to_string() const;
 
 private:
     struct parameter_t

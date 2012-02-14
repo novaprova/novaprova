@@ -195,5 +195,35 @@ function_t::get_parameter_names() const
     return res;
 }
 
+string
+function_t::to_string() const
+{
+    int n = 0;
+    string s;
+
+    s += type_t(type_).to_string();
+    s += " ";
+    s += get_name();
+    s += "(";
+
+    vector<parameter_t>::const_iterator i;
+    for (i = parameters_.begin() ; i != parameters_.end() ; ++i)
+    {
+	if (n++)
+	    s += ", ";
+	s += type_t(i->type).to_string();
+    }
+
+    if (ellipsis_)
+    {
+	if (n)
+	    s += ", ";
+	s += "...";
+    }
+
+    s += ")";
+    return s;
+}
+
 // close namespace
 };
