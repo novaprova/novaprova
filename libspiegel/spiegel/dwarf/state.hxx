@@ -28,13 +28,16 @@ public:
     void dump_info(bool preorder);
     void dump_abbrevs();
 
-    std::vector<spiegel::compile_unit_t *> get_compile_units();
+    // state_t is a Singleton
+    static state_t *instance() { return instance_; }
 
 private:
     compile_unit_t *get_compile_unit(reference_t ref) const
     {
 	return compile_units_[ref.cu];
     }
+
+    static state_t *instance_;
 
     char *filename_;
     section_t sections_[DW_sec_num];

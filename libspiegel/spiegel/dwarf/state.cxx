@@ -11,15 +11,21 @@
 namespace spiegel { namespace dwarf {
 using namespace std;
 
+state_t *state_t::instance_ = 0;
+
 state_t::state_t(const char *filename)
  :  filename_(xstrdup(filename))
 {
     memset(sections_, 0, sizeof(sections_));
+    assert(!instance_);
+    instance_ = this;
 }
 
 state_t::~state_t()
 {
     free(filename_);
+    assert(instance_ == this);
+    instance_ = 0;
 }
 
 void
