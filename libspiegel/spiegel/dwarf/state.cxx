@@ -459,23 +459,5 @@ state_t::dump_abbrevs()
     printf("\n\n");
 }
 
-vector<spiegel::compile_unit_t *>
-state_t::get_compile_units()
-{
-    vector<spiegel::compile_unit_t *> units;
-
-    vector<compile_unit_t*>::iterator i;
-    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
-    {
-	spiegel::compile_unit_t *cu = new spiegel::compile_unit_t;
-	walker_t w(*this, *i);
-	if (!cu->populate(w))
-	    delete cu;
-	else
-	    units.push_back(cu);
-    }
-    return units;
-}
-
 // close namespace
 } }

@@ -164,7 +164,7 @@ test_compile_units(int argc, char **argv)
     printf("Compile Units\n");
     printf("=============\n");
 
-    vector<spiegel::compile_unit_t *> units = state.get_compile_units();
+    vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {

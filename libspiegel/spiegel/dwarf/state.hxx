@@ -31,6 +31,8 @@ public:
     // state_t is a Singleton
     static state_t *instance() { return instance_; }
 
+    const std::vector<compile_unit_t*> &get_compile_units() const { return compile_units_; }
+
 private:
     compile_unit_t *get_compile_unit(reference_t ref) const
     {

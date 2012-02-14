@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include "spiegel/dwarf/reference.hxx"
 
 #define SPIEGEL_DYNAMIC 0
 
@@ -28,23 +29,26 @@ union value_t
 class compile_unit_t
 {
 public:
+    static std::vector<compile_unit_t *> get_compile_units();
+
     const char *get_name() const { return name_; }
     const char *get_compile_dir() const { return comp_dir_; }
 //     static compile_unit_t *for_name(const char *name);
 
 private:
-    compile_unit_t() {}
+    compile_unit_t(spiegel::dwarf::reference_t ref)
+     :  ref_(ref)
+    {}
     ~compile_unit_t() {}
 
-    bool populate(spiegel::dwarf::walker_t &);
+    bool populate();
 
+    spiegel::dwarf::reference_t ref_;
     const char *name_;
     const char *comp_dir_;
     uint64_t low_pc_;	    // TODO: should be an addr_t
     uint64_t high_pc_;
     uint32_t language_;
-
-    friend class spiegel::dwarf::state_t;
 };
 
 #if 0

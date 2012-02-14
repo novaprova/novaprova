@@ -38,6 +38,13 @@ public:
 	ref.offset = off;
 	return ref;
     }
+    reference_t make_root_reference() const
+    {
+	reference_t ref;
+	ref.cu = index_;
+	ref.offset = header_length;
+	return ref;
+    }
 
     reader_t get_contents() const
     {
