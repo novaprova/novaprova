@@ -283,7 +283,7 @@ state_t::dump_structs()
     {
 	printf("compile_unit {\n");
 
-	walker_t w(*this, *i);
+	walker_t w(*i);
 	w.move_next();	// at the DW_TAG_compile_unit
 	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
 	{
@@ -357,7 +357,7 @@ state_t::dump_functions()
     {
 	printf("compile_unit {\n");
 
-	walker_t w(*this, *i);
+	walker_t w(*i);
 	w.move_next();	// at the DW_TAG_compile_unit
 	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
 	{
@@ -390,7 +390,7 @@ state_t::dump_variables()
     {
 	printf("compile_unit {\n");
 
-	walker_t w(*this, *i);
+	walker_t w(*i);
 	w.move_next();	// at the DW_TAG_compile_unit
 	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
 	{
@@ -429,7 +429,7 @@ state_t::dump_info(bool preorder)
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
 	printf("compile_unit {\n");
-	walker_t w(*this, *i);
+	walker_t w(*i);
 	if (preorder)
 	{
 	    while (const entry_t *e = w.move_preorder())

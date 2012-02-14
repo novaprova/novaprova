@@ -9,6 +9,15 @@ using namespace std;
 
 uint32_t walker_t::next_id_ = 1;
 
+void
+walker_t::seek(reference_t ref)
+{
+    compile_unit_ = state_t::instance()->get_compile_unit(ref);
+    reader_ = compile_unit_->get_contents();
+    reader_.seek(ref.offset);
+    level_ = 0;
+}
+
 int
 walker_t::read_entry()
 {
@@ -177,7 +186,7 @@ walker_t::read_entry()
 		uint32_t off;
 		if (!reader_.read_u32(off))
 		    return EOF;
-		const char *v = state_.sections_[DW_sec_str].offset_as_string(off);
+		const char *v = state_t::instance()->sections_[DW_sec_str].offset_as_string(off);
 		if (!v)
 		    return EOF;
 		entry_.add_attribute(i->name, value_t::make_string(v));
@@ -314,10 +323,7 @@ walker_t::move_down()
 const entry_t *
 walker_t::move_to(reference_t ref)
 {
-    compile_unit_ = state_.get_compile_unit(ref);
-    reader_ = compile_unit_->get_contents();
-    reader_.seek(ref.offset);
-    level_ = 0;
+    seek(ref);
     int r = read_entry();
     RETURN(r == 1 ? &entry_ : 0);
 }

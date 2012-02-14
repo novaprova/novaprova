@@ -9,14 +9,11 @@
 namespace spiegel {
 namespace dwarf {
 
-class state_t;
-
 class walker_t
 {
 public:
-    walker_t(state_t &s, compile_unit_t *cu)
+    walker_t(compile_unit_t *cu)
      :  id_(next_id_++),
-	state_(s),
 	compile_unit_(cu),
 	reader_(cu->get_contents()),
 	level_(0)
@@ -25,7 +22,6 @@ public:
 
     walker_t(const walker_t &o)
      :  id_(next_id_++),
-        state_(o.state_),
 	compile_unit_(o.compile_unit_),
 	reader_(o.reader_),
 	// Note: we don't clone the entry, on the assumption
@@ -35,6 +31,12 @@ public:
 	// but we need the entry's level for the move
 	// operations to work correctly
 	entry_.partial_setup(o.entry_);
+    }
+
+    walker_t(reference_t ref)
+     :  id_(next_id_++)
+    {
+	seek(ref);
     }
 
     const entry_t *get_entry() const { return &entry_; }
@@ -51,13 +53,13 @@ public:
     const entry_t *move_to(reference_t);
 
 private:
+    void seek(reference_t ref);
     int read_entry();
 
     // for debugging only
     static uint32_t next_id_;
     uint32_t id_;
 
-    state_t &state_;
     compile_unit_t *compile_unit_;
     reader_t reader_;
     entry_t entry_;
