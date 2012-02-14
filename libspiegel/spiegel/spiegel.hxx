@@ -13,6 +13,7 @@ namespace dwarf {
 class walker_t;
 class compile_unit_t;
 class state_t;
+class entry_t;
 };
 
 #if SPIEGEL_DYNAMIC
@@ -26,6 +27,8 @@ union value_t
 };
 #endif
 
+class function_t;
+
 class compile_unit_t
 {
 public:
@@ -34,6 +37,8 @@ public:
     const char *get_name() const { return name_; }
     const char *get_compile_dir() const { return comp_dir_; }
 //     static compile_unit_t *for_name(const char *name);
+
+    std::vector<function_t *> get_functions();
 
 private:
     compile_unit_t(spiegel::dwarf::reference_t ref)
@@ -72,12 +77,12 @@ public:
     field_t *get_field(const char *name) const;
     std::vector<field_t*> get_fields() const;
 
-    // methods declared by this class
-    method_t *get_declared_method(const char *name) const;
-    std::vector<method_t*> get_declared_methods() const;
-    // methods declared by this class or any of its ancestors
-    method_t *get_method(const char *name) const;
-    std::vector<method_t*> get_methods() const;
+    // functions declared by this class
+    function_t *get_declared_function(const char *name) const;
+    std::vector<function_t*> get_declared_functions() const;
+    // functions declared by this class or any of its ancestors
+    function_t *get_function(const char *name) const;
+    std::vector<function_t*> get_functions() const;
 
     int get_modifiers() const;
 
@@ -91,15 +96,23 @@ public:
 #endif
     char *to_string() const;
 };
+#endif
 
 class member_t
 {
 public:
-    const char *get_ame() const;
-    type_t *get_declaring_class() const;
-    int get_modifiers() const;
+    const char *get_name() const { return name_; }
+//     type_t *get_declaring_class() const;
+//     int get_modifiers() const;
+
+protected:
+    member_t() {}
+    ~member_t() {}
+
+    const char *name_;
 };
 
+#if 0
 class field_t : public member_t
 {
 public:
@@ -149,19 +162,28 @@ public:
 #endif
     char *to_string() const;
 };
+#endif
 
-class method_t : public member_t
+class function_t : public member_t
 {
 public:
-    type_t *get_return_type() const;
-    std::vector<type_t*> get_parameter_types() const;
-    std::vector<type_t*> get_exception_types() const;
+//     type_t *get_return_type() const;
+//     std::vector<type_t*> get_parameter_types() const;
+//     std::vector<type_t*> get_exception_types() const;
+
 #if SPIEGEL_DYNAMIC
     value_t invoke(void *obj, std::vector<value_t> args);
 #endif
-    char *to_string() const;
+//     char *to_string() const;
+
+private:
+    function_t() {}
+    ~function_t() {}
+
+    bool populate(const spiegel::dwarf::entry_t *);
+
+    friend class compile_unit_t;
 };
-#endif
 
 }; // namespace spiegel
 

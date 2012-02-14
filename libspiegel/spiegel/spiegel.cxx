@@ -52,5 +52,40 @@ compile_unit_t::populate()
     return true;
 }
 
+vector<function_t *>
+compile_unit_t::get_functions()
+{
+    spiegel::dwarf::walker_t w(ref_);
+    // move to DW_TAG_compile_unit
+    w.move_next();
+
+    vector<function_t *> res;
+
+    // scan children of DW_TAG_compile_unit for functions
+    for (const spiegel::dwarf::entry_t *e = w.move_down() ; e ; e = w.move_next())
+    {
+	if (e->get_tag() != DW_TAG_subprogram)
+	    continue;
+
+	const char *name = e->get_string_attribute(DW_AT_name);
+	if (!name)
+	    continue;
+
+	function_t *fn = new function_t;
+	if (!fn->populate(e))
+	    delete fn;
+	else
+	    res.push_back(fn);
+    }
+    return res;
+}
+
+bool
+function_t::populate(const spiegel::dwarf::entry_t *e)
+{
+    name_ = e->get_string_attribute(DW_AT_name);
+    return true;
+}
+
 // close namespace
 };

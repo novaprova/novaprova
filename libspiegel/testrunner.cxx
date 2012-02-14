@@ -53,7 +53,7 @@ test_abbrevs(int argc, char **argv)
 }
 
 static int
-test_functions(int argc, char **argv)
+test_functions_dwarf(int argc, char **argv)
 {
     if (argc != 2)
 	fatal("Usage: spiegtest functions EXE\n");
@@ -176,6 +176,38 @@ test_compile_units(int argc, char **argv)
     return 0;
 }
 
+static int
+test_functions(int argc, char **argv)
+{
+    if (argc != 2)
+	fatal("Usage: spiegtest functions EXE\n");
+
+    spiegel::dwarf::state_t state(argv[1]);
+    state.map_sections();
+    state.read_compile_units();
+
+    printf("Functions\n");
+    printf("=========\n");
+
+    vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
+    vector<spiegel::compile_unit_t *>::iterator i;
+    for (i = units.begin() ; i != units.end() ; ++i)
+    {
+	printf("%s/%s\n", (*i)->get_compile_dir(), (*i)->get_name());
+
+	vector<spiegel::function_t *> fns = (*i)->get_functions();
+	vector<spiegel::function_t *>::iterator j;
+	for (j = fns.begin() ; j != fns.end() ; ++j)
+	{
+	    printf("    %s\n", (*j)->get_name());
+	}
+    }
+
+    printf("\n\n");
+
+    return 0;
+}
+
 
 
 int
@@ -188,6 +220,8 @@ main(int argc, char **argv)
 	return test_abbrevs(argc-1, argv+1);
     if (!strcmp(argv[1], "functions"))
 	return test_functions(argc-1, argv+1);
+    if (!strcmp(argv[1], "functions_dwarf"))
+	return test_functions_dwarf(argc-1, argv+1);
     if (!strcmp(argv[1], "variables"))
 	return test_variables(argc-1, argv+1);
     if (!strcmp(argv[1], "structs"))
