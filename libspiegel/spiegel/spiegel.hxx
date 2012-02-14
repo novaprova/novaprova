@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <string>
 #include "spiegel/dwarf/reference.hxx"
 
 #define SPIEGEL_DYNAMIC 0
@@ -56,10 +57,10 @@ private:
     uint32_t language_;
 };
 
-#if 0
 class type_t
 {
 public:
+#if 0
     // all the types including primitives like int
     std::vector<type_t*> get_classes() const;
     type_t *get_component_type() const;	// component of an array
@@ -94,9 +95,18 @@ public:
 #if SPIEGEL_DYNAMIC
     void *new_instance() const;
 #endif
-    char *to_string() const;
-};
 #endif
+    std::string to_string() const;
+
+private:
+    type_t(spiegel::dwarf::reference_t ref)
+     :  ref_(ref) {}
+    ~type_t() {}
+
+    spiegel::dwarf::reference_t ref_;
+
+    friend class function_t;
+};
 
 class member_t
 {
@@ -167,8 +177,10 @@ public:
 class function_t : public member_t
 {
 public:
-//     type_t *get_return_type() const;
-//     std::vector<type_t*> get_parameter_types() const;
+    type_t *get_return_type() const;
+    std::vector<type_t*> get_parameter_types() const;
+    std::vector<const char *> get_parameter_names() const;
+    bool has_unspecified_parameters() const { return ellipsis_; }
 //     std::vector<type_t*> get_exception_types() const;
 
 #if SPIEGEL_DYNAMIC
@@ -177,10 +189,23 @@ public:
 //     char *to_string() const;
 
 private:
+    struct parameter_t
+    {
+	parameter_t() {}
+	parameter_t(const spiegel::dwarf::entry_t *e);
+
+	const char *name;
+	spiegel::dwarf::reference_t type;
+    };
+
     function_t() {}
     ~function_t() {}
 
-    bool populate(const spiegel::dwarf::entry_t *);
+    bool populate(spiegel::dwarf::walker_t &w);
+
+    spiegel::dwarf::reference_t type_;
+    std::vector<parameter_t> parameters_;
+    bool ellipsis_;
 
     friend class compile_unit_t;
 };

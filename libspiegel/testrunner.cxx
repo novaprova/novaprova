@@ -199,7 +199,29 @@ test_functions(int argc, char **argv)
 	vector<spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
 	{
-	    printf("    %s\n", (*j)->get_name());
+	    int n = 0;
+
+	    printf("    %s %s(",
+		    (*j)->get_return_type()->to_string().c_str(),
+		    (*j)->get_name());
+
+	    vector<spiegel::type_t *> atypes = (*j)->get_parameter_types();
+	    vector<spiegel::type_t *>::iterator k;
+	    for (k = atypes.begin() ; k != atypes.end() ; ++k)
+	    {
+		if (n++)
+		    printf(", ");
+		printf("%s", (*k)->to_string().c_str());
+	    }
+
+	    if ((*j)->has_unspecified_parameters())
+	    {
+		if (n)
+		    printf(", ");
+		printf("...");
+	    }
+
+	    printf(")\n");
 	}
     }
 
