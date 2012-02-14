@@ -78,10 +78,10 @@ public:
 	else
 	    return 0;
     }
-    const reference_t *get_reference_attribute(uint32_t name) const
+    const reference_t get_reference_attribute(uint32_t name) const
     {
 	const value_t *v = get_attribute(name);
-	return (v && v->type == value_t::T_REF ? &v->val.ref : 0);
+	return (v && v->type == value_t::T_REF ? v->val.ref : reference_t::null);
     }
 
 private:

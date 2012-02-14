@@ -27,6 +27,7 @@ libspiegel_SOURCES= \
 	spiegel/dwarf/compile_unit.cxx \
 	spiegel/dwarf/entry.cxx \
 	spiegel/dwarf/enumerations.cxx \
+	spiegel/dwarf/reference.cxx \
 	spiegel/dwarf/state.cxx \
 	spiegel/dwarf/string_table.cxx \
 	spiegel/dwarf/value.cxx \

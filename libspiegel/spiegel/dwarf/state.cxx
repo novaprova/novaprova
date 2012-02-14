@@ -182,15 +182,15 @@ state_t::read_compile_units()
 }
 
 static void
-describe_type(const walker_t &ow, const reference_t *ref)
+describe_type(const walker_t &ow, reference_t ref)
 {
-    if (!ref)
+    if (ref == reference_t::null)
     {
 	printf("void ");
 	return;
     }
     walker_t w = ow;
-    const entry_t *e = w.move_to(*ref);
+    const entry_t *e = w.move_to(ref);
     if (!e)
     {
 	printf("??? ");
