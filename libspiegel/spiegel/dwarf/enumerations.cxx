@@ -212,5 +212,19 @@ static const char * const _attrnames[] = {
 };
 string_table_t attrnames("DW_AT_", _attrnames);
 
+static const char * const _encvals[] = {
+    "",
+    "address",		/* 0x1 */
+    "boolean",		/* 0x2 */
+    "complex_float",	/* 0x3 */
+    "float",		/* 0x4 */
+    "signed",		/* 0x5 */
+    "signed_char",	/* 0x6 */
+    "unsigned",		/* 0x7 */
+    "unsigned_char",	/* 0x8 */
+    0,
+};
+string_table_t encvals("DW_ATE_", _encvals);
+
 // close namespace
 } }

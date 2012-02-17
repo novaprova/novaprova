@@ -207,6 +207,20 @@ enum attribute_names
     DW_AT_max
 };
 
+enum encoding_values
+{
+    DW_ATE_address = 0x1,
+    DW_ATE_boolean = 0x2,
+    DW_ATE_complex_float = 0x3,
+    DW_ATE_float = 0x4,
+    DW_ATE_signed = 0x5,
+    DW_ATE_signed_char = 0x6,
+    DW_ATE_unsigned = 0x7,
+    DW_ATE_unsigned_char = 0x8,
+//     DW_ATE_lo_user = 0x80,
+//     DW_ATE_hi_user = 0xff,
+};
+
 namespace spiegel {
 namespace dwarf {
 
@@ -215,6 +229,7 @@ extern string_table_t childvals;
 extern string_table_t formvals;
 extern string_table_t tagnames;
 extern string_table_t attrnames;
+extern string_table_t encvals;
 
 // close namespaces
 }; };

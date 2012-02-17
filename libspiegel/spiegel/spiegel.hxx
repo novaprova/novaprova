@@ -41,6 +41,8 @@ public:
 
     std::vector<function_t *> get_functions();
 
+    void dump_types();
+
 private:
     compile_unit_t(spiegel::dwarf::reference_t ref)
      :  ref_(ref)
@@ -60,6 +62,60 @@ private:
 class type_t
 {
 public:
+
+    // Type classification constants
+    enum
+    {
+	TC_INVALID =		0,
+
+	TC_MAJOR_VOID =		(1<<8),
+	TC_MAJOR_POINTER =	(2<<8),
+	TC_MAJOR_ARRAY =	(3<<8),
+	TC_MAJOR_INTEGER =	(4<<8),
+	TC_MAJOR_FLOAT =	(5<<8),
+	TC_MAJOR_COMPOUND =	(6<<8),
+	_TC_MAJOR_MASK =	(7<<8),
+
+	_TC_UNSIGNED =		(0<<7),
+	_TC_SIGNED =		(1<<7),
+
+	TC_VOID =		TC_MAJOR_VOID|0,
+	TC_POINTER =		TC_MAJOR_POINTER|0,
+	TC_REFERENCE =		TC_MAJOR_POINTER|1,
+	TC_ARRAY =		TC_MAJOR_ARRAY|0,
+	TC_UNSIGNED_CHAR =	TC_MAJOR_INTEGER|_TC_UNSIGNED|sizeof(char),
+	TC_SIGNED_CHAR =	TC_MAJOR_INTEGER|_TC_SIGNED|sizeof(char),
+	TC_UNSIGNED_INT8 =	TC_MAJOR_INTEGER|_TC_UNSIGNED|1,
+	TC_SIGNED_INT8 =	TC_MAJOR_INTEGER|_TC_SIGNED|1,
+	TC_UNSIGNED_SHORT =	TC_MAJOR_INTEGER|_TC_UNSIGNED|sizeof(short),
+	TC_SIGNED_SHORT =	TC_MAJOR_INTEGER|_TC_SIGNED|sizeof(short),
+	TC_UNSIGNED_INT16 =	TC_MAJOR_INTEGER|_TC_UNSIGNED|2,
+	TC_SIGNED_INT16 =	TC_MAJOR_INTEGER|_TC_SIGNED|2,
+	TC_UNSIGNED_INT =	TC_MAJOR_INTEGER|_TC_UNSIGNED|sizeof(int),
+	TC_SIGNED_INT =		TC_MAJOR_INTEGER|_TC_SIGNED|sizeof(int),
+	TC_UNSIGNED_INT32 =	TC_MAJOR_INTEGER|_TC_UNSIGNED|4,
+	TC_SIGNED_INT32 =	TC_MAJOR_INTEGER|_TC_SIGNED|4,
+	TC_UNSIGNED_LONG =	TC_MAJOR_INTEGER|_TC_UNSIGNED|sizeof(long),
+	TC_SIGNED_LONG =	TC_MAJOR_INTEGER|_TC_SIGNED|sizeof(long),
+	TC_UNSIGNED_LONG_LONG =	TC_MAJOR_INTEGER|_TC_UNSIGNED|sizeof(long long),
+	TC_SIGNED_LONG_LONG =	TC_MAJOR_INTEGER|_TC_SIGNED|sizeof(long long),
+	TC_UNSIGNED_INT64 =	TC_MAJOR_INTEGER|_TC_UNSIGNED|8,
+	TC_SIGNED_INT64 =	TC_MAJOR_INTEGER|_TC_SIGNED|8,
+	TC_FLOAT =		TC_MAJOR_FLOAT|sizeof(float),
+	TC_DOUBLE =		TC_MAJOR_FLOAT|sizeof(double),
+	TC_LONG_DOUBLE =	TC_MAJOR_FLOAT|sizeof(long double),
+	TC_STRUCT =		TC_MAJOR_COMPOUND|0,
+	TC_UNION =		TC_MAJOR_COMPOUND|1,
+	TC_CLASS =		TC_MAJOR_COMPOUND|2,
+    };
+
+    unsigned int get_classification() const;
+    std::string get_classification_as_string() const;
+    static int major(unsigned int tc) { return (tc & _TC_MAJOR_MASK); }
+    static int is_signed(unsigned int tc) { return !!(tc & _TC_SIGNED); }
+
+    unsigned int get_sizeof() const;
+
 #if 0
     // all the types including primitives like int
     std::vector<type_t*> get_classes() const;
@@ -94,6 +150,8 @@ public:
 
 #if SPIEGEL_DYNAMIC
     void *new_instance() const;
+    value_t get(void *) const;
+    void set(void *, value_t) const;
 #endif
 #endif
     std::string to_string() const;
@@ -106,6 +164,7 @@ private:
     spiegel::dwarf::reference_t ref_;
 
     friend class function_t;
+    friend class compile_unit_t;
 };
 
 class member_t

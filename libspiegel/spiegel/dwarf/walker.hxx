@@ -40,6 +40,10 @@ public:
     }
 
     const entry_t *get_entry() const { return &entry_; }
+    reference_t get_reference() const
+    {
+	return compile_unit_->make_reference(entry_.get_offset());
+    }
 
     // move in preorder: to next sibling or to
     // next available ancestor's sibling

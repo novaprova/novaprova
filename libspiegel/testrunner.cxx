@@ -206,6 +206,32 @@ test_functions(int argc, char **argv)
     return 0;
 }
 
+static int
+test_types(int argc, char **argv)
+{
+    if (argc != 2)
+	fatal("Usage: spiegtest types EXE\n");
+
+    spiegel::dwarf::state_t state(argv[1]);
+    state.map_sections();
+    state.read_compile_units();
+
+    printf("Types\n");
+    printf("=====\n");
+
+    vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
+    vector<spiegel::compile_unit_t *>::iterator i;
+    for (i = units.begin() ; i != units.end() ; ++i)
+    {
+	printf("%s/%s\n", (*i)->get_compile_dir(), (*i)->get_name());
+	(*i)->dump_types();
+    }
+
+    printf("\n\n");
+
+    return 0;
+}
+
 
 
 int
@@ -230,6 +256,8 @@ main(int argc, char **argv)
 	return test_read_sleb128(argc-1, argv+1);
     if (!strcmp(argv[1], "compile_units"))
 	return test_compile_units(argc-1, argv+1);
+    if (!strcmp(argv[1], "types"))
+	return test_types(argc-1, argv+1);
     fatal("Usage: spiegel command args...\n");
     return 1;
 }
