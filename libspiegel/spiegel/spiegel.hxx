@@ -157,6 +157,7 @@ public:
     std::string to_string() const;
 
 private:
+    std::string to_string(std::string inner) const;
     type_t(spiegel::dwarf::reference_t ref)
      :  ref_(ref) {}
     ~type_t() {}

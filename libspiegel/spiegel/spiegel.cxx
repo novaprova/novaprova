@@ -131,43 +131,48 @@ type_t::get_sizeof() const
 }
 
 string
-type_t::to_string() const
+type_t::to_string(string inner) const
 {
     if (ref_ == spiegel::dwarf::reference_t::null)
-	return "void";
+	return (inner.length() ? "void " + inner : "void");
 
     spiegel::dwarf::walker_t w(ref_);
     const spiegel::dwarf::entry_t *e = w.move_next();
     if (!e)
-	return "???";
+	return (inner.length() ? "wtf? " + inner : "wtf?");
+
+    string s;
 
     const char *name = e->get_string_attribute(DW_AT_name);
     switch (e->get_tag())
     {
     case DW_TAG_base_type:
     case DW_TAG_typedef:
-	if (!name)
-	    name = "wtf?";
-	return name;
+	s = (name ? name : "wtf?");
+	break;
     case DW_TAG_pointer_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string() + " *";
+	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("*" + inner);
     case DW_TAG_reference_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string() + " &";
+	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("&" + inner);
     case DW_TAG_volatile_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string() + " volatile";
+	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("volatile " + inner);
     case DW_TAG_const_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string() + " const";
+	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("const " + inner);
     case DW_TAG_structure_type:
-	return string("struct ") + (name ? name : "{...}");
+	s = string("struct ") + (name ? name : "{...}");
+	break;
     case DW_TAG_union_type:
-	return string("union ") + (name ? name : "{...}");
+	s = string("union ") + (name ? name : "{...}");
+	break;
     case DW_TAG_class_type:
-	return string("class ") + (name ? name : "{...}");
+	s = string("class ") + (name ? name : "{...}");
+	break;
     case DW_TAG_enumeration_type:
-	return string("enum ") + (name ? name : "{...}");
+	s = string("enum ") + (name ? name : "{...}");
+	break;
     case DW_TAG_array_type:
 	{
-	    string s = type_t(e->get_reference_attribute(DW_AT_type)).to_string();
+	    type_t element_type(e->get_reference_attribute(DW_AT_type));
 	    bool found = false;
 	    for (e = w.move_down() ; e ; e = w.move_next())
 	    {
@@ -179,19 +184,19 @@ type_t::to_string() const
 		    // TODO: unuglify this
 		    char buf[32];
 		    snprintf(buf, sizeof(buf), "[%u]", count);
-		    s += buf;
+		    inner += buf;
 		    found = true;
 		}
 	    }
 	    if (!found)
-		s += "[]";
-	    return s;
+		inner += "[]";
+	    return element_type.to_string(inner);
 	}
     case DW_TAG_subroutine_type:
 	{
-	    string s = "(";
-	    s += type_t(e->get_reference_attribute(DW_AT_type)).to_string();
-	    s += " foo(";
+	    // TODO: elide the parenethese around inner if it's an identifier
+	    type_t return_type(e->get_reference_attribute(DW_AT_type));
+	    inner = "(" + inner + ")(";
 	    bool ellipsis = false;
 	    unsigned int nparam = 0;
 	    for (e = w.move_down() ; e ; e = w.move_next())
@@ -199,23 +204,36 @@ type_t::to_string() const
 		if (!ellipsis && e->get_tag() == DW_TAG_formal_parameter)
 		{
 		    if (nparam++)
-			s += ", ";
-		    s += type_t(e->get_reference_attribute(DW_AT_type)).to_string();
+			inner += ", ";
+		    const char *param = e->get_string_attribute(DW_AT_name);
+		    if (!param)
+			param = "";
+		    inner += type_t(e->get_reference_attribute(DW_AT_type)).to_string(param);
 		}
 		else if (e->get_tag() == DW_TAG_unspecified_parameters)
 		{
 		    ellipsis = true;
 		    if (nparam++)
-			s += ", ";
-		    s += "...";
+			inner += ", ";
+		    inner += "...";
 		}
 	    }
-	    s += "))";
-	    return s;
+	    inner += ")";
+	    return return_type.to_string(inner);
 	}
     default:
-	return spiegel::dwarf::tagnames.to_name(e->get_tag());
+	s = spiegel::dwarf::tagnames.to_name(e->get_tag());
+	break;
     }
+    if (inner.length())
+	s += " " + inner;
+    return s;
+}
+
+string
+type_t::to_string() const
+{
+    return to_string(string(""));
 }
 
 vector<compile_unit_t *>
@@ -396,31 +414,27 @@ function_t::get_parameter_names() const
 string
 function_t::to_string() const
 {
-    int n = 0;
-    string s;
-
-    s += type_t(type_).to_string();
-    s += " ";
-    s += get_name();
-    s += "(";
+    string inner = get_name();
+    inner += "(";
 
     vector<parameter_t>::const_iterator i;
+    int n = 0;
     for (i = parameters_.begin() ; i != parameters_.end() ; ++i)
     {
 	if (n++)
-	    s += ", ";
-	s += type_t(i->type).to_string();
+	    inner += ", ";
+	inner += type_t(i->type).to_string(i->name ? i->name : "");
     }
 
     if (ellipsis_)
     {
 	if (n)
-	    s += ", ";
-	s += "...";
+	    inner += ", ";
+	inner += "...";
     }
 
-    s += ")";
-    return s;
+    inner += ")";
+    return type_t(type_).to_string(inner);
 }
 
 // close namespace
