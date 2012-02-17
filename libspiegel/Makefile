@@ -17,6 +17,7 @@ CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 CXXFLAGS=	$(CXXDEBUGFLAGS) $(CXXOPTFLAGS) $(CXXWARNFLAGS) $(CXXDEFINES)
 INSTALL=	/usr/bin/install -c
 RANLIB=		ranlib
+depdir=		.deps
 
 all: testrunner
 
@@ -58,6 +59,12 @@ libspiegel_OBJS= \
 	$(patsubst %.c,%.o,$(filter %.c,$(libspiegel_SOURCES))) \
 	$(patsubst %.cxx,%.o,$(filter %.cxx,$(libspiegel_SOURCES)))
 
+# Automatic dependency tracking
+libspiegel_DFILES= \
+	$(patsubst %.c,$(depdir)/%.d,$(filter %.c,$(libspiegel_SOURCES))) \
+	$(patsubst %.cxx,$(depdir)/%.d,$(filter %.cxx,$(libspiegel_SOURCES)))
+-include $(libspiegel_DFILES)
+
 $(libspiegel): $(libspiegel_OBJS)
 	$(AR) $(ARFLAGS) $(libspiegel) $(libspiegel_OBJS)
 
@@ -76,12 +83,25 @@ spiegel/%.o: spiegel/%.cxx
 %.o: %.cxx
 	$(COMPILE.C) -o $@ $<
 
+$(depdir)/%.d: %.c
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	$(COMPILE.c) -MM -MF $@ -MT $(patsubst %.c,%.o,$<) $<
+$(depdir)/%.d: %.cxx
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	$(COMPILE.C) -MM -MF $@ -MT $(patsubst %.cxx,%.o,$<) $<
+
 testrunner_SOURCES= \
 	testrunner.cxx
 
 testrunner_OBJS= \
 	$(patsubst %.c,%.o,$(filter %.c,$(testrunner_SOURCES))) \
 	$(patsubst %.cxx,%.o,$(filter %.cxx,$(testrunner_SOURCES)))
+
+# Automatic dependency tracking
+testrunner_DFILES= \
+	$(patsubst %.c,$(depdir)/%.d,$(filter %.c,$(testrunner_SOURCES))) \
+	$(patsubst %.cxx,$(depdir)/%.d,$(filter %.cxx,$(testrunner_SOURCES)))
+-include $(testrunner_DFILES)
 
 testrunner_LDADD= \
 	$(libspiegel) -lbfd
@@ -101,4 +121,5 @@ testrunner: $(testrunner_OBJS) $(libspiegel)
 clean:
 	$(RM) testrunner $(testrunner_OBJS)
 	$(RM) $(libspiegel) $(libspiegel_OBJS)
+	$(RM) -r $(depdir)
 
