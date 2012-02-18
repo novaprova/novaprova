@@ -24,20 +24,27 @@ string_table_t::to_index(const char *name) const
 const char *
 string_table_t::to_name(int i) const
 {
+    const char *name;
     if (i < 0 || i >= (int)names_count_ || names_[i][0] == '\0')
-	return "unknown";
+	name = 0;
+    else
+	name = names_[i];
+
+    static char buf[256];
     if (prefix_len_)
     {
-	// TODO: use an estring
-	static char buf[256];
-	strncpy(buf, prefix_, sizeof(buf));
-	strncat(buf, names_[i], sizeof(buf)-prefix_len_);
-	return buf;
+	if (name)
+	    snprintf(buf, sizeof(buf), "%s%s", prefix_, name);
+	else
+	    snprintf(buf, sizeof(buf), "%s0x%x", prefix_, (unsigned)i);
+	name = buf;
     }
-    else
+    else if (!name)
     {
-	return names_[i];
+	snprintf(buf, sizeof(buf), "0x%x", (unsigned)i);
+	name = buf;
     }
+    return name;
 }
 
 // close namespace
