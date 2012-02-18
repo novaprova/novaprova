@@ -338,7 +338,15 @@ usage:
 	vector<spiegel::function_t *> fns = (*i)->get_functions();
 	vector<spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
-	    printf("    %s\n", (*j)->to_string().c_str());
+	{
+	    unsigned long addr = (unsigned long)(*j)->get_address();
+	    printf("    ");
+	    if (!addr)
+		printf("extern");
+	    else
+		printf("/*0x%lx*/", addr);
+	    printf(" %s\n", (*j)->to_string().c_str());
+	}
     }
 
     printf("\n\n");

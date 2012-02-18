@@ -449,5 +449,16 @@ function_t::to_string() const
     return return_type.to_string(inner);
 }
 
+// Return the address of the function, or 0 if the function is not
+// defined in this compile unit (in which case, good luck finding it in
+// some other compile unit).
+void *
+function_t::get_address() const
+{
+    spiegel::dwarf::walker_t w(ref_);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    return e->get_address_attribute(DW_AT_low_pc);
+}
+
 // close namespace
 };

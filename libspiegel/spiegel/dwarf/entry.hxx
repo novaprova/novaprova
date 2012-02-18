@@ -78,6 +78,18 @@ public:
 	else
 	    return 0;
     }
+    void *get_address_attribute(uint32_t name) const
+    {
+	const value_t *v = get_attribute(name);
+	if (!v)
+	    return 0;
+	else if (v->type == value_t::T_UINT32)
+	    return (void *)v->val.uint32;
+	else if (v->type == value_t::T_UINT64)
+	    return (void *)v->val.uint64;
+	else
+	    return 0;
+    }
     const reference_t get_reference_attribute(uint32_t name) const
     {
 	const value_t *v = get_attribute(name);
