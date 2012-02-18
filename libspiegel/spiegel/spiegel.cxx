@@ -293,18 +293,11 @@ compile_unit_t::get_functions()
     // scan children of DW_TAG_compile_unit for functions
     for (const spiegel::dwarf::entry_t *e = w.move_down() ; e ; e = w.move_next())
     {
-	if (e->get_tag() != DW_TAG_subprogram)
+	if (e->get_tag() != DW_TAG_subprogram ||
+	    !e->get_string_attribute(DW_AT_name))
 	    continue;
 
-	const char *name = e->get_string_attribute(DW_AT_name);
-	if (!name)
-	    continue;
-
-	function_t *fn = new function_t;
-	if (!fn->populate(w))
-	    delete fn;
-	else
-	    res.push_back(fn);
+	res.push_back(new function_t(w));
     }
     return res;
 }
@@ -315,12 +308,6 @@ compile_unit_t::get_executable() const
     spiegel::dwarf::compile_unit_t *cu =
 	spiegel::dwarf::state_t::instance()->get_compile_unit(ref_);
     return cu->get_executable();
-}
-
-function_t::parameter_t::parameter_t(const spiegel::dwarf::entry_t *e)
-{
-    name = e->get_string_attribute(DW_AT_name),
-    type = e->get_reference_attribute(DW_AT_type);
 }
 
 void
@@ -364,33 +351,18 @@ compile_unit_t::dump_types()
     }
 }
 
-bool
-function_t::populate(spiegel::dwarf::walker_t &w)
+member_t::member_t(spiegel::dwarf::walker_t &w)
+ :  ref_(w.get_reference()),
+    name_(w.get_entry()->get_string_attribute(DW_AT_name))
 {
-    const spiegel::dwarf::entry_t *e = w.get_entry();
-
-    name_ = e->get_string_attribute(DW_AT_name);
-    type_ = e->get_reference_attribute(DW_AT_type);
-
-    for (e = w.move_down() ; e ; e = w.move_next())
-    {
-	if (!ellipsis_ && e->get_tag() == DW_TAG_formal_parameter)
-	{
-	    parameters_.push_back(parameter_t(e));
-	}
-	else if (e->get_tag() == DW_TAG_unspecified_parameters)
-	{
-	    ellipsis_ = true;
-	}
-    }
-
-    return true;
 }
 
 type_t *
 function_t::get_return_type() const
 {
-    return new type_t(type_);
+    spiegel::dwarf::walker_t w(ref_);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    return new type_t(e->get_reference_attribute(DW_AT_type));
 }
 
 vector<type_t*>
@@ -398,10 +370,14 @@ function_t::get_parameter_types() const
 {
     vector<type_t *> res;
 
-    vector<parameter_t>::const_iterator i;
-    for (i = parameters_.begin() ; i != parameters_.end() ; ++i)
+    spiegel::dwarf::walker_t w(ref_);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    for (e = w.move_down() ; e ; e = w.move_next())
     {
-	res.push_back(new type_t(i->type));
+	if (e->get_tag() == DW_TAG_formal_parameter)
+	    res.push_back(new type_t(e->get_reference_attribute(DW_AT_type)));
+	else if (e->get_tag() == DW_TAG_unspecified_parameters)
+	    break;
     }
     return res;
 }
@@ -411,38 +387,66 @@ function_t::get_parameter_names() const
 {
     vector<const char *> res;
 
-    vector<parameter_t>::const_iterator i;
-    for (i = parameters_.begin() ; i != parameters_.end() ; ++i)
+    spiegel::dwarf::walker_t w(ref_);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    for (e = w.move_down() ; e ; e = w.move_next())
     {
-	res.push_back(i->name);
+	if (e->get_tag() == DW_TAG_formal_parameter)
+	{
+	    const char *name = e->get_string_attribute(DW_AT_name);
+	    if (!name || !*name)
+		name = "<unknown>";
+	    res.push_back(name);
+	}
+	else if (e->get_tag() == DW_TAG_unspecified_parameters)
+	    break;
     }
     return res;
+}
+
+bool
+function_t::has_unspecified_parameters() const
+{
+    spiegel::dwarf::walker_t w(ref_);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    for (e = w.move_down() ; e ; e = w.move_next())
+    {
+	if (e->get_tag() == DW_TAG_unspecified_parameters)
+	    return true;
+    }
+    return false;
 }
 
 string
 function_t::to_string() const
 {
-    string inner = get_name();
+    spiegel::dwarf::walker_t w(ref_);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    type_t return_type(e->get_reference_attribute(DW_AT_type));
+    string inner = name_;
     inner += "(";
-
-    vector<parameter_t>::const_iterator i;
-    int n = 0;
-    for (i = parameters_.begin() ; i != parameters_.end() ; ++i)
+    unsigned int nparam = 0;
+    for (e = w.move_down() ; e ; e = w.move_next())
     {
-	if (n++)
-	    inner += ", ";
-	inner += type_t(i->type).to_string(i->name ? i->name : "");
+	if (e->get_tag() == DW_TAG_formal_parameter)
+	{
+	    if (nparam++)
+		inner += ", ";
+	    const char *param = e->get_string_attribute(DW_AT_name);
+	    if (!param)
+		param = "";
+	    inner += type_t(e->get_reference_attribute(DW_AT_type)).to_string(param);
+	}
+	else if (e->get_tag() == DW_TAG_unspecified_parameters)
+	{
+	    if (nparam++)
+		inner += ", ";
+	    inner += "...";
+	    break;
+	}
     }
-
-    if (ellipsis_)
-    {
-	if (n)
-	    inner += ", ";
-	inner += "...";
-    }
-
     inner += ")";
-    return type_t(type_).to_string(inner);
+    return return_type.to_string(inner);
 }
 
 // close namespace

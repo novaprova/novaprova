@@ -177,8 +177,12 @@ public:
 //     int get_modifiers() const;
 
 protected:
-    member_t() {}
+    member_t(spiegel::dwarf::walker_t &w);
     ~member_t() {}
+
+    // We pull almost everything from DWARF info on demand
+    // using this reference to the DW_TAG_subprogram
+    spiegel::dwarf::reference_t ref_;
 
     const char *name_;
 };
@@ -241,7 +245,7 @@ public:
     type_t *get_return_type() const;
     std::vector<type_t*> get_parameter_types() const;
     std::vector<const char *> get_parameter_names() const;
-    bool has_unspecified_parameters() const { return ellipsis_; }
+    bool has_unspecified_parameters() const;
 //     std::vector<type_t*> get_exception_types() const;
 
 #if SPIEGEL_DYNAMIC
@@ -250,23 +254,9 @@ public:
     std::string to_string() const;
 
 private:
-    struct parameter_t
-    {
-	parameter_t() {}
-	parameter_t(const spiegel::dwarf::entry_t *e);
-
-	const char *name;
-	spiegel::dwarf::reference_t type;
-    };
-
-    function_t() {}
+    function_t(spiegel::dwarf::walker_t &w) : member_t(w) {}
     ~function_t() {}
 
-    bool populate(spiegel::dwarf::walker_t &w);
-
-    spiegel::dwarf::reference_t type_;
-    std::vector<parameter_t> parameters_;
-    bool ellipsis_;
 
     friend class compile_unit_t;
 };
