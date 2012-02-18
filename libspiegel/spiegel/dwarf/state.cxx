@@ -7,6 +7,7 @@
 #include "reader.hxx"
 #include "compile_unit.hxx"
 #include "walker.hxx"
+#include "spiegel/platform/common.hxx"
 
 namespace spiegel { namespace dwarf {
 using namespace std;
@@ -193,10 +194,60 @@ state_t::read_compile_units(linkobj_t *lo)
     return true;
 }
 
-// bool
-// state_t::add_self()
-// {
-// }
+static bool
+filename_is_ignored(const char *filename)
+{
+    static const char * const prefixes[] =
+    {
+	"/bin/",
+	"/lib/",
+	"/usr/bin/",
+	"/usr/lib/",
+	"/opt/",
+	NULL
+    };
+    const char * const *p;
+
+    for (p = prefixes ; *p ; p++)
+    {
+	if (!strncmp(filename, *p, strlen(*p)))
+	    return true;
+    }
+    return false;
+}
+
+bool
+state_t::add_self()
+{
+    char *exe = spiegel::platform::self_exe();
+    bool r = false;
+
+    vector<spiegel::platform::linkobj_t> los = spiegel::platform::self_linkobjs();
+    vector<spiegel::platform::linkobj_t>::iterator i;
+    const char *filename;
+    for (i = los.begin() ; i != los.end() ; ++i)
+    {
+	filename = i->name;
+	if (!filename)
+	    filename = "";
+
+	if (!i->addr && !*filename)
+	    filename = exe;
+	else if (!i->addr || !*filename)
+	    continue;
+
+	if (filename_is_ignored(filename))
+	    continue;
+
+	if (!add_executable(filename))
+	    goto out;
+    }
+
+    r = true;
+out:
+    free(exe);
+    return r;
+}
 
 bool
 state_t::add_executable(const char *filename)

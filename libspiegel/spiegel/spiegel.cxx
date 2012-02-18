@@ -309,6 +309,14 @@ compile_unit_t::get_functions()
     return res;
 }
 
+const char *
+compile_unit_t::get_executable() const
+{
+    spiegel::dwarf::compile_unit_t *cu =
+	spiegel::dwarf::state_t::instance()->get_compile_unit(ref_);
+    return cu->get_executable();
+}
+
 function_t::parameter_t::parameter_t(const spiegel::dwarf::entry_t *e)
 {
     name = e->get_string_attribute(DW_AT_name),

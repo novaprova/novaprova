@@ -20,7 +20,7 @@ test_info(int argc, char **argv)
 	else if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: spiegtest info [--preorder|--recursive] EXE\n");
+	    fatal("Usage: testrunner info [--preorder|--recursive] [executable]\n");
 	}
 	else
 	{
@@ -31,8 +31,16 @@ usage:
     }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(filename))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
     state.dump_info(preorder);
 
     return 0;
@@ -41,12 +49,34 @@ usage:
 static int
 test_abbrevs(int argc, char **argv)
 {
-    if (argc != 2)
-	fatal("Usage: spiegtest abbrevs EXE\n");
+    const char *filename = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    fatal("Usage: testrunner abbrevs [executable]\n");
+	}
+	else
+	{
+	    if (filename)
+		goto usage;
+	    filename = argv[i];
+	}
+    }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(argv[1]))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
+
     state.dump_abbrevs();
 
     return 0;
@@ -55,12 +85,34 @@ test_abbrevs(int argc, char **argv)
 static int
 test_functions_dwarf(int argc, char **argv)
 {
-    if (argc != 2)
-	fatal("Usage: spiegtest functions EXE\n");
+    const char *filename = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    fatal("Usage: testrunner functions_dwarf [executable]\n");
+	}
+	else
+	{
+	    if (filename)
+		goto usage;
+	    filename = argv[i];
+	}
+    }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(argv[1]))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
+
     state.dump_functions();
 
     return 0;
@@ -69,12 +121,34 @@ test_functions_dwarf(int argc, char **argv)
 static int
 test_variables(int argc, char **argv)
 {
-    if (argc != 2)
-	fatal("Usage: spiegtest variables EXE\n");
+    const char *filename = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    fatal("Usage: testrunner variables [executable]\n");
+	}
+	else
+	{
+	    if (filename)
+		goto usage;
+	    filename = argv[i];
+	}
+    }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(argv[1]))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
+
     state.dump_variables();
 
     return 0;
@@ -83,12 +157,34 @@ test_variables(int argc, char **argv)
 static int
 test_structs(int argc, char **argv)
 {
-    if (argc != 2)
-	fatal("Usage: spiegtest structs EXE\n");
+    const char *filename = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    fatal("Usage: testrunner structs [executable]\n");
+	}
+	else
+	{
+	    if (filename)
+		goto usage;
+	    filename = argv[i];
+	}
+    }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(argv[1]))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
+
     state.dump_structs();
 
     return 0;
@@ -154,12 +250,33 @@ test_read_sleb128(int argc __attribute__((unused)),
 static int
 test_compile_units(int argc, char **argv)
 {
-    if (argc != 2)
-	fatal("Usage: spiegtest compile_units EXE\n");
+    const char *filename = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    fatal("Usage: testrunner compile_units [executable]\n");
+	}
+	else
+	{
+	    if (filename)
+		goto usage;
+	    filename = argv[i];
+	}
+    }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(argv[1]))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
 
     printf("Compile Units\n");
     printf("=============\n");
@@ -168,7 +285,9 @@ test_compile_units(int argc, char **argv)
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-	printf("%s/%s\n", (*i)->get_compile_dir(), (*i)->get_name());
+	printf("%s/%s [%s]\n",
+	       (*i)->get_compile_dir(), (*i)->get_name(),
+	       (*i)->get_executable());
     }
 
     printf("\n\n");
@@ -179,12 +298,33 @@ test_compile_units(int argc, char **argv)
 static int
 test_functions(int argc, char **argv)
 {
-    if (argc != 2)
-	fatal("Usage: spiegtest functions EXE\n");
+    const char *filename = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    fatal("Usage: testrunner functions [executable]\n");
+	}
+	else
+	{
+	    if (filename)
+		goto usage;
+	    filename = argv[i];
+	}
+    }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(argv[1]))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
 
     printf("Functions\n");
     printf("=========\n");
@@ -209,12 +349,33 @@ test_functions(int argc, char **argv)
 static int
 test_types(int argc, char **argv)
 {
-    if (argc != 2)
-	fatal("Usage: spiegtest types EXE\n");
+    const char *filename = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    fatal("Usage: testrunner types [executable]\n");
+	}
+	else
+	{
+	    if (filename)
+		goto usage;
+	    filename = argv[i];
+	}
+    }
 
     spiegel::dwarf::state_t state;
-    if (!state.add_executable(argv[1]))
-	return 1;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
 
     printf("Types\n");
     printf("=====\n");
@@ -231,7 +392,6 @@ test_types(int argc, char **argv)
 
     return 0;
 }
-
 
 
 int
@@ -258,7 +418,7 @@ main(int argc, char **argv)
 	return test_compile_units(argc-1, argv+1);
     if (!strcmp(argv[1], "types"))
 	return test_types(argc-1, argv+1);
-    fatal("Usage: spiegel command args...\n");
+    fatal("Usage: testrunner command args...\n");
     return 1;
 }
 

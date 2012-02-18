@@ -37,6 +37,7 @@ public:
 
     const char *get_name() const { return name_; }
     const char *get_compile_dir() const { return comp_dir_; }
+    const char *get_executable() const;
 //     static compile_unit_t *for_name(const char *name);
 
     std::vector<function_t *> get_functions();

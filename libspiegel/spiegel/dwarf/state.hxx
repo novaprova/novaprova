@@ -20,7 +20,7 @@ public:
     state_t();
     ~state_t();
 
-//     bool add_self();
+    bool add_self();
     bool add_executable(const char *filename);
 
     void dump_structs();
@@ -33,6 +33,10 @@ public:
     static state_t *instance() { return instance_; }
 
     const std::vector<compile_unit_t*> &get_compile_units() const { return compile_units_; }
+    compile_unit_t *get_compile_unit(reference_t ref) const
+    {
+	return compile_units_[ref.cu];
+    }
 
 private:
     struct linkobj_t
@@ -59,11 +63,6 @@ private:
     };
 
     bool read_compile_units(linkobj_t *);
-
-    compile_unit_t *get_compile_unit(reference_t ref) const
-    {
-	return compile_units_[ref.cu];
-    }
 
     static state_t *instance_;
 

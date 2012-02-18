@@ -33,6 +33,7 @@
 #define __STDC_LIMIT_MACROS 1
 #endif
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

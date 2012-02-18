@@ -33,6 +33,7 @@ libspiegel_SOURCES= \
 	spiegel/dwarf/string_table.cxx \
 	spiegel/dwarf/value.cxx \
 	spiegel/dwarf/walker.cxx \
+	spiegel/platform/linux.cxx \
 	spiegel/common.c \
 	spiegel/commonp.cxx \
 	spiegel/spiegel.cxx \
@@ -49,6 +50,7 @@ libspiegel_PRIVHEADERS= \
 	spiegel/dwarf/string_table.hxx \
 	spiegel/dwarf/value.hxx \
 	spiegel/dwarf/walker.hxx \
+	spiegel/platform/common.hxx \
 	spiegel/common.h \
 	spiegel/commonp.hxx \
 
@@ -71,6 +73,11 @@ $(libspiegel): $(libspiegel_OBJS)
 spiegel/dwarf/%.o: spiegel/dwarf/%.c
 	$(COMPILE.c) -o $@ $<
 spiegel/dwarf/%.o: spiegel/dwarf/%.cxx
+	$(COMPILE.C) -o $@ $<
+
+spiegel/platform/%.o: spiegel/platform/%.c
+	$(COMPILE.c) -o $@ $<
+spiegel/platform/%.o: spiegel/platform/%.cxx
 	$(COMPILE.C) -o $@ $<
 
 spiegel/%.o: spiegel/%.c
