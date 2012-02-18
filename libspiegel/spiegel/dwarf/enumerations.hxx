@@ -201,7 +201,7 @@ enum attribute_names
     DW_AT_recursive = 0x68,
 
 //     DW_AT_lo_user = 0x2000,
-    DW_AT_wacky_mangled_name = 0x2007,	    // observed in the wild
+    DW_AT_gnu_mangled_name = 0x2007,	    // observed in the wild
 //     DW_AT_hi_user = 0x3fff
 
     DW_AT_max
