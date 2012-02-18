@@ -186,7 +186,7 @@ walker_t::read_entry()
 		uint32_t off;
 		if (!reader_.read_u32(off))
 		    return EOF;
-		const char *v = state_t::instance()->sections_[DW_sec_str].offset_as_string(off);
+		const char *v = compile_unit_->get_section(DW_sec_str)->offset_as_string(off);
 		if (!v)
 		    return EOF;
 		entry_.add_attribute(i->name, value_t::make_string(v));

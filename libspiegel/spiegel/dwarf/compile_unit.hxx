@@ -11,14 +11,16 @@ namespace dwarf {
 
 class abbrev_t;
 class walker_t;
+class section_t;
 
 class compile_unit_t
 {
 private:
     enum { header_length = 11 };	    // this might depend on version
 public:
-    compile_unit_t(uint32_t idx)
-     : index_(idx)
+    compile_unit_t(uint32_t idx, uint32_t loidx)
+     :  index_(idx),
+        loindex_(loidx)
     {}
 
     ~compile_unit_t()
@@ -30,6 +32,9 @@ public:
     void dump_abbrevs() const;
 
     uint32_t get_index() const { return index_; }
+    uint32_t get_link_object_index() const { return loindex_; }
+    const char *get_executable() const;
+    const section_t *get_section(uint32_t) const;
 
     reference_t make_reference(uint32_t off) const
     {
@@ -63,6 +68,7 @@ public:
 
 private:
     uint32_t index_;
+    uint32_t loindex_;
     reader_t reader_;	    // for whole including header
     uint32_t abbrevs_offset_;
     std::map<uint32_t, abbrev_t*> abbrevs_;

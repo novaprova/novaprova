@@ -30,9 +30,9 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state(filename);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(filename))
+	return 1;
     state.dump_info(preorder);
 
     return 0;
@@ -44,9 +44,9 @@ test_abbrevs(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegtest abbrevs EXE\n");
 
-    spiegel::dwarf::state_t state(argv[1]);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(argv[1]))
+	return 1;
     state.dump_abbrevs();
 
     return 0;
@@ -58,9 +58,9 @@ test_functions_dwarf(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegtest functions EXE\n");
 
-    spiegel::dwarf::state_t state(argv[1]);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(argv[1]))
+	return 1;
     state.dump_functions();
 
     return 0;
@@ -72,9 +72,9 @@ test_variables(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegtest variables EXE\n");
 
-    spiegel::dwarf::state_t state(argv[1]);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(argv[1]))
+	return 1;
     state.dump_variables();
 
     return 0;
@@ -86,9 +86,9 @@ test_structs(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegtest structs EXE\n");
 
-    spiegel::dwarf::state_t state(argv[1]);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(argv[1]))
+	return 1;
     state.dump_structs();
 
     return 0;
@@ -157,9 +157,9 @@ test_compile_units(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegtest compile_units EXE\n");
 
-    spiegel::dwarf::state_t state(argv[1]);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(argv[1]))
+	return 1;
 
     printf("Compile Units\n");
     printf("=============\n");
@@ -182,9 +182,9 @@ test_functions(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegtest functions EXE\n");
 
-    spiegel::dwarf::state_t state(argv[1]);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(argv[1]))
+	return 1;
 
     printf("Functions\n");
     printf("=========\n");
@@ -212,9 +212,9 @@ test_types(int argc, char **argv)
     if (argc != 2)
 	fatal("Usage: spiegtest types EXE\n");
 
-    spiegel::dwarf::state_t state(argv[1]);
-    state.map_sections();
-    state.read_compile_units();
+    spiegel::dwarf::state_t state;
+    if (!state.add_executable(argv[1]))
+	return 1;
 
     printf("Types\n");
     printf("=====\n");

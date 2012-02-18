@@ -17,11 +17,12 @@ class compile_unit_t;
 class state_t
 {
 public:
-    state_t(const char *filename);
+    state_t();
     ~state_t();
 
-    void map_sections();
-    void read_compile_units();
+//     bool add_self();
+    bool add_executable(const char *filename);
+
     void dump_structs();
     void dump_functions();
     void dump_variables();
@@ -34,6 +35,31 @@ public:
     const std::vector<compile_unit_t*> &get_compile_units() const { return compile_units_; }
 
 private:
+    struct linkobj_t
+    {
+	linkobj_t(const char *n, uint32_t idx)
+	 :  filename_(xstrdup(n)),
+	    index_(idx)
+	{
+	    memset(sections_, 0, sizeof(sections_));
+	}
+	~linkobj_t()
+	{
+	    unmap_sections();
+	    free(filename_);
+	}
+
+	char *filename_;
+	uint32_t index_;
+	section_t sections_[DW_sec_num];
+	std::vector<section_t> mappings_;
+
+	bool map_sections();
+	void unmap_sections();
+    };
+
+    bool read_compile_units(linkobj_t *);
+
     compile_unit_t *get_compile_unit(reference_t ref) const
     {
 	return compile_units_[ref.cu];
@@ -41,12 +67,11 @@ private:
 
     static state_t *instance_;
 
-    char *filename_;
-    section_t sections_[DW_sec_num];
-    std::vector<section_t> mappings_;
+    std::vector<linkobj_t*> linkobjs_;
     std::vector<compile_unit_t*> compile_units_;
 
     friend class walker_t;
+    friend class compile_unit_t;
 };
 
 

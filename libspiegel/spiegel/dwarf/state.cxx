@@ -13,26 +13,28 @@ using namespace std;
 
 state_t *state_t::instance_ = 0;
 
-state_t::state_t(const char *filename)
- :  filename_(xstrdup(filename))
+state_t::state_t()
 {
-    memset(sections_, 0, sizeof(sections_));
     assert(!instance_);
     instance_ = this;
 }
 
 state_t::~state_t()
 {
-    free(filename_);
+    vector<linkobj_t*>::iterator i;
+    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+	delete *i;
+
     assert(instance_ == this);
     instance_ = 0;
 }
 
-void
-state_t::map_sections()
+bool
+state_t::linkobj_t::map_sections()
 {
     int fd = -1;
     vector<section_t>::iterator m;
+    bool r = true;
 
     bfd_init();
 
@@ -41,7 +43,7 @@ state_t::map_sections()
     if (!b)
     {
 	bfd_perror(filename_);
-	return;
+	return false;
     }
     if (!bfd_check_format(b, bfd_object))
     {
@@ -147,6 +149,19 @@ state_t::map_sections()
 
     goto out;
 error:
+    unmap_sections();
+    r = false;
+out:
+    if (fd >= 0)
+	close(fd);
+    bfd_close(b);
+    return r;
+}
+
+void
+state_t::linkobj_t::unmap_sections()
+{
+    vector<section_t>::iterator m;
     for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
 	if (m->map)
@@ -155,22 +170,18 @@ error:
 	    m->map = NULL;
 	}
     }
-out:
-    if (fd >= 0)
-	close(fd);
-    bfd_close(b);
 }
 
-void
-state_t::read_compile_units()
+bool
+state_t::read_compile_units(linkobj_t *lo)
 {
-    reader_t infor = sections_[DW_sec_info].get_contents();
-    reader_t abbrevr = sections_[DW_sec_abbrev].get_contents();
+    reader_t infor = lo->sections_[DW_sec_info].get_contents();
+    reader_t abbrevr = lo->sections_[DW_sec_abbrev].get_contents();
 
     compile_unit_t *cu = 0;
     for (;;)
     {
-	cu = new compile_unit_t(compile_units_.size());
+	cu = new compile_unit_t(compile_units_.size(), lo->index_);
 	if (!cu->read_header(infor))
 	    break;
 
@@ -179,6 +190,32 @@ state_t::read_compile_units()
 	compile_units_.push_back(cu);
     }
     delete cu;
+    return true;
+}
+
+// bool
+// state_t::add_self()
+// {
+// }
+
+bool
+state_t::add_executable(const char *filename)
+{
+    if (!filename)
+	return false;
+
+    linkobj_t *lo = new linkobj_t(filename,
+				  linkobjs_.size());
+
+    if (!lo->map_sections() ||
+        !read_compile_units(lo))
+    {
+	delete lo;
+	return false;
+    }
+
+    linkobjs_.push_back(lo);
+    return true;
 }
 
 static void

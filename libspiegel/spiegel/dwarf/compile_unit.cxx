@@ -1,4 +1,5 @@
 #include "spiegel/commonp.hxx"
+#include "state.hxx"
 #include "compile_unit.hxx"
 #include "walker.hxx"
 #include "enumerations.hxx"
@@ -100,6 +101,20 @@ compile_unit_t::dump_abbrevs() const
 	printf("    }\n");
     }
     printf("}\n");
+}
+
+const char *
+compile_unit_t::get_executable() const
+{
+    const state_t::linkobj_t *lo = state_t::instance()->linkobjs_[loindex_];
+    return lo->filename_;
+}
+
+const section_t *
+compile_unit_t::get_section(uint32_t i) const
+{
+    const state_t::linkobj_t *lo = state_t::instance()->linkobjs_[loindex_];
+    return &lo->sections_[i];
 }
 
 // close namespace
