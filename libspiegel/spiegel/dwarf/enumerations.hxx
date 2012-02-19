@@ -1,7 +1,7 @@
 #ifndef __libspiegel_dwarf_enumerations_hxx__
 #define __libspiegel_dwarf_enumerations_hxx__ 1
 
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 #include "string_table.hxx"
 
 enum section_names

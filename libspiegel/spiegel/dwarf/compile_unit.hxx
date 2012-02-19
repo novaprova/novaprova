@@ -1,8 +1,7 @@
 #ifndef __libspiegel_dwarf_compile_unit_hxx__
 #define __libspiegel_dwarf_compile_unit_hxx__ 1
 
-#include "spiegel/commonp.hxx"
-#include <map>
+#include "spiegel/common.hxx"
 #include "reference.hxx"
 #include "reader.hxx"
 

@@ -1,8 +1,7 @@
 #ifndef __libspiegel_dwarf_entry_hxx__
 #define __libspiegel_dwarf_entry_hxx__ 1
 
-#include "spiegel/commonp.hxx"
-#include <vector>
+#include "spiegel/common.hxx"
 #include "value.hxx"
 #include "abbrev.hxx"
 

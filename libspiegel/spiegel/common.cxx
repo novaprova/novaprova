@@ -17,9 +17,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <sys/types.h>
-#include <sys/time.h>
-#include "common.h"
+#include "spiegel/common.hxx"
+
+using namespace std;
+namespace spiegel {
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+#define safestr(s)  ((s) == 0 ? "" : (s))
+int safe_strcmp(const char *a, const char *b)
+{
+    return strcmp(safestr(a), safestr(b));
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+int u32cmp(uint32_t ul1, uint32_t ul2);
+int u64cmp(uint64_t ull1, uint64_t ull2);
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -93,7 +107,7 @@ xstrdup(const char *s)
     if (!s)
 	return 0;
     len = strlen(s);
-    if ((x = malloc(len+1)) == 0)
+    if ((x = (char *)malloc(len+1)) == 0)
 	oom();
     strcpy(x, s);
     return x;
@@ -147,4 +161,8 @@ page_round_down(unsigned long x)
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+// close the namespace 
+};
+
 /*END*/

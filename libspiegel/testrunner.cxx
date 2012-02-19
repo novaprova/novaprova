@@ -20,7 +20,7 @@ test_info(int argc, char **argv)
 	else if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner info [--preorder|--recursive] [executable]\n");
+	    spiegel::fatal("Usage: testrunner info [--preorder|--recursive] [executable]\n");
 	}
 	else
 	{
@@ -55,7 +55,7 @@ test_abbrevs(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner abbrevs [executable]\n");
+	    spiegel::fatal("Usage: testrunner abbrevs [executable]\n");
 	}
 	else
 	{
@@ -91,7 +91,7 @@ test_functions_dwarf(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner functions_dwarf [executable]\n");
+	    spiegel::fatal("Usage: testrunner functions_dwarf [executable]\n");
 	}
 	else
 	{
@@ -127,7 +127,7 @@ test_variables(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner variables [executable]\n");
+	    spiegel::fatal("Usage: testrunner variables [executable]\n");
 	}
 	else
 	{
@@ -163,7 +163,7 @@ test_structs(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner structs [executable]\n");
+	    spiegel::fatal("Usage: testrunner structs [executable]\n");
 	}
 	else
 	{
@@ -256,7 +256,7 @@ test_compile_units(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner compile_units [executable]\n");
+	    spiegel::fatal("Usage: testrunner compile_units [executable]\n");
 	}
 	else
 	{
@@ -304,7 +304,7 @@ test_functions(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner functions [executable]\n");
+	    spiegel::fatal("Usage: testrunner functions [executable]\n");
 	}
 	else
 	{
@@ -363,7 +363,7 @@ test_types(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    fatal("Usage: testrunner types [executable]\n");
+	    spiegel::fatal("Usage: testrunner types [executable]\n");
 	}
 	else
 	{
@@ -405,7 +405,7 @@ usage:
 int
 main(int argc, char **argv)
 {
-    argv0 = argv[0];
+    spiegel::argv0 = argv[0];
     if (!strcmp(argv[1], "info"))
 	return test_info(argc-1, argv+1);
     if (!strcmp(argv[1], "abbrevs"))
@@ -426,7 +426,7 @@ main(int argc, char **argv)
 	return test_compile_units(argc-1, argv+1);
     if (!strcmp(argv[1], "types"))
 	return test_types(argc-1, argv+1);
-    fatal("Usage: testrunner command args...\n");
+    spiegel::fatal("Usage: testrunner command args...\n");
     return 1;
 }
 

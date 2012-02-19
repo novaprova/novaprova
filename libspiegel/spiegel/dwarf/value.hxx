@@ -1,7 +1,7 @@
 #ifndef __libspiegel_dwarf_value_hxx__
 #define __libspiegel_dwarf_value_hxx__ 1
 
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 #include "reference.hxx"
 
 namespace spiegel {

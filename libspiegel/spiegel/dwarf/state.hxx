@@ -1,9 +1,8 @@
 #ifndef __libspiegel_dwarf_state_hxx__
 #define __libspiegel_dwarf_state_hxx__ 1
 
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 #include "spiegel/spiegel.hxx"
-#include <vector>
 #include "section.hxx"
 #include "reference.hxx"
 #include "enumerations.hxx"

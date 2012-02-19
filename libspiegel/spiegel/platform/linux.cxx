@@ -1,4 +1,4 @@
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 #include "common.hxx"
 
 #include <dlfcn.h>

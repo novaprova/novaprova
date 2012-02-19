@@ -1,4 +1,4 @@
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 #include "state.hxx"
 #include "compile_unit.hxx"
 #include "walker.hxx"

@@ -34,8 +34,7 @@ libspiegel_SOURCES= \
 	spiegel/dwarf/value.cxx \
 	spiegel/dwarf/walker.cxx \
 	spiegel/platform/linux.cxx \
-	spiegel/common.c \
-	spiegel/commonp.cxx \
+	spiegel/common.cxx \
 	spiegel/spiegel.cxx \
 
 libspiegel_PRIVHEADERS= \
@@ -51,8 +50,7 @@ libspiegel_PRIVHEADERS= \
 	spiegel/dwarf/value.hxx \
 	spiegel/dwarf/walker.hxx \
 	spiegel/platform/common.hxx \
-	spiegel/common.h \
-	spiegel/commonp.hxx \
+	spiegel/common.hxx \
 
 libspiegel_HEADERS= \
 	spiegel/spiegel.hxx \

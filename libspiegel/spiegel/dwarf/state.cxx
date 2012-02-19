@@ -1,6 +1,5 @@
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 #include <sys/mman.h>
-#include <vector>
 #include <sys/fcntl.h>
 #include <bfd.h>
 #include "state.hxx"

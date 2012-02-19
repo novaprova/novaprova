@@ -1,7 +1,7 @@
 #ifndef __libspiegel_dwarf_reference_hxx__
 #define __libspiegel_dwarf_reference_hxx__ 1
 
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 
 namespace spiegel {
 namespace dwarf {

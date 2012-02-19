@@ -1,7 +1,7 @@
 #ifndef __libspiegel_dwarf_walker_hxx__
 #define __libspiegel_dwarf_walker_hxx__ 1
 
-#include "spiegel/commonp.hxx"
+#include "spiegel/common.hxx"
 #include "reader.hxx"
 #include "entry.hxx"
 #include "compile_unit.hxx"

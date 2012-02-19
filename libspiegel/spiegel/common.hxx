@@ -17,8 +17,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _common_h_
-#define _common_h_ 1
+#ifndef __spiegel_common_hxx__
+#define __spiegel_common_hxx__ 1
 
 /* Include autoconf defines */
 // #include <config.h>
@@ -48,97 +48,38 @@
 #include <stdint.h>
 #endif
 
-// #include <glib.h>
+#include <map>
+#include <vector>
+#include <exception>
 
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
-#define listdelete(v,type,dtor) \
-    do { \
-	while ((v) != 0) \
-	{ \
-    	    dtor((type *)(v)->data); \
-    	    (v) = g_list_remove_link((v), (v)); \
-	} \
-    } while(0)
-
-#define listclear(v) \
-    do { \
-	while ((v) != 0) \
-	{ \
-    	    (v) = g_list_remove_link((v), (v)); \
-	} \
-    } while(0)
-
-#define boolassign(bv, s) \
-    (bv) = strbool((s), (bv))
-
-#define boolstr(b)  	((b) ? "true" : "false")
-
-/* boolean, true, and false need to be defined always, and
- * unsigned so that struct fields of type boolean:1 do not
- * generate whiny gcc warnings */
-#ifdef boolean
-#undef boolean
+// Provide an empty definition of __attribute__ so
+// we can just use it even on non-gcc compilers
+#if !defined(__GNUC__) && !defined(__attribute__)
+#define __attribute__(x)
 #endif
-#define boolean	    unsigned int
 
-#ifdef false
-#undef false
-#endif
-#define false	    (0U)
+namespace spiegel {
 
-#ifdef false
-#undef false
-#endif
-#define false	    (0U)
+extern int safe_strcmp(const char *a, const char *b);
 
-#define safestr(s)  ((s) == 0 ? "" : (s))
-static inline int safe_strcmp(const char *a, const char *b)
-{
-    return strcmp(safestr(a), safestr(b));
-}
-
-int u32cmp(uint32_t ul1, uint32_t ul2);
-int u64cmp(uint64_t ull1, uint64_t ull2);
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-#ifdef __cplusplus
-extern "C" {
-#endif
+extern int u32cmp(uint32_t ul1, uint32_t ul2);
+extern int u64cmp(uint64_t ull1, uint64_t ull2);
 
 extern const char *argv0;
 extern void fatal(const char *fmt, ...)
-#ifdef __GNUC__
-__attribute__ (( noreturn ))
-__attribute__ (( format(printf,1,2) ))
-#endif
-;
+    __attribute__ (( noreturn ))
+    __attribute__ (( format(printf,1,2) ));
 
 extern void *xmalloc(size_t sz);
 extern char *xstrdup(const char *s);
-#ifdef __cplusplus
-};
-#endif
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 extern unsigned long page_size(void);
 extern unsigned long page_round_up(unsigned long x);
 extern unsigned long page_round_down(unsigned long x);
 
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
-#ifdef _
-#undef _
-#endif
-#define _(s)	s
-
-#ifdef N_
-#undef N_
-#endif
-#define N_(s)	s
+// close the namespace
+};
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-
-#endif /* _common_h_ */
+#endif /* __spiegel_common_hxx__ */
