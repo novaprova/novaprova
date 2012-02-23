@@ -2,6 +2,138 @@
 #include "spiegel/dwarf/state.hxx"
 using namespace std;
 
+#define BASEDIR	"/tmp"
+#define TESTDIR	BASEDIR"/ggcov.filename.test"
+
+static char oldcwd[PATH_MAX];
+
+static int
+filenames_setup()
+{
+    struct stat sb;
+    int r;
+
+    r = system("rm -rf "TESTDIR);
+    if (r)
+	return -1;
+    r = stat(TESTDIR, &sb);
+    if (r == 0 || errno != ENOENT)
+    {
+	perror(TESTDIR);
+	return -1;
+    }
+    mkdir(TESTDIR, 0777);
+    mkdir(TESTDIR"/dir3", 0777);
+    mkdir(TESTDIR"/dir3/dir4", 0777);
+    r = stat(TESTDIR, &sb);
+    if (r != 0)
+    {
+	perror(TESTDIR);
+	return -1;
+    }
+
+    if (getcwd(oldcwd, sizeof(oldcwd)) == NULL)
+    {
+	perror("getcwd");
+	return -1;
+    }
+    if (chdir(TESTDIR"/dir3/dir4") < 0)
+    {
+	perror(TESTDIR"/dir3/dir4");
+	return -1;
+    }
+
+    return 0;
+}
+
+static int
+filenames_teardown()
+{
+    int r;
+
+    if (oldcwd[0])
+	chdir(oldcwd);
+
+    r = system("rm -rf "TESTDIR);
+    if (r)
+	return -1;
+    return 0;
+}
+
+static int
+test_filenames(int argc, char **argv __attribute__((unused)))
+{
+    if (argc != 1)
+	spiegel::fatal("Usage: testrunner filenames\n");
+
+    filenames_setup();
+
+#define TESTCASE(in, expected) \
+{ \
+    spiegel::filename_t _in(in); \
+    spiegel::filename_t _out = _in.make_absolute(); \
+    spiegel::filename_t _exp(expected); \
+    fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
+	_in.c_str(), _out.c_str(), _exp.c_str()); \
+    assert(!strcmp(_out.c_str(), _exp.c_str())); \
+}
+    TESTCASE("/foo/bar", "/foo/bar");
+    TESTCASE("/foo", "/foo");
+    TESTCASE("/", "/");
+    TESTCASE("foo", TESTDIR"/dir3/dir4/foo");
+    TESTCASE("foo/bar", TESTDIR"/dir3/dir4/foo/bar");
+    TESTCASE(".", TESTDIR"/dir3/dir4");
+    TESTCASE("./foo", TESTDIR"/dir3/dir4/foo");
+    TESTCASE("./foo/bar", TESTDIR"/dir3/dir4/foo/bar");
+    TESTCASE("./foo/./bar", TESTDIR"/dir3/dir4/foo/bar");
+    TESTCASE("./././foo/./bar", TESTDIR"/dir3/dir4/foo/bar");
+    TESTCASE("..", TESTDIR"/dir3");
+    TESTCASE("../foo", TESTDIR"/dir3/foo");
+    TESTCASE("../foo/bar", TESTDIR"/dir3/foo/bar");
+    TESTCASE("../../foo", TESTDIR"/foo");
+    TESTCASE("../../../foo/bar", BASEDIR"/foo/bar");
+    TESTCASE("./../.././../foo/bar", BASEDIR"/foo/bar");
+#undef TESTCASE
+    filenames_teardown();
+    filenames_setup();
+#define TESTCASE(in, expected) \
+{ \
+    spiegel::filename_t _in(in); \
+    spiegel::filename_t _out = _in.normalise(); \
+    spiegel::filename_t _exp(expected); \
+    fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
+	_in.c_str(), _out.c_str(), _exp.c_str()); \
+    assert(!strcmp(_out.c_str(), _exp.c_str())); \
+}
+    TESTCASE("/foo/bar", "/foo/bar");
+    TESTCASE("//foo////bar", "/foo/bar");
+    TESTCASE("/", "/");
+    TESTCASE("foo", "foo");
+    TESTCASE("./foo", "foo");
+    TESTCASE("./././foo", "foo");
+    TESTCASE("./foo/./", "foo");
+    TESTCASE("foo/bar", "foo/bar");
+    TESTCASE("foo////bar", "foo/bar");
+    TESTCASE("./foo", "foo");
+    TESTCASE("./foo/bar", "foo/bar");
+    TESTCASE("./foo///bar", "foo/bar");
+    TESTCASE(".//foo/bar", "foo/bar");
+    TESTCASE("././././foo/bar", "foo/bar");
+    TESTCASE(".", ".");
+    TESTCASE("../foo", "../foo");
+    TESTCASE("../foo/bar", "../foo/bar");
+    TESTCASE("../foo//bar", "../foo/bar");
+    TESTCASE("foo/..", ".");
+    TESTCASE("foo///..", ".");
+    TESTCASE("foo/../bar/..", ".");
+    TESTCASE("foo//.././bar/.//..", ".");
+    TESTCASE("../../../foo/bar", "../../../foo/bar");
+    TESTCASE("./../.././../foo/bar", "../../../foo/bar");
+#undef TESTCASE
+    filenames_teardown();
+    return 0;
+}
+
 static int
 test_info(int argc, char **argv)
 {
@@ -406,6 +538,8 @@ int
 main(int argc, char **argv)
 {
     spiegel::argv0 = argv[0];
+    if (!strcmp(argv[1], "filenames"))
+	return test_filenames(argc-1, argv+1);
     if (!strcmp(argv[1], "info"))
 	return test_info(argc-1, argv+1);
     if (!strcmp(argv[1], "abbrevs"))

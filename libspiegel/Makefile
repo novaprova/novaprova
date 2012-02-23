@@ -29,7 +29,9 @@ libspiegel_SOURCES= \
 	spiegel/dwarf/walker.cxx \
 	spiegel/platform/linux.cxx \
 	spiegel/common.cxx \
+	spiegel/filename.cxx \
 	spiegel/spiegel.cxx \
+	spiegel/tok.cxx \
 
 libspiegel_PRIVHEADERS= \
 	spiegel/dwarf/abbrev.hxx \
@@ -44,7 +46,9 @@ libspiegel_PRIVHEADERS= \
 	spiegel/dwarf/value.hxx \
 	spiegel/dwarf/walker.hxx \
 	spiegel/platform/common.hxx \
+	spiegel/filename.hxx \
 	spiegel/common.hxx \
+	spiegel/tok.hxx \
 
 libspiegel_HEADERS= \
 	spiegel/spiegel.hxx \
