@@ -60,6 +60,8 @@ private:
     uint64_t low_pc_;	    // TODO: should be an addr_t
     uint64_t high_pc_;
     uint32_t language_;
+
+    friend class member_t;
 };
 
 class type_t
@@ -175,6 +177,7 @@ class member_t
 {
 public:
     const char *get_name() const { return name_; }
+    const compile_unit_t *get_compile_unit() const;
 //     type_t *get_declaring_class() const;
 //     int get_modifiers() const;
 

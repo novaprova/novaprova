@@ -363,6 +363,20 @@ member_t::member_t(spiegel::dwarf::walker_t &w)
 {
 }
 
+const compile_unit_t *
+member_t::get_compile_unit() const
+{
+    spiegel::dwarf::state_t *state = spiegel::dwarf::state_t::instance();
+    spiegel::dwarf::compile_unit_t *dcu = state->get_compile_unit(ref_);
+    compile_unit_t *cu = new compile_unit_t(dcu->make_root_reference());
+    if (!cu->populate())
+    {
+	delete cu;
+	return 0;
+    }
+    return cu;
+}
+
 type_t *
 function_t::get_return_type() const
 {
