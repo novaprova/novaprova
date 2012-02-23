@@ -417,9 +417,11 @@ usage:
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-	printf("%s/%s [%s]\n",
-	       (*i)->get_compile_dir(), (*i)->get_name(),
-	       (*i)->get_executable());
+	printf("compile_unit\n");
+	printf("    name: %s\n", (*i)->get_name().c_str());
+	printf("    compile_dir: %s\n", (*i)->get_compile_dir().c_str());
+	printf("    absolute_path: %s\n", (*i)->get_absolute_path().c_str());
+	printf("    executable: %s\n", (*i)->get_executable());
     }
 
     printf("\n\n");
@@ -465,7 +467,7 @@ usage:
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-	printf("%s/%s\n", (*i)->get_compile_dir(), (*i)->get_name());
+	printf("%s\n", (*i)->get_absolute_path().c_str());
 
 	vector<spiegel::function_t *> fns = (*i)->get_functions();
 	vector<spiegel::function_t *>::iterator j;
@@ -524,7 +526,7 @@ usage:
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-	printf("%s/%s\n", (*i)->get_compile_dir(), (*i)->get_name());
+	printf("%s\n", (*i)->get_absolute_path().c_str());
 	(*i)->dump_types();
     }
 

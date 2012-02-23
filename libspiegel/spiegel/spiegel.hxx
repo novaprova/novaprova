@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "spiegel/dwarf/reference.hxx"
+#include "spiegel/filename.hxx"
 
 #define SPIEGEL_DYNAMIC 0
 
@@ -35,8 +36,9 @@ class compile_unit_t
 public:
     static std::vector<compile_unit_t *> get_compile_units();
 
-    const char *get_name() const { return name_; }
-    const char *get_compile_dir() const { return comp_dir_; }
+    filename_t get_name() const { return name_; }
+    filename_t get_compile_dir() const { return comp_dir_; }
+    filename_t get_absolute_path() const;
     const char *get_executable() const;
 //     static compile_unit_t *for_name(const char *name);
 
@@ -258,7 +260,6 @@ public:
 private:
     function_t(spiegel::dwarf::walker_t &w) : member_t(w) {}
     ~function_t() {}
-
 
     friend class compile_unit_t;
 };

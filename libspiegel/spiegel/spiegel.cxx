@@ -236,6 +236,12 @@ type_t::to_string() const
     return to_string(string(""));
 }
 
+filename_t
+compile_unit_t::get_absolute_path() const
+{
+    return filename_t(name_).make_absolute_to_dir(filename_t(comp_dir_));
+}
+
 vector<compile_unit_t *>
 compile_unit_t::get_compile_units()
 {
