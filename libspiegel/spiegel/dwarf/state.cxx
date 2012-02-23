@@ -546,5 +546,42 @@ state_t::dump_abbrevs()
     printf("\n\n");
 }
 
+bool
+state_t::is_within(unsigned long addr, const entry_t *e) const
+{
+    uint64_t lo = e->get_uint64_attribute(DW_AT_low_pc);
+    uint64_t hi = e->get_uint64_attribute(DW_AT_high_pc);
+    return (lo && hi && addr >= lo && addr <= hi);
+}
+
+
+bool
+state_t::describe_address(unsigned long addr,
+			  const char **filenamep,
+			  unsigned int *linenop,
+			  const char **functionp) const
+{
+    vector<compile_unit_t*>::const_iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    {
+	walker_t w((*i)->make_root_reference());
+	const entry_t *e = w.move_next();
+	if (is_within(addr, e))
+	{
+	    *linenop = 0;
+	    *filenamep = e->get_string_attribute(DW_AT_name);
+	    for (e = w.move_down() ; e ; e = w.move_next())
+	    {
+		if (e->get_tag() == DW_TAG_subprogram && is_within(addr, e))
+		{
+		    *functionp = e->get_string_attribute(DW_AT_name);
+		    return true;
+		}
+	    }
+	}
+    }
+    return false;
+}
+
 // close namespace
 } }

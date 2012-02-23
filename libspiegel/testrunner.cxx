@@ -535,6 +535,68 @@ usage:
     return 0;
 }
 
+static int
+test_addresses(int argc, char **argv __attribute__((unused)))
+{
+    const char *filename = 0;
+    unsigned long addr = 0;
+    for (int i = 1 ; i < argc ; i++)
+    {
+	if (argv[i][0] == '-')
+	{
+usage:
+	    spiegel::fatal("Usage: testrunner addresses [addr [executable]]\n");
+	}
+	else
+	{
+	    if (!addr)
+		addr = strtoul(argv[i], 0, 0);
+	    else if (!filename)
+		filename = argv[i];
+	    else
+		goto usage;
+	}
+    }
+    if (!addr)
+	addr = (unsigned long)&test_addresses + 10;
+
+    spiegel::dwarf::state_t state;
+    if (filename)
+    {
+	if (!state.add_executable(filename))
+	    return 1;
+    }
+    else
+    {
+	if (!state.add_self())
+	    return 1;
+    }
+
+    printf("Addresses\n");
+    printf("=========\n");
+
+    const char *a_filename = 0;
+    unsigned int a_lineno = 0;
+    const char *a_function = 0;
+
+    if (!state.describe_address(addr,
+			        &a_filename,
+				&a_lineno,
+				&a_function))
+    {
+	fprintf(stderr, "FAILed to describe address\n");
+	return 1;
+    }
+
+    printf("address=0x%lx\n", addr);
+    printf("filename=\"%s\"\n", a_filename);
+    printf("lineno=%u\n", a_lineno);
+    printf("function=\"%s\"\n", a_function);
+
+    return 0;
+}
+
+
 
 int
 main(int argc, char **argv)
@@ -562,6 +624,8 @@ main(int argc, char **argv)
 	return test_compile_units(argc-1, argv+1);
     if (!strcmp(argv[1], "types"))
 	return test_types(argc-1, argv+1);
+    if (!strcmp(argv[1], "addresses"))
+	return test_addresses(argc-1, argv+1);
     spiegel::fatal("Usage: testrunner command args...\n");
     return 1;
 }

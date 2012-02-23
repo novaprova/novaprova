@@ -28,6 +28,9 @@ public:
     void dump_info(bool preorder);
     void dump_abbrevs();
 
+    bool describe_address(unsigned long addr, const char **filenamep,
+		          unsigned int *linenop, const char **functionp) const;
+
     // state_t is a Singleton
     static state_t *instance() { return instance_; }
 
@@ -62,6 +65,7 @@ private:
     };
 
     bool read_compile_units(linkobj_t *);
+    bool is_within(unsigned long addr, const entry_t *e) const;
 
     static state_t *instance_;
 
