@@ -2,6 +2,7 @@
 #define __libspiegel_dwarf_reference_hxx__ 1
 
 #include "spiegel/common.hxx"
+#include <string>
 
 namespace spiegel {
 namespace dwarf {
@@ -17,6 +18,7 @@ struct reference_t
     {
 	return (o.cu == cu && o.offset == offset);
     }
+    std::string as_string() const;
 };
 
 // close namespaces
