@@ -35,3 +35,6 @@ check: $(TESTS)
 
 %.c: %-genc.pl
 	perl $< > $@
+
+clean:
+	$(RM) $(TESTS)
