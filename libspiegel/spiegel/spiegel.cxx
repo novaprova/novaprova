@@ -7,6 +7,43 @@
 namespace spiegel {
 using namespace std;
 
+value_t
+value_t::make_invalid()
+{
+    value_t v;
+    memset(&v, 0, sizeof(v));
+    return v;
+}
+
+value_t
+value_t::make_void()
+{
+    value_t v;
+    memset(&v, 0, sizeof(v));
+    v.which = type_t::TC_VOID;
+    return v;
+}
+
+value_t
+value_t::make_sint(int64_t i)
+{
+    value_t v;
+    memset(&v, 0, sizeof(v));
+    v.which = type_t::TC_SIGNED_LONG_LONG;
+    v.val.vsint = i;
+    return v;
+}
+
+value_t
+value_t::make_sint(int32_t i)
+{
+    value_t v;
+    memset(&v, 0, sizeof(v));
+    v.which = type_t::TC_SIGNED_LONG_LONG;
+    v.val.vsint = i;
+    return v;
+}
+
 unsigned int
 type_t::get_classification() const
 {
@@ -471,6 +508,33 @@ function_t::get_address() const
     const spiegel::dwarf::entry_t *e = w.move_next();
     return e->get_address_attribute(DW_AT_low_pc);
 }
+
+#if SPIEGEL_DYNAMIC
+value_t
+function_t::invoke(vector<value_t> args __attribute__((unused))) const
+{
+    // TODO: check that DW_AT_calling_convention == DW_CC_normal
+    // TODO: check that we're talking to self
+    void *addr = get_address();
+    if (!addr)
+	return value_t::make_invalid();
+
+    // Hacky special cases, enough to get U4C working without
+    // writing the general purpose platform ABI invoke()
+    if (get_parameter_types().size() > 0)
+	return value_t::make_invalid();
+    switch (get_return_type()->get_classification())
+    {
+    case type_t::TC_VOID:
+	((void (*)(void))addr)();
+	return value_t::make_void();
+    case type_t::TC_SIGNED_INT:
+	return value_t::make_sint(((int32_t (*)(void))addr)());
+    }
+    return value_t::make_invalid();
+//     return spiegel::platform::invoke(addr, args);
+}
+#endif
 
 map<spiegel::dwarf::reference_t, _cacheable_t*> _cacher_t::cache_;
 

@@ -7,7 +7,7 @@
 #include "spiegel/dwarf/reference.hxx"
 #include "spiegel/filename.hxx"
 
-#define SPIEGEL_DYNAMIC 0
+#define SPIEGEL_DYNAMIC 1
 
 namespace spiegel {
 
@@ -19,13 +19,28 @@ class entry_t;
 };
 
 #if SPIEGEL_DYNAMIC
-union value_t
+struct value_t
 {
-    void *vpointer;
-    unsigned long long vuint;
-    long long vsint;
-    double vdouble;
-    float vfloat;
+    // Valid values for 'which' are
+    // TC_INVALID
+    // TC_VOID
+    // TC_POINTER
+    // TC_UNSIGNED_LONG_LONG
+    // TC_SIGNED_LONG_LONG
+    // TC_DOUBLE
+    unsigned int which;
+    union
+    {
+	void *vpointer;
+	unsigned long long vuint;
+	long long vsint;
+	double vdouble;
+    } val;
+
+    static value_t make_invalid();
+    static value_t make_void();
+    static value_t make_sint(int64_t i);
+    static value_t make_sint(int32_t i);
 };
 #endif
 
@@ -262,7 +277,7 @@ public:
 //     std::vector<type_t*> get_exception_types() const;
 
 #if SPIEGEL_DYNAMIC
-    value_t invoke(void *obj, std::vector<value_t> args);
+    value_t invoke(std::vector<value_t> args) const;
 #endif
     std::string to_string() const;
 

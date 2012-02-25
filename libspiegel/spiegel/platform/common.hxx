@@ -15,6 +15,8 @@ struct linkobj_t
 };
 extern std::vector<linkobj_t> self_linkobjs();
 
+// extern spiegel::value_t invoke(void *fnaddr, vector<spiegel::value_t> args);
+
 // close namespaces
 } }
 
