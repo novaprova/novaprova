@@ -11,6 +11,7 @@ CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 INSTALL=	/usr/bin/install -c
 RANLIB=		ranlib
+depdir=		.deps
 
 all: libu4c.a
 
@@ -21,6 +22,16 @@ libu4c_PRIVHEADERS= \
 		common.h u4c_priv.h
 libu4c_HEADERS=	u4c.h
 libu4c_OBJS=	$(libu4c_SOURCE:.c=.o)
+#
+# Automatic dependency tracking
+libu4c_DFILES= \
+	$(patsubst %.c,$(depdir)/%.d,$(filter %.c,$(libu4c_SOURCE))) \
+
+-include $(libu4c_DFILES)
+
+$(depdir)/%.d: %.c
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	$(COMPILE.c) -MM -MF $@ -MT $(patsubst %.c,%.o,$<) $<
 
 libu4c.a: $(libu4c_OBJS)
 	$(AR) $(ARFLAGS) libu4c.a $(libu4c_OBJS)
@@ -36,6 +47,7 @@ install: all
 
 clean:
 	$(RM) libu4c.a $(libu4c_OBJS)
+	$(RM) -r $(depdir)
 
 check: all
 	cd tests ; $(MAKE) $@
