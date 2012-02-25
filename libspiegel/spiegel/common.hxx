@@ -58,7 +58,21 @@
 #define __attribute__(x)
 #endif
 
+// These are macros so we can #if on them
+#define SPIEGEL_ADDRSIZE    4
+#define SPIEGEL_MAXADDR	    (0xffffffffUL)
+// #define SPIEGEL_ADDRSIZE    8
+// #define SPIEGEL_MAXADDR	    (0xffffffffffffffffULL)
+
 namespace spiegel {
+
+#if SPIEGEL_ADDRSIZE == 4
+typedef uint32_t addr_t;
+#elif SPIEGEL_ADDRSIZE == 8
+typedef uint64_t addr_t;
+#else
+#error "Unknown address size"
+#endif
 
 extern int safe_strcmp(const char *a, const char *b);
 

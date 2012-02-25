@@ -79,6 +79,17 @@ public:
 	return true;
     }
 
+    bool read_addr(spiegel::addr_t &v)
+    {
+#if SPIEGEL_ADDRSIZE == 4
+	return read_u32(v);
+#elif SPIEGEL_ADDRSIZE == 8
+	return read_u64(v);
+#else
+#error "Unknown address size"
+#endif
+    }
+
     bool read_uleb128(uint32_t &v)
     {
 	const unsigned char *pp = p_;

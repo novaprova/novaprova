@@ -30,9 +30,9 @@ compile_unit_t::read_header(reader_t &r)
     if (!r.read_u32(abbrevs_offset_) ||
 	!r.read_u8(addrsize))
 	return false;
-    if (addrsize != sizeof(void*))
+    if (addrsize != SPIEGEL_ADDRSIZE)
 	fatal("Bad DWARF addrsize %u, expecting %u",
-	      addrsize, sizeof(void*));
+	      addrsize, SPIEGEL_ADDRSIZE);
 
 #if 0
     printf("compilation unit\n");

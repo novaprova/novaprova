@@ -547,16 +547,15 @@ state_t::dump_abbrevs()
 }
 
 bool
-state_t::is_within(unsigned long addr, const entry_t *e) const
+state_t::is_within(spiegel::addr_t addr, const entry_t *e) const
 {
     uint64_t lo = e->get_uint64_attribute(DW_AT_low_pc);
     uint64_t hi = e->get_uint64_attribute(DW_AT_high_pc);
     return (lo && hi && addr >= lo && addr <= hi);
 }
 
-
 bool
-state_t::describe_address(unsigned long addr,
+state_t::describe_address(spiegel::addr_t addr,
 			  const char **filenamep,
 			  unsigned int *linenop,
 			  const char **functionp) const
