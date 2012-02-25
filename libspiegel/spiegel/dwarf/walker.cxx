@@ -9,6 +9,12 @@ using namespace std;
 
 uint32_t walker_t::next_id_ = 1;
 
+reader_t
+walker_t::get_section_contents(uint32_t sec) const
+{
+    return compile_unit_->get_section(sec)->get_contents();
+}
+
 void
 walker_t::seek(reference_t ref)
 {

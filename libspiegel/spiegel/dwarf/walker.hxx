@@ -46,6 +46,8 @@ public:
     }
     std::vector<reference_t> get_path() const;
 
+    reader_t get_section_contents(uint32_t sec) const;
+
     // move in preorder: to next sibling or to
     // next available ancestor's sibling
     const entry_t *move_preorder();

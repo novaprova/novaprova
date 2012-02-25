@@ -540,30 +540,45 @@ usage:
     return 0;
 }
 
-static int
-test_addresses(int argc, char **argv __attribute__((unused)))
+static void addr2line(spiegel::dwarf::state_t &state, unsigned long addr)
 {
     const char *filename = 0;
-    unsigned long addr = 0;
-    for (int i = 1 ; i < argc ; i++)
+    unsigned int lineno = 0;
+    const char *classname = 0;
+    const char *function = 0;
+
+    if (!state.describe_address(addr, &filename,
+				&lineno, &classname, &function))
     {
-	if (argv[i][0] == '-')
-	{
-usage:
-	    spiegel::fatal("Usage: testrunner addresses [addr [executable]]\n");
-	}
-	else
-	{
-	    if (!addr)
-		addr = strtoul(argv[i], 0, 0);
-	    else if (!filename)
-		filename = argv[i];
-	    else
-		goto usage;
-	}
+	printf("address 0x%lx filename - line - class - function -\n", addr);
+	return;
     }
-    if (!addr)
-	addr = (unsigned long)&test_addresses + 10;
+
+    printf("address 0x%lx filename %s line %u class %s function %s\n",
+	  addr, filename, lineno, classname, function);
+}
+
+static int
+test_addr2line(int argc, char **argv __attribute__((unused)))
+{
+    const char *filename = 0;
+    unsigned long addr = (unsigned long)&test_addr2line + 10;
+    bool stdin_flag = false;
+    if (argc > 1)
+    {
+	if (!strcmp(argv[1], "-"))
+	    stdin_flag = true;
+	else
+	    addr = strtoul(argv[1], 0, 0);
+    }
+    if (argc > 2)
+    {
+	filename = argv[2];
+    }
+    if (argc > 3)
+    {
+	spiegel::fatal("Usage: testrunner addr2line [addr [executable]]\n");
+    }
 
     spiegel::dwarf::state_t state;
     if (filename)
@@ -577,27 +592,22 @@ usage:
 	    return 1;
     }
 
-    printf("Addresses\n");
-    printf("=========\n");
-
-    const char *a_filename = 0;
-    unsigned int a_lineno = 0;
-    const char *a_function = 0;
-
-    if (!state.describe_address(addr,
-			        &a_filename,
-				&a_lineno,
-				&a_function))
+    if (stdin_flag)
     {
-	fprintf(stderr, "FAILed to describe address\n");
-	return 1;
+	char buf[128];
+	while (fgets(buf, sizeof(buf), stdin))
+	{
+	    char *p = strchr(buf, '\n');
+	    if (p)
+		*p = '\0';
+	    addr = strtoul(buf, 0, 0);
+	    addr2line(state, addr);
+	}
     }
-
-    printf("address=0x%lx\n", addr);
-    printf("filename=\"%s\"\n", a_filename);
-    printf("lineno=%u\n", a_lineno);
-    printf("function=\"%s\"\n", a_function);
-
+    else
+    {
+	addr2line(state, addr);
+    }
     return 0;
 }
 
@@ -629,8 +639,8 @@ main(int argc, char **argv)
 	return test_compile_units(argc-1, argv+1);
     if (!strcmp(argv[1], "types"))
 	return test_types(argc-1, argv+1);
-    if (!strcmp(argv[1], "addresses"))
-	return test_addresses(argc-1, argv+1);
+    if (!strcmp(argv[1], "addr2line"))
+	return test_addr2line(argc-1, argv+1);
     spiegel::fatal("Usage: testrunner command args...\n");
     return 1;
 }

@@ -563,17 +563,51 @@ state_t::dump_abbrevs()
 }
 
 bool
-state_t::is_within(spiegel::addr_t addr, const entry_t *e) const
+state_t::is_within(spiegel::addr_t addr, const walker_t &w) const
 {
+    const entry_t *e = w.get_entry();
     uint64_t lo = e->get_uint64_attribute(DW_AT_low_pc);
     uint64_t hi = e->get_uint64_attribute(DW_AT_high_pc);
-    return (lo && hi && addr >= lo && addr <= hi);
+    // DW_AT_ranges is a DWARF3 attribute, but g++ generates
+    // it (despite only claiming DWARF2 compliance).
+    uint64_t ranges = e->get_uint64_attribute(DW_AT_ranges);
+    if (lo && hi)
+	return (addr >= lo && addr <= hi);
+    if (lo)
+	return (addr == lo);
+    if (ranges)
+    {
+	reader_t r = w.get_section_contents(DW_sec_ranges);
+	r.skip(ranges);
+	spiegel::addr_t base = 0; // TODO: compile unit base
+	spiegel::addr_t start, end;
+	for (;;)
+	{
+	    if (!r.read_addr(start) || !r.read_addr(end))
+		break;
+	    /* (0,0) marks the end of the list */
+	    if (!start && !end)
+		break;
+	    /* (~0,base) marks a new base address */
+	    if (start == SPIEGEL_MAXADDR)
+	    {
+		base = end;
+		continue;
+	    }
+	    start += base;
+	    end += base;
+	    if (addr >= start && addr < end)
+		return true;
+	}
+    }
+    return false;
 }
 
 bool
 state_t::describe_address(spiegel::addr_t addr,
 			  const char **filenamep,
 			  unsigned int *linenop,
+			  const char **classp,
 			  const char **functionp) const
 {
     vector<compile_unit_t*>::const_iterator i;
@@ -581,16 +615,32 @@ state_t::describe_address(spiegel::addr_t addr,
     {
 	walker_t w((*i)->make_root_reference());
 	const entry_t *e = w.move_next();
-	if (is_within(addr, e))
+	if (is_within(addr, w))
 	{
 	    *linenop = 0;
 	    *filenamep = e->get_string_attribute(DW_AT_name);
 	    for (e = w.move_down() ; e ; e = w.move_next())
 	    {
-		if (e->get_tag() == DW_TAG_subprogram && is_within(addr, e))
+		switch (e->get_tag())
 		{
-		    *functionp = e->get_string_attribute(DW_AT_name);
-		    return true;
+		case DW_TAG_subprogram:
+		    if (is_within(addr, w))
+		    {
+			if (e->get_attribute(DW_AT_specification))
+			{
+			    e = w.move_to(e->get_reference_attribute(DW_AT_specification));
+			    *functionp = e->get_string_attribute(DW_AT_name);
+			    e = w.move_up();
+			    *classp = (e ?  e->get_string_attribute(DW_AT_name) : 0);
+			}
+			else
+			{
+			    *classp = 0;
+			    *functionp = e->get_string_attribute(DW_AT_name);
+			}
+			return true;
+		    }
+		    break;
 		}
 	    }
 	}

@@ -29,7 +29,8 @@ public:
     void dump_abbrevs();
 
     bool describe_address(spiegel::addr_t addr, const char **filenamep,
-		          unsigned int *linenop, const char **functionp) const;
+		          unsigned int *linenop, const char **classp,
+			  const char **functionp) const;
 
     // state_t is a Singleton
     static state_t *instance() { return instance_; }
@@ -65,7 +66,7 @@ private:
     };
 
     bool read_compile_units(linkobj_t *);
-    bool is_within(spiegel::addr_t addr, const entry_t *e) const;
+    bool is_within(spiegel::addr_t addr, const walker_t &w) const;
 
     static state_t *instance_;
 
