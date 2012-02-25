@@ -497,18 +497,30 @@ state_t::dump_variables()
     printf("\n\n");
 }
 
+static void
+dump_path(const walker_t &w)
+{
+    printf("Path:");
+    vector<reference_t> path = w.get_path();
+    vector<reference_t>::iterator i;
+    for (i = path.begin() ; i != path.end() ; ++i)
+	printf(" %s", i->as_string().c_str());
+    printf("\n");
+}
 
 static void
-recursive_dump(const entry_t *e, walker_t &w, unsigned depth)
+recursive_dump(const entry_t *e, walker_t &w, unsigned depth, bool paths)
 {
     assert(e->get_level() == depth);
+    if (paths)
+	dump_path(w);
     e->dump();
     for (e = w.move_down() ; e ; e = w.move_next())
-	recursive_dump(e, w, depth+1);
+	recursive_dump(e, w, depth+1, paths);
 }
 
 void
-state_t::dump_info(bool preorder)
+state_t::dump_info(bool preorder, bool paths)
 {
     printf("Info\n");
     printf("====\n");
@@ -520,11 +532,15 @@ state_t::dump_info(bool preorder)
 	if (preorder)
 	{
 	    while (const entry_t *e = w.move_preorder())
+	    {
+		if (paths)
+		    dump_path(w);
 		e->dump();
+	    }
 	}
 	else
 	{
-	    recursive_dump(w.move_next(), w, 0);
+	    recursive_dump(w.move_next(), w, 0, paths);
 	}
 	printf("} compile_unit\n");
     }

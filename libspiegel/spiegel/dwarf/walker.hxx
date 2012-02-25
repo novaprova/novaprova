@@ -44,6 +44,7 @@ public:
     {
 	return compile_unit_->make_reference(entry_.get_offset());
     }
+    std::vector<reference_t> get_path() const;
 
     // move in preorder: to next sibling or to
     // next available ancestor's sibling
@@ -55,6 +56,7 @@ public:
     // return 0 if has no children
     const entry_t *move_down();
     const entry_t *move_to(reference_t);
+    const entry_t *move_up();
 
 private:
     void seek(reference_t ref);

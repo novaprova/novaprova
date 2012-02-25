@@ -25,7 +25,7 @@ public:
     void dump_structs();
     void dump_functions();
     void dump_variables();
-    void dump_info(bool preorder);
+    void dump_info(bool preorder, bool paths);
     void dump_abbrevs();
 
     bool describe_address(spiegel::addr_t addr, const char **filenamep,

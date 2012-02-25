@@ -254,6 +254,31 @@ walker_t::read_entry()
     return 1;
 }
 
+vector<reference_t>
+walker_t::get_path() const
+{
+    walker_t w2(compile_unit_);
+    vector<reference_t> path;
+
+    for (;;)
+    {
+	int r = w2.read_entry();
+	if (r == EOF)
+	    break;
+	if (!r)
+	{
+	    path.pop_back();
+	    continue;
+	}
+	path.push_back(w2.get_reference());
+	if (get_reference() == w2.get_reference())
+	    break;
+	if (!w2.entry_.has_children())
+	    path.pop_back();
+    }
+    return path;
+}
+
 #if DEBUG_WALK
 #define BEGIN \
     printf("\n# [%u] XXX %s:%d level=%u entry.level=%u\n", \
@@ -326,6 +351,15 @@ walker_t::move_to(reference_t ref)
     seek(ref);
     int r = read_entry();
     RETURN(r == 1 ? &entry_ : 0);
+}
+
+const entry_t *
+walker_t::move_up()
+{
+    vector<reference_t> path = get_path();
+    if (path.size() > 1)
+	return move_to(path[path.size()-2]);
+    return 0;
 }
 
 #undef RETURN

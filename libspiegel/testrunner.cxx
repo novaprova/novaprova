@@ -138,6 +138,7 @@ static int
 test_info(int argc, char **argv)
 {
     bool preorder = true;
+    bool paths = false;
     const char *filename = 0;
     for (int i = 1 ; i < argc ; i++)
     {
@@ -149,10 +150,14 @@ test_info(int argc, char **argv)
 	{
 	    preorder = false;
 	}
+	else if (!strcmp(argv[i], "--paths"))
+	{
+	    paths = true;
+	}
 	else if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner info [--preorder|--recursive] [executable]\n");
+	    spiegel::fatal("Usage: testrunner info [--preorder|--recursive] [--paths] [executable]\n");
 	}
 	else
 	{
@@ -173,7 +178,7 @@ usage:
 	if (!state.add_self())
 	    return 1;
     }
-    state.dump_info(preorder);
+    state.dump_info(preorder, paths);
 
     return 0;
 }
