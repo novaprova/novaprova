@@ -31,7 +31,19 @@ union value_t
 
 class function_t;
 
-class compile_unit_t
+class _cacheable_t
+{
+public:
+    _cacheable_t(spiegel::dwarf::reference_t ref) : ref_(ref) {}
+    ~_cacheable_t() {}
+
+protected:
+    spiegel::dwarf::reference_t ref_;
+
+    friend class _cacher_t;
+};
+
+class compile_unit_t : public _cacheable_t
 {
 public:
     static std::vector<compile_unit_t *> get_compile_units();
@@ -47,14 +59,11 @@ public:
     void dump_types();
 
 private:
-    compile_unit_t(spiegel::dwarf::reference_t ref)
-     :  ref_(ref)
-    {}
+    compile_unit_t(spiegel::dwarf::reference_t ref) :  _cacheable_t(ref) {}
     ~compile_unit_t() {}
 
     bool populate();
 
-    spiegel::dwarf::reference_t ref_;
     const char *name_;
     const char *comp_dir_;
     uint64_t low_pc_;	    // TODO: should be an addr_t
@@ -62,9 +71,11 @@ private:
     uint32_t language_;
 
     friend class member_t;
+    friend class spiegel::dwarf::state_t;
+    friend class _cacher_t;
 };
 
-class type_t
+class type_t : public _cacheable_t
 {
 public:
 
@@ -163,17 +174,15 @@ public:
 
 private:
     std::string to_string(std::string inner) const;
-    type_t(spiegel::dwarf::reference_t ref)
-     :  ref_(ref) {}
+    type_t(spiegel::dwarf::reference_t ref) : _cacheable_t(ref) {}
     ~type_t() {}
-
-    spiegel::dwarf::reference_t ref_;
 
     friend class function_t;
     friend class compile_unit_t;
+    friend class _cacher_t;
 };
 
-class member_t
+class member_t : public _cacheable_t
 {
 public:
     const char *get_name() const { return name_; }
@@ -185,11 +194,8 @@ protected:
     member_t(spiegel::dwarf::walker_t &w);
     ~member_t() {}
 
-    // We pull almost everything from DWARF info on demand
-    // using this reference to the DW_TAG_subprogram
-    spiegel::dwarf::reference_t ref_;
-
     const char *name_;
+    friend class _cacher_t;
 };
 
 #if 0
@@ -265,6 +271,28 @@ private:
     ~function_t() {}
 
     friend class compile_unit_t;
+    friend class _cacher_t;
+};
+
+class _cacher_t
+{
+public:
+    static type_t *make_type(spiegel::dwarf::reference_t);
+    static compile_unit_t *make_compile_unit(spiegel::dwarf::reference_t);
+    static function_t *make_function(spiegel::dwarf::walker_t &);
+//     static constructor_t *make_constructor(spiegel::dwarf::reference_t);
+//     static destructor_t *make_destructor(spiegel::dwarf::reference_t);
+//     static field_t *make_field(spiegel::dwarf::reference_t);
+
+private:
+    // no instances for you
+    _cacher_t() {}
+    ~_cacher_t() {}
+
+    static _cacheable_t *find(spiegel::dwarf::reference_t ref);
+    static _cacheable_t *add(_cacheable_t *cc);
+
+    static std::map<spiegel::dwarf::reference_t, _cacheable_t*> cache_;
 };
 
 }; // namespace spiegel

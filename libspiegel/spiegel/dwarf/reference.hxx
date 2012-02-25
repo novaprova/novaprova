@@ -18,6 +18,14 @@ struct reference_t
     {
 	return (o.cu == cu && o.offset == offset);
     }
+    int operator<(const reference_t &o) const
+    {
+	if (cu < o.cu)
+	    return true;
+	if (cu == o.cu && offset < o.offset)
+	    return true;
+	return false;
+    }
     std::string as_string() const;
 };
 
