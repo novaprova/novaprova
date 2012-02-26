@@ -15,17 +15,16 @@
  * This product includes software developed by Computing Services
  * at Carnegie Mellon University (http://www.cmu.edu/computing/).
  */
-typedef enum u4c_sldisposition u4c_sldisposition_t;
-typedef struct u4c_slmatch u4c_slmatch_t;
+struct u4c_slmatch_t;
 
-enum u4c_sldisposition
+enum u4c_sldisposition_t
 {
     SL_IGNORE,
     SL_COUNT,
     SL_FAIL,
 };
 
-struct u4c_slmatch
+struct u4c_slmatch_t
 {
     u4c_slmatch_t *next;
     char *re;
@@ -59,7 +58,7 @@ add_slmatch(const char *re, u4c_sldisposition_t dis,
     u4c_slmatch_t *slm, **prevp;
     int r;
 
-    slm = xmalloc(sizeof(*slm));
+    slm = (u4c_slmatch_t *)xmalloc(sizeof(*slm));
     slm->re = xstrdup(re);
     slm->disposition = dis;
     slm->tag = tag;
@@ -209,9 +208,10 @@ vlogmsg(int prio, const char *fmt, va_list args)
 #if defined(__GLIBC__)
 /* Under some but not all combinations of options, glibc
  * defines syslog() as an inline that calls this function */
-void __syslog_chk(int prio,
-		  int whatever __attribute__((unused)),
-		  const char *fmt, ...)
+extern "C" void
+__syslog_chk(int prio,
+	     int whatever __attribute__((unused)),
+	     const char *fmt, ...)
 {
     const char *msg;
     va_list args;
@@ -223,7 +223,7 @@ void __syslog_chk(int prio,
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
     {
-	struct u4c_event ev = eventc(EV_SYSLOG, msg);
+	u4c_event_t ev(EV_SYSLOG, msg);
 	__u4c_raise_event(&ev, FT_UNKNOWN);
     }
 
@@ -232,7 +232,8 @@ void __syslog_chk(int prio,
 }
 #endif
 
-void syslog(int prio, const char *fmt, ...)
+extern "C" void
+syslog(int prio, const char *fmt, ...)
 {
     const char *msg;
     va_list args;
@@ -244,7 +245,7 @@ void syslog(int prio, const char *fmt, ...)
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
     {
-	struct u4c_event ev = eventc(EV_SYSLOG, msg);
+	u4c_event_t ev(EV_SYSLOG, msg);
 	__u4c_raise_event(&ev, FT_UNKNOWN);
     }
 

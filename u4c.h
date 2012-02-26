@@ -4,8 +4,17 @@
 #include <stdbool.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+struct u4c_globalstate_t;
+struct u4c_plan_t;
+#else
 typedef struct u4c_globalstate u4c_globalstate_t;
 typedef struct u4c_plan u4c_plan_t;
+#endif
 
 extern u4c_globalstate_t *u4c_init(void);
 extern void u4c_list_tests(u4c_globalstate_t *);
@@ -124,5 +133,9 @@ extern void __u4c_syslog_match(const char *re, int tag, const char *, int);
 extern unsigned int __u4c_syslog_count(int tag, const char *, int);
 #define u4c_syslog_count(tag) \
     __u4c_syslog_count((tag), __FILE__, __LINE__)
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif /* __U4C_H__ */

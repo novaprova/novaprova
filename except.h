@@ -4,7 +4,7 @@
 #include "common.h"
 #include <setjmp.h>
 
-typedef struct __u4c_exceptstate __u4c_exceptstate_t;
+struct __u4c_exceptstate_t;
 
 enum u4c_events
 {
@@ -20,40 +20,51 @@ enum u4c_events
     EV_SLMATCH,		/* syslog matching */
 };
 
-struct u4c_event
+struct u4c_event_t
 {
     enum u4c_events which;
     const char *description;
     const char *filename;
     unsigned int lineno;
     const char *function;
+
+    u4c_event_t() {}
+    u4c_event_t(enum u4c_events w,
+		const char *d,
+		const char *f,
+		unsigned int l,
+		const char *fn)
+     :  which(w),
+        description(d),
+        filename(f),
+        lineno(l),
+        function(fn)
+    {}
+    u4c_event_t(enum u4c_events w,
+		const char *d)
+     :  which(w),
+        description(d),
+        filename((const char *)__builtin_return_address(0)),
+        lineno(~0U),
+        function((const char *)__builtin_frame_address(0))
+    {}
 };
 
-struct __u4c_exceptstate
+struct __u4c_exceptstate_t
 {
     jmp_buf jbuf;
     bool catching;
     int caught;
-    struct u4c_event event;
+    u4c_event_t event;
 };
 
 /* in run.c */
 extern __u4c_exceptstate_t __u4c_exceptstate;
 
 #define event(w, d, f, l, fn) \
-    { .which = (w), \
-      .description = (d), \
-      .filename = (f), \
-      .lineno = (l), \
-      .function = (fn) \
-    }
+	u4c_event_t(w, d, f, l, fn)
 #define eventc(w, d) \
-    { .which = (w), \
-      .description = (d), \
-      .filename = __builtin_return_address(0), \
-      .lineno = ~0U, \
-      .function = __builtin_frame_address(0) \
-    }
+	u4c_event_t(w, d)
 
 #define u4c_try \
 	__u4c_exceptstate.catching = true; \
@@ -67,7 +78,7 @@ extern __u4c_exceptstate_t __u4c_exceptstate;
 	do { \
 	    if (__u4c_exceptstate.catching) \
 	    { \
-		struct u4c_event _ev = __VA_ARGS__; \
+		u4c_event_t _ev(__VA_ARGS__); \
 		__u4c_exceptstate.event = _ev; \
 		longjmp(__u4c_exceptstate.jbuf, 1); \
 	    } \

@@ -54,7 +54,7 @@ __u4c_strdup(const char *s)
     if (!s)
 	return 0;
     len = strlen(s);
-    x = malloc(len+1);
+    x = (char *)malloc(len+1);
     if (!x)
 	oom();
     return strcpy(x, s);

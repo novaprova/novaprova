@@ -178,7 +178,7 @@ fork_child(u4c_testnode_t *tn)
 		(int)pid, nm);
 	xfree(nm);
     }
-    child = xmalloc(sizeof(*child));
+    child = (u4c_child_t *)xmalloc(sizeof(*child));
     child->pid = pid;
     child->node = tn;
     child->result = R_UNKNOWN;
@@ -208,7 +208,7 @@ handle_events(void)
 	if (state->npfd != state->nchildren)
 	{
 	    state->npfd = state->nchildren;
-	    state->pfd = xrealloc(state->pfd, state->npfd * sizeof(struct pollfd));
+	    state->pfd = (struct pollfd *)xrealloc(state->pfd, state->npfd * sizeof(struct pollfd));
 	}
 	memset(state->pfd, 0, state->npfd * sizeof(struct pollfd));
 	for (i = 0, child = state->children ; child ; i++, child = child->next)
@@ -283,7 +283,7 @@ reap_children(void)
 	{
 	    if (WEXITSTATUS(status))
 	    {
-		u4c_event_t ev = event(EV_EXIT, msg, NULL, 0, NULL);
+		u4c_event_t ev(EV_EXIT, msg, NULL, 0, NULL);
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
@@ -292,7 +292,7 @@ reap_children(void)
 	}
 	else if (WIFSIGNALED(status))
 	{
-	    u4c_event_t ev = event(EV_SIGNAL, msg, NULL, 0, NULL);
+	    u4c_event_t ev(EV_SIGNAL, msg, NULL, 0, NULL);
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
@@ -336,7 +336,7 @@ run_function(u4c_function_t *f)
 	{
 	    static char cond[64];
 	    snprintf(cond, sizeof(cond), "fixture retured %d", r);
-	    u4c_throw(event(EV_FIXTURE, cond, f->filename,
+	    u4c_throw(u4c_event_t(EV_FIXTURE, cond, f->filename,
 			    0, f->name));
 	}
     }
@@ -350,7 +350,7 @@ run_fixtures(u4c_testnode_t *tn,
     unsigned int i;
 
     if (!state->fixtures)
-	state->fixtures = xmalloc(sizeof(u4c_function_t*) *
+	state->fixtures = (u4c_function_t **)xmalloc(sizeof(u4c_function_t*) *
 				  state->maxdepth);
     else
 	memset(state->fixtures, 0, sizeof(u4c_function_t*) *
@@ -388,7 +388,7 @@ valgrind_errors(void)
     VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
     if (leaked)
     {
-	u4c_event_t ev = event(EV_VALGRIND, msg, NULL, 0, NULL);
+	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
 	__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
@@ -397,7 +397,7 @@ valgrind_errors(void)
     nerrors = VALGRIND_COUNT_ERRORS;
     if (nerrors)
     {
-	u4c_event_t ev = event(EV_VALGRIND, msg, NULL, 0, NULL);
+	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
 	__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));

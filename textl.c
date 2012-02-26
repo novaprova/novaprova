@@ -117,19 +117,20 @@ text_finished(u4c_listener_t *l, u4c_result_t res)
 
 static u4c_listener_ops_t text_ops =
 {
-    .begin = text_begin,
-    .end = text_end,
-    .begin_node = text_begin_node,
-    .end_node = text_end_node,
-    .add_event = text_add_event,
-    .finished = text_finished
+    text_begin,
+    text_end,
+    text_begin_node,
+    text_end_node,
+    text_add_event,
+    text_finished
 };
 
 u4c_listener_t *
 __u4c_text_listener(void)
 {
-    static u4c_text_listener_t l = {
-	    .super = { .next = NULL, .ops = &text_ops }};
+    static u4c_text_listener_t l;
+    l.super.next = NULL;
+    l.super.ops = &text_ops;
     return &l.super;
 }
 

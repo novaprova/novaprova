@@ -45,7 +45,7 @@ new_state(void)
 {
     u4c_globalstate_t *state;
 
-    state = xmalloc(sizeof(*state));
+    state = (u4c_globalstate_t *)xmalloc(sizeof(*state));
 
     state->classifiers_tailp = &state->classifiers;
     state->objects_tailp = &state->objects;
@@ -186,7 +186,7 @@ u4c_add_classifier(u4c_globalstate_t *state,
     u4c_classifier_t *cl;
     int r;
 
-    cl = xmalloc(sizeof(*cl));
+    cl = (u4c_classifier_t *)xmalloc(sizeof(*cl));
     cl->re = xstrdup(re);
     cl->type = type;
     r = regcomp(&cl->compiled_re, re,
@@ -318,7 +318,7 @@ new_testnode(const char *name)
 {
     u4c_testnode_t *tn;
 
-    tn = xmalloc(sizeof(*tn));
+    tn = (u4c_testnode_t  *)xmalloc(sizeof(*tn));
     if (name)
 	tn->name = xstrdup(name);
 
@@ -391,7 +391,7 @@ generate_nodes(u4c_globalstate_t *state)
 	if (len > buflen)
 	{
 	    buflen = (len | 0xff) + 1;
-	    buf = realloc(buf, buflen);
+	    buf = (char *)realloc(buf, buflen);
 	}
 	strcpy(buf, f->filename + state->commonlen);
 
@@ -437,7 +437,7 @@ dump_nodes(u4c_globalstate_t *state,
 	{
 	    indent(level);
 	    fprintf(stderr, "  %s=%s:%s\n",
-			    __u4c_functype_as_string(type),
+			    __u4c_functype_as_string((u4c_functype)type),
 			    tn->funcs[type]->filename + state->commonlen,
 			    tn->funcs[type]->name);
 	}
@@ -458,7 +458,7 @@ __u4c_testnode_fullname(const u4c_testnode_t *tn)
 	if (a->name)
 	    len += strlen(a->name) + 1;
 
-    buf = xmalloc(len);
+    buf = (char *)xmalloc(len);
     p = buf + len - 1;
 
     for (a = tn ; a ; a = a->parent)
@@ -513,7 +513,7 @@ u4c_plan_new(u4c_globalstate_t *state)
 {
     u4c_plan_t *plan;
 
-    plan = xmalloc(sizeof(*plan));
+    plan = (u4c_plan_t  *)xmalloc(sizeof(*plan));
     plan->state = state;
 
     /* Prepend to the list of all plans; order doesn't
@@ -553,7 +553,7 @@ u4c_plan_delete(u4c_plan_t *plan)
 static void
 u4c_plan_add_node(u4c_plan_t *plan, u4c_testnode_t *tn)
 {
-    plan->nodes = xrealloc(plan->nodes,
+    plan->nodes = (u4c_testnode_t **)xrealloc(plan->nodes,
 			   sizeof(u4c_testnode_t *) * (plan->numnodes+1));
     plan->nodes[plan->numnodes++] = tn;
 }
@@ -635,8 +635,8 @@ be_valground(void)
 {
     int argc;
     char **argv;
-    char **newargv;
-    char **p;
+    const char **newargv;
+    const char **p;
 
     if (RUNNING_ON_VALGRIND)
 	return;
@@ -645,7 +645,7 @@ be_valground(void)
     if (!discover_args(&argc, &argv))
 	return;
 
-    p = newargv = xmalloc(sizeof(char *) * (argc+6));
+    p = newargv = (const char **)xmalloc(sizeof(char *) * (argc+6));
     *p++ = "/usr/bin/valgrind";
     *p++ = "-q";
     *p++ = "--tool=memcheck";
@@ -654,7 +654,7 @@ be_valground(void)
     while (*argv)
 	*p++ = *argv++;
 
-    execv(newargv[0], newargv);
+    execv(newargv[0], (char * const *)newargv);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

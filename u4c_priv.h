@@ -3,22 +3,25 @@
 
 #include "common.h"
 #include "u4c.h"
+#include "spiegel/spiegel.hxx"
+#include "spiegel/dwarf/state.hxx"
+#include "spiegel/filename.hxx"
 #include <regex.h>
 #include <bfd.h>
 #include <sys/poll.h>
 
-typedef struct u4c_object u4c_object_t;
-typedef struct u4c_classifier u4c_classifier_t;
-typedef struct u4c_function u4c_function_t;
-typedef struct u4c_testnode u4c_testnode_t;
-typedef struct u4c_child u4c_child_t;
-typedef struct u4c_event u4c_event_t;
-typedef struct u4c_listener u4c_listener_t;
-typedef struct u4c_listener_ops u4c_listener_ops_t;
-typedef struct u4c_plan_iterator u4c_plan_iterator_t;
-typedef enum u4c_result u4c_result_t;
+struct u4c_child_t;
+struct u4c_event_t;
+struct u4c_classifier_t;
+struct u4c_function_t;
+struct u4c_testnode_t;
+struct u4c_plan_iterator_t;
+struct u4c_plan;
+struct u4c_listener_ops_t;
+struct u4c_listener_t;
+struct u4c_globalstate;
 
-enum u4c_result
+enum u4c_result_t
 {
     /* Note ordinal values: we use MAX() to combine
      * multiple results for a given test */
@@ -28,7 +31,7 @@ enum u4c_result
     R_FAIL
 };
 
-struct u4c_child
+struct u4c_child_t
 {
     u4c_child_t *next;
     pid_t pid;
@@ -59,7 +62,7 @@ enum u4c_functype
     FT_NUM
 };
 
-struct u4c_classifier
+struct u4c_classifier_t
 {
     u4c_classifier_t *next;
     char *re;
@@ -67,18 +70,25 @@ struct u4c_classifier
     enum u4c_functype type;
 };
 
-struct u4c_function
+struct u4c_function_t
 {
     u4c_function_t *next;
     enum u4c_functype type;
-    char *name;
-    char *filename;
+    spiegel::function_t *func;
+    spiegel::filename_t filename;
     char *submatch;
-    void (*addr)(void);
-    u4c_object_t *object;
+
+    u4c_function_t()
+     :  next(0),
+        type(FT_UNKNOWN),
+	func(0),
+	submatch(0)
+    {
+    }
+
 };
 
-struct u4c_testnode
+struct u4c_testnode_t
 {
     u4c_testnode_t *next;
     u4c_testnode_t *parent;
@@ -87,13 +97,13 @@ struct u4c_testnode
     u4c_function_t *funcs[FT_NUM];
 };
 
-struct u4c_plan_iterator
+struct u4c_plan_iterator_t
 {
     int idx;
     u4c_testnode_t *node;
 };
 
-struct u4c_plan
+struct u4c_plan_t
 {
     u4c_plan_t *next;
     u4c_globalstate_t *state;
@@ -102,7 +112,7 @@ struct u4c_plan
     u4c_plan_iterator_t current;
 };
 
-struct u4c_listener_ops
+struct u4c_listener_ops_t
 {
     void (*begin)(u4c_listener_t *);
     void (*end)(u4c_listener_t *);
@@ -112,13 +122,13 @@ struct u4c_listener_ops
     void (*finished)(u4c_listener_t *, u4c_result_t);
 };
 
-struct u4c_listener
+struct u4c_listener_t
 {
     u4c_listener_t *next;
     u4c_listener_ops_t *ops;
 };
 
-struct u4c_globalstate
+struct u4c_globalstate_t
 {
     u4c_classifier_t *classifiers, **classifiers_tailp;
     u4c_object_t *objects, **objects_tailp;
@@ -176,7 +186,7 @@ extern void __u4c_wait(void);
 extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 #define __u4c_merge(r1, r2) \
     do { \
-	u4c_result_t _r1 = (r1), _r2 = (r2); \
+	u4c_result_t _r1 = (r1), _r2 = (u4c_result_t)(r2); \
 	(r1) = (_r1 > _r2 ? _r1 : _r2); \
     } while(0)
 

@@ -110,7 +110,7 @@ deserialise_event(int fd, u4c_event_t *ev)
     if ((r = deserialise_string(fd, function_buf,
 				sizeof(function_buf))))
 	return r;
-    ev->which = which;
+    ev->which = (enum u4c_events)which;
     ev->description = description_buf;
     ev->lineno = lineno;
     ev->filename = filename_buf;
@@ -139,15 +139,20 @@ proxy_finished(u4c_listener_t *l, u4c_result_t res)
 
 static u4c_listener_ops_t proxy_ops =
 {
-    .add_event = proxy_add_event,
-    .finished = proxy_finished
+    /*begin*/NULL,
+    /*end*/NULL,
+    /*begin_node*/NULL,
+    /*end_node*/NULL,
+    proxy_add_event,
+    proxy_finished
 };
 
 u4c_listener_t *
 __u4c_proxy_listener(int fd)
 {
-    static u4c_proxy_listener_t l = {
-	    .super = { .next = NULL, .ops = &proxy_ops }};
+    static u4c_proxy_listener_t l;
+    l.super.next = NULL;
+    l.super.ops = &proxy_ops;
     l.fd = fd;
     return &l.super;
 }
@@ -178,7 +183,7 @@ __u4c_handle_proxy_call(int fd, u4c_result_t *resp)
 	if ((r = deserialise_event(fd, &ev)) ||
 	    (r = deserialise_uint(fd, &ft)))
 	    return false;    /* failed to decode */
-	__u4c_merge(*resp, __u4c_raise_event(&ev, ft));
+	__u4c_merge(*resp, __u4c_raise_event(&ev, (u4c_functype)ft));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))
