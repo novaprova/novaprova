@@ -321,7 +321,10 @@ walker_t::move_preorder()
 const entry_t *
 walker_t::move_next()
 {
-    // TODO: use the DW_AT_sibling attribute if present
+    const value_t *sib = entry_.get_attribute(DW_AT_sibling);
+    if (sib && sib->type == value_t::T_REF)
+	return move_to(sib->val.ref);
+
     unsigned target_level = entry_.get_level();
     int r = 0;
     for (;;)
