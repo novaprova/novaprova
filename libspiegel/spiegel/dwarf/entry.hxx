@@ -17,8 +17,13 @@ public:
     entry_t()
      :  offset_(0),
 	level_(0),
-	abbrev_(0)
-    {}
+	abbrev_(0),
+	nvalues_(0)
+    {
+	// invalidate the by-attribute indexes
+	memset(byattr_basic_, 0xff, sizeof(byattr_basic_));
+	memset(byattr_user_, 0xff, sizeof(byattr_user_));
+    }
 
     void setup(size_t offset, unsigned level, const abbrev_t *a);
     void partial_setup(const entry_t &o)
