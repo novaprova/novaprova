@@ -5,6 +5,8 @@
 #include "except.h"
 #include <valgrind/memcheck.h>
 
+using namespace std;
+
 __u4c_exceptstate_t __u4c_exceptstate;
 static u4c_globalstate_t *state;
 static volatile int caught_sigchld = 0;
@@ -73,13 +75,22 @@ normalise_event(const u4c_event_t *ev)
     if (ev->lineno == ~0U)
     {
 	unsigned long pc = (unsigned long)ev->filename;
-	static char pcbuf[32];
+	const char *classname = 0;
 
-	if (!__u4c_describe_address(state, pc,
-				    &norm.filename,
-				    &norm.lineno,
-				    &norm.function))
+	if (state->spiegel->describe_address(pc, &norm.filename,
+			&norm.lineno, &classname, &norm.function))
 	{
+	    static char fullname[1024];
+	    if (classname)
+	    {
+		snprintf(fullname, sizeof(fullname), "%s::%s",
+			 classname, norm.function);
+		norm.function = fullname;
+	    }
+	}
+	else
+	{
+	    static char pcbuf[32];
 	    snprintf(pcbuf, sizeof(pcbuf), "(0x%lx)", pc);
 	    norm.function = pcbuf;
 	    norm.filename = "";
@@ -319,25 +330,24 @@ reap_children(void)
 static void
 run_function(u4c_function_t *f)
 {
+    vector<spiegel::value_t> args;
+    spiegel::value_t ret = f->func->invoke(args);
+
     if (f->type == FT_TEST)
     {
-	void (*call)(void) = f->addr;
-
-	call();
+	assert(ret.which == spiegel::type_t::TC_VOID);
     }
     else
     {
-	int (*call)(void) = (int(*)(void))f->addr;
-	int r;
-
-	r = call();
+	assert(ret.which == spiegel::type_t::TC_SIGNED_INT);
+	int r = ret.val.vsint;
 
 	if (r)
 	{
 	    static char cond[64];
 	    snprintf(cond, sizeof(cond), "fixture retured %d", r);
-	    u4c_throw(u4c_event_t(EV_FIXTURE, cond, f->filename,
-			    0, f->name));
+	    u4c_throw(u4c_event_t(EV_FIXTURE, cond, f->filename.c_str(),
+			    0, f->func->get_name()));
 	}
     }
 }

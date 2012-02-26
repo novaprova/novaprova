@@ -41,17 +41,6 @@ struct u4c_child_t
     bool finished;
 };
 
-struct u4c_object
-{
-    u4c_object_t *next;
-    unsigned long base;
-    char *name;
-
-    bfd *bfd;
-    unsigned int nsyms;
-    asymbol **syms;
-};
-
 enum u4c_functype
 {
     FT_UNKNOWN,
@@ -131,7 +120,7 @@ struct u4c_listener_t
 struct u4c_globalstate_t
 {
     u4c_classifier_t *classifiers, **classifiers_tailp;
-    u4c_object_t *objects, **objects_tailp;
+    spiegel::dwarf::state_t *spiegel;
     u4c_function_t *funcs, **funcs_tailp;
     char *common;
     unsigned int commonlen;
@@ -168,12 +157,9 @@ extern const char *__u4c_functype_as_string(enum u4c_functype);
 extern char *__u4c_testnode_fullname(const u4c_testnode_t *tn);
 extern enum u4c_functype __u4c_classify_function(u4c_globalstate_t *,
 	const char *func, char *match_return, size_t maxmatch);
-extern u4c_object_t *__u4c_add_object(u4c_globalstate_t *,
-	const char *name, unsigned long base);
 extern u4c_function_t *__u4c_add_function(u4c_globalstate_t *,
-	enum u4c_functype type, const char *name,
-	const char *filename, const char *submatch,
-	void (*addr)(void), u4c_object_t *o);
+	enum u4c_functype type, spiegel::function_t *func,
+	const char *submatch);
 extern u4c_listener_t *__u4c_new_text_listener(void);
 
 /* run.c */
@@ -198,12 +184,6 @@ extern u4c_listener_t *__u4c_proxy_listener(int fd);
 extern bool __u4c_handle_proxy_call(int fd, u4c_result_t *resp);
 
 /* discover.c */
-extern bool __u4c_describe_address(u4c_globalstate_t *state,
-				   unsigned long addr,
-				   const char **filenamep,
-				   unsigned int *linenop,
-				   const char **functionp);
-extern void __u4c_discover_objects(u4c_globalstate_t *state);
 extern void __u4c_discover_functions(u4c_globalstate_t *state);
 
 #endif /* __U4C_PRIV_H__ */

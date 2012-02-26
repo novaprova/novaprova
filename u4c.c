@@ -48,7 +48,6 @@ new_state(void)
     state = (u4c_globalstate_t *)xmalloc(sizeof(*state));
 
     state->classifiers_tailp = &state->classifiers;
-    state->objects_tailp = &state->objects;
     state->funcs_tailp = &state->funcs;
     state->maxchildren = 1;
 
@@ -73,32 +72,16 @@ static void
 free_state(u4c_globalstate_t *state)
 {
     u4c_function_t *f;
-    u4c_object_t *o;
     u4c_classifier_t *cl;
-
-    while (state->objects)
-    {
-	o = state->objects;
-	state->objects = o->next;
-
-	xfree(o->name);
-	if (o->bfd)
-	{
-	    xfree(o->syms);
-	    bfd_close(o->bfd);
-	}
-	xfree(o);
-    }
 
     while (state->funcs)
     {
 	f = state->funcs;
 	state->funcs = f->next;
 
-	xfree(f->name);
-	xfree(f->filename);
+// 	xfree(f->name);
 	xfree(f->submatch);
-	xfree(f);
+	delete f;
     }
 
     while (state->classifiers)
@@ -115,6 +98,9 @@ free_state(u4c_globalstate_t *state)
 	u4c_plan_delete(state->plans);
 
     delete_node(state->root);
+
+    if (state->spiegel)
+	delete state->spiegel;
 
     xfree(state->fixtures);
     xfree(state->common);
@@ -221,46 +207,21 @@ setup_classifiers(u4c_globalstate_t *state)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_object_t *
-__u4c_add_object(u4c_globalstate_t *state,
-		 const char *name,
-		 unsigned long base)
-{
-    u4c_object_t *o;
-
-//     fprintf(stderr, "u4c: addr=0x%lx name=\"%s\"\n",
-// 	    base, name);
-
-    o = xmalloc(sizeof(*o));
-    o->base = base;
-    o->name = xstrdup(xstr(name));
-
-    /* append to the objects list */
-    o->next = NULL;
-    *state->objects_tailp = o;
-    state->objects_tailp = &o->next;
-
-    return 0;
-}
-
 u4c_function_t *
 __u4c_add_function(u4c_globalstate_t *state,
 		   enum u4c_functype type,
-		   const char *name,
-		   const char *filename,
-		   const char *submatch,
-		   void (*addr)(void),
-		   u4c_object_t *o)
+		   spiegel::function_t *func,
+		   const char *submatch)
 {
     u4c_function_t *f;
 
-    f = xmalloc(sizeof(*f));
+    f = new u4c_function_t;
     f->type = type;
-    f->name = xstrdup(name);
-    f->filename = xstrdup(filename);
+    f->func = func;
+
+    f->filename = func->get_compile_unit()->get_absolute_path();
+
     f->submatch = xstrdup(submatch);
-    f->addr = addr;
-    f->object = o;
 
     /* append */
     *state->funcs_tailp = f;
@@ -284,25 +245,25 @@ find_common_path(u4c_globalstate_t *state)
     {
 	if (common == NULL)
 	{
-	    common = xstrdup(f->filename);
+	    common = xstrdup(f->filename.c_str());
 	    cp = strrchr(common, '/');
 	    if (cp)
 		*cp = '\0';
 	    continue;
 	}
 	cp = common;
-	ep = f->filename;
+	ep = (char *)f->filename.c_str();
 
 	for (;;)
 	{
 	    cp = strchr(cp+1, '/');
 	    clen = cp - common;
 	    ep = strchr(ep+1, '/');
-	    elen = ep - f->filename;
+	    elen = ep - f->filename.c_str();
 
 	    if (clen != elen)
 		break;
-	    if (strncmp(common, f->filename, clen))
+	    if (strncmp(common, f->filename.c_str(), clen))
 		break;
 	    lastcommonlen = commonlen;
 	    commonlen = clen+1;
@@ -361,10 +322,10 @@ add_testnode(u4c_globalstate_t *state,
 	fprintf(stderr, "u4c: WARNING: duplicate %s functions: "
 			"%s:%s and %s:%s\n",
 			__u4c_functype_as_string(func->type),
-			child->funcs[func->type]->filename,
-			child->funcs[func->type]->name,
-			func->filename,
-			func->name);
+			child->funcs[func->type]->filename.c_str(),
+			child->funcs[func->type]->func->get_name(),
+			func->filename.c_str(),
+			func->func->get_name());
     else
 	child->funcs[func->type] = func;
 
@@ -385,7 +346,7 @@ generate_nodes(u4c_globalstate_t *state)
     for (f = state->funcs ; f ; f = f->next)
     {
 	/* TODO: use estring!! */
-	len = strlen(f->filename + state->commonlen) + 1;
+	len = strlen(f->filename.c_str() + state->commonlen) + 1;
 	if (f->submatch)
 	    len += strlen(f->submatch) + 1;
 	if (len > buflen)
@@ -393,7 +354,7 @@ generate_nodes(u4c_globalstate_t *state)
 	    buflen = (len | 0xff) + 1;
 	    buf = (char *)realloc(buf, buflen);
 	}
-	strcpy(buf, f->filename + state->commonlen);
+	strcpy(buf, f->filename.c_str() + state->commonlen);
 
 	/* strip the .c extension */
 	p = strrchr(buf, '.');
@@ -438,8 +399,8 @@ dump_nodes(u4c_globalstate_t *state,
 	    indent(level);
 	    fprintf(stderr, "  %s=%s:%s\n",
 			    __u4c_functype_as_string((u4c_functype)type),
-			    tn->funcs[type]->filename + state->commonlen,
-			    tn->funcs[type]->name);
+			    tn->funcs[type]->filename.c_str() + state->commonlen,
+			    tn->funcs[type]->func->get_name());
 	}
     }
 
@@ -668,7 +629,6 @@ u4c_init(void)
     u4c_reltimestamp();
     state = new_state();
     setup_classifiers(state);
-    __u4c_discover_objects(state);
     __u4c_discover_functions(state);
     find_common_path(state);
     generate_nodes(state);
