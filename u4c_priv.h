@@ -19,7 +19,7 @@ struct u4c_plan_iterator_t;
 struct u4c_plan;
 struct u4c_listener_ops_t;
 struct u4c_listener_t;
-struct u4c_globalstate;
+class u4c_globalstate_t;
 
 enum u4c_result_t
 {
@@ -117,8 +117,16 @@ struct u4c_listener_t
     u4c_listener_ops_t *ops;
 };
 
-struct u4c_globalstate_t
+class u4c_globalstate_t
 {
+public:
+    static void *operator new(size_t sz) { return xmalloc(sz); }
+    static void operator delete(void *x) { free(x); }
+    u4c_globalstate_t();
+    ~u4c_globalstate_t();
+
+    u4c_functype classify_function(const char *func, char *match_return, size_t maxmatch);
+
     u4c_classifier_t *classifiers, **classifiers_tailp;
     spiegel::dwarf::state_t *spiegel;
     u4c_function_t *funcs, **funcs_tailp;
@@ -155,8 +163,6 @@ struct u4c_globalstate_t
 /* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
 extern char *__u4c_testnode_fullname(const u4c_testnode_t *tn);
-extern enum u4c_functype __u4c_classify_function(u4c_globalstate_t *,
-	const char *func, char *match_return, size_t maxmatch);
 extern u4c_function_t *__u4c_add_function(u4c_globalstate_t *,
 	enum u4c_functype type, spiegel::function_t *func,
 	const char *submatch);

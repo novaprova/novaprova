@@ -47,8 +47,8 @@ fprintf(stderr, "__u4c_discover_functions: scanning %s\n", (*i)->get_absolute_pa
 	    if (fn->get_parameter_types().size() != 0)
 		continue;
 
-	    type = __u4c_classify_function(state, fn->get_name(),
-					   submatch, sizeof(submatch));
+	    type = state->classify_function(fn->get_name(),
+					    submatch, sizeof(submatch));
 	    if (type == FT_UNKNOWN)
 		continue;
 	    if (type == FT_TEST && !submatch[0])

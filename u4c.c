@@ -40,18 +40,11 @@ __u4c_functype_as_string(enum u4c_functype type)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static u4c_globalstate_t *
-new_state(void)
+u4c_globalstate_t::u4c_globalstate_t()
 {
-    u4c_globalstate_t *state;
-
-    state = (u4c_globalstate_t *)xmalloc(sizeof(*state));
-
-    state->classifiers_tailp = &state->classifiers;
-    state->funcs_tailp = &state->funcs;
-    state->maxchildren = 1;
-
-    return state;
+    classifiers_tailp = &classifiers;
+    funcs_tailp = &funcs;
+    maxchildren = 1;
 }
 
 static void
@@ -68,52 +61,49 @@ delete_node(u4c_testnode_t *tn)
     xfree(tn);
 }
 
-static void
-free_state(u4c_globalstate_t *state)
+u4c_globalstate_t::~u4c_globalstate_t()
 {
     u4c_function_t *f;
     u4c_classifier_t *cl;
 
-    while (state->funcs)
+    while (funcs)
     {
-	f = state->funcs;
-	state->funcs = f->next;
+	f = funcs;
+	funcs = f->next;
 
 // 	xfree(f->name);
 	xfree(f->submatch);
 	delete f;
     }
 
-    while (state->classifiers)
+    while (classifiers)
     {
-	cl = state->classifiers;
-	state->classifiers = cl->next;
+	cl = classifiers;
+	classifiers = cl->next;
 
 	xfree(cl->re);
 	regfree(&cl->compiled_re);
 	xfree(cl);
     }
 
-    while (state->plans)
-	u4c_plan_delete(state->plans);
+    while (plans)
+	u4c_plan_delete(plans);
 
-    delete_node(state->root);
+    delete_node(root);
 
-    if (state->spiegel)
-	delete state->spiegel;
+    if (spiegel)
+	delete spiegel;
 
-    xfree(state->fixtures);
-    xfree(state->common);
-    xfree(state);
+    xfree(fixtures);
+    xfree(common);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 enum u4c_functype
-__u4c_classify_function(u4c_globalstate_t *state,
-		        const char *func,
-		        char *match_return,
-		        size_t maxmatch)
+u4c_globalstate_t::classify_function(const char *func,
+				     char *match_return,
+				     size_t maxmatch)
 {
     int r;
     u4c_classifier_t *cl;
@@ -122,7 +112,7 @@ __u4c_classify_function(u4c_globalstate_t *state,
     if (match_return)
 	match_return[0] = '\0';
 
-    for (cl = state->classifiers ; cl ; cl = cl->next)
+    for (cl = classifiers ; cl ; cl = cl->next)
     {
 	r = regexec(&cl->compiled_re, func, 2, match, 0);
 
@@ -627,7 +617,7 @@ u4c_init(void)
 
     be_valground();
     u4c_reltimestamp();
-    state = new_state();
+    state = new u4c_globalstate_t;
     setup_classifiers(state);
     __u4c_discover_functions(state);
     find_common_path(state);
@@ -706,6 +696,6 @@ u4c_run_tests(u4c_globalstate_t *state)
 void
 u4c_done(u4c_globalstate_t *state)
 {
-    free_state(state);
+    delete state;
 }
 
