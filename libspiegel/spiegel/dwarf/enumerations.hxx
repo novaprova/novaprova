@@ -200,11 +200,13 @@ enum attribute_names
     DW_AT_pure = 0x67,
     DW_AT_recursive = 0x68,
 
-//     DW_AT_lo_user = 0x2000,
-    DW_AT_gnu_mangled_name = 0x2007,	    // observed in the wild
-//     DW_AT_hi_user = 0x3fff
+    DW_AT_max_basic,
 
-    DW_AT_max
+    DW_AT_lo_user = 0x2000,
+    DW_AT_gnu_mangled_name = 0x2007,	    // observed in the wild
+    DW_AT_max_user,
+    DW_AT_hi_user = 0x3fff
+
 };
 
 enum encoding_values

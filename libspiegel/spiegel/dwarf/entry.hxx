@@ -4,6 +4,7 @@
 #include "spiegel/common.hxx"
 #include "value.hxx"
 #include "abbrev.hxx"
+#include "enumerations.hxx"
 
 namespace spiegel {
 namespace dwarf {
@@ -35,8 +36,15 @@ public:
 
     void add_attribute(uint32_t name, value_t val)
     {
-	values_.push_back(val);
-	byattr_[name] = &values_.back();
+	assert(nvalues_ < MAX_VALUES);
+	values_[nvalues_] = val;
+	if (name < DW_AT_max_basic)
+	    byattr_basic_[name] = nvalues_;
+	else if (name >= DW_AT_lo_user && name < DW_AT_max_user)
+	    byattr_user_[name-DW_AT_lo_user] = nvalues_;
+	else
+	    assert(0);
+	nvalues_++;
     }
 
     size_t get_offset() const { return offset_; }
@@ -48,7 +56,12 @@ public:
 
     const value_t *get_attribute(uint32_t name) const
     {
-	return (name < byattr_.size() ? byattr_[name] : 0);
+	int8_t n = -1;
+	if (name < DW_AT_max_basic)
+	    n = byattr_basic_[name];
+	else if (name >= DW_AT_lo_user && name < DW_AT_max_user)
+	    n = byattr_user_[name-DW_AT_lo_user];
+	return (n < 0 ? 0 : &values_[n]);
     }
     const char *get_string_attribute(uint32_t name) const
     {
@@ -96,11 +109,19 @@ public:
     }
 
 private:
+    enum
+    {
+	MAX_VALUES = 32,	// the most defined attributes for any tag
+				// in DWARF2 is 23 for DW_TAG_subprogram
+    };
     size_t offset_;
     unsigned level_;
     const abbrev_t *abbrev_;
-    std::vector<value_t> values_;
-    std::vector<const value_t*> byattr_;
+    uint8_t nvalues_;
+    value_t values_[MAX_VALUES];
+    // by-attribute indexes into values_[], -1=invalid
+    int8_t byattr_basic_[DW_AT_max_basic];
+    int8_t byattr_user_[DW_AT_max_user-DW_AT_lo_user];
 };
 
 
