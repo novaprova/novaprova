@@ -2,55 +2,40 @@
 #include "except.h"
 #include "u4c_priv.h"
 
-typedef struct u4c_text_listener u4c_text_listener_t;
-struct u4c_text_listener
-{
-    u4c_listener_t super;
-    unsigned int nrun;
-    unsigned int nfailed;
-    u4c_result_t result; /* for the current test */
-};
-
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static void
-text_begin(u4c_listener_t *l)
+void
+u4c_text_listener_t::begin()
 {
-    u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
-    tl->nrun = 0;
-    tl->nfailed = 0;
+    nrun_ = 0;
+    nfailed_ = 0;
     fprintf(stderr, "u4c: running\n");
 }
 
-static void
-text_end(u4c_listener_t *l)
+void
+u4c_text_listener_t::end()
 {
-    u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
     fprintf(stderr, "u4c: %u run %u failed\n",
-	    tl->nrun, tl->nfailed);
+	    nrun_, nfailed_);
 }
 
-static void
-text_begin_node(u4c_listener_t *l __attribute__((unused)),
-		const u4c_testnode_t *tn)
+void
+u4c_text_listener_t::begin_node(const u4c_testnode_t *tn)
 {
-    u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
     char *fullname = __u4c_testnode_fullname(tn);
 
     fprintf(stderr, "u4c: running: \"%s\"\n", fullname);
-    tl->result = R_UNKNOWN;
+    result_ = R_UNKNOWN;
     xfree(fullname);
 }
 
-static void
-text_end_node(u4c_listener_t *l __attribute__((unused)),
-	      const u4c_testnode_t *tn)
+void
+u4c_text_listener_t::end_node(const u4c_testnode_t *tn)
 {
-    u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
     char *fullname = __u4c_testnode_fullname(tn);
 
-    tl->nrun++;
-    switch (tl->result)
+    nrun_++;
+    switch (result_)
     {
     case R_PASS:
 	fprintf(stderr, "PASS %s\n", fullname);
@@ -59,21 +44,19 @@ text_end_node(u4c_listener_t *l __attribute__((unused)),
 	fprintf(stderr, "N/A %s\n", fullname);
 	break;
     case R_FAIL:
-	tl->nfailed++;
+	nfailed_++;
 	fprintf(stderr, "FAIL %s\n", fullname);
 	break;
     default:
-	fprintf(stderr, "??? (result %d) %s\n", tl->result, fullname);
+	fprintf(stderr, "??? (result %d) %s\n", result_, fullname);
 	break;
     }
     xfree(fullname);
 }
 
-static void
-text_add_event(u4c_listener_t *l __attribute__((unused)),
-	       const u4c_event_t *ev, enum u4c_functype ft)
+void
+u4c_text_listener_t::add_event(const u4c_event_t *ev, enum u4c_functype ft)
 {
-//     u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
     const char *type;
     char buf[2048];
 
@@ -106,32 +89,10 @@ text_add_event(u4c_listener_t *l __attribute__((unused)),
     fputs(buf, stderr);
 }
 
-static void
-text_finished(u4c_listener_t *l, u4c_result_t res)
+void
+u4c_text_listener_t::finished(u4c_result_t res)
 {
-    u4c_text_listener_t *tl = container_of(l, u4c_text_listener_t, super);
-    tl->result = res;
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
-static u4c_listener_ops_t text_ops =
-{
-    text_begin,
-    text_end,
-    text_begin_node,
-    text_end_node,
-    text_add_event,
-    text_finished
-};
-
-u4c_listener_t *
-__u4c_text_listener(void)
-{
-    static u4c_text_listener_t l;
-    l.super.next = NULL;
-    l.super.ops = &text_ops;
-    return &l.super;
+    result_ = res;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

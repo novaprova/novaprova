@@ -683,7 +683,7 @@ u4c_globalstate_t::run_tests()
     }
 
     if (!listeners)
-	add_listener(__u4c_text_listener());
+	add_listener(new u4c_text_listener_t);
 
     begin();
     for (;;)

@@ -17,8 +17,7 @@ struct u4c_function_t;
 struct u4c_testnode_t;
 struct u4c_plan_iterator_t;
 struct u4c_plan;
-struct u4c_listener_ops_t;
-struct u4c_listener_t;
+class u4c_listener_t;
 class u4c_globalstate_t;
 
 enum u4c_result_t
@@ -101,21 +100,58 @@ struct u4c_plan_t
     u4c_plan_iterator_t current;
 };
 
-struct u4c_listener_ops_t
+class u4c_listener_t
 {
-    void (*begin)(u4c_listener_t *);
-    void (*end)(u4c_listener_t *);
-    void (*begin_node)(u4c_listener_t *, const u4c_testnode_t *);
-    void (*end_node)(u4c_listener_t *, const u4c_testnode_t *);
-    void (*add_event)(u4c_listener_t *, const u4c_event_t *, enum u4c_functype ft);
-    void (*finished)(u4c_listener_t *, u4c_result_t);
+public:
+    u4c_listener_t() : next(0) {}
+    ~u4c_listener_t() {}
+
+    virtual void begin() = 0;
+    virtual void end() = 0;
+    virtual void begin_node(const u4c_testnode_t *) = 0;
+    virtual void end_node(const u4c_testnode_t *) = 0;
+    virtual void add_event(const u4c_event_t *, enum u4c_functype ft) = 0;
+    virtual void finished(u4c_result_t) = 0;
+
+    u4c_listener_t *next;
 };
 
-struct u4c_listener_t
+class u4c_text_listener_t : public u4c_listener_t
 {
-    u4c_listener_t *next;
-    u4c_listener_ops_t *ops;
+public:
+    u4c_text_listener_t() {}
+    ~u4c_text_listener_t() {}
+
+    void begin();
+    void end();
+    void begin_node(const u4c_testnode_t *tn);
+    void end_node(const u4c_testnode_t *tn);
+    void add_event(const u4c_event_t *ev, enum u4c_functype ft);
+    void finished(u4c_result_t res);
+
+private:
+    unsigned int nrun_;
+    unsigned int nfailed_;
+    u4c_result_t result_; /* for the current test */
 };
+
+class u4c_proxy_listener_t : public u4c_listener_t
+{
+public:
+    u4c_proxy_listener_t(int);
+    ~u4c_proxy_listener_t();
+
+    void begin();
+    void end();
+    void begin_node(const u4c_testnode_t *);
+    void end_node(const u4c_testnode_t *);
+    void add_event(const u4c_event_t *ev, enum u4c_functype ft);
+    void finished(u4c_result_t res);
+
+private:
+    int fd_;
+};
+
 
 class u4c_globalstate_t
 {
@@ -175,15 +211,13 @@ public:
 	for (_l = (st)->listeners ; _l ; _l = _n) \
 	{ \
 	    _n = _l->next; \
-	    if ((_l)->ops->func) \
-		(_l)->ops->func((_l), ## __VA_ARGS__); \
+	    (_l)->func(__VA_ARGS__); \
 	} \
     } while(0)
 
 /* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
 extern char *__u4c_testnode_fullname(const u4c_testnode_t *tn);
-extern u4c_listener_t *__u4c_new_text_listener(void);
 
 /* run.c */
 extern void __u4c_begin_test(u4c_testnode_t *);
@@ -195,11 +229,7 @@ extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 	(r1) = (_r1 > _r2 ? _r1 : _r2); \
     } while(0)
 
-/* textl.c */
-extern u4c_listener_t *__u4c_text_listener(void);
-
 /* proxyl.c */
-extern u4c_listener_t *__u4c_proxy_listener(int fd);
 extern bool __u4c_handle_proxy_call(int fd, u4c_result_t *resp);
 
 

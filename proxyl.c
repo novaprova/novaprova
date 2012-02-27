@@ -2,13 +2,6 @@
 #include "except.h"
 #include "u4c_priv.h"
 
-typedef struct u4c_proxy_listener u4c_proxy_listener_t;
-struct u4c_proxy_listener
-{
-    u4c_listener_t super;
-    int fd;
-};
-
 enum u4c_proxy_call
 {
     PROXY_EVENT = 1,
@@ -120,41 +113,48 @@ deserialise_event(int fd, u4c_event_t *ev)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static void
-proxy_add_event(u4c_listener_t *l, const u4c_event_t *ev, enum u4c_functype ft)
+u4c_proxy_listener_t::u4c_proxy_listener_t(int fd)
+ :  fd_(fd)
 {
-    u4c_proxy_listener_t *tl = container_of(l, u4c_proxy_listener_t, super);
-    serialise_uint(tl->fd, PROXY_EVENT);
-    serialise_event(tl->fd, ev);
-    serialise_uint(tl->fd, ft);
 }
 
-static void
-proxy_finished(u4c_listener_t *l, u4c_result_t res)
+u4c_proxy_listener_t::~u4c_proxy_listener_t()
 {
-    u4c_proxy_listener_t *tl = container_of(l, u4c_proxy_listener_t, super);
-    serialise_uint(tl->fd, PROXY_FINISHED);
-    serialise_uint(tl->fd, res);
 }
 
-static u4c_listener_ops_t proxy_ops =
+void
+u4c_proxy_listener_t::begin()
 {
-    /*begin*/NULL,
-    /*end*/NULL,
-    /*begin_node*/NULL,
-    /*end_node*/NULL,
-    proxy_add_event,
-    proxy_finished
-};
+}
 
-u4c_listener_t *
-__u4c_proxy_listener(int fd)
+void
+u4c_proxy_listener_t::end()
 {
-    static u4c_proxy_listener_t l;
-    l.super.next = NULL;
-    l.super.ops = &proxy_ops;
-    l.fd = fd;
-    return &l.super;
+}
+
+void
+u4c_proxy_listener_t::begin_node(const u4c_testnode_t *)
+{
+}
+
+void
+u4c_proxy_listener_t::end_node(const u4c_testnode_t *)
+{
+}
+
+void
+u4c_proxy_listener_t::add_event(const u4c_event_t *ev, enum u4c_functype ft)
+{
+    serialise_uint(fd_, PROXY_EVENT);
+    serialise_event(fd_, ev);
+    serialise_uint(fd_, ft);
+}
+
+void
+u4c_proxy_listener_t::finished(u4c_result_t res)
+{
+    serialise_uint(fd_, PROXY_FINISHED);
+    serialise_uint(fd_, res);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

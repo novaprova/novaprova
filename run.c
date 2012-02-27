@@ -491,7 +491,7 @@ __u4c_begin_test(u4c_testnode_t *tn)
 	return; /* parent process */
 
     /* child process */
-    state->set_listener(__u4c_proxy_listener(state->event_pipe));
+    state->set_listener(new u4c_proxy_listener_t(state->event_pipe));
     res = run_test_code(tn);
     dispatch_listeners(state, finished, res);
     {
