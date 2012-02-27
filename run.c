@@ -8,29 +8,29 @@
 using namespace std;
 
 __u4c_exceptstate_t __u4c_exceptstate;
-static u4c_globalstate_t *state;
+u4c_globalstate_t *u4c_globalstate_t::state = 0;
 static volatile int caught_sigchld = 0;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 void
-__u4c_add_listener(u4c_globalstate_t *st, u4c_listener_t *l)
+u4c_globalstate_t::add_listener(u4c_listener_t *l)
 {
     u4c_listener_t **tailp;
 
     /* append to the list.  The order of adding is preserved for
      * dispatching */
-    for (tailp = &st->listeners ; *tailp ; tailp = &(*tailp)->next)
+    for (tailp = &listeners ; *tailp ; tailp = &(*tailp)->next)
 	;
     *tailp = l;
     l->next = 0;
 }
 
 void
-__u4c_set_listener(u4c_globalstate_t *st, u4c_listener_t *l)
+u4c_globalstate_t::set_listener(u4c_listener_t *l)
 {
     /* just throw away the old ones */
-    st->listeners = l;
+    listeners = l;
     l->next = 0;
 }
 
@@ -41,7 +41,7 @@ handle_sigchld(int sig __attribute__((unused)))
 }
 
 void
-__u4c_begin(u4c_globalstate_t *s)
+u4c_globalstate_t::begin()
 {
     static bool init = false;
 
@@ -51,12 +51,12 @@ __u4c_begin(u4c_globalstate_t *s)
 	init = true;
     }
 
-    state = s;
+    state = this;
     dispatch_listeners(state, begin);
 }
 
 void
-__u4c_end(void)
+u4c_globalstate_t::end()
 {
     dispatch_listeners(state, end);
     state = 0;
@@ -77,7 +77,7 @@ normalise_event(const u4c_event_t *ev)
 	unsigned long pc = (unsigned long)ev->filename;
 	const char *classname = 0;
 
-	if (state->spiegel->describe_address(pc, &norm.filename,
+	if (u4c_globalstate_t::state->spiegel->describe_address(pc, &norm.filename,
 			&norm.lineno, &classname, &norm.function))
 	{
 	    static char fullname[1024];
@@ -111,7 +111,7 @@ normalise_event(const u4c_event_t *ev)
 u4c_result_t __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
 {
     ev = normalise_event(ev);
-    dispatch_listeners(state, add_event, ev, ft);
+    dispatch_listeners(u4c_globalstate_t::state, add_event, ev, ft);
 
     switch (ev->which)
     {
@@ -177,7 +177,7 @@ fork_child(u4c_testnode_t *tn)
     {
 	/* child process: return, will run the test */
 	close(pipefd[PIPE_READ]);
-	state->event_pipe = pipefd[PIPE_WRITE];
+	u4c_globalstate_t::state->event_pipe = pipefd[PIPE_WRITE];
 	return NULL;
     }
 
@@ -195,9 +195,9 @@ fork_child(u4c_testnode_t *tn)
     child->result = R_UNKNOWN;
     close(pipefd[PIPE_WRITE]);
     child->event_pipe = pipefd[PIPE_READ];
-    child->next = state->children;
-    state->children = child;
-    state->nchildren++;
+    child->next = u4c_globalstate_t::state->children;
+    u4c_globalstate_t::state->children = child;
+    u4c_globalstate_t::state->nchildren++;
 
     return child;
 #undef PIPE_READ
@@ -207,6 +207,7 @@ fork_child(u4c_testnode_t *tn)
 static void
 handle_events(void)
 {
+    u4c_globalstate_t *state = u4c_globalstate_t::state;
     u4c_child_t *child;
     int r;
     int i;
@@ -255,6 +256,7 @@ handle_events(void)
 static void
 reap_children(void)
 {
+    u4c_globalstate_t *state = u4c_globalstate_t::state;
     pid_t pid;
     u4c_child_t **prevp, *child;
     int status;
@@ -356,6 +358,7 @@ static void
 run_fixtures(u4c_testnode_t *tn,
 	     enum u4c_functype type)
 {
+    u4c_globalstate_t *state = u4c_globalstate_t::state;
     u4c_testnode_t *a;
     unsigned int i;
 
@@ -464,6 +467,7 @@ run_test_code(u4c_testnode_t *tn)
 void
 __u4c_begin_test(u4c_testnode_t *tn)
 {
+    u4c_globalstate_t *state = u4c_globalstate_t::state;
     u4c_child_t *child;
     u4c_result_t res;
 
@@ -487,7 +491,7 @@ __u4c_begin_test(u4c_testnode_t *tn)
 	return; /* parent process */
 
     /* child process */
-    __u4c_set_listener(state, __u4c_proxy_listener(state->event_pipe));
+    state->set_listener(__u4c_proxy_listener(state->event_pipe));
     res = run_test_code(tn);
     dispatch_listeners(state, finished, res);
     {

@@ -125,7 +125,27 @@ public:
     u4c_globalstate_t();
     ~u4c_globalstate_t();
 
+    /* u4c.c */
     u4c_functype classify_function(const char *func, char *match_return, size_t maxmatch);
+    u4c_function_t *add_function(enum u4c_functype type, spiegel::function_t *func, const char *submatch);
+    void add_classifier(const char *re, bool case_sensitive, enum u4c_functype type);
+    void setup_classifiers();
+    void find_common_path();
+    void add_testnode(char *name, u4c_function_t *func);
+    void generate_nodes();
+    void dump_nodes(u4c_testnode_t *tn, int level);
+    void set_concurrency(int n);
+    void list_tests();
+    int run_tests();
+    /* run.c */
+    void begin();
+    void end();
+    void add_listener(u4c_listener_t *);
+    void set_listener(u4c_listener_t *);
+    /* discover.c */
+    void discover_functions();
+
+    static u4c_globalstate_t *state;
 
     u4c_classifier_t *classifiers, **classifiers_tailp;
     spiegel::dwarf::state_t *spiegel;
@@ -163,16 +183,9 @@ public:
 /* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
 extern char *__u4c_testnode_fullname(const u4c_testnode_t *tn);
-extern u4c_function_t *__u4c_add_function(u4c_globalstate_t *,
-	enum u4c_functype type, spiegel::function_t *func,
-	const char *submatch);
 extern u4c_listener_t *__u4c_new_text_listener(void);
 
 /* run.c */
-extern void __u4c_add_listener(u4c_globalstate_t *, u4c_listener_t *);
-extern void __u4c_set_listener(u4c_globalstate_t *, u4c_listener_t *);
-extern void __u4c_begin(u4c_globalstate_t *);
-extern void __u4c_end(void);
 extern void __u4c_begin_test(u4c_testnode_t *);
 extern void __u4c_wait(void);
 extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
@@ -189,7 +202,5 @@ extern u4c_listener_t *__u4c_text_listener(void);
 extern u4c_listener_t *__u4c_proxy_listener(int fd);
 extern bool __u4c_handle_proxy_call(int fd, u4c_result_t *resp);
 
-/* discover.c */
-extern void __u4c_discover_functions(u4c_globalstate_t *state);
 
 #endif /* __U4C_PRIV_H__ */

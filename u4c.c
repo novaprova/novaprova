@@ -153,11 +153,10 @@ u4c_globalstate_t::classify_function(const char *func,
     return FT_UNKNOWN;
 }
 
-static void
-u4c_add_classifier(u4c_globalstate_t *state,
-	           const char *re,
-	           bool case_sensitive,
-	           enum u4c_functype type)
+void
+u4c_globalstate_t::add_classifier(const char *re,
+			          bool case_sensitive,
+			          enum u4c_functype type)
 {
     u4c_classifier_t *cl;
     int r;
@@ -178,30 +177,29 @@ u4c_add_classifier(u4c_globalstate_t *state,
 	return;
     }
 
-    *state->classifiers_tailp = cl;
-    state->classifiers_tailp = &cl->next;
+    *classifiers_tailp = cl;
+    classifiers_tailp = &cl->next;
 }
 
-static void
-setup_classifiers(u4c_globalstate_t *state)
+void
+u4c_globalstate_t::setup_classifiers()
 {
-    u4c_add_classifier(state, "^test_([a-z0-9].*)", false, FT_TEST);
-    u4c_add_classifier(state, "^[tT]est([A-Z].*)", false, FT_TEST);
-    u4c_add_classifier(state, "^[sS]etup$", false, FT_BEFORE);
-    u4c_add_classifier(state, "^set_up$", false, FT_BEFORE);
-    u4c_add_classifier(state, "^[iI]nit$", false, FT_BEFORE);
-    u4c_add_classifier(state, "^[tT]ear[dD]own$", false, FT_AFTER);
-    u4c_add_classifier(state, "^tear_down$", false, FT_AFTER);
-    u4c_add_classifier(state, "^[cC]leanup$", false, FT_AFTER);
+    add_classifier("^test_([a-z0-9].*)", false, FT_TEST);
+    add_classifier("^[tT]est([A-Z].*)", false, FT_TEST);
+    add_classifier("^[sS]etup$", false, FT_BEFORE);
+    add_classifier("^set_up$", false, FT_BEFORE);
+    add_classifier("^[iI]nit$", false, FT_BEFORE);
+    add_classifier("^[tT]ear[dD]own$", false, FT_AFTER);
+    add_classifier("^tear_down$", false, FT_AFTER);
+    add_classifier("^[cC]leanup$", false, FT_AFTER);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 u4c_function_t *
-__u4c_add_function(u4c_globalstate_t *state,
-		   enum u4c_functype type,
-		   spiegel::function_t *func,
-		   const char *submatch)
+u4c_globalstate_t::add_function(enum u4c_functype type,
+			        spiegel::function_t *func,
+			        const char *submatch)
 {
     u4c_function_t *f;
 
@@ -214,16 +212,16 @@ __u4c_add_function(u4c_globalstate_t *state,
     f->submatch = xstrdup(submatch);
 
     /* append */
-    *state->funcs_tailp = f;
-    state->funcs_tailp = &f->next;
+    *funcs_tailp = f;
+    funcs_tailp = &f->next;
 
     return f;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static void
-find_common_path(u4c_globalstate_t *state)
+void
+u4c_globalstate_t::find_common_path()
 {
     u4c_function_t *f;
     char *common = NULL;
@@ -231,7 +229,7 @@ find_common_path(u4c_globalstate_t *state)
     char *cp, *ep;
     unsigned int clen, elen;
 
-    for (f = state->funcs ; f ; f = f->next)
+    for (f = funcs ; f ; f = f->next)
     {
 	if (common == NULL)
 	{
@@ -260,8 +258,8 @@ find_common_path(u4c_globalstate_t *state)
 	}
     }
 
-    state->common = common;
-    state->commonlen = lastcommonlen;
+    common = common;
+    commonlen = lastcommonlen;
 }
 
 static u4c_testnode_t *
@@ -276,12 +274,10 @@ new_testnode(const char *name)
     return tn;
 }
 
-static void
-add_testnode(u4c_globalstate_t *state,
-	     char *name,
-	     u4c_function_t *func)
+void
+u4c_globalstate_t::add_testnode(char *name, u4c_function_t *func)
 {
-    u4c_testnode_t *parent = state->root;
+    u4c_testnode_t *parent = root;
     char *part;
     u4c_testnode_t *child;
     u4c_testnode_t **tailp;
@@ -319,12 +315,12 @@ add_testnode(u4c_globalstate_t *state,
     else
 	child->funcs[func->type] = func;
 
-    if (depth > state->maxdepth)
-	state->maxdepth = depth;
+    if (depth > maxdepth)
+	maxdepth = depth;
 }
 
-static void
-generate_nodes(u4c_globalstate_t *state)
+void
+u4c_globalstate_t::generate_nodes()
 {
     u4c_function_t *f;
     char *buf = NULL;
@@ -332,11 +328,11 @@ generate_nodes(u4c_globalstate_t *state)
     unsigned int len;
     char *p;
 
-    state->root = new_testnode(0);
-    for (f = state->funcs ; f ; f = f->next)
+    root = new_testnode(0);
+    for (f = funcs ; f ; f = f->next)
     {
 	/* TODO: use estring!! */
-	len = strlen(f->filename.c_str() + state->commonlen) + 1;
+	len = strlen(f->filename.c_str() + commonlen) + 1;
 	if (f->submatch)
 	    len += strlen(f->submatch) + 1;
 	if (len > buflen)
@@ -344,7 +340,7 @@ generate_nodes(u4c_globalstate_t *state)
 	    buflen = (len | 0xff) + 1;
 	    buf = (char *)realloc(buf, buflen);
 	}
-	strcpy(buf, f->filename.c_str() + state->commonlen);
+	strcpy(buf, f->filename.c_str() + commonlen);
 
 	/* strip the .c extension */
 	p = strrchr(buf, '.');
@@ -359,7 +355,7 @@ generate_nodes(u4c_globalstate_t *state)
 
 // 	    fprintf(stderr, "u4c: \"%s\", \"%s\" -> \"%s\"\n",
 // 		    f->name, f->filename+lastcommonlen, s);
-	add_testnode(state, buf, f);
+	add_testnode(buf, f);
     }
     xfree(buf);
 }
@@ -371,10 +367,8 @@ indent(int level)
 	fputs("    ", stderr);
 }
 
-static void
-dump_nodes(u4c_globalstate_t *state,
-	   u4c_testnode_t *tn,
-	   int level)
+void
+u4c_globalstate_t::dump_nodes(u4c_testnode_t *tn, int level)
 {
     u4c_testnode_t *child;
     int type;
@@ -389,13 +383,13 @@ dump_nodes(u4c_globalstate_t *state,
 	    indent(level);
 	    fprintf(stderr, "  %s=%s:%s\n",
 			    __u4c_functype_as_string((u4c_functype)type),
-			    tn->funcs[type]->filename.c_str() + state->commonlen,
+			    tn->funcs[type]->filename.c_str() + commonlen,
 			    tn->funcs[type]->func->get_name());
 	}
     }
 
     for (child = tn->children ; child ; child = child->next)
-	dump_nodes(state, child, level+1);
+	dump_nodes(child, level+1);
 }
 
 char *
@@ -610,7 +604,7 @@ be_valground(void)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_globalstate_t *
+extern "C" u4c_globalstate_t *
 u4c_init(void)
 {
     u4c_globalstate_t *state;
@@ -618,19 +612,19 @@ u4c_init(void)
     be_valground();
     u4c_reltimestamp();
     state = new u4c_globalstate_t;
-    setup_classifiers(state);
-    __u4c_discover_functions(state);
-    find_common_path(state);
-    generate_nodes(state);
+    state->setup_classifiers();
+    state->discover_functions();
+    state->find_common_path();
+    state->generate_nodes();
     /* TODO: check tree for a) leaves without FT_TEST
      * and b) non-leaves with FT_TEST */
-//     dump_nodes(state, state->root, 0);
+//     state->dump_nodes(state->root, 0);
 
     return state;
 }
 
 void
-u4c_set_concurrency(u4c_globalstate_t *state, int n)
+u4c_globalstate_t::set_concurrency(int n)
 {
     if (n == 0)
     {
@@ -639,18 +633,24 @@ u4c_set_concurrency(u4c_globalstate_t *state, int n)
     }
     if (n < 1)
 	n = 1;
-    state->maxchildren = n;
+    maxchildren = n;
+}
+
+extern "C" void
+u4c_set_concurrency(u4c_globalstate_t *state, int n)
+{
+    state->set_concurrency(n);
 }
 
 void
-u4c_list_tests(u4c_globalstate_t *state)
+u4c_globalstate_t::list_tests()
 {
     u4c_plan_t *plan;
     u4c_testnode_t *tn;
 
     /* build a default plan with all the tests */
-    plan = u4c_plan_new(state);
-    u4c_plan_add_node(plan, state->root);
+    plan = u4c_plan_new(this);
+    u4c_plan_add_node(plan, root);
 
     /* iterate over all tests */
     while ((tn = u4c_plan_next(plan)))
@@ -663,37 +663,49 @@ u4c_list_tests(u4c_globalstate_t *state)
     u4c_plan_delete(plan);
 }
 
+extern "C" void
+u4c_list_tests(u4c_globalstate_t *state)
+{
+    state->list_tests();
+}
+
 int
-u4c_run_tests(u4c_globalstate_t *state)
+u4c_globalstate_t::run_tests()
 {
     u4c_testnode_t *tn;
 
-    if (!state->rootplan)
+    if (!rootplan)
     {
 	/* build a default plan with all the tests */
-	u4c_plan_t *plan = u4c_plan_new(state);
-	u4c_plan_add_node(plan, state->root);
+	u4c_plan_t *plan = u4c_plan_new(this);
+	u4c_plan_add_node(plan, root);
 	u4c_plan_enable(plan);
     }
 
-    if (!state->listeners)
-	__u4c_add_listener(state, __u4c_text_listener());
+    if (!listeners)
+	add_listener(__u4c_text_listener());
 
-    __u4c_begin(state);
+    begin();
     for (;;)
     {
-	while (state->nchildren < state->maxchildren &&
-	       (tn = u4c_plan_next(state->rootplan)))
+	while (nchildren < maxchildren &&
+	       (tn = u4c_plan_next(rootplan)))
 	    __u4c_begin_test(tn);
-	if (!state->nchildren)
+	if (!nchildren)
 	    break;
 	__u4c_wait();
     }
-    __u4c_end();
-    return !!state->nfailed;
+    end();
+    return !!nfailed;
 }
 
-void
+extern "C" int
+u4c_run_tests(u4c_globalstate_t *state)
+{
+    return state->run_tests();
+}
+
+extern "C" void
 u4c_done(u4c_globalstate_t *state)
 {
     delete state;

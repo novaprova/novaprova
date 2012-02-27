@@ -8,12 +8,12 @@ using namespace std;
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 void
-__u4c_discover_functions(u4c_globalstate_t *state)
+u4c_globalstate_t::discover_functions()
 {
-    if (!state->spiegel)
+    if (!spiegel)
     {
-	state->spiegel = new spiegel::dwarf::state_t();
-	state->spiegel->add_self();
+	spiegel = new spiegel::dwarf::state_t();
+	spiegel->add_self();
     }
 
     vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
@@ -47,14 +47,14 @@ fprintf(stderr, "__u4c_discover_functions: scanning %s\n", (*i)->get_absolute_pa
 	    if (fn->get_parameter_types().size() != 0)
 		continue;
 
-	    type = state->classify_function(fn->get_name(),
-					    submatch, sizeof(submatch));
+	    type = classify_function(fn->get_name(),
+				     submatch, sizeof(submatch));
 	    if (type == FT_UNKNOWN)
 		continue;
 	    if (type == FT_TEST && !submatch[0])
 		continue;
 
-	    __u4c_add_function(state, type, fn, submatch);
+	    add_function(type, fn, submatch);
 	}
     }
 }
