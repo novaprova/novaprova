@@ -4,6 +4,8 @@
 #include <sys/time.h>
 #include <valgrind/valgrind.h>
 
+using namespace std;
+
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 const char *
@@ -392,63 +394,40 @@ u4c_globalstate_t::dump_nodes(u4c_testnode_t *tn, int level)
 	dump_nodes(child, level+1);
 }
 
-char *
-__u4c_testnode_fullname(const u4c_testnode_t *tn)
+string
+u4c_testnode_t::get_fullname() const
 {
     const u4c_testnode_t *a;
-    unsigned int len = 0;
-    char *buf, *p;
+    string full = "";
 
-    for (a = tn ; a ; a = a->parent)
-	if (a->name)
-	    len += strlen(a->name) + 1;
-
-    buf = (char *)xmalloc(len);
-    p = buf + len - 1;
-
-    for (a = tn ; a ; a = a->parent)
+    for (a = this ; a ; a = a->parent)
     {
 	if (!a->name)
 	    continue;
-	if (a != tn)
-	    *--p = '.';
-	len = strlen(a->name);
-	p -= len;
-	memcpy(p, a->name, len);
+	if (a != this)
+	    full = "." + full;
+	full = a->name + full;
     }
 
-    return buf;
+    return full;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static u4c_testnode_t *
-find_node(u4c_testnode_t *tn, const char *name)
+u4c_testnode_t *
+u4c_testnode_t::find(const char *nm)
 {
-    u4c_testnode_t *child;
-    u4c_testnode_t *found = 0;
-    char *fullname = 0;
+    if (name && get_fullname() == nm)
+	return this;
 
-    if (tn->name)
+    for (u4c_testnode_t *child = children ; child ; child = child->next)
     {
-	fullname = __u4c_testnode_fullname(tn);
-	if (!strcmp(name, fullname))
-	{
-	    found = tn;
-	    goto out;
-	}
-    }
-
-    for (child = tn->children ; child ; child = child->next)
-    {
-	found = find_node(child, name);
+	u4c_testnode_t *found = child->find(nm);
 	if (found)
-	    goto out;
+	    return found;
     }
 
-out:
-    xfree(fullname);
-    return found;
+    return 0;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -511,7 +490,7 @@ u4c_plan_add(u4c_plan_t *plan, int nspec, const char **specs)
 
     for (i = 0 ; i < nspec ; i++)
     {
-	tn = find_node(plan->state->root, specs[i]);
+	tn = plan->state->root->find(specs[i]);
 	if (!tn)
 	    return false;
 	u4c_plan_add_node(plan, tn);
@@ -654,11 +633,7 @@ u4c_globalstate_t::list_tests()
 
     /* iterate over all tests */
     while ((tn = u4c_plan_next(plan)))
-    {
-	char *fullname = __u4c_testnode_fullname(tn);
-	printf("%s\n", fullname);
-	xfree(fullname);
-    }
+	printf("%s\n", tn->get_fullname().c_str());
 
     u4c_plan_delete(plan);
 }

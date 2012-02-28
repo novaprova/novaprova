@@ -83,6 +83,9 @@ struct u4c_testnode_t
     u4c_testnode_t *children;
     char *name;
     u4c_function_t *funcs[FT_NUM];
+
+    std::string get_fullname() const;
+    u4c_testnode_t *find(const char *name);
 };
 
 struct u4c_plan_iterator_t
@@ -217,7 +220,6 @@ public:
 
 /* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
-extern char *__u4c_testnode_fullname(const u4c_testnode_t *tn);
 
 /* run.c */
 extern void __u4c_begin_test(u4c_testnode_t *);

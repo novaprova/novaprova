@@ -183,12 +183,8 @@ fork_child(u4c_testnode_t *tn)
 
     /* parent process */
 
-    {
-	char *nm = __u4c_testnode_fullname(tn);
-	fprintf(stderr, "u4c: spawned child process %d for %s\n",
-		(int)pid, nm);
-	xfree(nm);
-    }
+    fprintf(stderr, "u4c: spawned child process %d for %s\n",
+	    (int)pid, tn->get_fullname().c_str());
     child = (u4c_child_t *)xmalloc(sizeof(*child));
     child->pid = pid;
     child->node = tn;
@@ -477,12 +473,8 @@ __u4c_begin_test(u4c_testnode_t *tn)
 	    return;
     }
 
-    {
-	char *nm = __u4c_testnode_fullname(tn);
-	fprintf(stderr, "%s: begin test %s\n",
-		u4c_reltimestamp(), nm);
-	xfree(nm);
-    }
+    fprintf(stderr, "%s: begin test %s\n",
+	    u4c_reltimestamp(), tn->get_fullname().c_str());
 
     dispatch_listeners(state, begin_node, tn);
 
@@ -494,12 +486,8 @@ __u4c_begin_test(u4c_testnode_t *tn)
     state->set_listener(new u4c_proxy_listener_t(state->event_pipe));
     res = run_test_code(tn);
     dispatch_listeners(state, finished, res);
-    {
-	char *nm = __u4c_testnode_fullname(tn);
-	fprintf(stderr, "u4c: child process %d (%s) finishing\n",
-		(int)getpid(), nm);
-	xfree(nm);
-    }
+    fprintf(stderr, "u4c: child process %d (%s) finishing\n",
+	    (int)getpid(), tn->get_fullname().c_str());
     exit(0);
 }
 
