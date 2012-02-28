@@ -53,10 +53,25 @@ enum u4c_functype
 
 struct u4c_classifier_t
 {
-    u4c_classifier_t *next;
-    char *re;
-    regex_t compiled_re;
-    enum u4c_functype type;
+public:
+    u4c_classifier_t()
+    {
+	memset(this, 0, sizeof(*this));
+    }
+    ~u4c_classifier_t()
+    {
+	xfree(re_);
+	regfree(&compiled_re_);
+    }
+
+    bool set_regexp(const char *, bool);
+    void set_functype(enum u4c_functype type) { type_ = type; }
+    enum u4c_functype classify(const char *, char *, size_t) const;
+
+private:
+    char *re_;
+    regex_t compiled_re_;
+    enum u4c_functype type_;
 };
 
 struct u4c_function_t
@@ -185,7 +200,7 @@ public:
 
     static u4c_globalstate_t *state;
 
-    u4c_classifier_t *classifiers, **classifiers_tailp;
+    std::vector<u4c_classifier_t*> classifiers_;
     spiegel::dwarf::state_t *spiegel;
     u4c_function_t *funcs, **funcs_tailp;
     char *common;

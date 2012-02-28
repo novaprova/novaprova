@@ -44,7 +44,6 @@ __u4c_functype_as_string(enum u4c_functype type)
 
 u4c_globalstate_t::u4c_globalstate_t()
 {
-    classifiers_tailp = &classifiers;
     funcs_tailp = &funcs;
     maxchildren = 1;
 }
@@ -66,7 +65,6 @@ delete_node(u4c_testnode_t *tn)
 u4c_globalstate_t::~u4c_globalstate_t()
 {
     u4c_function_t *f;
-    u4c_classifier_t *cl;
 
     while (funcs)
     {
@@ -78,14 +76,10 @@ u4c_globalstate_t::~u4c_globalstate_t()
 	delete f;
     }
 
-    while (classifiers)
+    while (classifiers_.size())
     {
-	cl = classifiers;
-	classifiers = cl->next;
-
-	xfree(cl->re);
-	regfree(&cl->compiled_re);
-	xfree(cl);
+	delete classifiers_.back();
+	classifiers_.pop_back();
     }
 
     while (plans)
@@ -107,51 +101,78 @@ u4c_globalstate_t::classify_function(const char *func,
 				     char *match_return,
 				     size_t maxmatch)
 {
-    int r;
-    u4c_classifier_t *cl;
-    regmatch_t match[2];
-
     if (match_return)
 	match_return[0] = '\0';
 
-    for (cl = classifiers ; cl ; cl = cl->next)
+    vector<u4c_classifier_t*>::iterator i;
+    for (i = classifiers_.begin() ; i != classifiers_.end() ; ++i)
     {
-	r = regexec(&cl->compiled_re, func, 2, match, 0);
+	enum u4c_functype ft = (*i)->classify(func, match_return, maxmatch);
+	if (ft != FT_UNKNOWN)
+	    return ft;
+	/* else, no match: just keep looking */
+    }
+    return FT_UNKNOWN;
+}
 
-	if (r == 0)
-	{
+bool
+u4c_classifier_t::set_regexp(const char *re, bool case_sensitive)
+{
+    re_ = xstrdup(re);
+    int r = regcomp(&compiled_re_, re,
+		    REG_EXTENDED|(case_sensitive ? 0 : REG_ICASE));
+    if (r)
+    {
+	char err[1024];
+	regerror(r, &compiled_re_, err, sizeof(err));
+	fprintf(stderr, "u4c: bad classifier %s: %s\n",
+		re, err);
+	return false;
+    }
+    return true;
+}
+
+enum u4c_functype
+u4c_classifier_t::classify(const char *func,
+			   char *match_return,
+			   size_t maxmatch) const
+{
+    regmatch_t match[2];
+    int r = regexec(&compiled_re_, func, 2, match, 0);
+
+    if (r == 0)
+    {
 // fprintf(stderr, "MATCHED \"%s\" to \"%s\"\n", func, cl->re);
 // fprintf(stderr, "    submatch [ {%d %d} {%d %d}]\n",
 // 	    match[0].rm_so, match[0].rm_eo,
 // 	    match[1].rm_so, match[1].rm_eo);
 
-	    /* successful match */
-	    if (match_return && match[1].rm_so >= 0)
-	    {
-		size_t len = match[1].rm_eo - match[1].rm_so;
-		if (len >= maxmatch)
-		{
-		    fprintf(stderr, "u4c: match for classifier %s too long\n",
-				    cl->re);
-		    return FT_UNKNOWN;
-		}
-		memcpy(match_return, func+match[1].rm_so, len);
-		match_return[len] = '\0';
-// fprintf(stderr, "    match_return \"%s\"\n", match_return);
-	    }
-	    return cl->type;
-	}
-	else if (r != REG_NOMATCH)
+	/* successful match */
+	if (match_return && match[1].rm_so >= 0)
 	{
-	    /* some runtime error */
-	    char err[1024];
-	    regerror(r, &cl->compiled_re, err, sizeof(err));
-	    fprintf(stderr, "u4c: failed matching \"%s\": %s\n",
-		    func, err);
-	    continue;
+	    size_t len = match[1].rm_eo - match[1].rm_so;
+	    if (len >= maxmatch)
+	    {
+		fprintf(stderr, "u4c: match for classifier %s too long\n",
+				re_);
+		return FT_UNKNOWN;
+	    }
+	    memcpy(match_return, func+match[1].rm_so, len);
+	    match_return[len] = '\0';
+// fprintf(stderr, "    match_return \"%s\"\n", match_return);
 	}
-	/* else, no match: just keep looking */
+	return type_;
     }
+
+    if (r != REG_NOMATCH)
+    {
+	/* some runtime error */
+	char err[1024];
+	regerror(r, &compiled_re_, err, sizeof(err));
+	fprintf(stderr, "u4c: failed matching \"%s\": %s\n",
+		func, err);
+    }
+
     return FT_UNKNOWN;
 }
 
@@ -160,27 +181,14 @@ u4c_globalstate_t::add_classifier(const char *re,
 			          bool case_sensitive,
 			          enum u4c_functype type)
 {
-    u4c_classifier_t *cl;
-    int r;
-
-    cl = (u4c_classifier_t *)xmalloc(sizeof(*cl));
-    cl->re = xstrdup(re);
-    cl->type = type;
-    r = regcomp(&cl->compiled_re, re,
-	        REG_EXTENDED|(case_sensitive ? 0 : REG_ICASE));
-    if (r)
+    u4c_classifier_t *cl = new u4c_classifier_t;
+    if (!cl->set_regexp(re, case_sensitive))
     {
-	char err[1024];
-	regerror(r, &cl->compiled_re, err, sizeof(err));
-	fprintf(stderr, "u4c: bad classifier %s: %s\n",
-		re, err);
-	xfree(cl->re);
-	xfree(cl);
+	delete cl;
 	return;
     }
-
-    *classifiers_tailp = cl;
-    classifiers_tailp = &cl->next;
+    cl->set_functype(type);
+    classifiers_.push_back(cl);
 }
 
 void
