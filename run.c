@@ -342,12 +342,12 @@ u4c_globalstate_t::reap_children()
 }
 
 void
-u4c_globalstate_t::run_function(u4c_function_t *f)
+u4c_globalstate_t::run_function(enum u4c_functype ft, spiegel::function_t *f)
 {
     vector<spiegel::value_t> args;
-    spiegel::value_t ret = f->func->invoke(args);
+    spiegel::value_t ret = f->invoke(args);
 
-    if (f->type == FT_TEST)
+    if (ft == FT_TEST)
     {
 	assert(ret.which == spiegel::type_t::TC_VOID);
     }
@@ -360,8 +360,9 @@ u4c_globalstate_t::run_function(u4c_function_t *f)
 	{
 	    static char cond[64];
 	    snprintf(cond, sizeof(cond), "fixture retured %d", r);
-	    u4c_throw(u4c_event_t(EV_FIXTURE, cond, f->filename.c_str(),
-			    0, f->func->get_name()));
+	    u4c_throw(u4c_event_t(EV_FIXTURE, cond,
+			    f->get_compile_unit()->get_absolute_path().c_str(),
+			    0, f->get_name()));
 	}
     }
 }
@@ -369,34 +370,10 @@ u4c_globalstate_t::run_function(u4c_function_t *f)
 void
 u4c_globalstate_t::run_fixtures(u4c_testnode_t *tn, enum u4c_functype type)
 {
-    u4c_testnode_t *a;
-    unsigned int i;
-
-    if (!fixtures)
-	fixtures = (u4c_function_t **)xmalloc(sizeof(u4c_function_t*) *
-				  maxdepth);
-    else
-	memset(fixtures, 0, sizeof(u4c_function_t*) *
-				   maxdepth);
-
-    /* Run FT_BEFORE from outermost in, and FT_AFTER
-     * from innermost out */
-    if (type == FT_BEFORE)
-    {
-	i = maxdepth;
-	for (a = tn ; a ; a = a->parent)
-	    fixtures[--i] = a->funcs[type];
-    }
-    else
-    {
-	i = 0;
-	for (a = tn ; a ; a = a->parent)
-	    fixtures[i++] = a->funcs[type];
-    }
-
-    for (i = 0 ; i < maxdepth ; i++)
-	if (fixtures[i])
-	    run_function(fixtures[i]);
+    list<spiegel::function_t*> fixtures = tn->get_fixtures(type);
+    list<spiegel::function_t*>::iterator itr;
+    for (itr = fixtures.begin() ; itr != fixtures.end() ; ++itr)
+	run_function(type, *itr);
 }
 
 static u4c_result_t
@@ -448,7 +425,7 @@ u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
     {
 	u4c_try
 	{
-	    run_function(tn->funcs[FT_TEST]);
+	    run_function(FT_TEST, tn->get_function(FT_TEST));
 	}
 	u4c_catch(ev)
 	{

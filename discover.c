@@ -7,6 +7,25 @@ using namespace std;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+static string
+test_name(spiegel::function_t *fn, char *submatch)
+{
+    string name = fn->get_compile_unit()->get_absolute_path();
+
+    /* strip the .c or .cxx extension */
+    size_t p = name.find_last_of('.');
+    if (p != string::npos)
+	name.resize(p);
+
+    if (submatch && submatch[0])
+    {
+	name += "/";
+	name += submatch;
+    }
+
+    return name;
+}
+
 void
 u4c_globalstate_t::discover_functions()
 {
@@ -14,6 +33,7 @@ u4c_globalstate_t::discover_functions()
     {
 	spiegel = new spiegel::dwarf::state_t();
 	spiegel->add_self();
+	root_ = base_ = new u4c_testnode_t(0);
     }
 
     vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
@@ -54,9 +74,12 @@ fprintf(stderr, "__u4c_discover_functions: scanning %s\n", (*i)->get_absolute_pa
 	    if (type == FT_TEST && !submatch[0])
 		continue;
 
-	    add_function(type, fn, submatch);
+	    root_->make_path(test_name(fn, submatch))->set_function(type, fn);
 	}
     }
+
+    // Calculate a new base
+    base_ = root_->skip_common();
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

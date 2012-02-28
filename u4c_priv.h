@@ -10,12 +10,13 @@
 #include <bfd.h>
 #include <sys/poll.h>
 #include <vector>
+#include <list>
 
 class u4c_child_t;
 struct u4c_event_t;
 struct u4c_classifier_t;
 struct u4c_function_t;
-struct u4c_testnode_t;
+class u4c_testnode_t;
 struct u4c_plan_iterator_t;
 struct u4c_plan;
 class u4c_listener_t;
@@ -86,34 +87,33 @@ private:
     enum u4c_functype type_;
 };
 
-struct u4c_function_t
+class u4c_testnode_t
 {
-    u4c_function_t *next;
-    enum u4c_functype type;
-    spiegel::function_t *func;
-    spiegel::filename_t filename;
-    char *submatch;
-
-    u4c_function_t()
-     :  next(0),
-        type(FT_UNKNOWN),
-	func(0),
-	submatch(0)
-    {
-    }
-
-};
-
-struct u4c_testnode_t
-{
-    u4c_testnode_t *next;
-    u4c_testnode_t *parent;
-    u4c_testnode_t *children;
-    char *name;
-    u4c_function_t *funcs[FT_NUM];
+public:
+    u4c_testnode_t(const char *);
+    ~u4c_testnode_t();
 
     std::string get_fullname() const;
     u4c_testnode_t *find(const char *name);
+    u4c_testnode_t *make_path(std::string name);
+    void set_function(enum u4c_functype, spiegel::function_t *);
+
+    u4c_testnode_t *skip_common();
+    u4c_testnode_t *next_preorder();
+    spiegel::function_t *get_function(u4c_functype type) const
+    {
+	return funcs_[type];
+    }
+    std::list<spiegel::function_t*> get_fixtures(u4c_functype type) const;
+
+    void dump(int level) const;
+
+private:
+    u4c_testnode_t *next_;
+    u4c_testnode_t *parent_;
+    u4c_testnode_t *children_;
+    char *name_;
+    spiegel::function_t *funcs_[FT_NUM];
 };
 
 struct u4c_plan_iterator_t
@@ -195,12 +195,8 @@ public:
 
     /* u4c.c */
     u4c_functype classify_function(const char *func, char *match_return, size_t maxmatch);
-    u4c_function_t *add_function(enum u4c_functype type, spiegel::function_t *func, const char *submatch);
     void add_classifier(const char *re, bool case_sensitive, enum u4c_functype type);
     void setup_classifiers();
-    void find_common_path();
-    void add_testnode(char *name, u4c_function_t *func);
-    void generate_nodes();
     void dump_nodes(u4c_testnode_t *tn, int level);
     void set_concurrency(int n);
     void list_tests();
@@ -215,7 +211,7 @@ public:
     u4c_child_t *fork_child(u4c_testnode_t *tn);
     void handle_events();
     void reap_children();
-    void run_function(u4c_function_t *f);
+    void run_function(enum u4c_functype ft, spiegel::function_t *f);
     void run_fixtures(u4c_testnode_t *tn, enum u4c_functype type);
     u4c_result_t run_test_code(u4c_testnode_t *tn);
     void begin_test(u4c_testnode_t *);
@@ -225,11 +221,8 @@ public:
 
     std::vector<u4c_classifier_t*> classifiers_;
     spiegel::dwarf::state_t *spiegel;
-    u4c_function_t *funcs, **funcs_tailp;
-    char *common;
-    unsigned int commonlen;
-    u4c_testnode_t *root;
-    unsigned int maxdepth;
+    u4c_testnode_t *root_;
+    u4c_testnode_t *base_;
     u4c_plan_t *rootplan;
     u4c_plan_t *plans;
     /* runtime state */
