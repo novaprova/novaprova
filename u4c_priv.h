@@ -217,8 +217,7 @@ public:
     int event_pipe;		/* only in child processes */
     std::vector<u4c_child_t*> children_;	// only in the parent process
     unsigned int maxchildren;
-    unsigned int npfd;
-    struct pollfd *pfd;
+    std::vector<struct pollfd> pfd_;
 };
 
 #define dispatch_listeners(st, func, ...) \

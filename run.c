@@ -198,31 +198,26 @@ handle_events(void)
 {
     u4c_globalstate_t *state = u4c_globalstate_t::state;
     int r;
-    int i;
 
     if (!state->children_.size())
 	return;
 
     while (!caught_sigchld)
     {
-	if (state->npfd != state->children_.size())
+	state->pfd_.resize(state->children_.size());
+	vector<u4c_child_t*>::iterator citr;
+	vector<struct pollfd>::iterator pitr;
+	for (pitr = state->pfd_.begin(), citr = state->children_.begin() ;
+	     citr != state->children_.end() ; ++pitr, ++citr)
 	{
-	    state->npfd = state->children_.size();
-	    state->pfd = (struct pollfd *)xrealloc(state->pfd, state->npfd * sizeof(struct pollfd));
-	}
-	memset(state->pfd, 0, state->npfd * sizeof(struct pollfd));
-	vector<u4c_child_t*>::iterator itr;
-	for (i = 0, itr = state->children_.begin() ;
-	     itr != state->children_.end() ;
-	     ++i, ++itr)
-	{
-	    if ((*itr)->finished)
+	    if ((*citr)->finished)
 		continue;
-	    state->pfd[i].fd = (*itr)->event_pipe;
-	    state->pfd[i].events = POLLIN;
+	    pitr->fd = (*citr)->event_pipe;
+	    pitr->events = POLLIN;
+	    pitr->revents = 0;
 	}
 
-	r = poll(state->pfd, state->npfd, -1);
+	r = poll(state->pfd_.data(), state->pfd_.size(), -1);
 	if (r < 0)
 	{
 	    if (errno == EINTR)
@@ -232,16 +227,15 @@ handle_events(void)
 	}
 	/* TODO: implement test timeout handling here */
 
-	for (i = 0, itr = state->children_.begin() ;
-	     itr != state->children_.end() ;
-	     ++i, ++itr)
+	for (pitr = state->pfd_.begin(), citr = state->children_.begin() ;
+	     citr != state->children_.end() ; ++pitr, ++citr)
 	{
-	    if ((*itr)->finished)
+	    if ((*citr)->finished)
 		continue;
-	    if (!(state->pfd[i].revents & POLLIN))
+	    if (!(pitr->revents & POLLIN))
 		continue;
-	    if (!__u4c_handle_proxy_call((*itr)->event_pipe, &(*itr)->result))
-		(*itr)->finished = true;
+	    if (!__u4c_handle_proxy_call((*citr)->event_pipe, &(*citr)->result))
+		(*citr)->finished = true;
 	}
     }
 }
