@@ -11,7 +11,7 @@
 #include <sys/poll.h>
 #include <vector>
 
-struct u4c_child_t;
+class u4c_child_t;
 struct u4c_event_t;
 struct u4c_classifier_t;
 struct u4c_function_t;
@@ -31,14 +31,26 @@ enum u4c_result_t
     R_FAIL
 };
 
-struct u4c_child_t
+class u4c_child_t
 {
-    u4c_child_t *next;
-    pid_t pid;
-    int event_pipe;	    /* read end of the pipe */
-    u4c_testnode_t *node;
-    u4c_result_t result;
-    bool finished;
+public:
+    u4c_child_t(pid_t pid, int fd, u4c_testnode_t *tn);
+    ~u4c_child_t();
+
+    pid_t get_pid() const { return pid_; }
+    u4c_testnode_t *get_node() const { return node_; }
+    u4c_result_t get_result() const { return result_; }
+
+    void poll_setup(struct pollfd &);
+    void poll_handle(struct pollfd &);
+    void merge_result(u4c_result_t r);
+
+private:
+    pid_t pid_;
+    int event_pipe_;	    /* read end of the pipe */
+    u4c_testnode_t *node_;
+    u4c_result_t result_;
+    bool finished_;
 };
 
 enum u4c_functype

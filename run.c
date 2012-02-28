@@ -134,6 +134,46 @@ u4c_globalstate_t::raise_event(const u4c_event_t *ev, enum u4c_functype ft)
     }
 }
 
+u4c_child_t::u4c_child_t(pid_t pid, int fd, u4c_testnode_t *tn)
+ :  pid_(pid),
+    event_pipe_(fd),
+    node_(tn),
+    result_(R_UNKNOWN),
+    finished_(false)
+{
+}
+
+u4c_child_t::~u4c_child_t()
+{
+    close(event_pipe_);
+}
+
+void
+u4c_child_t::poll_setup(struct pollfd &pfd)
+{
+    memset(&pfd, 0, sizeof(struct pollfd));
+    if (finished_)
+	return;
+    pfd.fd = event_pipe_;
+    pfd.events = POLLIN;
+}
+
+void
+u4c_child_t::poll_handle(struct pollfd &pfd)
+{
+    if (finished_)
+	return;
+    if (!(pfd.revents & POLLIN))
+	return;
+    if (!__u4c_handle_proxy_call(event_pipe_, &result_))
+	finished_ = true;
+}
+
+void u4c_child_t::merge_result(u4c_result_t r)
+{
+    __u4c_merge(result_, r);
+}
+
 u4c_child_t *
 u4c_globalstate_t::fork_child(u4c_testnode_t *tn)
 {
@@ -185,12 +225,8 @@ u4c_globalstate_t::fork_child(u4c_testnode_t *tn)
 
     fprintf(stderr, "u4c: spawned child process %d for %s\n",
 	    (int)pid, tn->get_fullname().c_str());
-    child = (u4c_child_t *)xmalloc(sizeof(*child));
-    child->pid = pid;
-    child->node = tn;
-    child->result = R_UNKNOWN;
     close(pipefd[PIPE_WRITE]);
-    child->event_pipe = pipefd[PIPE_READ];
+    child = new u4c_child_t(pid, pipefd[PIPE_READ], tn);
     children_.push_back(child);
 
     return child;
@@ -213,13 +249,7 @@ u4c_globalstate_t::handle_events()
 	vector<struct pollfd>::iterator pitr;
 	for (pitr = pfd_.begin(), citr = children_.begin() ;
 	     citr != children_.end() ; ++pitr, ++citr)
-	{
-	    if ((*citr)->finished)
-		continue;
-	    pitr->fd = (*citr)->event_pipe;
-	    pitr->events = POLLIN;
-	    pitr->revents = 0;
-	}
+	    (*citr)->poll_setup(*pitr);
 
 	r = poll(pfd_.data(), pfd_.size(), -1);
 	if (r < 0)
@@ -233,14 +263,7 @@ u4c_globalstate_t::handle_events()
 
 	for (pitr = pfd_.begin(), citr = children_.begin() ;
 	     citr != children_.end() ; ++pitr, ++citr)
-	{
-	    if ((*citr)->finished)
-		continue;
-	    if (!(pitr->revents & POLLIN))
-		continue;
-	    if (!__u4c_handle_proxy_call((*citr)->event_pipe, &(*citr)->result))
-		(*citr)->finished = true;
-	}
+	    (*citr)->poll_handle(*pitr);
     }
 }
 
@@ -271,7 +294,7 @@ u4c_globalstate_t::reap_children()
 	}
 	vector<u4c_child_t*>::iterator itr;
 	for (itr = children_.begin() ;
-	     itr != children_.end() && (*itr)->pid != pid ;
+	     itr != children_.end() && (*itr)->get_pid() != pid ;
 	     ++itr)
 	    ;
 	if (itr == children_.end())
@@ -291,7 +314,7 @@ u4c_globalstate_t::reap_children()
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
-		__u4c_merge(child->result, __u4c_raise_event(&ev, FT_UNKNOWN));
+		child->merge_result(__u4c_raise_event(&ev, FT_UNKNOWN));
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -300,19 +323,18 @@ u4c_globalstate_t::reap_children()
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
-	    __u4c_merge(child->result, __u4c_raise_event(&ev, FT_UNKNOWN));
+	    child->merge_result(__u4c_raise_event(&ev, FT_UNKNOWN));
 	}
 
 	/* notify listeners */
-	nfailed_ += (child->result == R_FAIL);
+	nfailed_ += (child->get_result() == R_FAIL);
 	nrun_++;
-	dispatch_listeners(finished, child->result);
-	dispatch_listeners(end_node, child->node);
+	dispatch_listeners(finished, child->get_result());
+	dispatch_listeners(end_node, child->get_node());
 
 	/* detach and clean up */
 	children_.erase(itr);
-	close(child->event_pipe);
-	free(child);
+	delete child;
     }
 
     caught_sigchld = 0;
