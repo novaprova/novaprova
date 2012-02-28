@@ -657,7 +657,7 @@ u4c_globalstate_t::run_tests()
 	u4c_plan_enable(plan);
     }
 
-    if (!listeners)
+    if (!listeners_.size())
 	add_listener(new u4c_text_listener_t);
 
     begin();

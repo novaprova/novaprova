@@ -16,22 +16,17 @@ static volatile int caught_sigchld = 0;
 void
 u4c_globalstate_t::add_listener(u4c_listener_t *l)
 {
-    u4c_listener_t **tailp;
-
     /* append to the list.  The order of adding is preserved for
      * dispatching */
-    for (tailp = &listeners ; *tailp ; tailp = &(*tailp)->next)
-	;
-    *tailp = l;
-    l->next = 0;
+    listeners_.push_back(l);
 }
 
 void
 u4c_globalstate_t::set_listener(u4c_listener_t *l)
 {
     /* just throw away the old ones */
-    listeners = l;
-    l->next = 0;
+    listeners_.clear();
+    listeners_.push_back(l);
 }
 
 static void

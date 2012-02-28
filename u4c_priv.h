@@ -9,6 +9,7 @@
 #include <regex.h>
 #include <bfd.h>
 #include <sys/poll.h>
+#include <vector>
 
 struct u4c_child_t;
 struct u4c_event_t;
@@ -106,7 +107,7 @@ struct u4c_plan_t
 class u4c_listener_t
 {
 public:
-    u4c_listener_t() : next(0) {}
+    u4c_listener_t() {}
     ~u4c_listener_t() {}
 
     virtual void begin() = 0;
@@ -115,8 +116,6 @@ public:
     virtual void end_node(const u4c_testnode_t *) = 0;
     virtual void add_event(const u4c_event_t *, enum u4c_functype ft) = 0;
     virtual void finished(u4c_result_t) = 0;
-
-    u4c_listener_t *next;
 };
 
 class u4c_text_listener_t : public u4c_listener_t
@@ -196,7 +195,7 @@ public:
     u4c_plan_t *rootplan;
     u4c_plan_t *plans;
     /* runtime state */
-    u4c_listener_t *listeners;
+    std::vector<u4c_listener_t*> listeners_;
     u4c_function_t **fixtures;
     unsigned int nrun;
     unsigned int nfailed;
@@ -210,12 +209,11 @@ public:
 
 #define dispatch_listeners(st, func, ...) \
     do { \
-	u4c_listener_t *_l, *_n; \
-	for (_l = (st)->listeners ; _l ; _l = _n) \
-	{ \
-	    _n = _l->next; \
-	    (_l)->func(__VA_ARGS__); \
-	} \
+	vector<u4c_listener_t*>::iterator _i; \
+	for (_i = (st)->listeners_.begin() ; \
+	     _i != (st)->listeners_.end() ; \
+	     ++_i) \
+	    (*_i)->func(__VA_ARGS__); \
     } while(0)
 
 /* u4c.c */
