@@ -8,8 +8,14 @@
 using namespace std;
 
 __u4c_exceptstate_t __u4c_exceptstate;
-u4c_globalstate_t *u4c_globalstate_t::state = 0;
 static volatile int caught_sigchld = 0;
+
+#define dispatch_listeners(func, ...) \
+    do { \
+	vector<u4c_listener_t*>::iterator _i; \
+	for (_i = listeners_.begin() ; _i != listeners_.end() ; ++_i) \
+	    (*_i)->func(__VA_ARGS__); \
+    } while(0)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -46,21 +52,19 @@ u4c_globalstate_t::begin()
 	init = true;
     }
 
-    state = this;
-    dispatch_listeners(state, begin);
+    dispatch_listeners(begin);
 }
 
 void
 u4c_globalstate_t::end()
 {
-    dispatch_listeners(state, end);
-    state = 0;
+    dispatch_listeners(end);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static const u4c_event_t *
-normalise_event(const u4c_event_t *ev)
+const u4c_event_t *
+u4c_globalstate_t::normalise_event(const u4c_event_t *ev)
 {
     static u4c_event_t norm;
 
@@ -72,7 +76,7 @@ normalise_event(const u4c_event_t *ev)
 	unsigned long pc = (unsigned long)ev->filename;
 	const char *classname = 0;
 
-	if (u4c_globalstate_t::state->spiegel->describe_address(pc, &norm.filename,
+	if (spiegel->describe_address(pc, &norm.filename,
 			&norm.lineno, &classname, &norm.function))
 	{
 	    static char fullname[1024];
@@ -103,10 +107,11 @@ normalise_event(const u4c_event_t *ev)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_result_t __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
+u4c_result_t
+u4c_globalstate_t::raise_event(const u4c_event_t *ev, enum u4c_functype ft)
 {
     ev = normalise_event(ev);
-    dispatch_listeners(u4c_globalstate_t::state, add_event, ev, ft);
+    dispatch_listeners(add_event, ev, ft);
 
     switch (ev->which)
     {
@@ -129,8 +134,8 @@ u4c_result_t __u4c_raise_event(const u4c_event_t *ev, enum u4c_functype ft)
     }
 }
 
-static u4c_child_t *
-fork_child(u4c_testnode_t *tn)
+u4c_child_t *
+u4c_globalstate_t::fork_child(u4c_testnode_t *tn)
 {
     pid_t pid;
 #define PIPE_READ 0
@@ -172,7 +177,7 @@ fork_child(u4c_testnode_t *tn)
     {
 	/* child process: return, will run the test */
 	close(pipefd[PIPE_READ]);
-	u4c_globalstate_t::state->event_pipe = pipefd[PIPE_WRITE];
+	event_pipe_ = pipefd[PIPE_WRITE];
 	return NULL;
     }
 
@@ -186,29 +191,28 @@ fork_child(u4c_testnode_t *tn)
     child->result = R_UNKNOWN;
     close(pipefd[PIPE_WRITE]);
     child->event_pipe = pipefd[PIPE_READ];
-    u4c_globalstate_t::state->children_.push_back(child);
+    children_.push_back(child);
 
     return child;
 #undef PIPE_READ
 #undef PIPE_WRITE
 }
 
-static void
-handle_events(void)
+void
+u4c_globalstate_t::handle_events()
 {
-    u4c_globalstate_t *state = u4c_globalstate_t::state;
     int r;
 
-    if (!state->children_.size())
+    if (!children_.size())
 	return;
 
     while (!caught_sigchld)
     {
-	state->pfd_.resize(state->children_.size());
+	pfd_.resize(children_.size());
 	vector<u4c_child_t*>::iterator citr;
 	vector<struct pollfd>::iterator pitr;
-	for (pitr = state->pfd_.begin(), citr = state->children_.begin() ;
-	     citr != state->children_.end() ; ++pitr, ++citr)
+	for (pitr = pfd_.begin(), citr = children_.begin() ;
+	     citr != children_.end() ; ++pitr, ++citr)
 	{
 	    if ((*citr)->finished)
 		continue;
@@ -217,7 +221,7 @@ handle_events(void)
 	    pitr->revents = 0;
 	}
 
-	r = poll(state->pfd_.data(), state->pfd_.size(), -1);
+	r = poll(pfd_.data(), pfd_.size(), -1);
 	if (r < 0)
 	{
 	    if (errno == EINTR)
@@ -227,8 +231,8 @@ handle_events(void)
 	}
 	/* TODO: implement test timeout handling here */
 
-	for (pitr = state->pfd_.begin(), citr = state->children_.begin() ;
-	     citr != state->children_.end() ; ++pitr, ++citr)
+	for (pitr = pfd_.begin(), citr = children_.begin() ;
+	     citr != children_.end() ; ++pitr, ++citr)
 	{
 	    if ((*citr)->finished)
 		continue;
@@ -240,10 +244,9 @@ handle_events(void)
     }
 }
 
-static void
-reap_children(void)
+void
+u4c_globalstate_t::reap_children()
 {
-    u4c_globalstate_t *state = u4c_globalstate_t::state;
     pid_t pid;
     int status;
     char msg[1024];
@@ -267,11 +270,11 @@ reap_children(void)
 	    continue;
 	}
 	vector<u4c_child_t*>::iterator itr;
-	for (itr = state->children_.begin() ;
-	     itr != state->children_.end() && (*itr)->pid != pid ;
+	for (itr = children_.begin() ;
+	     itr != children_.end() && (*itr)->pid != pid ;
 	     ++itr)
 	    ;
-	if (itr == state->children_.end())
+	if (itr == children_.end())
 	{
 	    /* some other process */
 	    fprintf(stderr, "u4c: reaped stray process %d\n", (int)pid);
@@ -301,13 +304,13 @@ reap_children(void)
 	}
 
 	/* notify listeners */
-	state->nfailed += (child->result == R_FAIL);
-	state->nrun++;
-	dispatch_listeners(state, finished, child->result);
-	dispatch_listeners(state, end_node, child->node);
+	nfailed_ += (child->result == R_FAIL);
+	nrun_++;
+	dispatch_listeners(finished, child->result);
+	dispatch_listeners(end_node, child->node);
 
 	/* detach and clean up */
-	state->children_.erase(itr);
+	children_.erase(itr);
 	close(child->event_pipe);
 	free(child);
     }
@@ -316,8 +319,8 @@ reap_children(void)
     /* nothing to reap here, move along */
 }
 
-static void
-run_function(u4c_function_t *f)
+void
+u4c_globalstate_t::run_function(u4c_function_t *f)
 {
     vector<spiegel::value_t> args;
     spiegel::value_t ret = f->func->invoke(args);
@@ -341,39 +344,37 @@ run_function(u4c_function_t *f)
     }
 }
 
-static void
-run_fixtures(u4c_testnode_t *tn,
-	     enum u4c_functype type)
+void
+u4c_globalstate_t::run_fixtures(u4c_testnode_t *tn, enum u4c_functype type)
 {
-    u4c_globalstate_t *state = u4c_globalstate_t::state;
     u4c_testnode_t *a;
     unsigned int i;
 
-    if (!state->fixtures)
-	state->fixtures = (u4c_function_t **)xmalloc(sizeof(u4c_function_t*) *
-				  state->maxdepth);
+    if (!fixtures)
+	fixtures = (u4c_function_t **)xmalloc(sizeof(u4c_function_t*) *
+				  maxdepth);
     else
-	memset(state->fixtures, 0, sizeof(u4c_function_t*) *
-				   state->maxdepth);
+	memset(fixtures, 0, sizeof(u4c_function_t*) *
+				   maxdepth);
 
     /* Run FT_BEFORE from outermost in, and FT_AFTER
      * from innermost out */
     if (type == FT_BEFORE)
     {
-	i = state->maxdepth;
+	i = maxdepth;
 	for (a = tn ; a ; a = a->parent)
-	    state->fixtures[--i] = a->funcs[type];
+	    fixtures[--i] = a->funcs[type];
     }
     else
     {
 	i = 0;
 	for (a = tn ; a ; a = a->parent)
-	    state->fixtures[i++] = a->funcs[type];
+	    fixtures[i++] = a->funcs[type];
     }
 
-    for (i = 0 ; i < state->maxdepth ; i++)
-	if (state->fixtures[i])
-	    run_function(state->fixtures[i]);
+    for (i = 0 ; i < maxdepth ; i++)
+	if (fixtures[i])
+	    run_function(fixtures[i]);
 }
 
 static u4c_result_t
@@ -406,8 +407,8 @@ valgrind_errors(void)
     return res;
 }
 
-static u4c_result_t
-run_test_code(u4c_testnode_t *tn)
+u4c_result_t
+u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
 {
     u4c_result_t res = R_UNKNOWN;
     const u4c_event_t *ev;
@@ -452,9 +453,8 @@ run_test_code(u4c_testnode_t *tn)
 
 
 void
-__u4c_begin_test(u4c_testnode_t *tn)
+u4c_globalstate_t::begin_test(u4c_testnode_t *tn)
 {
-    u4c_globalstate_t *state = u4c_globalstate_t::state;
     u4c_child_t *child;
     u4c_result_t res;
 
@@ -467,23 +467,23 @@ __u4c_begin_test(u4c_testnode_t *tn)
     fprintf(stderr, "%s: begin test %s\n",
 	    u4c_reltimestamp(), tn->get_fullname().c_str());
 
-    dispatch_listeners(state, begin_node, tn);
+    dispatch_listeners(begin_node, tn);
 
     child = fork_child(tn);
     if (child)
 	return; /* parent process */
 
     /* child process */
-    state->set_listener(new u4c_proxy_listener_t(state->event_pipe));
+    set_listener(new u4c_proxy_listener_t(event_pipe_));
     res = run_test_code(tn);
-    dispatch_listeners(state, finished, res);
+    dispatch_listeners(finished, res);
     fprintf(stderr, "u4c: child process %d (%s) finishing\n",
 	    (int)getpid(), tn->get_fullname().c_str());
     exit(0);
 }
 
 void
-__u4c_wait(void)
+u4c_globalstate_t::wait()
 {
     handle_events();
     reap_children();

@@ -673,13 +673,13 @@ u4c_globalstate_t::run_tests()
     {
 	while (children_.size() < maxchildren &&
 	       (tn = u4c_plan_next(rootplan)))
-	    __u4c_begin_test(tn);
+	    begin_test(tn);
 	if (!children_.size())
 	    break;
-	__u4c_wait();
+	wait();
     }
     end();
-    return !!nfailed;
+    return !!nfailed_;
 }
 
 extern "C" int

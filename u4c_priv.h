@@ -195,10 +195,18 @@ public:
     void end();
     void add_listener(u4c_listener_t *);
     void set_listener(u4c_listener_t *);
+    const u4c_event_t *normalise_event(const u4c_event_t *ev);
+    u4c_result_t raise_event(const u4c_event_t *ev, enum u4c_functype ft);
+    u4c_child_t *fork_child(u4c_testnode_t *tn);
+    void handle_events();
+    void reap_children();
+    void run_function(u4c_function_t *f);
+    void run_fixtures(u4c_testnode_t *tn, enum u4c_functype type);
+    u4c_result_t run_test_code(u4c_testnode_t *tn);
+    void begin_test(u4c_testnode_t *);
+    void wait();
     /* discover.c */
     void discover_functions();
-
-    static u4c_globalstate_t *state;
 
     std::vector<u4c_classifier_t*> classifiers_;
     spiegel::dwarf::state_t *spiegel;
@@ -212,29 +220,18 @@ public:
     /* runtime state */
     std::vector<u4c_listener_t*> listeners_;
     u4c_function_t **fixtures;
-    unsigned int nrun;
-    unsigned int nfailed;
-    int event_pipe;		/* only in child processes */
+    unsigned int nrun_;
+    unsigned int nfailed_;
+    int event_pipe_;		/* only in child processes */
     std::vector<u4c_child_t*> children_;	// only in the parent process
     unsigned int maxchildren;
     std::vector<struct pollfd> pfd_;
 };
 
-#define dispatch_listeners(st, func, ...) \
-    do { \
-	vector<u4c_listener_t*>::iterator _i; \
-	for (_i = (st)->listeners_.begin() ; \
-	     _i != (st)->listeners_.end() ; \
-	     ++_i) \
-	    (*_i)->func(__VA_ARGS__); \
-    } while(0)
-
 /* u4c.c */
 extern const char *__u4c_functype_as_string(enum u4c_functype);
 
 /* run.c */
-extern void __u4c_begin_test(u4c_testnode_t *);
-extern void __u4c_wait(void);
 extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 #define __u4c_merge(r1, r2) \
     do { \
