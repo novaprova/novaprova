@@ -186,9 +186,7 @@ fork_child(u4c_testnode_t *tn)
     child->result = R_UNKNOWN;
     close(pipefd[PIPE_WRITE]);
     child->event_pipe = pipefd[PIPE_READ];
-    child->next = u4c_globalstate_t::state->children;
-    u4c_globalstate_t::state->children = child;
-    u4c_globalstate_t::state->nchildren++;
+    u4c_globalstate_t::state->children_.push_back(child);
 
     return child;
 #undef PIPE_READ
@@ -199,26 +197,28 @@ static void
 handle_events(void)
 {
     u4c_globalstate_t *state = u4c_globalstate_t::state;
-    u4c_child_t *child;
     int r;
     int i;
 
-    if (!state->nchildren)
+    if (!state->children_.size())
 	return;
 
     while (!caught_sigchld)
     {
-	if (state->npfd != state->nchildren)
+	if (state->npfd != state->children_.size())
 	{
-	    state->npfd = state->nchildren;
+	    state->npfd = state->children_.size();
 	    state->pfd = (struct pollfd *)xrealloc(state->pfd, state->npfd * sizeof(struct pollfd));
 	}
 	memset(state->pfd, 0, state->npfd * sizeof(struct pollfd));
-	for (i = 0, child = state->children ; child ; i++, child = child->next)
+	vector<u4c_child_t*>::iterator itr;
+	for (i = 0, itr = state->children_.begin() ;
+	     itr != state->children_.end() ;
+	     ++i, ++itr)
 	{
-	    if (child->finished)
+	    if ((*itr)->finished)
 		continue;
-	    state->pfd[i].fd = child->event_pipe;
+	    state->pfd[i].fd = (*itr)->event_pipe;
 	    state->pfd[i].events = POLLIN;
 	}
 
@@ -232,14 +232,16 @@ handle_events(void)
 	}
 	/* TODO: implement test timeout handling here */
 
-	for (i = 0, child = state->children ; child ; i++, child = child->next)
+	for (i = 0, itr = state->children_.begin() ;
+	     itr != state->children_.end() ;
+	     ++i, ++itr)
 	{
-	    if (child->finished)
+	    if ((*itr)->finished)
 		continue;
 	    if (!(state->pfd[i].revents & POLLIN))
 		continue;
-	    if (!__u4c_handle_proxy_call(child->event_pipe, &child->result))
-		child->finished = true;
+	    if (!__u4c_handle_proxy_call((*itr)->event_pipe, &(*itr)->result))
+		(*itr)->finished = true;
 	}
     }
 }
@@ -249,7 +251,6 @@ reap_children(void)
 {
     u4c_globalstate_t *state = u4c_globalstate_t::state;
     pid_t pid;
-    u4c_child_t **prevp, *child;
     int status;
     char msg[1024];
 
@@ -271,17 +272,19 @@ reap_children(void)
 		    (int)pid, WSTOPSIG(status));
 	    continue;
 	}
-	for (child = state->children, prevp = &state->children ;
-	     child && child->pid != pid ;
-	     prevp = &child->next, child = child->next)
+	vector<u4c_child_t*>::iterator itr;
+	for (itr = state->children_.begin() ;
+	     itr != state->children_.end() && (*itr)->pid != pid ;
+	     ++itr)
 	    ;
-	if (!child)
+	if (itr == state->children_.end())
 	{
 	    /* some other process */
 	    fprintf(stderr, "u4c: reaped stray process %d\n", (int)pid);
 	    /* TODO: this is probably eventworthy */
 	    continue;	    /* whatever */
 	}
+	u4c_child_t *child = *itr;
 
 	if (WIFEXITED(status))
 	{
@@ -310,8 +313,7 @@ reap_children(void)
 	dispatch_listeners(state, end_node, child->node);
 
 	/* detach and clean up */
-	*prevp = child->next;
-	state->nchildren--;
+	state->children_.erase(itr);
 	close(child->event_pipe);
 	free(child);
     }

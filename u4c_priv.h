@@ -215,10 +215,9 @@ public:
     unsigned int nrun;
     unsigned int nfailed;
     int event_pipe;		/* only in child processes */
-    u4c_child_t *children;	/* only in the parent process */
-    int nchildren;
-    int maxchildren;
-    int npfd;
+    std::vector<u4c_child_t*> children_;	// only in the parent process
+    unsigned int maxchildren;
+    unsigned int npfd;
     struct pollfd *pfd;
 };
 

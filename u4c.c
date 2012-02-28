@@ -671,10 +671,10 @@ u4c_globalstate_t::run_tests()
     begin();
     for (;;)
     {
-	while (nchildren < maxchildren &&
+	while (children_.size() < maxchildren &&
 	       (tn = u4c_plan_next(rootplan)))
 	    __u4c_begin_test(tn);
-	if (!nchildren)
+	if (!children_.size())
 	    break;
 	__u4c_wait();
     }
