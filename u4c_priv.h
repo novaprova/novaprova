@@ -177,6 +177,9 @@ public:
     void add_event(const u4c_event_t *ev, enum u4c_functype ft);
     void finished(u4c_result_t res);
 
+    /* proxyl.c */
+    static bool handle_call(int fd, u4c_result_t *resp);
+
 private:
     int fd_;
 };
@@ -250,9 +253,6 @@ extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 	u4c_result_t _r1 = (r1), _r2 = (u4c_result_t)(r2); \
 	(r1) = (_r1 > _r2 ? _r1 : _r2); \
     } while(0)
-
-/* proxyl.c */
-extern bool __u4c_handle_proxy_call(int fd, u4c_result_t *resp);
 
 
 #endif /* __U4C_PRIV_H__ */

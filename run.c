@@ -165,7 +165,7 @@ u4c_child_t::poll_handle(struct pollfd &pfd)
 	return;
     if (!(pfd.revents & POLLIN))
 	return;
-    if (!__u4c_handle_proxy_call(event_pipe_, &result_))
+    if (!u4c_proxy_listener_t::handle_call(event_pipe_, &result_))
 	finished_ = true;
 }
 

@@ -166,7 +166,7 @@ u4c_proxy_listener_t::finished(u4c_result_t res)
  * Updates *@resp if necessary.
  */
 bool
-__u4c_handle_proxy_call(int fd, u4c_result_t *resp)
+u4c_proxy_listener_t::handle_call(int fd, u4c_result_t *resp)
 {
     unsigned int which;
     u4c_event_t ev;
