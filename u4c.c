@@ -56,12 +56,6 @@ u4c_globalstate_t::~u4c_globalstate_t()
 	classifiers_.pop_back();
     }
 
-    if (plan_)
-    {
-	delete plan_;
-	plan_ = 0;
-    }
-
     delete root_;
     root_ = base_ = 0;
 
@@ -380,6 +374,7 @@ u4c_plan_new(u4c_globalstate_t *state)
     return new u4c_plan_t(state);
 
 }
+
 extern "C" void
 u4c_plan_delete(u4c_plan_t *plan)
 {
@@ -411,15 +406,9 @@ u4c_plan_t::add_specs(int nspec, const char **specs)
 }
 
 extern "C" bool
-u4c_plan_add(u4c_plan_t *plan, int nspec, const char **spec)
+u4c_plan_add_specs(u4c_plan_t *plan, int nspec, const char **spec)
 {
     return plan->add_specs(nspec, spec);
-}
-
-extern "C" void
-u4c_plan_enable(u4c_plan_t *plan)
-{
-    plan->state_->plan_ = plan;
 }
 
 u4c_testnode_t *
@@ -531,37 +520,45 @@ u4c_set_concurrency(u4c_globalstate_t *state, int n)
 }
 
 void
-u4c_globalstate_t::list_tests()
+u4c_globalstate_t::list_tests(u4c_plan_t *plan)
 {
     u4c_testnode_t *tn;
 
-    /* build a default plan with all the tests */
-    u4c_plan_t *plan = new u4c_plan_t(this);
-    plan->add_node(base_);
+    bool ourplan = false;
+    if (!plan)
+    {
+	/* build a default plan with all the tests */
+	u4c_plan_t *plan = new u4c_plan_t(this);
+	plan->add_node(base_);
+	ourplan = true;
+    }
 
     /* iterate over all tests */
     while ((tn = plan->next()))
 	printf("%s\n", tn->get_fullname().c_str());
 
-    delete plan;
+    if (ourplan)
+	delete plan;
 }
 
 extern "C" void
-u4c_list_tests(u4c_globalstate_t *state)
+u4c_list_tests(u4c_globalstate_t *state, u4c_plan_t *plan)
 {
-    state->list_tests();
+    state->list_tests(plan);
 }
 
 int
-u4c_globalstate_t::run_tests()
+u4c_globalstate_t::run_tests(u4c_plan_t *plan)
 {
     u4c_testnode_t *tn;
 
-    if (!plan_)
+    bool ourplan = false;
+    if (!plan)
     {
 	/* build a default plan with all the tests */
-	plan_ =  new u4c_plan_t(this);
-	plan_->add_node(base_);
+	plan =  new u4c_plan_t(this);
+	plan->add_node(base_);
+	ourplan = true;
     }
 
     if (!listeners_.size())
@@ -571,20 +568,24 @@ u4c_globalstate_t::run_tests()
     for (;;)
     {
 	while (children_.size() < maxchildren &&
-	       (tn = plan_->next()))
+	       (tn = plan->next()))
 	    begin_test(tn);
 	if (!children_.size())
 	    break;
 	wait();
     }
     end();
+
+    if (ourplan)
+	delete plan;
+
     return !!nfailed_;
 }
 
 extern "C" int
-u4c_run_tests(u4c_globalstate_t *state)
+u4c_run_tests(u4c_globalstate_t *state, u4c_plan_t *plan)
 {
-    return state->run_tests();
+    return state->run_tests(plan);
 }
 
 extern "C" void

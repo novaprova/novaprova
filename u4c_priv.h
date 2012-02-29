@@ -141,8 +141,6 @@ private:
     int numnodes_;
     u4c_testnode_t **nodes_;
     u4c_plan_iterator_t current_;
-
-    friend void u4c_plan_enable(u4c_plan_t *plan);
 };
 
 class u4c_listener_t
@@ -209,9 +207,9 @@ public:
 
     void initialise();
     void set_concurrency(int n);
-    void list_tests();
+    void list_tests(u4c_plan_t *);
     void add_listener(u4c_listener_t *);
-    int run_tests();
+    int run_tests(u4c_plan_t *);
     static u4c_globalstate_t *running() { return running_; }
     u4c_result_t raise_event(const u4c_event_t *, enum u4c_functype);
 
@@ -244,7 +242,6 @@ private:
     spiegel::dwarf::state_t *spiegel;
     u4c_testnode_t *root_;
     u4c_testnode_t *base_;
-    u4c_plan_t *plan_;
     /* runtime state */
     std::vector<u4c_listener_t*> listeners_;
     unsigned int nrun_;
@@ -255,7 +252,6 @@ private:
     std::vector<struct pollfd> pfd_;
 
     friend class u4c_plan_t;
-    friend void u4c_plan_enable(u4c_plan_t *plan);
 };
 
 /* u4c.c */
