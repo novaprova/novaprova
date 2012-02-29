@@ -138,8 +138,7 @@ public:
 
 private:
     u4c_globalstate_t *state_;
-    int numnodes_;
-    u4c_testnode_t **nodes_;
+    std::vector<u4c_testnode_t*> nodes_;
     u4c_plan_iterator_t current_;
 };
 

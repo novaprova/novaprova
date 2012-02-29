@@ -365,14 +365,12 @@ u4c_plan_t::u4c_plan_t(u4c_globalstate_t *state)
 
 u4c_plan_t::~u4c_plan_t()
 {
-    xfree(nodes_);
 }
 
 extern "C" u4c_plan_t *
 u4c_plan_new(u4c_globalstate_t *state)
 {
     return new u4c_plan_t(state);
-
 }
 
 extern "C" void
@@ -384,9 +382,7 @@ u4c_plan_delete(u4c_plan_t *plan)
 void
 u4c_plan_t::add_node(u4c_testnode_t *tn)
 {
-    nodes_ = (u4c_testnode_t **)xrealloc(nodes_,
-		   sizeof(u4c_testnode_t *) * (numnodes_+1));
-    nodes_[numnodes_++] = tn;
+    nodes_.push_back(tn);
 }
 
 bool
@@ -424,7 +420,7 @@ u4c_plan_t::next()
 	tn = tn->next_preorder();
 	if (tn)
 	    return itr->node = tn;
-	if (itr->idx >= numnodes_-1)
+	if (itr->idx >= (int)nodes_.size()-1)
 	    return itr->node = 0;
 	tn = nodes_[++itr->idx];
     }
