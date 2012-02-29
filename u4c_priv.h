@@ -122,13 +122,27 @@ struct u4c_plan_iterator_t
     u4c_testnode_t *node;
 };
 
-struct u4c_plan_t
+class u4c_plan_t
 {
-    u4c_plan_t *next;
-    u4c_globalstate_t *state;
-    int numnodes;
-    u4c_testnode_t **nodes;
-    u4c_plan_iterator_t current;
+public:
+    static void *operator new(size_t sz) { return xmalloc(sz); }
+    static void operator delete(void *x) { free(x); }
+
+    u4c_plan_t(u4c_globalstate_t *state);
+    ~u4c_plan_t();
+
+    void add_node(u4c_testnode_t *tn);
+    bool add_specs(int nspec, const char **specs);
+
+    u4c_testnode_t *next();
+
+private:
+    u4c_globalstate_t *state_;
+    int numnodes_;
+    u4c_testnode_t **nodes_;
+    u4c_plan_iterator_t current_;
+
+    friend void u4c_plan_enable(u4c_plan_t *plan);
 };
 
 class u4c_listener_t
@@ -193,21 +207,25 @@ public:
     u4c_globalstate_t();
     ~u4c_globalstate_t();
 
-    /* u4c.c */
-    u4c_functype classify_function(const char *func, char *match_return, size_t maxmatch);
-    void add_classifier(const char *re, bool case_sensitive, enum u4c_functype type);
-    void setup_classifiers();
-    void dump_nodes(u4c_testnode_t *tn, int level);
+    void initialise();
     void set_concurrency(int n);
     void list_tests();
+    void add_listener(u4c_listener_t *);
     int run_tests();
-    /* run.c */
     static u4c_globalstate_t *running() { return running_; }
+    u4c_result_t raise_event(const u4c_event_t *, enum u4c_functype);
+
+private:
+    /* u4c.c */
+    void discover_functions();
+    void setup_classifiers();
+    u4c_functype classify_function(const char *func, char *match_return, size_t maxmatch);
+    void add_classifier(const char *re, bool case_sensitive, enum u4c_functype type);
+    void dump_nodes(u4c_testnode_t *tn, int level);
+    /* run.c */
     void begin();
     void end();
-    void add_listener(u4c_listener_t *);
     void set_listener(u4c_listener_t *);
-    u4c_result_t raise_event(const u4c_event_t *, enum u4c_functype);
     const u4c_event_t *normalise_event(const u4c_event_t *ev);
     u4c_child_t *fork_child(u4c_testnode_t *tn);
     void handle_events();
@@ -219,7 +237,6 @@ public:
     void begin_test(u4c_testnode_t *);
     void wait();
     /* discover.c */
-    void discover_functions();
 
     static u4c_globalstate_t *running_;
 
@@ -227,17 +244,18 @@ public:
     spiegel::dwarf::state_t *spiegel;
     u4c_testnode_t *root_;
     u4c_testnode_t *base_;
-    u4c_plan_t *rootplan;
-    u4c_plan_t *plans;
+    u4c_plan_t *plan_;
     /* runtime state */
     std::vector<u4c_listener_t*> listeners_;
-    u4c_function_t **fixtures;
     unsigned int nrun_;
     unsigned int nfailed_;
     int event_pipe_;		/* only in child processes */
     std::vector<u4c_child_t*> children_;	// only in the parent process
     unsigned int maxchildren;
     std::vector<struct pollfd> pfd_;
+
+    friend class u4c_plan_t;
+    friend void u4c_plan_enable(u4c_plan_t *plan);
 };
 
 /* u4c.c */

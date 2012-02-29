@@ -56,16 +56,17 @@ u4c_globalstate_t::~u4c_globalstate_t()
 	classifiers_.pop_back();
     }
 
-    while (plans)
-	u4c_plan_delete(plans);
+    if (plan_)
+    {
+	delete plan_;
+	plan_ = 0;
+    }
 
     delete root_;
     root_ = base_ = 0;
 
     if (spiegel)
 	delete spiegel;
-
-    xfree(fixtures);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -360,86 +361,73 @@ u4c_testnode_t::find(const char *nm)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_plan_t *
+u4c_plan_t::u4c_plan_t(u4c_globalstate_t *state)
+ :  state_(state)
+{
+    /* initialise iterator */
+    current_.idx = -1;
+    current_.node = 0;
+}
+
+u4c_plan_t::~u4c_plan_t()
+{
+    xfree(nodes_);
+}
+
+extern "C" u4c_plan_t *
 u4c_plan_new(u4c_globalstate_t *state)
 {
-    u4c_plan_t *plan;
+    return new u4c_plan_t(state);
 
-    plan = (u4c_plan_t  *)xmalloc(sizeof(*plan));
-    plan->state = state;
-
-    /* Prepend to the list of all plans; order doesn't
-     * matter because all we use the list for is avoiding
-     * memory leaks. */
-    plan->next = state->plans;
-    state->plans = plan;
-
-    /* initialise iterator */
-    plan->current.idx = -1;
-    plan->current.node = 0;
-
-    return plan;
+}
+extern "C" void
+u4c_plan_delete(u4c_plan_t *plan)
+{
+    delete plan;
 }
 
 void
-u4c_plan_delete(u4c_plan_t *plan)
+u4c_plan_t::add_node(u4c_testnode_t *tn)
 {
-    u4c_plan_t **prevp;
-
-    if (plan->state->rootplan == plan)
-	plan->state->rootplan = 0;
-
-    /* Remove from the list of all plans */
-    for (prevp = &plan->state->plans ;
-	 *prevp && *prevp != plan ;
-	 prevp = &(*prevp)->next)
-	;
-    // assert(*prevp);
-    if (*prevp)
-	*prevp = plan->next;
-
-    xfree(plan->nodes);
-    xfree(plan);
-}
-
-static void
-u4c_plan_add_node(u4c_plan_t *plan, u4c_testnode_t *tn)
-{
-    plan->nodes = (u4c_testnode_t **)xrealloc(plan->nodes,
-			   sizeof(u4c_testnode_t *) * (plan->numnodes+1));
-    plan->nodes[plan->numnodes++] = tn;
+    nodes_ = (u4c_testnode_t **)xrealloc(nodes_,
+		   sizeof(u4c_testnode_t *) * (numnodes_+1));
+    nodes_[numnodes_++] = tn;
 }
 
 bool
-u4c_plan_add(u4c_plan_t *plan, int nspec, const char **specs)
+u4c_plan_t::add_specs(int nspec, const char **specs)
 {
     u4c_testnode_t *tn;
     int i;
 
     for (i = 0 ; i < nspec ; i++)
     {
-	tn = plan->state->base_->find(specs[i]);
+	tn = state_->base_->find(specs[i]);
 	if (!tn)
 	    return false;
-	u4c_plan_add_node(plan, tn);
+	add_node(tn);
     }
     return true;
 }
 
-void
-u4c_plan_enable(u4c_plan_t *plan)
+extern "C" bool
+u4c_plan_add(u4c_plan_t *plan, int nspec, const char **spec)
 {
-    plan->state->rootplan = plan;
+    return plan->add_specs(nspec, spec);
 }
 
-static u4c_testnode_t *
-u4c_plan_next(u4c_plan_t *plan)
+extern "C" void
+u4c_plan_enable(u4c_plan_t *plan)
 {
-    u4c_testnode_t *tn;
+    plan->state_->plan_ = plan;
+}
 
-    u4c_plan_iterator_t *itr = &plan->current;
+u4c_testnode_t *
+u4c_plan_t::next()
+{
+    u4c_plan_iterator_t *itr = &current_;
 
-    tn = itr->node;
+    u4c_testnode_t *tn = itr->node;
 
     /* advance tn */
     for (;;)
@@ -447,9 +435,9 @@ u4c_plan_next(u4c_plan_t *plan)
 	tn = tn->next_preorder();
 	if (tn)
 	    return itr->node = tn;
-	if (itr->idx >= plan->numnodes-1)
+	if (itr->idx >= numnodes_-1)
 	    return itr->node = 0;
-	tn = plan->nodes[++itr->idx];
+	tn = nodes_[++itr->idx];
     }
 }
 
@@ -503,20 +491,23 @@ be_valground(void)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+void
+u4c_globalstate_t::initialise()
+{
+    setup_classifiers();
+    discover_functions();
+    /* TODO: check tree for a) leaves without FT_TEST
+     * and b) non-leaves with FT_TEST */
+    base_->dump(0);
+}
+
 extern "C" u4c_globalstate_t *
 u4c_init(void)
 {
-    u4c_globalstate_t *state;
-
     be_valground();
     u4c_reltimestamp();
-    state = new u4c_globalstate_t;
-    state->setup_classifiers();
-    state->discover_functions();
-    /* TODO: check tree for a) leaves without FT_TEST
-     * and b) non-leaves with FT_TEST */
-    state->base_->dump(0);
-
+    u4c_globalstate_t *state = new u4c_globalstate_t;
+    state->initialise();
     return state;
 }
 
@@ -542,18 +533,17 @@ u4c_set_concurrency(u4c_globalstate_t *state, int n)
 void
 u4c_globalstate_t::list_tests()
 {
-    u4c_plan_t *plan;
     u4c_testnode_t *tn;
 
     /* build a default plan with all the tests */
-    plan = u4c_plan_new(this);
-    u4c_plan_add_node(plan, base_);
+    u4c_plan_t *plan = new u4c_plan_t(this);
+    plan->add_node(base_);
 
     /* iterate over all tests */
-    while ((tn = u4c_plan_next(plan)))
+    while ((tn = plan->next()))
 	printf("%s\n", tn->get_fullname().c_str());
 
-    u4c_plan_delete(plan);
+    delete plan;
 }
 
 extern "C" void
@@ -567,12 +557,11 @@ u4c_globalstate_t::run_tests()
 {
     u4c_testnode_t *tn;
 
-    if (!rootplan)
+    if (!plan_)
     {
 	/* build a default plan with all the tests */
-	u4c_plan_t *plan = u4c_plan_new(this);
-	u4c_plan_add_node(plan, base_);
-	u4c_plan_enable(plan);
+	plan_ =  new u4c_plan_t(this);
+	plan_->add_node(base_);
     }
 
     if (!listeners_.size())
@@ -582,7 +571,7 @@ u4c_globalstate_t::run_tests()
     for (;;)
     {
 	while (children_.size() < maxchildren &&
-	       (tn = u4c_plan_next(rootplan)))
+	       (tn = plan_->next()))
 	    begin_test(tn);
 	if (!children_.size())
 	    break;
