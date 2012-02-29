@@ -202,22 +202,26 @@ public:
     void list_tests();
     int run_tests();
     /* run.c */
+    static u4c_globalstate_t *running() { return running_; }
     void begin();
     void end();
     void add_listener(u4c_listener_t *);
     void set_listener(u4c_listener_t *);
+    u4c_result_t raise_event(const u4c_event_t *, enum u4c_functype);
     const u4c_event_t *normalise_event(const u4c_event_t *ev);
-    u4c_result_t raise_event(const u4c_event_t *ev, enum u4c_functype ft);
     u4c_child_t *fork_child(u4c_testnode_t *tn);
     void handle_events();
     void reap_children();
     void run_function(enum u4c_functype ft, spiegel::function_t *f);
     void run_fixtures(u4c_testnode_t *tn, enum u4c_functype type);
+    u4c_result_t valgrind_errors();
     u4c_result_t run_test_code(u4c_testnode_t *tn);
     void begin_test(u4c_testnode_t *);
     void wait();
     /* discover.c */
     void discover_functions();
+
+    static u4c_globalstate_t *running_;
 
     std::vector<u4c_classifier_t*> classifiers_;
     spiegel::dwarf::state_t *spiegel;
@@ -240,7 +244,6 @@ public:
 extern const char *__u4c_functype_as_string(enum u4c_functype);
 
 /* run.c */
-extern u4c_result_t __u4c_raise_event(const u4c_event_t *, enum u4c_functype);
 #define __u4c_merge(r1, r2) \
     do { \
 	u4c_result_t _r1 = (r1), _r2 = (u4c_result_t)(r2); \

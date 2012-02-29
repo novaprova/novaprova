@@ -8,6 +8,7 @@
 using namespace std;
 
 __u4c_exceptstate_t __u4c_exceptstate;
+u4c_globalstate_t *u4c_globalstate_t::running_;
 static volatile int caught_sigchld = 0;
 
 #define dispatch_listeners(func, ...) \
@@ -52,6 +53,7 @@ u4c_globalstate_t::begin()
 	init = true;
     }
 
+    running_ = this;
     dispatch_listeners(begin);
 }
 
@@ -59,6 +61,7 @@ void
 u4c_globalstate_t::end()
 {
     dispatch_listeners(end);
+    running_ = 0;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -314,7 +317,7 @@ u4c_globalstate_t::reap_children()
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
-		child->merge_result(__u4c_raise_event(&ev, FT_UNKNOWN));
+		child->merge_result(raise_event(&ev, FT_UNKNOWN));
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -323,7 +326,7 @@ u4c_globalstate_t::reap_children()
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
-	    child->merge_result(__u4c_raise_event(&ev, FT_UNKNOWN));
+	    child->merge_result(raise_event(&ev, FT_UNKNOWN));
 	}
 
 	/* notify listeners */
@@ -376,8 +379,8 @@ u4c_globalstate_t::run_fixtures(u4c_testnode_t *tn, enum u4c_functype type)
 	run_function(type, *itr);
 }
 
-static u4c_result_t
-valgrind_errors(void)
+u4c_result_t
+u4c_globalstate_t::valgrind_errors()
 {
     unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
     unsigned long nerrors;
@@ -391,7 +394,7 @@ valgrind_errors(void)
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
-	__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
+	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
@@ -400,7 +403,7 @@ valgrind_errors(void)
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
-	__u4c_merge(res, __u4c_raise_event(&ev, FT_UNKNOWN));
+	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
     }
 
     return res;
@@ -418,7 +421,7 @@ u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
     }
     u4c_catch(ev)
     {
-	__u4c_merge(res, __u4c_raise_event(ev, FT_BEFORE));
+	__u4c_merge(res, raise_event(ev, FT_BEFORE));
     }
 
     if (res == R_UNKNOWN)
@@ -429,7 +432,7 @@ u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, __u4c_raise_event(ev, FT_TEST));
+	    __u4c_merge(res, raise_event(ev, FT_TEST));
 	}
 
 	u4c_try
@@ -438,7 +441,7 @@ u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, __u4c_raise_event(ev, FT_AFTER));
+	    __u4c_merge(res, raise_event(ev, FT_AFTER));
 	}
 
 	/* If we got this far and nothing bad
