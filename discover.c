@@ -33,8 +33,9 @@ u4c_globalstate_t::discover_functions()
     {
 	spiegel = new spiegel::dwarf::state_t();
 	spiegel->add_self();
-	root_ = base_ = new u4c_testnode_t(0);
+	root_ = new u4c_testnode_t(0);
     }
+    // else: splice common_ and root_ back together
 
     vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
     vector<spiegel::compile_unit_t *>::iterator i;
@@ -78,8 +79,9 @@ fprintf(stderr, "__u4c_discover_functions: scanning %s\n", (*i)->get_absolute_pa
 	}
     }
 
-    // Calculate a new base
-    base_ = root_->skip_common();
+    // Calculate the effective root_ and common_
+    common_ = root_;
+    root_ = root_->detach_common();
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

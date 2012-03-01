@@ -57,7 +57,9 @@ u4c_globalstate_t::~u4c_globalstate_t()
     }
 
     delete root_;
-    root_ = base_ = 0;
+    root_ = 0;
+    delete common_;
+    common_ = 0;
 
     if (spiegel)
 	delete spiegel;
@@ -252,7 +254,11 @@ void
 u4c_testnode_t::dump(int level) const
 {
     indent(level);
-    fprintf(stderr, "%s\n", (name_ ? name_ : ""));
+    if (name_)
+    {
+	fprintf(stderr, "%s (full %s)\n",
+		name_, get_fullname().c_str());
+    }
 
     for (int type = 0 ; type < FT_NUM ; type++)
     {
@@ -306,14 +312,21 @@ u4c_testnode_t::next_preorder()
 }
 
 u4c_testnode_t *
-u4c_testnode_t::skip_common()
+u4c_testnode_t::detach_common()
 {
-    u4c_testnode_t *base;
-    for (base = this ;
-         base->children_ && !base->children_->next_ ;
-	 base = base->children_)
+    u4c_testnode_t *tn;
+
+    for (tn = this ;
+         tn->children_ && !tn->children_->next_ ;
+	 tn = tn->children_)
 	;
-    return base;
+    /* tn now points at the highest node with more than 1 child */
+
+    tn->parent_->children_ = 0;
+    assert(!tn->next_);
+    tn->parent_ = 0;
+
+    return tn;
 }
 
 list<spiegel::function_t*>
@@ -393,7 +406,7 @@ u4c_plan_t::add_specs(int nspec, const char **specs)
 
     for (i = 0 ; i < nspec ; i++)
     {
-	tn = state_->base_->find(specs[i]);
+	tn = state_->root_->find(specs[i]);
 	if (!tn)
 	    return false;
 	add_node(tn);
@@ -483,7 +496,7 @@ u4c_globalstate_t::initialise()
     discover_functions();
     /* TODO: check tree for a) leaves without FT_TEST
      * and b) non-leaves with FT_TEST */
-    base_->dump(0);
+    root_->dump(0);
 }
 
 extern "C" u4c_globalstate_t *
@@ -525,7 +538,7 @@ u4c_globalstate_t::list_tests(u4c_plan_t *plan)
     {
 	/* build a default plan with all the tests */
 	u4c_plan_t *plan = new u4c_plan_t(this);
-	plan->add_node(base_);
+	plan->add_node(root_);
 	ourplan = true;
     }
 
@@ -553,7 +566,7 @@ u4c_globalstate_t::run_tests(u4c_plan_t *plan)
     {
 	/* build a default plan with all the tests */
 	plan =  new u4c_plan_t(this);
-	plan->add_node(base_);
+	plan->add_node(root_);
 	ourplan = true;
     }
 

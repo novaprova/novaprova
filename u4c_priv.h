@@ -98,7 +98,7 @@ public:
     u4c_testnode_t *make_path(std::string name);
     void set_function(enum u4c_functype, spiegel::function_t *);
 
-    u4c_testnode_t *skip_common();
+    u4c_testnode_t *detach_common();
     u4c_testnode_t *next_preorder();
     spiegel::function_t *get_function(u4c_functype type) const
     {
@@ -240,7 +240,7 @@ private:
     std::vector<u4c_classifier_t*> classifiers_;
     spiegel::dwarf::state_t *spiegel;
     u4c_testnode_t *root_;
-    u4c_testnode_t *base_;
+    u4c_testnode_t *common_;	// nodes from filesystem root down to root_
     /* runtime state */
     std::vector<u4c_listener_t*> listeners_;
     unsigned int nrun_;
