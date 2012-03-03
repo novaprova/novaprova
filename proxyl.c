@@ -143,7 +143,7 @@ u4c_proxy_listener_t::end_node(const u4c_testnode_t *)
 }
 
 void
-u4c_proxy_listener_t::add_event(const u4c_event_t *ev, enum u4c_functype ft)
+u4c_proxy_listener_t::add_event(const u4c_event_t *ev, u4c::functype_t ft)
 {
     serialise_uint(fd_, PROXY_EVENT);
     serialise_event(fd_, ev);
@@ -151,7 +151,7 @@ u4c_proxy_listener_t::add_event(const u4c_event_t *ev, enum u4c_functype ft)
 }
 
 void
-u4c_proxy_listener_t::finished(u4c_result_t res)
+u4c_proxy_listener_t::finished(u4c::result_t res)
 {
     serialise_uint(fd_, PROXY_FINISHED);
     serialise_uint(fd_, res);
@@ -166,7 +166,7 @@ u4c_proxy_listener_t::finished(u4c_result_t res)
  * Updates *@resp if necessary.
  */
 bool
-u4c_proxy_listener_t::handle_call(int fd, u4c_result_t *resp)
+u4c_proxy_listener_t::handle_call(int fd, u4c::result_t *resp)
 {
     unsigned int which;
     u4c_event_t ev;
@@ -183,7 +183,8 @@ u4c_proxy_listener_t::handle_call(int fd, u4c_result_t *resp)
 	if ((r = deserialise_event(fd, &ev)) ||
 	    (r = deserialise_uint(fd, &ft)))
 	    return false;    /* failed to decode */
-	__u4c_merge(*resp, u4c_globalstate_t::running()->raise_event(&ev, (u4c_functype)ft));
+	__u4c_merge(*resp,
+	u4c_globalstate_t::running()->raise_event(&ev, (u4c::functype_t)ft));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))

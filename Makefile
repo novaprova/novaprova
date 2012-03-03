@@ -26,6 +26,7 @@ libu4c_PRIVHEADERS= \
 		common.h u4c_priv.h \
 
 libu4c_HEADERS=	u4c.h \
+		u4c/types.hxx \
 		u4c/classifier.hxx \
 
 libu4c_OBJS=	\

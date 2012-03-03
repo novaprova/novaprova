@@ -25,7 +25,7 @@ void
 u4c_text_listener_t::begin_node(const u4c_testnode_t *tn)
 {
     fprintf(stderr, "u4c: running: \"%s\"\n", tn->get_fullname().c_str());
-    result_ = R_UNKNOWN;
+    result_ = u4c::R_UNKNOWN;
 }
 
 void
@@ -36,13 +36,13 @@ u4c_text_listener_t::end_node(const u4c_testnode_t *tn)
     nrun_++;
     switch (result_)
     {
-    case R_PASS:
+    case u4c::R_PASS:
 	fprintf(stderr, "PASS %s\n", fullname.c_str());
 	break;
-    case R_NOTAPPLICABLE:
+    case u4c::R_NOTAPPLICABLE:
 	fprintf(stderr, "N/A %s\n", fullname.c_str());
 	break;
-    case R_FAIL:
+    case u4c::R_FAIL:
 	nfailed_++;
 	fprintf(stderr, "FAIL %s\n", fullname.c_str());
 	break;
@@ -53,7 +53,7 @@ u4c_text_listener_t::end_node(const u4c_testnode_t *tn)
 }
 
 void
-u4c_text_listener_t::add_event(const u4c_event_t *ev, enum u4c_functype ft)
+u4c_text_listener_t::add_event(const u4c_event_t *ev, u4c::functype_t ft)
 {
     const char *type;
     char buf[2048];
@@ -88,7 +88,7 @@ u4c_text_listener_t::add_event(const u4c_event_t *ev, enum u4c_functype ft)
 }
 
 void
-u4c_text_listener_t::finished(u4c_result_t res)
+u4c_text_listener_t::finished(u4c::result_t res)
 {
     result_ = res;
 }

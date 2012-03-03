@@ -29,14 +29,14 @@ u4c_reltimestamp(void)
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 const char *
-__u4c_functype_as_string(enum u4c_functype type)
+__u4c_functype_as_string(u4c::functype_t type)
 {
     switch (type)
     {
-    case FT_UNKNOWN: return "unknown";
-    case FT_BEFORE: return "before";
-    case FT_TEST: return "test";
-    case FT_AFTER: return "after";
+    case u4c::FT_UNKNOWN: return "unknown";
+    case u4c::FT_BEFORE: return "before";
+    case u4c::FT_TEST: return "test";
+    case u4c::FT_AFTER: return "after";
     default: return "INTERNAL ERROR!";
     }
 }
@@ -67,7 +67,7 @@ u4c_globalstate_t::~u4c_globalstate_t()
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-enum u4c_functype
+u4c::functype_t
 u4c_globalstate_t::classify_function(const char *func,
 				     char *match_return,
 				     size_t maxmatch)
@@ -78,18 +78,18 @@ u4c_globalstate_t::classify_function(const char *func,
     vector<u4c::classifier_t*>::iterator i;
     for (i = classifiers_.begin() ; i != classifiers_.end() ; ++i)
     {
-	u4c_functype ft = (u4c_functype) (*i)->classify(func, match_return, maxmatch);
-	if (ft != FT_UNKNOWN)
+	u4c::functype_t ft = (u4c::functype_t) (*i)->classify(func, match_return, maxmatch);
+	if (ft != u4c::FT_UNKNOWN)
 	    return ft;
 	/* else, no match: just keep looking */
     }
-    return FT_UNKNOWN;
+    return u4c::FT_UNKNOWN;
 }
 
 void
 u4c_globalstate_t::add_classifier(const char *re,
 			          bool case_sensitive,
-			          enum u4c_functype type)
+			          u4c::functype_t type)
 {
     u4c::classifier_t *cl = new u4c::classifier_t;
     if (!cl->set_regexp(re, case_sensitive))
@@ -97,21 +97,21 @@ u4c_globalstate_t::add_classifier(const char *re,
 	delete cl;
 	return;
     }
-    cl->set_results(FT_UNKNOWN, type);
+    cl->set_results(u4c::FT_UNKNOWN, type);
     classifiers_.push_back(cl);
 }
 
 void
 u4c_globalstate_t::setup_classifiers()
 {
-    add_classifier("^test_([a-z0-9].*)", false, FT_TEST);
-    add_classifier("^[tT]est([A-Z].*)", false, FT_TEST);
-    add_classifier("^[sS]etup$", false, FT_BEFORE);
-    add_classifier("^set_up$", false, FT_BEFORE);
-    add_classifier("^[iI]nit$", false, FT_BEFORE);
-    add_classifier("^[tT]ear[dD]own$", false, FT_AFTER);
-    add_classifier("^tear_down$", false, FT_AFTER);
-    add_classifier("^[cC]leanup$", false, FT_AFTER);
+    add_classifier("^test_([a-z0-9].*)", false, u4c::FT_TEST);
+    add_classifier("^[tT]est([A-Z].*)", false, u4c::FT_TEST);
+    add_classifier("^[sS]etup$", false, u4c::FT_BEFORE);
+    add_classifier("^set_up$", false, u4c::FT_BEFORE);
+    add_classifier("^[iI]nit$", false, u4c::FT_BEFORE);
+    add_classifier("^[tT]ear[dD]own$", false, u4c::FT_AFTER);
+    add_classifier("^tear_down$", false, u4c::FT_AFTER);
+    add_classifier("^[cC]leanup$", false, u4c::FT_AFTER);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -168,7 +168,7 @@ u4c_testnode_t::make_path(string name)
 }
 
 void
-u4c_testnode_t::set_function(enum u4c_functype ft, spiegel::function_t *func)
+u4c_testnode_t::set_function(u4c::functype_t ft, spiegel::function_t *func)
 {
     if (funcs_[ft])
 	fprintf(stderr, "u4c: WARNING: duplicate %s functions: "
@@ -199,13 +199,13 @@ u4c_testnode_t::dump(int level) const
 		name_, get_fullname().c_str());
     }
 
-    for (int type = 0 ; type < FT_NUM ; type++)
+    for (int type = 0 ; type < u4c::FT_NUM ; type++)
     {
 	if (funcs_[type])
 	{
 	    indent(level);
 	    fprintf(stderr, "  %s=%s:%s\n",
-			    __u4c_functype_as_string((u4c_functype)type),
+			    __u4c_functype_as_string((u4c::functype_t)type),
 			    funcs_[type]->get_compile_unit()->get_absolute_path().c_str(),
 			    funcs_[type]->get_name());
 	}
@@ -244,7 +244,7 @@ u4c_testnode_t::next_preorder()
 	    tn = tn->next_;
 	else if (tn->parent_)
 	    tn = tn->parent_->next_;
-	if (tn && tn->funcs_[FT_TEST])
+	if (tn && tn->funcs_[u4c::FT_TEST])
 	    break;
     }
     return tn;
@@ -269,7 +269,7 @@ u4c_testnode_t::detach_common()
 }
 
 list<spiegel::function_t*>
-u4c_testnode_t::get_fixtures(u4c_functype type) const
+u4c_testnode_t::get_fixtures(u4c::functype_t type) const
 {
     list<spiegel::function_t*> fixtures;
 
@@ -279,7 +279,7 @@ u4c_testnode_t::get_fixtures(u4c_functype type) const
     {
 	if (!a->funcs_[type])
 	    continue;
-	if (type == FT_BEFORE)
+	if (type == u4c::FT_BEFORE)
 	    fixtures.push_front(a->funcs_[type]);
 	else
 	    fixtures.push_back(a->funcs_[type]);

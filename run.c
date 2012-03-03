@@ -110,8 +110,8 @@ u4c_globalstate_t::normalise_event(const u4c_event_t *ev)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_result_t
-u4c_globalstate_t::raise_event(const u4c_event_t *ev, enum u4c_functype ft)
+u4c::result_t
+u4c_globalstate_t::raise_event(const u4c_event_t *ev, u4c::functype_t ft)
 {
     ev = normalise_event(ev);
     dispatch_listeners(add_event, ev, ft);
@@ -124,16 +124,16 @@ u4c_globalstate_t::raise_event(const u4c_event_t *ev, enum u4c_functype ft)
     case EV_FIXTURE:
     case EV_VALGRIND:
     case EV_SLMATCH:
-	return R_FAIL;
+	return u4c::R_FAIL;
     case EV_EXPASS:
-	return R_PASS;
+	return u4c::R_PASS;
     case EV_EXFAIL:
-	return R_FAIL;
+	return u4c::R_FAIL;
     case EV_EXNA:
-	return R_NOTAPPLICABLE;
+	return u4c::R_NOTAPPLICABLE;
     default:
 	/* there was an event, but it makes no difference */
-	return R_UNKNOWN;
+	return u4c::R_UNKNOWN;
     }
 }
 
@@ -141,7 +141,7 @@ u4c_child_t::u4c_child_t(pid_t pid, int fd, u4c_testnode_t *tn)
  :  pid_(pid),
     event_pipe_(fd),
     node_(tn),
-    result_(R_UNKNOWN),
+    result_(u4c::R_UNKNOWN),
     finished_(false)
 {
 }
@@ -172,7 +172,7 @@ u4c_child_t::poll_handle(struct pollfd &pfd)
 	finished_ = true;
 }
 
-void u4c_child_t::merge_result(u4c_result_t r)
+void u4c_child_t::merge_result(u4c::result_t r)
 {
     __u4c_merge(result_, r);
 }
@@ -317,7 +317,7 @@ u4c_globalstate_t::reap_children()
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
-		child->merge_result(raise_event(&ev, FT_UNKNOWN));
+		child->merge_result(raise_event(&ev, u4c::FT_UNKNOWN));
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -326,11 +326,11 @@ u4c_globalstate_t::reap_children()
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
-	    child->merge_result(raise_event(&ev, FT_UNKNOWN));
+	    child->merge_result(raise_event(&ev, u4c::FT_UNKNOWN));
 	}
 
 	/* notify listeners */
-	nfailed_ += (child->get_result() == R_FAIL);
+	nfailed_ += (child->get_result() == u4c::R_FAIL);
 	nrun_++;
 	dispatch_listeners(finished, child->get_result());
 	dispatch_listeners(end_node, child->get_node());
@@ -345,12 +345,12 @@ u4c_globalstate_t::reap_children()
 }
 
 void
-u4c_globalstate_t::run_function(enum u4c_functype ft, spiegel::function_t *f)
+u4c_globalstate_t::run_function(u4c::functype_t ft, spiegel::function_t *f)
 {
     vector<spiegel::value_t> args;
     spiegel::value_t ret = f->invoke(args);
 
-    if (ft == FT_TEST)
+    if (ft == u4c::FT_TEST)
     {
 	assert(ret.which == spiegel::type_t::TC_VOID);
     }
@@ -371,7 +371,7 @@ u4c_globalstate_t::run_function(enum u4c_functype ft, spiegel::function_t *f)
 }
 
 void
-u4c_globalstate_t::run_fixtures(u4c_testnode_t *tn, enum u4c_functype type)
+u4c_globalstate_t::run_fixtures(u4c_testnode_t *tn, u4c::functype_t type)
 {
     list<spiegel::function_t*> fixtures = tn->get_fixtures(type);
     list<spiegel::function_t*>::iterator itr;
@@ -379,12 +379,12 @@ u4c_globalstate_t::run_fixtures(u4c_testnode_t *tn, enum u4c_functype type)
 	run_function(type, *itr);
 }
 
-u4c_result_t
+u4c::result_t
 u4c_globalstate_t::valgrind_errors()
 {
     unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
     unsigned long nerrors;
-    u4c_result_t res = R_UNKNOWN;
+    u4c::result_t res = u4c::R_UNKNOWN;
     char msg[1024];
 
     VALGRIND_DO_LEAK_CHECK;
@@ -394,7 +394,7 @@ u4c_globalstate_t::valgrind_errors()
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
-	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
+	__u4c_merge(res, raise_event(&ev, u4c::FT_UNKNOWN));
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
@@ -403,50 +403,50 @@ u4c_globalstate_t::valgrind_errors()
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
-	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
+	__u4c_merge(res, raise_event(&ev, u4c::FT_UNKNOWN));
     }
 
     return res;
 }
 
-u4c_result_t
+u4c::result_t
 u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
 {
-    u4c_result_t res = R_UNKNOWN;
+    u4c::result_t res = u4c::R_UNKNOWN;
     const u4c_event_t *ev;
 
     u4c_try
     {
-	run_fixtures(tn, FT_BEFORE);
+	run_fixtures(tn, u4c::FT_BEFORE);
     }
     u4c_catch(ev)
     {
-	__u4c_merge(res, raise_event(ev, FT_BEFORE));
+	__u4c_merge(res, raise_event(ev, u4c::FT_BEFORE));
     }
 
-    if (res == R_UNKNOWN)
+    if (res == u4c::R_UNKNOWN)
     {
 	u4c_try
 	{
-	    run_function(FT_TEST, tn->get_function(FT_TEST));
+	    run_function(u4c::FT_TEST, tn->get_function(u4c::FT_TEST));
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, raise_event(ev, FT_TEST));
+	    __u4c_merge(res, raise_event(ev, u4c::FT_TEST));
 	}
 
 	u4c_try
 	{
-	    run_fixtures(tn, FT_AFTER);
+	    run_fixtures(tn, u4c::FT_AFTER);
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, raise_event(ev, FT_AFTER));
+	    __u4c_merge(res, raise_event(ev, u4c::FT_AFTER));
 	}
 
 	/* If we got this far and nothing bad
 	 * happened, we might have passed */
-	__u4c_merge(res, R_PASS);
+	__u4c_merge(res, u4c::R_PASS);
     }
 
     __u4c_merge(res, valgrind_errors());
@@ -458,7 +458,7 @@ void
 u4c_globalstate_t::begin_test(u4c_testnode_t *tn)
 {
     u4c_child_t *child;
-    u4c_result_t res;
+    u4c::result_t res;
 
     {
 	static int n = 0;

@@ -47,7 +47,7 @@ fprintf(stderr, "__u4c_discover_functions: scanning %s\n", (*i)->get_absolute_pa
 	for (j = fns.begin() ; j != fns.end() ; ++j)
 	{
 	    spiegel::function_t *fn = *j;
-	    enum u4c_functype type;
+	    u4c::functype_t type;
 	    char submatch[512];
 
 	    // We want functions which are defined in this compile unit
@@ -70,9 +70,9 @@ fprintf(stderr, "__u4c_discover_functions: scanning %s\n", (*i)->get_absolute_pa
 
 	    type = classify_function(fn->get_name(),
 				     submatch, sizeof(submatch));
-	    if (type == FT_UNKNOWN)
+	    if (type == u4c::FT_UNKNOWN)
 		continue;
-	    if (type == FT_TEST && !submatch[0])
+	    if (type == u4c::FT_TEST && !submatch[0])
 		continue;
 
 	    root_->make_path(test_name(fn, submatch))->set_function(type, fn);
