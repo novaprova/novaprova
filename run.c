@@ -1,6 +1,5 @@
 #include "common.h"
 #include <sys/wait.h>
-#include <sys/poll.h>
 #include "u4c_priv.h"
 #include "except.h"
 #include <valgrind/memcheck.h>
@@ -137,54 +136,14 @@ u4c_globalstate_t::raise_event(const u4c_event_t *ev, u4c::functype_t ft)
     }
 }
 
-u4c_child_t::u4c_child_t(pid_t pid, int fd, u4c_testnode_t *tn)
- :  pid_(pid),
-    event_pipe_(fd),
-    node_(tn),
-    result_(u4c::R_UNKNOWN),
-    finished_(false)
-{
-}
-
-u4c_child_t::~u4c_child_t()
-{
-    close(event_pipe_);
-}
-
-void
-u4c_child_t::poll_setup(struct pollfd &pfd)
-{
-    memset(&pfd, 0, sizeof(struct pollfd));
-    if (finished_)
-	return;
-    pfd.fd = event_pipe_;
-    pfd.events = POLLIN;
-}
-
-void
-u4c_child_t::poll_handle(struct pollfd &pfd)
-{
-    if (finished_)
-	return;
-    if (!(pfd.revents & POLLIN))
-	return;
-    if (!u4c_proxy_listener_t::handle_call(event_pipe_, &result_))
-	finished_ = true;
-}
-
-void u4c_child_t::merge_result(u4c::result_t r)
-{
-    __u4c_merge(result_, r);
-}
-
-u4c_child_t *
+u4c::child_t *
 u4c_globalstate_t::fork_child(u4c_testnode_t *tn)
 {
     pid_t pid;
 #define PIPE_READ 0
 #define PIPE_WRITE 1
     int pipefd[2];
-    u4c_child_t *child;
+    u4c::child_t *child;
     int delay_ms = 10;
     int max_sleeps = 20;
     int r;
@@ -229,7 +188,7 @@ u4c_globalstate_t::fork_child(u4c_testnode_t *tn)
     fprintf(stderr, "u4c: spawned child process %d for %s\n",
 	    (int)pid, tn->get_fullname().c_str());
     close(pipefd[PIPE_WRITE]);
-    child = new u4c_child_t(pid, pipefd[PIPE_READ], tn);
+    child = new u4c::child_t(pid, pipefd[PIPE_READ], tn);
     children_.push_back(child);
 
     return child;
@@ -248,7 +207,7 @@ u4c_globalstate_t::handle_events()
     while (!caught_sigchld)
     {
 	pfd_.resize(children_.size());
-	vector<u4c_child_t*>::iterator citr;
+	vector<u4c::child_t*>::iterator citr;
 	vector<struct pollfd>::iterator pitr;
 	for (pitr = pfd_.begin(), citr = children_.begin() ;
 	     citr != children_.end() ; ++pitr, ++citr)
@@ -295,7 +254,7 @@ u4c_globalstate_t::reap_children()
 		    (int)pid, WSTOPSIG(status));
 	    continue;
 	}
-	vector<u4c_child_t*>::iterator itr;
+	vector<u4c::child_t*>::iterator itr;
 	for (itr = children_.begin() ;
 	     itr != children_.end() && (*itr)->get_pid() != pid ;
 	     ++itr)
@@ -307,7 +266,7 @@ u4c_globalstate_t::reap_children()
 	    /* TODO: this is probably eventworthy */
 	    continue;	    /* whatever */
 	}
-	u4c_child_t *child = *itr;
+	u4c::child_t *child = *itr;
 
 	if (WIFEXITED(status))
 	{
@@ -457,7 +416,7 @@ u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
 void
 u4c_globalstate_t::begin_test(u4c_testnode_t *tn)
 {
-    u4c_child_t *child;
+    u4c::child_t *child;
     u4c::result_t res;
 
     {

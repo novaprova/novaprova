@@ -20,6 +20,7 @@ all: libu4c.a
 libu4c_SOURCE=	\
 		u4c.c common.c run.c textl.c proxyl.c discover.c \
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
+		u4c/child.cxx \
 		u4c/classifier.cxx \
 
 libu4c_PRIVHEADERS= \
@@ -27,6 +28,7 @@ libu4c_PRIVHEADERS= \
 
 libu4c_HEADERS=	u4c.h \
 		u4c/types.hxx \
+		u4c/child.hxx \
 		u4c/classifier.hxx \
 
 libu4c_OBJS=	\

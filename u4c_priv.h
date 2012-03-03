@@ -21,28 +21,7 @@ class u4c_globalstate_t;
 
 #include "u4c/types.hxx"
 #include "u4c/classifier.hxx"
-
-class u4c_child_t
-{
-public:
-    u4c_child_t(pid_t pid, int fd, u4c_testnode_t *tn);
-    ~u4c_child_t();
-
-    pid_t get_pid() const { return pid_; }
-    u4c_testnode_t *get_node() const { return node_; }
-    u4c::result_t get_result() const { return result_; }
-
-    void poll_setup(struct pollfd &);
-    void poll_handle(struct pollfd &);
-    void merge_result(u4c::result_t r);
-
-private:
-    pid_t pid_;
-    int event_pipe_;	    /* read end of the pipe */
-    u4c_testnode_t *node_;
-    u4c::result_t result_;
-    bool finished_;
-};
+#include "u4c/child.hxx"
 
 class u4c_testnode_t
 {
@@ -181,7 +160,7 @@ private:
     void end();
     void set_listener(u4c_listener_t *);
     const u4c_event_t *normalise_event(const u4c_event_t *ev);
-    u4c_child_t *fork_child(u4c_testnode_t *tn);
+    u4c::child_t *fork_child(u4c_testnode_t *tn);
     void handle_events();
     void reap_children();
     void run_function(u4c::functype_t ft, spiegel::function_t *f);
@@ -203,7 +182,7 @@ private:
     unsigned int nrun_;
     unsigned int nfailed_;
     int event_pipe_;		/* only in child processes */
-    std::vector<u4c_child_t*> children_;	// only in the parent process
+    std::vector<u4c::child_t*> children_;	// only in the parent process
     unsigned int maxchildren;
     std::vector<struct pollfd> pfd_;
 
