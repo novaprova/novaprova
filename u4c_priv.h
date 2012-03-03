@@ -13,8 +13,6 @@
 
 struct u4c_event_t;
 struct u4c_function_t;
-struct u4c_plan_iterator_t;
-struct u4c_plan;
 class u4c_globalstate_t;
 
 #include "u4c/types.hxx"
@@ -24,33 +22,7 @@ class u4c_globalstate_t;
 #include "u4c/listener.hxx"
 #include "u4c/text_listener.hxx"
 #include "u4c/proxy_listener.hxx"
-
-struct u4c_plan_iterator_t
-{
-    int idx;
-    u4c::testnode_t *node;
-};
-
-class u4c_plan_t
-{
-public:
-    static void *operator new(size_t sz) { return xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
-    u4c_plan_t(u4c_globalstate_t *state);
-    ~u4c_plan_t();
-
-    void add_node(u4c::testnode_t *tn);
-    bool add_specs(int nspec, const char **specs);
-
-    u4c::testnode_t *next();
-
-private:
-    u4c_globalstate_t *state_;
-    std::vector<u4c::testnode_t*> nodes_;
-    u4c_plan_iterator_t current_;
-};
-
+#include "u4c/plan.hxx"
 
 class u4c_globalstate_t
 {
@@ -62,9 +34,9 @@ public:
 
     void initialise();
     void set_concurrency(int n);
-    void list_tests(u4c_plan_t *);
+    void list_tests(u4c::plan_t *);
     void add_listener(u4c::listener_t *);
-    int run_tests(u4c_plan_t *);
+    int run_tests(u4c::plan_t *);
     static u4c_globalstate_t *running() { return running_; }
     u4c::result_t raise_event(const u4c_event_t *, u4c::functype_t);
 
@@ -106,7 +78,7 @@ private:
     unsigned int maxchildren;
     std::vector<struct pollfd> pfd_;
 
-    friend class u4c_plan_t;
+    friend class u4c::plan_t;
 };
 
 /* run.c */

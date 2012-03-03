@@ -22,6 +22,7 @@ libu4c_SOURCE=	\
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
 		u4c/child.cxx \
 		u4c/classifier.cxx \
+		u4c/plan.cxx \
 		u4c/proxy_listener.cxx \
 		u4c/testnode.cxx \
 		u4c/text_listener.cxx \
@@ -34,6 +35,7 @@ libu4c_HEADERS=	u4c.h \
 		u4c/child.hxx \
 		u4c/classifier.hxx \
 		u4c/listener.hxx \
+		u4c/plan.hxx \
 		u4c/proxy_listener.hxx \
 		u4c/testnode.hxx \
 		u4c/text_listener.hxx \

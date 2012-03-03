@@ -5,12 +5,12 @@
 #include <string.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef __cplusplus
+namespace u4c {
+class plan_t;
+};
 class u4c_globalstate_t;
-class u4c_plan_t;
+typedef class u4c::plan_t u4c_plan_t;
+extern "C" {
 #else
 typedef struct u4c_globalstate u4c_globalstate_t;
 typedef struct u4c_plan u4c_plan_t;

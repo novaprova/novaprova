@@ -101,79 +101,6 @@ u4c_globalstate_t::setup_classifiers()
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_plan_t::u4c_plan_t(u4c_globalstate_t *state)
- :  state_(state)
-{
-    /* initialise iterator */
-    current_.idx = -1;
-    current_.node = 0;
-}
-
-u4c_plan_t::~u4c_plan_t()
-{
-}
-
-extern "C" u4c_plan_t *
-u4c_plan_new(u4c_globalstate_t *state)
-{
-    return new u4c_plan_t(state);
-}
-
-extern "C" void
-u4c_plan_delete(u4c_plan_t *plan)
-{
-    delete plan;
-}
-
-void
-u4c_plan_t::add_node(u4c::testnode_t *tn)
-{
-    nodes_.push_back(tn);
-}
-
-bool
-u4c_plan_t::add_specs(int nspec, const char **specs)
-{
-    u4c::testnode_t *tn;
-    int i;
-
-    for (i = 0 ; i < nspec ; i++)
-    {
-	tn = state_->root_->find(specs[i]);
-	if (!tn)
-	    return false;
-	add_node(tn);
-    }
-    return true;
-}
-
-extern "C" bool
-u4c_plan_add_specs(u4c_plan_t *plan, int nspec, const char **spec)
-{
-    return plan->add_specs(nspec, spec);
-}
-
-u4c::testnode_t *
-u4c_plan_t::next()
-{
-    u4c_plan_iterator_t *itr = &current_;
-
-    u4c::testnode_t *tn = itr->node;
-
-    /* advance tn */
-    for (;;)
-    {
-	tn = tn->next_preorder();
-	if (tn)
-	    return itr->node = tn;
-	if (itr->idx >= (int)nodes_.size()-1)
-	    return itr->node = 0;
-	tn = nodes_[++itr->idx];
-    }
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
 extern char **environ;
 
 static bool
@@ -262,7 +189,7 @@ u4c_set_concurrency(u4c_globalstate_t *state, int n)
 }
 
 void
-u4c_globalstate_t::list_tests(u4c_plan_t *plan)
+u4c_globalstate_t::list_tests(u4c::plan_t *plan)
 {
     u4c::testnode_t *tn;
 
@@ -270,7 +197,7 @@ u4c_globalstate_t::list_tests(u4c_plan_t *plan)
     if (!plan)
     {
 	/* build a default plan with all the tests */
-	u4c_plan_t *plan = new u4c_plan_t(this);
+	u4c::plan_t *plan = new u4c::plan_t(this);
 	plan->add_node(root_);
 	ourplan = true;
     }
@@ -290,7 +217,7 @@ u4c_list_tests(u4c_globalstate_t *state, u4c_plan_t *plan)
 }
 
 int
-u4c_globalstate_t::run_tests(u4c_plan_t *plan)
+u4c_globalstate_t::run_tests(u4c::plan_t *plan)
 {
     u4c::testnode_t *tn;
 
@@ -298,7 +225,7 @@ u4c_globalstate_t::run_tests(u4c_plan_t *plan)
     if (!plan)
     {
 	/* build a default plan with all the tests */
-	plan =  new u4c_plan_t(this);
+	plan =  new u4c::plan_t(this);
 	plan->add_node(root_);
 	ourplan = true;
     }
