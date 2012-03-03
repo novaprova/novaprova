@@ -75,75 +75,14 @@ u4c_globalstate_t::classify_function(const char *func,
     if (match_return)
 	match_return[0] = '\0';
 
-    vector<u4c_classifier_t*>::iterator i;
+    vector<u4c::classifier_t*>::iterator i;
     for (i = classifiers_.begin() ; i != classifiers_.end() ; ++i)
     {
-	enum u4c_functype ft = (*i)->classify(func, match_return, maxmatch);
+	u4c_functype ft = (u4c_functype) (*i)->classify(func, match_return, maxmatch);
 	if (ft != FT_UNKNOWN)
 	    return ft;
 	/* else, no match: just keep looking */
     }
-    return FT_UNKNOWN;
-}
-
-bool
-u4c_classifier_t::set_regexp(const char *re, bool case_sensitive)
-{
-    re_ = xstrdup(re);
-    int r = regcomp(&compiled_re_, re,
-		    REG_EXTENDED|(case_sensitive ? 0 : REG_ICASE));
-    if (r)
-    {
-	char err[1024];
-	regerror(r, &compiled_re_, err, sizeof(err));
-	fprintf(stderr, "u4c: bad classifier %s: %s\n",
-		re, err);
-	return false;
-    }
-    return true;
-}
-
-enum u4c_functype
-u4c_classifier_t::classify(const char *func,
-			   char *match_return,
-			   size_t maxmatch) const
-{
-    regmatch_t match[2];
-    int r = regexec(&compiled_re_, func, 2, match, 0);
-
-    if (r == 0)
-    {
-// fprintf(stderr, "MATCHED \"%s\" to \"%s\"\n", func, cl->re);
-// fprintf(stderr, "    submatch [ {%d %d} {%d %d}]\n",
-// 	    match[0].rm_so, match[0].rm_eo,
-// 	    match[1].rm_so, match[1].rm_eo);
-
-	/* successful match */
-	if (match_return && match[1].rm_so >= 0)
-	{
-	    size_t len = match[1].rm_eo - match[1].rm_so;
-	    if (len >= maxmatch)
-	    {
-		fprintf(stderr, "u4c: match for classifier %s too long\n",
-				re_);
-		return FT_UNKNOWN;
-	    }
-	    memcpy(match_return, func+match[1].rm_so, len);
-	    match_return[len] = '\0';
-// fprintf(stderr, "    match_return \"%s\"\n", match_return);
-	}
-	return type_;
-    }
-
-    if (r != REG_NOMATCH)
-    {
-	/* some runtime error */
-	char err[1024];
-	regerror(r, &compiled_re_, err, sizeof(err));
-	fprintf(stderr, "u4c: failed matching \"%s\": %s\n",
-		func, err);
-    }
-
     return FT_UNKNOWN;
 }
 
@@ -152,13 +91,13 @@ u4c_globalstate_t::add_classifier(const char *re,
 			          bool case_sensitive,
 			          enum u4c_functype type)
 {
-    u4c_classifier_t *cl = new u4c_classifier_t;
+    u4c::classifier_t *cl = new u4c::classifier_t;
     if (!cl->set_regexp(re, case_sensitive))
     {
 	delete cl;
 	return;
     }
-    cl->set_functype(type);
+    cl->set_results(FT_UNKNOWN, type);
     classifiers_.push_back(cl);
 }
 

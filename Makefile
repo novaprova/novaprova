@@ -4,11 +4,13 @@ includedir=	$(prefix)/include
 libdir=		$(prefix)/lib
 
 CC=		g++
+CXX=		g++
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-D_GNU_SOURCE -Ilibspiegel
+CDEFINES=	-D_GNU_SOURCE -Ilibspiegel -I.
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
+CXXFLAGS=	$(CFLAGS)
 INSTALL=	/usr/bin/install -c
 RANLIB=		ranlib
 depdir=		.deps
@@ -17,10 +19,15 @@ all: libu4c.a
 
 libu4c_SOURCE=	\
 		u4c.c common.c run.c textl.c proxyl.c discover.c \
-		isyslog.c iassert.c icunit.c iexit.c uasserts.c
+		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
+		u4c/classifier.cxx \
+
 libu4c_PRIVHEADERS= \
-		common.h u4c_priv.h
-libu4c_HEADERS=	u4c.h
+		common.h u4c_priv.h \
+
+libu4c_HEADERS=	u4c.h \
+		u4c/classifier.hxx \
+
 libu4c_OBJS=	\
 	$(patsubst %.c,%.o,$(filter %.c,$(libu4c_SOURCE))) \
 	$(patsubst %.cxx,%.o,$(filter %.cxx,$(libu4c_SOURCE)))

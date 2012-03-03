@@ -6,7 +6,6 @@
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
 #include "spiegel/filename.hxx"
-#include <regex.h>
 #include <bfd.h>
 #include <sys/poll.h>
 #include <vector>
@@ -14,13 +13,14 @@
 
 class u4c_child_t;
 struct u4c_event_t;
-struct u4c_classifier_t;
 struct u4c_function_t;
 class u4c_testnode_t;
 struct u4c_plan_iterator_t;
 struct u4c_plan;
 class u4c_listener_t;
 class u4c_globalstate_t;
+
+#include "u4c/classifier.hxx"
 
 enum u4c_result_t
 {
@@ -62,29 +62,6 @@ enum u4c_functype
     FT_AFTER,
 
     FT_NUM
-};
-
-struct u4c_classifier_t
-{
-public:
-    u4c_classifier_t()
-    {
-	memset(this, 0, sizeof(*this));
-    }
-    ~u4c_classifier_t()
-    {
-	xfree(re_);
-	regfree(&compiled_re_);
-    }
-
-    bool set_regexp(const char *, bool);
-    void set_functype(enum u4c_functype type) { type_ = type; }
-    enum u4c_functype classify(const char *, char *, size_t) const;
-
-private:
-    char *re_;
-    regex_t compiled_re_;
-    enum u4c_functype type_;
 };
 
 class u4c_testnode_t
@@ -237,7 +214,7 @@ private:
 
     static u4c_globalstate_t *running_;
 
-    std::vector<u4c_classifier_t*> classifiers_;
+    std::vector<u4c::classifier_t*> classifiers_;
     spiegel::dwarf::state_t *spiegel;
     u4c_testnode_t *root_;
     u4c_testnode_t *common_;	// nodes from filesystem root down to root_
