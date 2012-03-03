@@ -304,7 +304,7 @@ u4c_globalstate_t::run_tests(u4c_plan_t *plan)
     }
 
     if (!listeners_.size())
-	add_listener(new u4c_text_listener_t);
+	add_listener(new u4c::text_listener_t);
 
     begin();
     for (;;)

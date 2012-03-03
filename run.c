@@ -12,7 +12,7 @@ static volatile int caught_sigchld = 0;
 
 #define dispatch_listeners(func, ...) \
     do { \
-	vector<u4c_listener_t*>::iterator _i; \
+	vector<u4c::listener_t*>::iterator _i; \
 	for (_i = listeners_.begin() ; _i != listeners_.end() ; ++_i) \
 	    (*_i)->func(__VA_ARGS__); \
     } while(0)
@@ -20,7 +20,7 @@ static volatile int caught_sigchld = 0;
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 void
-u4c_globalstate_t::add_listener(u4c_listener_t *l)
+u4c_globalstate_t::add_listener(u4c::listener_t *l)
 {
     /* append to the list.  The order of adding is preserved for
      * dispatching */
@@ -28,7 +28,7 @@ u4c_globalstate_t::add_listener(u4c_listener_t *l)
 }
 
 void
-u4c_globalstate_t::set_listener(u4c_listener_t *l)
+u4c_globalstate_t::set_listener(u4c::listener_t *l)
 {
     /* just throw away the old ones */
     listeners_.clear();
@@ -435,7 +435,7 @@ u4c_globalstate_t::begin_test(u4c::testnode_t *tn)
 	return; /* parent process */
 
     /* child process */
-    set_listener(new u4c_proxy_listener_t(event_pipe_));
+    set_listener(new u4c::proxy_listener_t(event_pipe_));
     res = run_test_code(tn);
     dispatch_listeners(finished, res);
     fprintf(stderr, "u4c: child process %d (%s) finishing\n",

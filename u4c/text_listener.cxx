@@ -1,13 +1,14 @@
-#include "common.h"
+#include "u4c/text_listener.hxx"
+#include "u4c/testnode.hxx"
 #include "except.h"
-#include "u4c_priv.h"
 
+namespace u4c {
 using namespace std;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 void
-u4c_text_listener_t::begin()
+text_listener_t::begin()
 {
     nrun_ = 0;
     nfailed_ = 0;
@@ -15,34 +16,34 @@ u4c_text_listener_t::begin()
 }
 
 void
-u4c_text_listener_t::end()
+text_listener_t::end()
 {
     fprintf(stderr, "u4c: %u run %u failed\n",
 	    nrun_, nfailed_);
 }
 
 void
-u4c_text_listener_t::begin_node(const u4c::testnode_t *tn)
+text_listener_t::begin_node(const testnode_t *tn)
 {
     fprintf(stderr, "u4c: running: \"%s\"\n", tn->get_fullname().c_str());
     result_ = u4c::R_UNKNOWN;
 }
 
 void
-u4c_text_listener_t::end_node(const u4c::testnode_t *tn)
+text_listener_t::end_node(const testnode_t *tn)
 {
     string fullname = tn->get_fullname();
 
     nrun_++;
     switch (result_)
     {
-    case u4c::R_PASS:
+    case R_PASS:
 	fprintf(stderr, "PASS %s\n", fullname.c_str());
 	break;
-    case u4c::R_NOTAPPLICABLE:
+    case R_NOTAPPLICABLE:
 	fprintf(stderr, "N/A %s\n", fullname.c_str());
 	break;
-    case u4c::R_FAIL:
+    case R_FAIL:
 	nfailed_++;
 	fprintf(stderr, "FAIL %s\n", fullname.c_str());
 	break;
@@ -53,7 +54,7 @@ u4c_text_listener_t::end_node(const u4c::testnode_t *tn)
 }
 
 void
-u4c_text_listener_t::add_event(const u4c_event_t *ev, u4c::functype_t ft)
+text_listener_t::add_event(const u4c_event_t *ev, functype_t ft)
 {
     const char *type;
     char buf[2048];
@@ -88,9 +89,10 @@ u4c_text_listener_t::add_event(const u4c_event_t *ev, u4c::functype_t ft)
 }
 
 void
-u4c_text_listener_t::finished(u4c::result_t res)
+text_listener_t::finished(result_t res)
 {
     result_ = res;
 }
 
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+// close the namespace
+};

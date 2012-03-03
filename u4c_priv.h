@@ -15,13 +15,15 @@ struct u4c_event_t;
 struct u4c_function_t;
 struct u4c_plan_iterator_t;
 struct u4c_plan;
-class u4c_listener_t;
 class u4c_globalstate_t;
 
 #include "u4c/types.hxx"
 #include "u4c/classifier.hxx"
 #include "u4c/child.hxx"
 #include "u4c/testnode.hxx"
+#include "u4c/listener.hxx"
+#include "u4c/text_listener.hxx"
+#include "u4c/proxy_listener.hxx"
 
 struct u4c_plan_iterator_t
 {
@@ -49,59 +51,6 @@ private:
     u4c_plan_iterator_t current_;
 };
 
-class u4c_listener_t
-{
-public:
-    u4c_listener_t() {}
-    ~u4c_listener_t() {}
-
-    virtual void begin() = 0;
-    virtual void end() = 0;
-    virtual void begin_node(const u4c::testnode_t *) = 0;
-    virtual void end_node(const u4c::testnode_t *) = 0;
-    virtual void add_event(const u4c_event_t *, u4c::functype_t ft) = 0;
-    virtual void finished(u4c::result_t) = 0;
-};
-
-class u4c_text_listener_t : public u4c_listener_t
-{
-public:
-    u4c_text_listener_t() {}
-    ~u4c_text_listener_t() {}
-
-    void begin();
-    void end();
-    void begin_node(const u4c::testnode_t *tn);
-    void end_node(const u4c::testnode_t *tn);
-    void add_event(const u4c_event_t *ev, u4c::functype_t ft);
-    void finished(u4c::result_t res);
-
-private:
-    unsigned int nrun_;
-    unsigned int nfailed_;
-    u4c::result_t result_; /* for the current test */
-};
-
-class u4c_proxy_listener_t : public u4c_listener_t
-{
-public:
-    u4c_proxy_listener_t(int);
-    ~u4c_proxy_listener_t();
-
-    void begin();
-    void end();
-    void begin_node(const u4c::testnode_t *);
-    void end_node(const u4c::testnode_t *);
-    void add_event(const u4c_event_t *ev, u4c::functype_t ft);
-    void finished(u4c::result_t res);
-
-    /* proxyl.c */
-    static bool handle_call(int fd, u4c::result_t *resp);
-
-private:
-    int fd_;
-};
-
 
 class u4c_globalstate_t
 {
@@ -114,7 +63,7 @@ public:
     void initialise();
     void set_concurrency(int n);
     void list_tests(u4c_plan_t *);
-    void add_listener(u4c_listener_t *);
+    void add_listener(u4c::listener_t *);
     int run_tests(u4c_plan_t *);
     static u4c_globalstate_t *running() { return running_; }
     u4c::result_t raise_event(const u4c_event_t *, u4c::functype_t);
@@ -129,7 +78,7 @@ private:
     /* run.c */
     void begin();
     void end();
-    void set_listener(u4c_listener_t *);
+    void set_listener(u4c::listener_t *);
     const u4c_event_t *normalise_event(const u4c_event_t *ev);
     u4c::child_t *fork_child(u4c::testnode_t *tn);
     void handle_events();
@@ -149,7 +98,7 @@ private:
     u4c::testnode_t *root_;
     u4c::testnode_t *common_;	// nodes from filesystem root down to root_
     /* runtime state */
-    std::vector<u4c_listener_t*> listeners_;
+    std::vector<u4c::listener_t*> listeners_;
     unsigned int nrun_;
     unsigned int nfailed_;
     int event_pipe_;		/* only in child processes */

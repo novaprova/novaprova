@@ -18,11 +18,13 @@ depdir=		.deps
 all: libu4c.a
 
 libu4c_SOURCE=	\
-		u4c.c common.c run.c textl.c proxyl.c discover.c \
+		u4c.c common.c run.c discover.c \
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
 		u4c/child.cxx \
 		u4c/classifier.cxx \
+		u4c/proxy_listener.cxx \
 		u4c/testnode.cxx \
+		u4c/text_listener.cxx \
 		u4c/types.cxx \
 
 libu4c_PRIVHEADERS= \
@@ -31,7 +33,10 @@ libu4c_PRIVHEADERS= \
 libu4c_HEADERS=	u4c.h \
 		u4c/child.hxx \
 		u4c/classifier.hxx \
+		u4c/listener.hxx \
+		u4c/proxy_listener.hxx \
 		u4c/testnode.hxx \
+		u4c/text_listener.hxx \
 		u4c/types.hxx \
 
 libu4c_OBJS=	\

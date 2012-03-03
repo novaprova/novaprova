@@ -1,8 +1,10 @@
-#include "common.h"
+#include "u4c/proxy_listener.hxx"
 #include "except.h"
 #include "u4c_priv.h"
 
-enum u4c_proxy_call
+namespace u4c {
+
+enum proxy_call
 {
     PROXY_EVENT = 1,
     PROXY_FINISHED = 2,
@@ -113,37 +115,37 @@ deserialise_event(int fd, u4c_event_t *ev)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_proxy_listener_t::u4c_proxy_listener_t(int fd)
+proxy_listener_t::proxy_listener_t(int fd)
  :  fd_(fd)
 {
 }
 
-u4c_proxy_listener_t::~u4c_proxy_listener_t()
+proxy_listener_t::~proxy_listener_t()
 {
 }
 
 void
-u4c_proxy_listener_t::begin()
+proxy_listener_t::begin()
 {
 }
 
 void
-u4c_proxy_listener_t::end()
+proxy_listener_t::end()
 {
 }
 
 void
-u4c_proxy_listener_t::begin_node(const u4c::testnode_t *)
+proxy_listener_t::begin_node(const testnode_t *)
 {
 }
 
 void
-u4c_proxy_listener_t::end_node(const u4c::testnode_t *)
+proxy_listener_t::end_node(const testnode_t *)
 {
 }
 
 void
-u4c_proxy_listener_t::add_event(const u4c_event_t *ev, u4c::functype_t ft)
+proxy_listener_t::add_event(const u4c_event_t *ev, functype_t ft)
 {
     serialise_uint(fd_, PROXY_EVENT);
     serialise_event(fd_, ev);
@@ -151,7 +153,7 @@ u4c_proxy_listener_t::add_event(const u4c_event_t *ev, u4c::functype_t ft)
 }
 
 void
-u4c_proxy_listener_t::finished(u4c::result_t res)
+proxy_listener_t::finished(result_t res)
 {
     serialise_uint(fd_, PROXY_FINISHED);
     serialise_uint(fd_, res);
@@ -166,7 +168,7 @@ u4c_proxy_listener_t::finished(u4c::result_t res)
  * Updates *@resp if necessary.
  */
 bool
-u4c_proxy_listener_t::handle_call(int fd, u4c::result_t *resp)
+proxy_listener_t::handle_call(int fd, result_t *resp)
 {
     unsigned int which;
     u4c_event_t ev;
@@ -184,7 +186,7 @@ u4c_proxy_listener_t::handle_call(int fd, u4c::result_t *resp)
 	    (r = deserialise_uint(fd, &ft)))
 	    return false;    /* failed to decode */
 	__u4c_merge(*resp,
-	u4c_globalstate_t::running()->raise_event(&ev, (u4c::functype_t)ft));
+	u4c_globalstate_t::running()->raise_event(&ev, (functype_t)ft));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))
@@ -199,4 +201,5 @@ u4c_proxy_listener_t::handle_call(int fd, u4c::result_t *resp)
     }
 }
 
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+// close the namespace
+};

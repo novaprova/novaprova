@@ -1,6 +1,7 @@
 #include "u4c/child.hxx"
 #include "u4c/testnode.hxx"
-#include "u4c_priv.h"	// for proxy_listener
+#include "u4c/proxy_listener.hxx"
+#include "u4c_priv.h"
 
 namespace u4c {
 
@@ -35,7 +36,7 @@ child_t::poll_handle(struct pollfd &pfd)
 	return;
     if (!(pfd.revents & POLLIN))
 	return;
-    if (!u4c_proxy_listener_t::handle_call(event_pipe_, &result_))
+    if (!proxy_listener_t::handle_call(event_pipe_, &result_))
 	finished_ = true;
 }
 
