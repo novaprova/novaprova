@@ -133,12 +133,12 @@ u4c_proxy_listener_t::end()
 }
 
 void
-u4c_proxy_listener_t::begin_node(const u4c_testnode_t *)
+u4c_proxy_listener_t::begin_node(const u4c::testnode_t *)
 {
 }
 
 void
-u4c_proxy_listener_t::end_node(const u4c_testnode_t *)
+u4c_proxy_listener_t::end_node(const u4c::testnode_t *)
 {
 }
 

@@ -33,7 +33,7 @@ u4c_globalstate_t::discover_functions()
     {
 	spiegel = new spiegel::dwarf::state_t();
 	spiegel->add_self();
-	root_ = new u4c_testnode_t(0);
+	root_ = new u4c::testnode_t(0);
     }
     // else: splice common_ and root_ back together
 

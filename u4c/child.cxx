@@ -1,9 +1,10 @@
 #include "u4c/child.hxx"
-#include "u4c_priv.h"
+#include "u4c/testnode.hxx"
+#include "u4c_priv.h"	// for proxy_listener
 
 namespace u4c {
 
-child_t::child_t(pid_t pid, int fd, u4c_testnode_t *tn)
+child_t::child_t(pid_t pid, int fd, testnode_t *tn)
  :  pid_(pid),
     event_pipe_(fd),
     node_(tn),

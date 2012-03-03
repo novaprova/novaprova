@@ -13,7 +13,6 @@
 
 struct u4c_event_t;
 struct u4c_function_t;
-class u4c_testnode_t;
 struct u4c_plan_iterator_t;
 struct u4c_plan;
 class u4c_listener_t;
@@ -22,40 +21,12 @@ class u4c_globalstate_t;
 #include "u4c/types.hxx"
 #include "u4c/classifier.hxx"
 #include "u4c/child.hxx"
-
-class u4c_testnode_t
-{
-public:
-    u4c_testnode_t(const char *);
-    ~u4c_testnode_t();
-
-    std::string get_fullname() const;
-    u4c_testnode_t *find(const char *name);
-    u4c_testnode_t *make_path(std::string name);
-    void set_function(u4c::functype_t, spiegel::function_t *);
-
-    u4c_testnode_t *detach_common();
-    u4c_testnode_t *next_preorder();
-    spiegel::function_t *get_function(u4c::functype_t type) const
-    {
-	return funcs_[type];
-    }
-    std::list<spiegel::function_t*> get_fixtures(u4c::functype_t type) const;
-
-    void dump(int level) const;
-
-private:
-    u4c_testnode_t *next_;
-    u4c_testnode_t *parent_;
-    u4c_testnode_t *children_;
-    char *name_;
-    spiegel::function_t *funcs_[u4c::FT_NUM];
-};
+#include "u4c/testnode.hxx"
 
 struct u4c_plan_iterator_t
 {
     int idx;
-    u4c_testnode_t *node;
+    u4c::testnode_t *node;
 };
 
 class u4c_plan_t
@@ -67,14 +38,14 @@ public:
     u4c_plan_t(u4c_globalstate_t *state);
     ~u4c_plan_t();
 
-    void add_node(u4c_testnode_t *tn);
+    void add_node(u4c::testnode_t *tn);
     bool add_specs(int nspec, const char **specs);
 
-    u4c_testnode_t *next();
+    u4c::testnode_t *next();
 
 private:
     u4c_globalstate_t *state_;
-    std::vector<u4c_testnode_t*> nodes_;
+    std::vector<u4c::testnode_t*> nodes_;
     u4c_plan_iterator_t current_;
 };
 
@@ -86,8 +57,8 @@ public:
 
     virtual void begin() = 0;
     virtual void end() = 0;
-    virtual void begin_node(const u4c_testnode_t *) = 0;
-    virtual void end_node(const u4c_testnode_t *) = 0;
+    virtual void begin_node(const u4c::testnode_t *) = 0;
+    virtual void end_node(const u4c::testnode_t *) = 0;
     virtual void add_event(const u4c_event_t *, u4c::functype_t ft) = 0;
     virtual void finished(u4c::result_t) = 0;
 };
@@ -100,8 +71,8 @@ public:
 
     void begin();
     void end();
-    void begin_node(const u4c_testnode_t *tn);
-    void end_node(const u4c_testnode_t *tn);
+    void begin_node(const u4c::testnode_t *tn);
+    void end_node(const u4c::testnode_t *tn);
     void add_event(const u4c_event_t *ev, u4c::functype_t ft);
     void finished(u4c::result_t res);
 
@@ -119,8 +90,8 @@ public:
 
     void begin();
     void end();
-    void begin_node(const u4c_testnode_t *);
-    void end_node(const u4c_testnode_t *);
+    void begin_node(const u4c::testnode_t *);
+    void end_node(const u4c::testnode_t *);
     void add_event(const u4c_event_t *ev, u4c::functype_t ft);
     void finished(u4c::result_t res);
 
@@ -154,20 +125,20 @@ private:
     void setup_classifiers();
     u4c::functype_t classify_function(const char *func, char *match_return, size_t maxmatch);
     void add_classifier(const char *re, bool case_sensitive, u4c::functype_t type);
-    void dump_nodes(u4c_testnode_t *tn, int level);
+    void dump_nodes(u4c::testnode_t *tn, int level);
     /* run.c */
     void begin();
     void end();
     void set_listener(u4c_listener_t *);
     const u4c_event_t *normalise_event(const u4c_event_t *ev);
-    u4c::child_t *fork_child(u4c_testnode_t *tn);
+    u4c::child_t *fork_child(u4c::testnode_t *tn);
     void handle_events();
     void reap_children();
     void run_function(u4c::functype_t ft, spiegel::function_t *f);
-    void run_fixtures(u4c_testnode_t *tn, u4c::functype_t type);
+    void run_fixtures(u4c::testnode_t *tn, u4c::functype_t type);
     u4c::result_t valgrind_errors();
-    u4c::result_t run_test_code(u4c_testnode_t *tn);
-    void begin_test(u4c_testnode_t *);
+    u4c::result_t run_test_code(u4c::testnode_t *tn);
+    void begin_test(u4c::testnode_t *);
     void wait();
     /* discover.c */
 
@@ -175,8 +146,8 @@ private:
 
     std::vector<u4c::classifier_t*> classifiers_;
     spiegel::dwarf::state_t *spiegel;
-    u4c_testnode_t *root_;
-    u4c_testnode_t *common_;	// nodes from filesystem root down to root_
+    u4c::testnode_t *root_;
+    u4c::testnode_t *common_;	// nodes from filesystem root down to root_
     /* runtime state */
     std::vector<u4c_listener_t*> listeners_;
     unsigned int nrun_;

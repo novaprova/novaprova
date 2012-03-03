@@ -137,7 +137,7 @@ u4c_globalstate_t::raise_event(const u4c_event_t *ev, u4c::functype_t ft)
 }
 
 u4c::child_t *
-u4c_globalstate_t::fork_child(u4c_testnode_t *tn)
+u4c_globalstate_t::fork_child(u4c::testnode_t *tn)
 {
     pid_t pid;
 #define PIPE_READ 0
@@ -330,7 +330,7 @@ u4c_globalstate_t::run_function(u4c::functype_t ft, spiegel::function_t *f)
 }
 
 void
-u4c_globalstate_t::run_fixtures(u4c_testnode_t *tn, u4c::functype_t type)
+u4c_globalstate_t::run_fixtures(u4c::testnode_t *tn, u4c::functype_t type)
 {
     list<spiegel::function_t*> fixtures = tn->get_fixtures(type);
     list<spiegel::function_t*>::iterator itr;
@@ -369,7 +369,7 @@ u4c_globalstate_t::valgrind_errors()
 }
 
 u4c::result_t
-u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
+u4c_globalstate_t::run_test_code(u4c::testnode_t *tn)
 {
     u4c::result_t res = u4c::R_UNKNOWN;
     const u4c_event_t *ev;
@@ -414,7 +414,7 @@ u4c_globalstate_t::run_test_code(u4c_testnode_t *tn)
 
 
 void
-u4c_globalstate_t::begin_test(u4c_testnode_t *tn)
+u4c_globalstate_t::begin_test(u4c::testnode_t *tn)
 {
     u4c::child_t *child;
     u4c::result_t res;

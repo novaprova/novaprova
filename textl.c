@@ -22,14 +22,14 @@ u4c_text_listener_t::end()
 }
 
 void
-u4c_text_listener_t::begin_node(const u4c_testnode_t *tn)
+u4c_text_listener_t::begin_node(const u4c::testnode_t *tn)
 {
     fprintf(stderr, "u4c: running: \"%s\"\n", tn->get_fullname().c_str());
     result_ = u4c::R_UNKNOWN;
 }
 
 void
-u4c_text_listener_t::end_node(const u4c_testnode_t *tn)
+u4c_text_listener_t::end_node(const u4c::testnode_t *tn)
 {
     string fullname = tn->get_fullname();
 

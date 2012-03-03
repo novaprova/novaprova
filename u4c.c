@@ -101,197 +101,6 @@ u4c_globalstate_t::setup_classifiers()
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_testnode_t::u4c_testnode_t(const char *name)
- :  next_(0),
-    parent_(0),
-    children_(0),
-    name_(name ? xstrdup(name) : 0)
-{
-    memset(funcs_, 0, sizeof(funcs_));
-}
-
-u4c_testnode_t::~u4c_testnode_t()
-{
-    while (children_)
-    {
-	u4c_testnode_t *child = children_;
-	children_ = child->next_;
-	delete child;
-    }
-
-    xfree(name_);
-}
-
-u4c_testnode_t *
-u4c_testnode_t::make_path(string name)
-{
-    u4c_testnode_t *parent = this;
-    const char *part;
-    u4c_testnode_t *child;
-    u4c_testnode_t **tailp;
-    spiegel::tok_t tok(name.c_str(), "/");
-
-    while ((part = tok.next()))
-    {
-	for (child = parent->children_, tailp = &parent->children_ ;
-	     child ;
-	     tailp = &child->next_, child = child->next_)
-	{
-	    if (!strcmp(child->name_, part))
-		break;
-	}
-	if (!child)
-	{
-	    child = new u4c_testnode_t(part);
-	    *tailp = child;
-	    child->parent_ = parent;
-	}
-
-	parent = child;
-    }
-    return child;
-}
-
-void
-u4c_testnode_t::set_function(u4c::functype_t ft, spiegel::function_t *func)
-{
-    if (funcs_[ft])
-	fprintf(stderr, "u4c: WARNING: duplicate %s functions: "
-			"%s:%s and %s:%s\n",
-			__u4c_functype_as_string(ft),
-			funcs_[ft]->get_compile_unit()->get_absolute_path().c_str(),
-			funcs_[ft]->get_name(),
-			func->get_compile_unit()->get_absolute_path().c_str(),
-			func->get_name());
-    else
-	funcs_[ft] = func;
-}
-
-static void
-indent(int level)
-{
-    for ( ; level ; level--)
-	fputs("    ", stderr);
-}
-
-void
-u4c_testnode_t::dump(int level) const
-{
-    indent(level);
-    if (name_)
-    {
-	fprintf(stderr, "%s (full %s)\n",
-		name_, get_fullname().c_str());
-    }
-
-    for (int type = 0 ; type < u4c::FT_NUM ; type++)
-    {
-	if (funcs_[type])
-	{
-	    indent(level);
-	    fprintf(stderr, "  %s=%s:%s\n",
-			    __u4c_functype_as_string((u4c::functype_t)type),
-			    funcs_[type]->get_compile_unit()->get_absolute_path().c_str(),
-			    funcs_[type]->get_name());
-	}
-    }
-
-    for (u4c_testnode_t *child = children_ ; child ; child = child->next_)
-	child->dump(level+1);
-}
-
-string
-u4c_testnode_t::get_fullname() const
-{
-    string full = "";
-
-    for (const u4c_testnode_t *a = this ; a ; a = a->parent_)
-    {
-	if (!a->name_)
-	    continue;
-	if (a != this)
-	    full = "." + full;
-	full = a->name_ + full;
-    }
-
-    return full;
-}
-
-u4c_testnode_t *
-u4c_testnode_t::next_preorder()
-{
-    u4c_testnode_t *tn = this;
-    while (tn)
-    {
-	if (tn->children_)
-	    tn = tn->children_;
-	else if (tn->next_)
-	    tn = tn->next_;
-	else if (tn->parent_)
-	    tn = tn->parent_->next_;
-	if (tn && tn->funcs_[u4c::FT_TEST])
-	    break;
-    }
-    return tn;
-}
-
-u4c_testnode_t *
-u4c_testnode_t::detach_common()
-{
-    u4c_testnode_t *tn;
-
-    for (tn = this ;
-         tn->children_ && !tn->children_->next_ ;
-	 tn = tn->children_)
-	;
-    /* tn now points at the highest node with more than 1 child */
-
-    tn->parent_->children_ = 0;
-    assert(!tn->next_);
-    tn->parent_ = 0;
-
-    return tn;
-}
-
-list<spiegel::function_t*>
-u4c_testnode_t::get_fixtures(u4c::functype_t type) const
-{
-    list<spiegel::function_t*> fixtures;
-
-    /* Run FT_BEFORE from outermost in, and FT_AFTER
-     * from innermost out */
-    for (const u4c_testnode_t *a = this ; a ; a = a->parent_)
-    {
-	if (!a->funcs_[type])
-	    continue;
-	if (type == u4c::FT_BEFORE)
-	    fixtures.push_front(a->funcs_[type]);
-	else
-	    fixtures.push_back(a->funcs_[type]);
-    }
-    return fixtures;
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
-u4c_testnode_t *
-u4c_testnode_t::find(const char *nm)
-{
-    if (name_ && get_fullname() == nm)
-	return this;
-
-    for (u4c_testnode_t *child = children_ ; child ; child = child->next_)
-    {
-	u4c_testnode_t *found = child->find(nm);
-	if (found)
-	    return found;
-    }
-
-    return 0;
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
 u4c_plan_t::u4c_plan_t(u4c_globalstate_t *state)
  :  state_(state)
 {
@@ -317,7 +126,7 @@ u4c_plan_delete(u4c_plan_t *plan)
 }
 
 void
-u4c_plan_t::add_node(u4c_testnode_t *tn)
+u4c_plan_t::add_node(u4c::testnode_t *tn)
 {
     nodes_.push_back(tn);
 }
@@ -325,7 +134,7 @@ u4c_plan_t::add_node(u4c_testnode_t *tn)
 bool
 u4c_plan_t::add_specs(int nspec, const char **specs)
 {
-    u4c_testnode_t *tn;
+    u4c::testnode_t *tn;
     int i;
 
     for (i = 0 ; i < nspec ; i++)
@@ -344,12 +153,12 @@ u4c_plan_add_specs(u4c_plan_t *plan, int nspec, const char **spec)
     return plan->add_specs(nspec, spec);
 }
 
-u4c_testnode_t *
+u4c::testnode_t *
 u4c_plan_t::next()
 {
     u4c_plan_iterator_t *itr = &current_;
 
-    u4c_testnode_t *tn = itr->node;
+    u4c::testnode_t *tn = itr->node;
 
     /* advance tn */
     for (;;)
@@ -455,7 +264,7 @@ u4c_set_concurrency(u4c_globalstate_t *state, int n)
 void
 u4c_globalstate_t::list_tests(u4c_plan_t *plan)
 {
-    u4c_testnode_t *tn;
+    u4c::testnode_t *tn;
 
     bool ourplan = false;
     if (!plan)
@@ -483,7 +292,7 @@ u4c_list_tests(u4c_globalstate_t *state, u4c_plan_t *plan)
 int
 u4c_globalstate_t::run_tests(u4c_plan_t *plan)
 {
-    u4c_testnode_t *tn;
+    u4c::testnode_t *tn;
 
     bool ourplan = false;
     if (!plan)

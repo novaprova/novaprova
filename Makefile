@@ -22,6 +22,7 @@ libu4c_SOURCE=	\
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
 		u4c/child.cxx \
 		u4c/classifier.cxx \
+		u4c/testnode.cxx \
 		u4c/types.cxx \
 
 libu4c_PRIVHEADERS= \
@@ -30,6 +31,7 @@ libu4c_PRIVHEADERS= \
 libu4c_HEADERS=	u4c.h \
 		u4c/child.hxx \
 		u4c/classifier.hxx \
+		u4c/testnode.hxx \
 		u4c/types.hxx \
 
 libu4c_OBJS=	\
