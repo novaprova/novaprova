@@ -81,7 +81,7 @@ u4c_text_listener_t::add_event(const u4c_event_t *ev, u4c::functype_t ft)
     if (*ev->function)
 	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
 		 " in %s %s",
-		 __u4c_functype_as_string(ft),
+		 as_string(ft),
 		 ev->function);
     strcat(buf, "\n");
     fputs(buf, stderr);

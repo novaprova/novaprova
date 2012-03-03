@@ -189,9 +189,6 @@ private:
     friend class u4c_plan_t;
 };
 
-/* u4c.c */
-extern const char *__u4c_functype_as_string(u4c::functype_t);
-
 /* run.c */
 #define __u4c_merge(r1, r2) \
     do { \

@@ -23,6 +23,8 @@ enum functype_t
     FT_NUM
 };
 
+extern const char *as_string(functype_t);
+
 // close the namespace
 };
 

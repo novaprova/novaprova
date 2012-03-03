@@ -28,21 +28,6 @@ u4c_reltimestamp(void)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-const char *
-__u4c_functype_as_string(u4c::functype_t type)
-{
-    switch (type)
-    {
-    case u4c::FT_UNKNOWN: return "unknown";
-    case u4c::FT_BEFORE: return "before";
-    case u4c::FT_TEST: return "test";
-    case u4c::FT_AFTER: return "after";
-    default: return "INTERNAL ERROR!";
-    }
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
 u4c_globalstate_t::u4c_globalstate_t()
 {
     maxchildren = 1;
