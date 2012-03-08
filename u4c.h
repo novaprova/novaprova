@@ -7,20 +7,21 @@
 #ifdef __cplusplus
 namespace u4c {
 class plan_t;
+class runner_t;
 };
-class u4c_globalstate_t;
 typedef class u4c::plan_t u4c_plan_t;
+typedef class u4c::runner_t u4c_runner_t;
 extern "C" {
 #else
-typedef struct u4c_globalstate u4c_globalstate_t;
+typedef struct u4c_runner u4c_runner_t;
 typedef struct u4c_plan u4c_plan_t;
 #endif
 
-extern u4c_globalstate_t *u4c_init(void);
-extern void u4c_list_tests(u4c_globalstate_t *, u4c_plan_t *);
-extern void u4c_set_concurrency(u4c_globalstate_t *, int);
-extern int u4c_run_tests(u4c_globalstate_t *, u4c_plan_t *);
-extern void u4c_done(u4c_globalstate_t *);
+extern u4c_runner_t *u4c_init(void);
+extern void u4c_list_tests(u4c_runner_t *, u4c_plan_t *);
+extern void u4c_set_concurrency(u4c_runner_t *, int);
+extern int u4c_run_tests(u4c_runner_t *, u4c_plan_t *);
+extern void u4c_done(u4c_runner_t *);
 
 extern u4c_plan_t *u4c_plan_new(void);
 extern void u4c_plan_delete(u4c_plan_t *);

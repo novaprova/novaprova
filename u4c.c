@@ -28,17 +28,6 @@ u4c_reltimestamp(void)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_globalstate_t::u4c_globalstate_t()
-{
-    maxchildren = 1;
-}
-
-u4c_globalstate_t::~u4c_globalstate_t()
-{
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
 extern char **environ;
 
 static bool
@@ -87,108 +76,19 @@ be_valground(void)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-extern "C" u4c_globalstate_t *
+extern "C" u4c_runner_t *
 u4c_init(void)
 {
     be_valground();
     u4c_reltimestamp();
     u4c::testmanager_t::instance();
-    u4c_globalstate_t *state = new u4c_globalstate_t;
-    return state;
-}
-
-void
-u4c_globalstate_t::set_concurrency(int n)
-{
-    if (n == 0)
-    {
-	/* shorthand for "best possible" */
-	n = sysconf(_SC_NPROCESSORS_ONLN);
-    }
-    if (n < 1)
-	n = 1;
-    maxchildren = n;
+    return new u4c::runner_t;
 }
 
 extern "C" void
-u4c_set_concurrency(u4c_globalstate_t *state, int n)
+u4c_done(u4c_runner_t *runner)
 {
-    state->set_concurrency(n);
-}
-
-void
-u4c_globalstate_t::list_tests(u4c::plan_t *plan) const
-{
-    u4c::testnode_t *tn;
-
-    bool ourplan = false;
-    if (!plan)
-    {
-	/* build a default plan with all the tests */
-	u4c::plan_t *plan = new u4c::plan_t();
-	plan->add_node(u4c::testmanager_t::instance()->get_root());
-	ourplan = true;
-    }
-
-    /* iterate over all tests */
-    while ((tn = plan->next()))
-	printf("%s\n", tn->get_fullname().c_str());
-
-    if (ourplan)
-	delete plan;
-}
-
-extern "C" void
-u4c_list_tests(u4c_globalstate_t *state, u4c_plan_t *plan)
-{
-    state->list_tests(plan);
-}
-
-int
-u4c_globalstate_t::run_tests(u4c::plan_t *plan)
-{
-    u4c::testnode_t *tn;
-
-    bool ourplan = false;
-    if (!plan)
-    {
-	/* build a default plan with all the tests */
-	plan =  new u4c::plan_t();
-	plan->add_node(u4c::testmanager_t::instance()->get_root());
-	ourplan = true;
-    }
-
-    if (!listeners_.size())
-	add_listener(new u4c::text_listener_t);
-
-    begin();
-    for (;;)
-    {
-	while (children_.size() < maxchildren &&
-	       (tn = plan->next()))
-	    begin_test(tn);
-	if (!children_.size())
-	    break;
-	wait();
-    }
-    end();
-
-    if (ourplan)
-	delete plan;
-
-    return !!nfailed_;
-}
-
-extern "C" int
-u4c_run_tests(u4c_globalstate_t *state, u4c_plan_t *plan)
-{
-    return state->run_tests(plan);
-}
-
-extern "C" void
-u4c_done(u4c_globalstate_t *state)
-{
-    delete state;
+    delete runner;
     u4c::testmanager_t::done();
 }
 

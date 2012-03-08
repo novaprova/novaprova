@@ -186,7 +186,7 @@ proxy_listener_t::handle_call(int fd, result_t *resp)
 	    (r = deserialise_uint(fd, &ft)))
 	    return false;    /* failed to decode */
 	__u4c_merge(*resp,
-	u4c_globalstate_t::running()->raise_event(&ev, (functype_t)ft));
+	u4c::runner_t::running()->raise_event(&ev, (functype_t)ft));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))

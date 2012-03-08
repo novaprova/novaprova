@@ -223,7 +223,7 @@ __syslog_chk(int prio,
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
     u4c_event_t ev(EV_SYSLOG, msg);
-    u4c_globalstate_t::running()->raise_event(&ev, u4c::FT_UNKNOWN);
+    u4c::runner_t::running()->raise_event(&ev, u4c::FT_UNKNOWN);
 
     if (find_slmatch(&msg) == SL_FAIL)
 	u4c_throw(eventc(EV_SLMATCH, msg));
@@ -243,7 +243,7 @@ syslog(int prio, const char *fmt, ...)
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
     u4c_event_t ev(EV_SYSLOG, msg);
-    u4c_globalstate_t::running()->raise_event(&ev, u4c::FT_UNKNOWN);
+    u4c::runner_t::running()->raise_event(&ev, u4c::FT_UNKNOWN);
 
     if (find_slmatch(&msg) == SL_FAIL)
 	u4c_throw(eventc(EV_SLMATCH, msg));

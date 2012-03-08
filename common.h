@@ -12,6 +12,10 @@
 #include <malloc.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <sys/wait.h>
+#include <sys/signal.h>
+#include <sys/poll.h>
+#include <valgrind/memcheck.h>
 
 extern void *__u4c_malloc(size_t sz);
 extern void *__u4c_realloc(void *, size_t);

@@ -1,26 +1,108 @@
-#include "common.h"
-#include <sys/wait.h>
+#include "u4c/runner.hxx"
+#include "u4c/testnode.hxx"
+#include "u4c/plan.hxx"
+#include "u4c/text_listener.hxx"
+#include "u4c/proxy_listener.hxx"
+#include "u4c/child.hxx"
+#include "spiegel/spiegel.hxx"
 #include "u4c_priv.h"
 #include "except.h"
 #include <valgrind/memcheck.h>
 
+namespace u4c {
 using namespace std;
-
-__u4c_exceptstate_t __u4c_exceptstate;
-u4c_globalstate_t *u4c_globalstate_t::running_;
-static volatile int caught_sigchld = 0;
 
 #define dispatch_listeners(func, ...) \
     do { \
-	vector<u4c::listener_t*>::iterator _i; \
+	vector<listener_t*>::iterator _i; \
 	for (_i = listeners_.begin() ; _i != listeners_.end() ; ++_i) \
 	    (*_i)->func(__VA_ARGS__); \
     } while(0)
 
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+runner_t *runner_t::running_;
+__u4c_exceptstate_t __u4c_exceptstate;
+
+runner_t::runner_t()
+{
+    maxchildren_ = 1;
+}
+
+runner_t::~runner_t()
+{
+}
 
 void
-u4c_globalstate_t::add_listener(u4c::listener_t *l)
+runner_t::set_concurrency(int n)
+{
+    if (n == 0)
+    {
+	/* shorthand for "best possible" */
+	n = sysconf(_SC_NPROCESSORS_ONLN);
+    }
+    if (n < 1)
+	n = 1;
+    maxchildren_ = n;
+}
+
+void
+runner_t::list_tests(plan_t *plan) const
+{
+    testnode_t *tn;
+
+    bool ourplan = false;
+    if (!plan)
+    {
+	/* build a default plan with all the tests */
+	plan_t *plan = new plan_t();
+	plan->add_node(testmanager_t::instance()->get_root());
+	ourplan = true;
+    }
+
+    /* iterate over all tests */
+    while ((tn = plan->next()))
+	printf("%s\n", tn->get_fullname().c_str());
+
+    if (ourplan)
+	delete plan;
+}
+
+int
+runner_t::run_tests(plan_t *plan)
+{
+    testnode_t *tn;
+
+    bool ourplan = false;
+    if (!plan)
+    {
+	/* build a default plan with all the tests */
+	plan =  new plan_t();
+	plan->add_node(testmanager_t::instance()->get_root());
+	ourplan = true;
+    }
+
+    if (!listeners_.size())
+	add_listener(new text_listener_t);
+
+    begin();
+    for (;;)
+    {
+	while (children_.size() < maxchildren_ &&
+	       (tn = plan->next()))
+	    begin_test(tn);
+	if (!children_.size())
+	    break;
+	wait();
+    }
+    end();
+
+    if (ourplan)
+	delete plan;
+
+    return !!nfailed_;
+}
+
+void
+runner_t::add_listener(listener_t *l)
 {
     /* append to the list.  The order of adding is preserved for
      * dispatching */
@@ -28,13 +110,14 @@ u4c_globalstate_t::add_listener(u4c::listener_t *l)
 }
 
 void
-u4c_globalstate_t::set_listener(u4c::listener_t *l)
+runner_t::set_listener(listener_t *l)
 {
     /* just throw away the old ones */
     listeners_.clear();
     listeners_.push_back(l);
 }
 
+static volatile int caught_sigchld = 0;
 static void
 handle_sigchld(int sig __attribute__((unused)))
 {
@@ -42,7 +125,7 @@ handle_sigchld(int sig __attribute__((unused)))
 }
 
 void
-u4c_globalstate_t::begin()
+runner_t::begin()
 {
     static bool init = false;
 
@@ -57,16 +140,14 @@ u4c_globalstate_t::begin()
 }
 
 void
-u4c_globalstate_t::end()
+runner_t::end()
 {
     dispatch_listeners(end);
     running_ = 0;
 }
 
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
 const u4c_event_t *
-u4c_globalstate_t::normalise_event(const u4c_event_t *ev)
+runner_t::normalise_event(const u4c_event_t *ev)
 {
     static u4c_event_t norm;
 
@@ -127,10 +208,8 @@ u4c_globalstate_t::normalise_event(const u4c_event_t *ev)
     return &norm;
 }
 
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
-u4c::result_t
-u4c_globalstate_t::raise_event(const u4c_event_t *ev, u4c::functype_t ft)
+result_t
+runner_t::raise_event(const u4c_event_t *ev, functype_t ft)
 {
     ev = normalise_event(ev);
     dispatch_listeners(add_event, ev, ft);
@@ -143,27 +222,27 @@ u4c_globalstate_t::raise_event(const u4c_event_t *ev, u4c::functype_t ft)
     case EV_FIXTURE:
     case EV_VALGRIND:
     case EV_SLMATCH:
-	return u4c::R_FAIL;
+	return R_FAIL;
     case EV_EXPASS:
-	return u4c::R_PASS;
+	return R_PASS;
     case EV_EXFAIL:
-	return u4c::R_FAIL;
+	return R_FAIL;
     case EV_EXNA:
-	return u4c::R_NOTAPPLICABLE;
+	return R_NOTAPPLICABLE;
     default:
 	/* there was an event, but it makes no difference */
-	return u4c::R_UNKNOWN;
+	return R_UNKNOWN;
     }
 }
 
-u4c::child_t *
-u4c_globalstate_t::fork_child(u4c::testnode_t *tn)
+child_t *
+runner_t::fork_child(testnode_t *tn)
 {
     pid_t pid;
 #define PIPE_READ 0
 #define PIPE_WRITE 1
     int pipefd[2];
-    u4c::child_t *child;
+    child_t *child;
     int delay_ms = 10;
     int max_sleeps = 20;
     int r;
@@ -208,7 +287,7 @@ u4c_globalstate_t::fork_child(u4c::testnode_t *tn)
     fprintf(stderr, "u4c: spawned child process %d for %s\n",
 	    (int)pid, tn->get_fullname().c_str());
     close(pipefd[PIPE_WRITE]);
-    child = new u4c::child_t(pid, pipefd[PIPE_READ], tn);
+    child = new child_t(pid, pipefd[PIPE_READ], tn);
     children_.push_back(child);
 
     return child;
@@ -217,7 +296,7 @@ u4c_globalstate_t::fork_child(u4c::testnode_t *tn)
 }
 
 void
-u4c_globalstate_t::handle_events()
+runner_t::handle_events()
 {
     int r;
 
@@ -227,7 +306,7 @@ u4c_globalstate_t::handle_events()
     while (!caught_sigchld)
     {
 	pfd_.resize(children_.size());
-	vector<u4c::child_t*>::iterator citr;
+	vector<child_t*>::iterator citr;
 	vector<struct pollfd>::iterator pitr;
 	for (pitr = pfd_.begin(), citr = children_.begin() ;
 	     citr != children_.end() ; ++pitr, ++citr)
@@ -250,7 +329,7 @@ u4c_globalstate_t::handle_events()
 }
 
 void
-u4c_globalstate_t::reap_children()
+runner_t::reap_children()
 {
     pid_t pid;
     int status;
@@ -274,7 +353,7 @@ u4c_globalstate_t::reap_children()
 		    (int)pid, WSTOPSIG(status));
 	    continue;
 	}
-	vector<u4c::child_t*>::iterator itr;
+	vector<child_t*>::iterator itr;
 	for (itr = children_.begin() ;
 	     itr != children_.end() && (*itr)->get_pid() != pid ;
 	     ++itr)
@@ -286,7 +365,7 @@ u4c_globalstate_t::reap_children()
 	    /* TODO: this is probably eventworthy */
 	    continue;	    /* whatever */
 	}
-	u4c::child_t *child = *itr;
+	child_t *child = *itr;
 
 	if (WIFEXITED(status))
 	{
@@ -296,7 +375,7 @@ u4c_globalstate_t::reap_children()
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
-		child->merge_result(raise_event(&ev, u4c::FT_UNKNOWN));
+		child->merge_result(raise_event(&ev, FT_UNKNOWN));
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -305,11 +384,11 @@ u4c_globalstate_t::reap_children()
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
-	    child->merge_result(raise_event(&ev, u4c::FT_UNKNOWN));
+	    child->merge_result(raise_event(&ev, FT_UNKNOWN));
 	}
 
 	/* notify listeners */
-	nfailed_ += (child->get_result() == u4c::R_FAIL);
+	nfailed_ += (child->get_result() == R_FAIL);
 	nrun_++;
 	dispatch_listeners(finished, child->get_result());
 	dispatch_listeners(end_node, child->get_node());
@@ -324,12 +403,12 @@ u4c_globalstate_t::reap_children()
 }
 
 void
-u4c_globalstate_t::run_function(u4c::functype_t ft, spiegel::function_t *f)
+runner_t::run_function(functype_t ft, spiegel::function_t *f)
 {
     vector<spiegel::value_t> args;
     spiegel::value_t ret = f->invoke(args);
 
-    if (ft == u4c::FT_TEST)
+    if (ft == FT_TEST)
     {
 	assert(ret.which == spiegel::type_t::TC_VOID);
     }
@@ -348,7 +427,7 @@ u4c_globalstate_t::run_function(u4c::functype_t ft, spiegel::function_t *f)
 }
 
 void
-u4c_globalstate_t::run_fixtures(u4c::testnode_t *tn, u4c::functype_t type)
+runner_t::run_fixtures(testnode_t *tn, functype_t type)
 {
     list<spiegel::function_t*> fixtures = tn->get_fixtures(type);
     list<spiegel::function_t*>::iterator itr;
@@ -356,12 +435,12 @@ u4c_globalstate_t::run_fixtures(u4c::testnode_t *tn, u4c::functype_t type)
 	run_function(type, *itr);
 }
 
-u4c::result_t
-u4c_globalstate_t::valgrind_errors()
+result_t
+runner_t::valgrind_errors()
 {
     unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
     unsigned long nerrors;
-    u4c::result_t res = u4c::R_UNKNOWN;
+    result_t res = R_UNKNOWN;
     char msg[1024];
 
     VALGRIND_DO_LEAK_CHECK;
@@ -371,7 +450,7 @@ u4c_globalstate_t::valgrind_errors()
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
-	__u4c_merge(res, raise_event(&ev, u4c::FT_UNKNOWN));
+	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
@@ -380,50 +459,50 @@ u4c_globalstate_t::valgrind_errors()
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
-	__u4c_merge(res, raise_event(&ev, u4c::FT_UNKNOWN));
+	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
     }
 
     return res;
 }
 
-u4c::result_t
-u4c_globalstate_t::run_test_code(u4c::testnode_t *tn)
+result_t
+runner_t::run_test_code(testnode_t *tn)
 {
-    u4c::result_t res = u4c::R_UNKNOWN;
+    result_t res = R_UNKNOWN;
     const u4c_event_t *ev;
 
     u4c_try
     {
-	run_fixtures(tn, u4c::FT_BEFORE);
+	run_fixtures(tn, FT_BEFORE);
     }
     u4c_catch(ev)
     {
-	__u4c_merge(res, raise_event(ev, u4c::FT_BEFORE));
+	__u4c_merge(res, raise_event(ev, FT_BEFORE));
     }
 
-    if (res == u4c::R_UNKNOWN)
+    if (res == R_UNKNOWN)
     {
 	u4c_try
 	{
-	    run_function(u4c::FT_TEST, tn->get_function(u4c::FT_TEST));
+	    run_function(FT_TEST, tn->get_function(FT_TEST));
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, raise_event(ev, u4c::FT_TEST));
+	    __u4c_merge(res, raise_event(ev, FT_TEST));
 	}
 
 	u4c_try
 	{
-	    run_fixtures(tn, u4c::FT_AFTER);
+	    run_fixtures(tn, FT_AFTER);
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, raise_event(ev, u4c::FT_AFTER));
+	    __u4c_merge(res, raise_event(ev, FT_AFTER));
 	}
 
 	/* If we got this far and nothing bad
 	 * happened, we might have passed */
-	__u4c_merge(res, u4c::R_PASS);
+	__u4c_merge(res, R_PASS);
     }
 
     __u4c_merge(res, valgrind_errors());
@@ -432,10 +511,10 @@ u4c_globalstate_t::run_test_code(u4c::testnode_t *tn)
 
 
 void
-u4c_globalstate_t::begin_test(u4c::testnode_t *tn)
+runner_t::begin_test(testnode_t *tn)
 {
-    u4c::child_t *child;
-    u4c::result_t res;
+    child_t *child;
+    result_t res;
 
     {
 	static int n = 0;
@@ -453,7 +532,7 @@ u4c_globalstate_t::begin_test(u4c::testnode_t *tn)
 	return; /* parent process */
 
     /* child process */
-    set_listener(new u4c::proxy_listener_t(event_pipe_));
+    set_listener(new proxy_listener_t(event_pipe_));
     res = run_test_code(tn);
     dispatch_listeners(finished, res);
     fprintf(stderr, "u4c: child process %d (%s) finishing\n",
@@ -462,10 +541,32 @@ u4c_globalstate_t::begin_test(u4c::testnode_t *tn)
 }
 
 void
-u4c_globalstate_t::wait()
+runner_t::wait()
 {
     handle_events();
     reap_children();
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+extern "C" void
+u4c_set_concurrency(u4c_runner_t *runner, int n)
+{
+    runner->set_concurrency(n);
+}
+
+extern "C" void
+u4c_list_tests(u4c_runner_t *runner, u4c_plan_t *plan)
+{
+    runner->list_tests(plan);
+}
+
+extern "C" int
+u4c_run_tests(u4c_runner_t *runner, u4c_plan_t *plan)
+{
+    return runner->run_tests(plan);
+}
+
+// close the namespace
+};
+
