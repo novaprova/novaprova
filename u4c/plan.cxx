@@ -1,5 +1,6 @@
 #include "u4c/plan.hxx"
 #include "u4c/testnode.hxx"
+#include "u4c/testmanager.hxx"
 #include "u4c_priv.h"
 
 namespace u4c {
@@ -26,7 +27,7 @@ plan_t::add_specs(int nspec, const char **specs)
 
     for (i = 0 ; i < nspec ; i++)
     {
-	tn = u4c_testmanager_t::instance()->find_node(specs[i]);
+	tn = testmanager_t::instance()->find_node(specs[i]);
 	if (!tn)
 	    return false;
 	add_node(tn);

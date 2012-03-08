@@ -37,76 +37,6 @@ u4c_globalstate_t::~u4c_globalstate_t()
 {
 }
 
-u4c_testmanager_t::u4c_testmanager_t()
-{
-}
-
-u4c_testmanager_t::~u4c_testmanager_t()
-{
-    while (classifiers_.size())
-    {
-	delete classifiers_.back();
-	classifiers_.pop_back();
-    }
-
-    delete root_;
-    root_ = 0;
-    delete common_;
-    common_ = 0;
-
-    if (spiegel_)
-	delete spiegel_;
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
-u4c::functype_t
-u4c_testmanager_t::classify_function(const char *func,
-				     char *match_return,
-				     size_t maxmatch)
-{
-    if (match_return)
-	match_return[0] = '\0';
-
-    vector<u4c::classifier_t*>::iterator i;
-    for (i = classifiers_.begin() ; i != classifiers_.end() ; ++i)
-    {
-	u4c::functype_t ft = (u4c::functype_t) (*i)->classify(func, match_return, maxmatch);
-	if (ft != u4c::FT_UNKNOWN)
-	    return ft;
-	/* else, no match: just keep looking */
-    }
-    return u4c::FT_UNKNOWN;
-}
-
-void
-u4c_testmanager_t::add_classifier(const char *re,
-			          bool case_sensitive,
-			          u4c::functype_t type)
-{
-    u4c::classifier_t *cl = new u4c::classifier_t;
-    if (!cl->set_regexp(re, case_sensitive))
-    {
-	delete cl;
-	return;
-    }
-    cl->set_results(u4c::FT_UNKNOWN, type);
-    classifiers_.push_back(cl);
-}
-
-void
-u4c_testmanager_t::setup_classifiers()
-{
-    add_classifier("^test_([a-z0-9].*)", false, u4c::FT_TEST);
-    add_classifier("^[tT]est([A-Z].*)", false, u4c::FT_TEST);
-    add_classifier("^[sS]etup$", false, u4c::FT_BEFORE);
-    add_classifier("^set_up$", false, u4c::FT_BEFORE);
-    add_classifier("^[iI]nit$", false, u4c::FT_BEFORE);
-    add_classifier("^[tT]ear[dD]own$", false, u4c::FT_AFTER);
-    add_classifier("^tear_down$", false, u4c::FT_AFTER);
-    add_classifier("^[cC]leanup$", false, u4c::FT_AFTER);
-}
-
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 extern char **environ;
@@ -157,28 +87,12 @@ be_valground(void)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-u4c_testmanager_t *u4c_testmanager_t::instance_ = 0;
-
-u4c_testmanager_t *
-u4c_testmanager_t::instance()
-{
-    if (!instance_)
-    {
-	instance_->setup_classifiers();
-	instance_->discover_functions();
-	/* TODO: check tree for a) leaves without FT_TEST
-	 * and b) non-leaves with FT_TEST */
-	instance_->root_->dump(0);
-    }
-    return instance_;
-}
-
 extern "C" u4c_globalstate_t *
 u4c_init(void)
 {
     be_valground();
     u4c_reltimestamp();
-    u4c_testmanager_t::instance();
+    u4c::testmanager_t::instance();
     u4c_globalstate_t *state = new u4c_globalstate_t;
     return state;
 }
@@ -212,7 +126,7 @@ u4c_globalstate_t::list_tests(u4c::plan_t *plan) const
     {
 	/* build a default plan with all the tests */
 	u4c::plan_t *plan = new u4c::plan_t();
-	plan->add_node(u4c_testmanager_t::instance()->get_root());
+	plan->add_node(u4c::testmanager_t::instance()->get_root());
 	ourplan = true;
     }
 
@@ -240,7 +154,7 @@ u4c_globalstate_t::run_tests(u4c::plan_t *plan)
     {
 	/* build a default plan with all the tests */
 	plan =  new u4c::plan_t();
-	plan->add_node(u4c_testmanager_t::instance()->get_root());
+	plan->add_node(u4c::testmanager_t::instance()->get_root());
 	ourplan = true;
     }
 

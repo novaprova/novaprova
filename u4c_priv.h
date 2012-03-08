@@ -23,37 +23,8 @@ class u4c_globalstate_t;
 #include "u4c/text_listener.hxx"
 #include "u4c/proxy_listener.hxx"
 #include "u4c/plan.hxx"
+#include "u4c/testmanager.hxx"
 
-class u4c_testmanager_t
-{
-public:
-    /* testmanager is a singleton */
-    static u4c_testmanager_t *instance();
-
-    u4c::testnode_t *find_node(const char *nm) const
-    {
-	return root_ ? root_->find(nm) : 0;
-    }
-    u4c::testnode_t *get_root() { return root_; }
-
-private:
-    static void *operator new(size_t sz) { return xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-    u4c_testmanager_t();
-    ~u4c_testmanager_t();
-
-    u4c::functype_t classify_function(const char *func, char *match_return, size_t maxmatch);
-    void add_classifier(const char *re, bool case_sensitive, u4c::functype_t type);
-    void setup_classifiers();
-    void discover_functions();
-
-    static u4c_testmanager_t *instance_;
-
-    std::vector<u4c::classifier_t*> classifiers_;
-    spiegel::dwarf::state_t *spiegel_;
-    u4c::testnode_t *root_;
-    u4c::testnode_t *common_;	// nodes from filesystem root down to root_
-};
 
 class u4c_globalstate_t
 {
