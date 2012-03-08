@@ -11,6 +11,8 @@ testmanager_t *testmanager_t::instance_ = 0;
 
 testmanager_t::testmanager_t()
 {
+    assert(instance_ == 0);
+    instance_ = this;
 }
 
 testmanager_t::~testmanager_t()
@@ -28,6 +30,9 @@ testmanager_t::~testmanager_t()
 
     if (spiegel_)
 	delete spiegel_;
+
+    assert(instance_ == this);
+    instance_ = 0;
 }
 
 
@@ -36,6 +41,7 @@ testmanager_t::instance()
 {
     if (!instance_)
     {
+	new testmanager_t();
 	instance_->setup_classifiers();
 	instance_->discover_functions();
 	/* TODO: check tree for a) leaves without FT_TEST

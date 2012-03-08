@@ -189,5 +189,6 @@ extern "C" void
 u4c_done(u4c_globalstate_t *state)
 {
     delete state;
+    u4c::testmanager_t::done();
 }
 

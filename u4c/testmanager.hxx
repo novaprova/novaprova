@@ -25,6 +25,7 @@ public:
     }
     testnode_t *get_root() { return root_; }
 
+    static void done() { delete instance_; }
 private:
     static void *operator new(size_t sz) { return xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
