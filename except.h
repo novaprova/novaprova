@@ -2,6 +2,7 @@
 #define __U4C_EXCEPT_H__ 1
 
 #include "common.h"
+#include "spiegel/spiegel.hxx"
 #include <setjmp.h>
 
 struct __u4c_exceptstate_t;
@@ -39,6 +40,15 @@ struct u4c_event_t
         filename(f),
         lineno(l),
         function(fn)
+    {}
+    u4c_event_t(enum u4c_events w,
+		const char *d,
+		const spiegel::function_t *f)
+     :  which(w),
+        description(d),
+        filename(0),
+        lineno(~0U -1),
+        function((const char *)f)
     {}
     u4c_event_t(enum u4c_events w,
 		const char *d)

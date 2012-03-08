@@ -4,7 +4,7 @@
 #include "common.h"
 #include <vector>
 
-class u4c_globalstate_t;
+class u4c_testmanager_t;
 
 namespace u4c {
 
@@ -16,7 +16,7 @@ public:
     static void *operator new(size_t sz) { return xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
 
-    plan_t(u4c_globalstate_t *state);
+    plan_t();
     ~plan_t();
 
     void add_node(testnode_t *tn);
@@ -34,7 +34,6 @@ private:
 	testnode_t *node;
     };
 
-    u4c_globalstate_t *state_;
     std::vector<testnode_t*> nodes_;
     iterator_t current_;
 };

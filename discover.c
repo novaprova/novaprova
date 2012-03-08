@@ -27,17 +27,17 @@ test_name(spiegel::function_t *fn, char *submatch)
 }
 
 void
-u4c_globalstate_t::discover_functions()
+u4c_testmanager_t::discover_functions()
 {
-    if (!spiegel)
+    if (!spiegel_)
     {
-	spiegel = new spiegel::dwarf::state_t();
-	spiegel->add_self();
+	spiegel_ = new spiegel::dwarf::state_t();
+	spiegel_->add_self();
 	root_ = new u4c::testnode_t(0);
     }
     // else: splice common_ and root_ back together
 
-    vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
+    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
@@ -68,7 +68,7 @@ fprintf(stderr, "__u4c_discover_functions: scanning %s\n", (*i)->get_absolute_pa
 	    if (fn->get_parameter_types().size() != 0)
 		continue;
 
-	    type = classify_function(fn->get_name(),
+	    type = classify_function(fn->get_name().c_str(),
 				     submatch, sizeof(submatch));
 	    if (type == u4c::FT_UNKNOWN)
 		continue;

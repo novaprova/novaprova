@@ -4,8 +4,7 @@
 
 namespace u4c {
 
-plan_t::plan_t(u4c_globalstate_t *state)
- :  state_(state)
+plan_t::plan_t()
 {
 }
 
@@ -27,7 +26,7 @@ plan_t::add_specs(int nspec, const char **specs)
 
     for (i = 0 ; i < nspec ; i++)
     {
-	tn = state_->root_->find(specs[i]);
+	tn = u4c_testmanager_t::instance()->find_node(specs[i]);
 	if (!tn)
 	    return false;
 	add_node(tn);
@@ -57,9 +56,9 @@ plan_t::next()
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 extern "C" u4c_plan_t *
-u4c_plan_new(u4c_globalstate_t *state)
+u4c_plan_new(void)
 {
-    return new plan_t(state);
+    return new plan_t();
 }
 
 extern "C" void

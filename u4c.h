@@ -22,7 +22,7 @@ extern void u4c_set_concurrency(u4c_globalstate_t *, int);
 extern int u4c_run_tests(u4c_globalstate_t *, u4c_plan_t *);
 extern void u4c_done(u4c_globalstate_t *);
 
-extern u4c_plan_t *u4c_plan_new(u4c_globalstate_t *);
+extern u4c_plan_t *u4c_plan_new(void);
 extern void u4c_plan_delete(u4c_plan_t *);
 extern bool u4c_plan_add_specs(u4c_plan_t *, int nspec, const char **spec);
 

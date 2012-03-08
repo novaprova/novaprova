@@ -70,32 +70,52 @@ u4c_globalstate_t::normalise_event(const u4c_event_t *ev)
 {
     static u4c_event_t norm;
 
+    static char filebuf[1024];
+    static char funcbuf[1024];
+
     memset(&norm, 0, sizeof(norm));
     norm.which = ev->which;
     norm.description = xstr(ev->description);
     if (ev->lineno == ~0U)
     {
 	unsigned long pc = (unsigned long)ev->filename;
-	const char *classname = 0;
+	spiegel::location_t loc;
 
-	if (spiegel->describe_address(pc, &norm.filename,
-			&norm.lineno, &classname, &norm.function))
+	if (spiegel::describe_address(pc, loc))
 	{
-	    static char fullname[1024];
-	    if (classname)
-	    {
-		snprintf(fullname, sizeof(fullname), "%s::%s",
-			 classname, norm.function);
-		norm.function = fullname;
-	    }
+	    snprintf(filebuf, sizeof(filebuf), "%s",
+		     loc.compile_unit_->get_absolute_path().c_str());
+	    norm.filename = filebuf;
+
+	    norm.lineno = loc.line_;
+
+	    if (loc.class_)
+		snprintf(funcbuf, sizeof(funcbuf), "%s::%s",
+			 loc.class_->get_name().c_str(),
+			 loc.function_->get_name().c_str());
+	    else
+		snprintf(funcbuf, sizeof(funcbuf), "%s",
+			 loc.function_->get_name().c_str());
+	    norm.function = funcbuf;
 	}
 	else
 	{
-	    static char pcbuf[32];
-	    snprintf(pcbuf, sizeof(pcbuf), "(0x%lx)", pc);
-	    norm.function = pcbuf;
+	    snprintf(funcbuf, sizeof(funcbuf), "(0x%lx)", pc);
+	    norm.function = funcbuf;
 	    norm.filename = "";
 	}
+    }
+    else if (ev->lineno == ~0U-1)
+    {
+	spiegel::function_t *f = (spiegel::function_t *)ev->function;
+
+	snprintf(filebuf, sizeof(filebuf), "%s",
+		 f->get_compile_unit()->get_absolute_path().c_str());
+	norm.filename = filebuf;
+
+	snprintf(funcbuf, sizeof(funcbuf), "%s",
+		 f->get_name().c_str());
+	norm.function = funcbuf;
     }
     else
     {
@@ -321,10 +341,8 @@ u4c_globalstate_t::run_function(u4c::functype_t ft, spiegel::function_t *f)
 	if (r)
 	{
 	    static char cond[64];
-	    snprintf(cond, sizeof(cond), "fixture retured %d", r);
-	    u4c_throw(u4c_event_t(EV_FIXTURE, cond,
-			    f->get_compile_unit()->get_absolute_path().c_str(),
-			    0, f->get_name()));
+	    snprintf(cond, sizeof(cond), "fixture returned %d", r);
+	    u4c_throw(u4c_event_t(EV_FIXTURE, cond, f));
 	}
     }
 }

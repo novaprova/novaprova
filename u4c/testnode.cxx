@@ -59,9 +59,9 @@ testnode_t::set_function(functype_t ft, spiegel::function_t *func)
 			"%s:%s and %s:%s\n",
 			as_string(ft),
 			funcs_[ft]->get_compile_unit()->get_absolute_path().c_str(),
-			funcs_[ft]->get_name(),
+			funcs_[ft]->get_name().c_str(),
 			func->get_compile_unit()->get_absolute_path().c_str(),
-			func->get_name());
+			func->get_name().c_str());
     else
 	funcs_[ft] = func;
 }
@@ -91,7 +91,7 @@ testnode_t::dump(int level) const
 	    fprintf(stderr, "  %s=%s:%s\n",
 			    as_string((functype_t)type),
 			    funcs_[type]->get_compile_unit()->get_absolute_path().c_str(),
-			    funcs_[type]->get_name());
+			    funcs_[type]->get_name().c_str());
 	}
     }
 
