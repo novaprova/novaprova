@@ -418,7 +418,7 @@ usage:
     printf("Compile Units\n");
     printf("=============\n");
 
-    vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
+    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
@@ -468,7 +468,7 @@ usage:
     printf("Functions\n");
     printf("=========\n");
 
-    vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
+    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
@@ -527,7 +527,7 @@ usage:
     printf("Types\n");
     printf("=====\n");
 
-    vector<spiegel::compile_unit_t *> units = spiegel::compile_unit_t::get_compile_units();
+    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {

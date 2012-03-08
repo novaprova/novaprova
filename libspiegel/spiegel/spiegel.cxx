@@ -280,7 +280,7 @@ compile_unit_t::get_absolute_path() const
 }
 
 vector<compile_unit_t *>
-compile_unit_t::get_compile_units()
+get_compile_units()
 {
     vector<spiegel::compile_unit_t *> res;
 

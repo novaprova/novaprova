@@ -61,8 +61,6 @@ protected:
 class compile_unit_t : public _cacheable_t
 {
 public:
-    static std::vector<compile_unit_t *> get_compile_units();
-
     filename_t get_name() const { return name_; }
     filename_t get_compile_dir() const { return comp_dir_; }
     filename_t get_absolute_path() const;
@@ -89,6 +87,8 @@ private:
     friend class spiegel::dwarf::state_t;
     friend class _cacher_t;
 };
+
+std::vector<compile_unit_t *> get_compile_units();
 
 class type_t : public _cacheable_t
 {
