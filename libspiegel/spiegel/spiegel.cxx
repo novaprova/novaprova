@@ -168,6 +168,40 @@ type_t::get_sizeof() const
 }
 
 string
+type_t::get_name() const
+{
+    if (ref_ == spiegel::dwarf::reference_t::null)
+	return "";
+
+    spiegel::dwarf::walker_t w(ref_);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    if (!e)
+	return "wtf?";
+
+    const char *name = e->get_string_attribute(DW_AT_name);
+    switch (e->get_tag())
+    {
+    case DW_TAG_base_type:
+    case DW_TAG_typedef:
+    case DW_TAG_structure_type:
+    case DW_TAG_union_type:
+    case DW_TAG_class_type:
+    case DW_TAG_enumeration_type:
+	return (name ? name : "");
+	break;
+    case DW_TAG_pointer_type:
+    case DW_TAG_reference_type:
+    case DW_TAG_volatile_type:
+    case DW_TAG_const_type:
+    case DW_TAG_array_type:
+    case DW_TAG_subroutine_type:
+	return "";
+    default:
+	return spiegel::dwarf::tagnames.to_name(e->get_tag());
+    }
+}
+
+string
 type_t::to_string(string inner) const
 {
     if (ref_ == spiegel::dwarf::reference_t::null)
@@ -396,6 +430,8 @@ member_t::member_t(spiegel::dwarf::walker_t &w)
  :  _cacheable_t(w.get_reference()),
     name_(w.get_entry()->get_string_attribute(DW_AT_name))
 {
+    if (!name_)
+	name_ = "";
 }
 
 const compile_unit_t *
@@ -536,6 +572,23 @@ function_t::invoke(vector<value_t> args __attribute__((unused))) const
 }
 #endif
 
+bool describe_address(addr_t addr, class location_t &loc)
+{
+    spiegel::dwarf::state_t *state = spiegel::dwarf::state_t::instance();
+
+    spiegel::dwarf::reference_t curef;
+    spiegel::dwarf::reference_t classref;
+    spiegel::dwarf::reference_t funcref;
+    if (!state->describe_address(addr, curef, loc.line_,
+				 classref, funcref, loc.offset_))
+	return false;
+
+    loc.compile_unit_ = _cacher_t::make_compile_unit(curef);
+    loc.class_ = _cacher_t::make_type(classref);
+    loc.function_ = _cacher_t::make_function(funcref);
+    return true;
+}
+
 map<spiegel::dwarf::reference_t, _cacheable_t*> _cacher_t::cache_;
 
 _cacheable_t *
@@ -557,6 +610,8 @@ _cacher_t::add(_cacheable_t *cc)
 compile_unit_t *
 _cacher_t::make_compile_unit(spiegel::dwarf::reference_t ref)
 {
+    if (ref == spiegel::dwarf::reference_t::null)
+	return 0;
     _cacheable_t *cc = find(ref);
     if (!cc)
 	cc = add(new compile_unit_t(ref));
@@ -572,6 +627,8 @@ _cacher_t::make_compile_unit(spiegel::dwarf::reference_t ref)
 type_t *
 _cacher_t::make_type(spiegel::dwarf::reference_t ref)
 {
+    if (ref == spiegel::dwarf::reference_t::null)
+	return 0;
     _cacheable_t *cc = find(ref);
     if (!cc)
 	cc = add(new type_t(ref));
@@ -585,6 +642,16 @@ _cacher_t::make_function(spiegel::dwarf::walker_t &w)
     if (!cc)
 	cc = add(new function_t(w));
     return (function_t *)cc;
+}
+
+function_t *
+_cacher_t::make_function(spiegel::dwarf::reference_t ref)
+{
+    if (ref == spiegel::dwarf::reference_t::null)
+	return 0;
+    spiegel::dwarf::walker_t w(ref);
+    const spiegel::dwarf::entry_t *e = w.move_next();
+    return (e ? make_function(w) : 0);
 }
 
 // close namespace

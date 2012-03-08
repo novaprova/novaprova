@@ -540,22 +540,23 @@ usage:
     return 0;
 }
 
-static void addr2line(spiegel::dwarf::state_t &state, unsigned long addr)
+static void addr2line(unsigned long addr)
 {
-    const char *filename = 0;
-    unsigned int lineno = 0;
-    const char *classname = 0;
-    const char *function = 0;
+    spiegel::location_t loc;
 
-    if (!state.describe_address(addr, &filename,
-				&lineno, &classname, &function))
+    if (!spiegel::describe_address(addr, loc))
     {
 	printf("address 0x%lx filename - line - class - function -\n", addr);
 	return;
     }
 
-    printf("address 0x%lx filename %s line %u class %s function %s\n",
-	  addr, filename, lineno, classname, function);
+    printf("address 0x%lx filename %s line %u class %s function %s offset 0x%x\n",
+	  addr,
+	  loc.compile_unit_->get_absolute_path().c_str(),
+	  loc.line_,
+	  loc.class_ ? loc.class_->get_name().c_str() : "-",
+	  loc.function_ ? loc.function_->get_name().c_str() : "-",
+	  loc.offset_);
 }
 
 static int
@@ -601,12 +602,12 @@ test_addr2line(int argc, char **argv __attribute__((unused)))
 	    if (p)
 		*p = '\0';
 	    addr = strtoul(buf, 0, 0);
-	    addr2line(state, addr);
+	    addr2line(addr);
 	}
     }
     else
     {
-	addr2line(state, addr);
+	addr2line(addr);
     }
     return 0;
 }

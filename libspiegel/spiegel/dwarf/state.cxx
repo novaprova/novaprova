@@ -563,7 +563,8 @@ state_t::dump_abbrevs()
 }
 
 bool
-state_t::is_within(spiegel::addr_t addr, const walker_t &w) const
+state_t::is_within(spiegel::addr_t addr, const walker_t &w,
+		   unsigned int &offset) const
 {
     const entry_t *e = w.get_entry();
     uint64_t lo = e->get_uint64_attribute(DW_AT_low_pc);
@@ -572,9 +573,23 @@ state_t::is_within(spiegel::addr_t addr, const walker_t &w) const
     // it (despite only claiming DWARF2 compliance).
     uint64_t ranges = e->get_uint64_attribute(DW_AT_ranges);
     if (lo && hi)
-	return (addr >= lo && addr <= hi);
+    {
+	if (addr >= lo && addr <= hi)
+	{
+	    offset = (addr - lo);
+	    return true;
+	}
+	return false;
+    }
     if (lo)
-	return (addr == lo);
+    {
+	if (addr == lo)
+	{
+	    offset = 0;
+	    return true;
+	}
+	return false;
+    }
     if (ranges)
     {
 	reader_t r = w.get_section_contents(DW_sec_ranges);
@@ -597,7 +612,10 @@ state_t::is_within(spiegel::addr_t addr, const walker_t &w) const
 	    start += base;
 	    end += base;
 	    if (addr >= start && addr < end)
+	    {
+		offset = addr - base;
 		return true;
+	    }
 	}
     }
     return false;
@@ -605,38 +623,44 @@ state_t::is_within(spiegel::addr_t addr, const walker_t &w) const
 
 bool
 state_t::describe_address(spiegel::addr_t addr,
-			  const char **filenamep,
-			  unsigned int *linenop,
-			  const char **classp,
-			  const char **functionp) const
+			  reference_t &curef,
+			  unsigned int &lineno,
+			  reference_t &classref,
+			  reference_t &funcref,
+			  unsigned int &offset) const
 {
+    // initialise all the results to the "dunno" case
+    curef = reference_t::null;
+    lineno = 0;
+    classref = reference_t::null;
+    funcref = reference_t::null;
+    offset = 0;
+
     vector<compile_unit_t*>::const_iterator i;
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
 	walker_t w((*i)->make_root_reference());
 	const entry_t *e = w.move_next();
-	if (is_within(addr, w))
+	if (is_within(addr, w, offset))
 	{
-	    *linenop = 0;
-	    *filenamep = e->get_string_attribute(DW_AT_name);
+	    curef = w.get_reference();
 	    for (e = w.move_down() ; e ; e = w.move_next())
 	    {
 		switch (e->get_tag())
 		{
 		case DW_TAG_subprogram:
-		    if (is_within(addr, w))
+		    if (is_within(addr, w, offset))
 		    {
 			if (e->get_attribute(DW_AT_specification))
 			{
 			    e = w.move_to(e->get_reference_attribute(DW_AT_specification));
-			    *functionp = e->get_string_attribute(DW_AT_name);
+			    funcref = w.get_reference();
 			    e = w.move_up();
-			    *classp = (e ?  e->get_string_attribute(DW_AT_name) : 0);
+			    classref = (e ? w.get_reference() : reference_t::null);
 			}
 			else
 			{
-			    *classp = 0;
-			    *functionp = e->get_string_attribute(DW_AT_name);
+			    funcref = w.get_reference();
 			}
 			return true;
 		    }

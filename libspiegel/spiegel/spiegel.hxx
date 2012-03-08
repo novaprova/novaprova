@@ -185,6 +185,9 @@ public:
     void set(void *, value_t) const;
 #endif
 #endif
+    // for class, struct, union, typedef
+    std::string get_name() const;
+
     std::string to_string() const;
 
 private:
@@ -200,7 +203,7 @@ private:
 class member_t : public _cacheable_t
 {
 public:
-    const char *get_name() const { return name_; }
+    std::string get_name() const { return name_; }
     const compile_unit_t *get_compile_unit() const;
 //     type_t *get_declaring_class() const;
 //     int get_modifiers() const;
@@ -289,12 +292,25 @@ private:
     friend class _cacher_t;
 };
 
+class location_t
+{
+public:
+    compile_unit_t *compile_unit_;
+    unsigned int line_;
+    type_t *class_;
+    function_t *function_;
+    unsigned int offset_;
+};
+
+bool describe_address(addr_t, class location_t &);
+
 class _cacher_t
 {
 public:
     static type_t *make_type(spiegel::dwarf::reference_t);
     static compile_unit_t *make_compile_unit(spiegel::dwarf::reference_t);
     static function_t *make_function(spiegel::dwarf::walker_t &);
+    static function_t *make_function(spiegel::dwarf::reference_t ref);
 //     static constructor_t *make_constructor(spiegel::dwarf::reference_t);
 //     static destructor_t *make_destructor(spiegel::dwarf::reference_t);
 //     static field_t *make_field(spiegel::dwarf::reference_t);
