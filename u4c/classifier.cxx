@@ -3,18 +3,29 @@
 
 namespace u4c {
 
+const char *
+classifier_t::error_string() const
+{
+    static char buf[2048];
+
+    if (!error_)
+	return 0;
+
+    int n = snprintf(buf, sizeof(buf)-100, "/%s/: ", re_);
+    regerror(error_, &compiled_re_, buf+n, sizeof(buf)-n-1);
+
+    return buf;
+}
+
 bool
 classifier_t::set_regexp(const char *re, bool case_sensitive)
 {
     re_ = xstrdup(re);
-    int r = regcomp(&compiled_re_, re,
+    error_ = regcomp(&compiled_re_, re,
 		    REG_EXTENDED|(case_sensitive ? 0 : REG_ICASE));
-    if (r)
+    if (error_)
     {
-	char err[1024];
-	regerror(r, &compiled_re_, err, sizeof(err));
-	fprintf(stderr, "u4c: bad classifier %s: %s\n",
-		re, err);
+	fprintf(stderr, "u4c: bad classifier %s\n", error_string());
 	return false;
     }
     return true;
@@ -55,10 +66,8 @@ classifier_t::classify(const char *func,
     if (r != REG_NOMATCH)
     {
 	/* some runtime error */
-	char err[1024];
-	regerror(r, &compiled_re_, err, sizeof(err));
 	fprintf(stderr, "u4c: failed matching \"%s\": %s\n",
-		func, err);
+		func, error_string());
     }
 
     return results_[0];

@@ -15,61 +15,46 @@
  * This product includes software developed by Computing Services
  * at Carnegie Mellon University (http://www.cmu.edu/computing/).
  */
-struct u4c_slmatch_t;
+namespace u4c {
+using namespace std;
 
-enum u4c_sldisposition_t
+enum sldisposition_t
 {
+    SL_UNKNOWN,
     SL_IGNORE,
     SL_COUNT,
     SL_FAIL,
 };
 
-struct u4c_slmatch_t
+struct slmatch_t
 {
-    u4c_slmatch_t *next;
-    char *re;
-    unsigned int count;
-    int tag;
-    u4c_sldisposition_t disposition;
-    regex_t compiled_re;
+    static void *operator new(size_t sz) { return xmalloc(sz); }
+    static void operator delete(void *x) { free(x); }
+
+    classifier_t classifier_;
+    unsigned int count_;
+    int tag_;
+
+    slmatch_t(sldisposition_t dis, int tag)
+     :  tag_(tag)
+    {
+	classifier_.set_results(SL_UNKNOWN, dis);
+    }
 };
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static u4c_slmatch_t *slmatches;
-
-static const char *
-slmatch_error(const u4c_slmatch_t *slm, int r)
-{
-    static char buf[2048];
-    int n;
-
-    snprintf(buf, sizeof(buf)-100, "/%s/: ", slm->re);
-    n = strlen(buf);
-    regerror(r, &slm->compiled_re, buf+n, sizeof(buf)-n-1);
-
-    return buf;
-}
+static vector<slmatch_t*> slmatches;
 
 static void
-add_slmatch(const char *re, u4c_sldisposition_t dis,
+add_slmatch(const char *re, sldisposition_t dis,
 	    int tag, const char *file, int line)
 {
-    u4c_slmatch_t *slm, **prevp;
-    int r;
-
-    slm = (u4c_slmatch_t *)u4c::xmalloc(sizeof(*slm));
-    slm->re = u4c::xstrdup(re);
-    slm->disposition = dis;
-    slm->tag = tag;
-
-    r = regcomp(&slm->compiled_re, slm->re,
-		REG_EXTENDED|REG_ICASE|REG_NOSUB);
-    if (r)
+    slmatch_t *slm = new slmatch_t(dis, tag);
+    if (!slm->classifier_.set_regexp(re, false))
     {
-	const char *msg = slmatch_error(slm, r);
-	free(slm->re);
-	free(slm);
+	const char *msg = slm->classifier_.error_string();
+	delete slm;
 	u4c_throw(event(EV_SLMATCH, msg, file, line, 0));
     }
 
@@ -77,44 +62,41 @@ add_slmatch(const char *re, u4c_sldisposition_t dis,
      * resolve multiple matches, but let's be
      * careful to preserve caller order anyway by
      * always appending. */
-    for (prevp = &slmatches ;
-	 *prevp ;
-	 prevp = &((*prevp)->next))
-	;
-    slm->next = NULL;
-    *prevp = slm;
+    slmatches.push_back(slm);
 }
 
-void
+extern "C" void
 __u4c_syslog_fail(const char *re, const char *file, int line)
 {
     add_slmatch(re, SL_FAIL, 0, file, line);
 }
 
-void
+extern "C" void
 __u4c_syslog_ignore(const char *re, const char *file, int line)
 {
     add_slmatch(re, SL_IGNORE, 0, file, line);
 }
 
-void
+extern "C" void
 __u4c_syslog_match(const char *re, int tag, const char *file, int line)
 {
     add_slmatch(re, SL_COUNT, tag, file, line);
 }
 
-unsigned int
+extern "C" unsigned int
 __u4c_syslog_count(int tag, const char *file, int line)
 {
     unsigned int count = 0;
     int nmatches = 0;
-    u4c_slmatch_t *slm;
 
-    for (slm = slmatches ; slm ; slm = slm->next)
+    vector<slmatch_t*>::iterator i;
+    for (i = slmatches.begin() ; i != slmatches.end() ; ++i)
     {
-	if (tag < 0 || slm->tag == tag)
+	slmatch_t *slm = *i;
+
+	if (tag < 0 || slm->tag_ == tag)
 	{
-	    count += slm->count;
+	    count += slm->count_;
 	    nmatches++;
 	}
     }
@@ -128,35 +110,30 @@ __u4c_syslog_count(int tag, const char *file, int line)
     return count;
 }
 
-static u4c_sldisposition_t
+static sldisposition_t
 find_slmatch(const char **msgp)
 {
-    int r;
-    u4c_slmatch_t *slm;
-    u4c_slmatch_t *most = NULL;
+    slmatch_t *most = NULL;
+    sldisposition_t mostdis = SL_UNKNOWN;
 
-    for (slm = slmatches ; slm ; slm = slm->next)
+    vector<slmatch_t*>::iterator i;
+    for (i = slmatches.begin() ; i != slmatches.end() ; ++i)
     {
-	r = regexec(&slm->compiled_re, *msgp, 0, NULL, 0);
-	if (!r)
+	slmatch_t *slm = *i;
+	sldisposition_t dis = (sldisposition_t)slm->classifier_.classify(*msgp, 0, 0);
+	if (dis != SL_UNKNOWN)
 	{
 	    /* found */
-	    if (!most || slm->disposition > most->disposition)
+	    if (!most || dis > mostdis)
 		most = slm;
-	}
-	else if (r != REG_NOMATCH)
-	{
-	    /* runtime regex error */
-	    *msgp = slmatch_error(slm, r);
-	    return SL_FAIL;
 	}
     }
 
     if (!most)
 	return SL_FAIL;
-    if (most->disposition == SL_COUNT)
-	most->count++;
-    return most->disposition;
+    if (mostdis == SL_COUNT)
+	most->count_++;
+    return mostdis;
 }
 
 /*
@@ -248,5 +225,8 @@ syslog(int prio, const char *fmt, ...)
     if (find_slmatch(&msg) == SL_FAIL)
 	u4c_throw(eventc(EV_SLMATCH, msg));
 }
+
+// close the namespace
+};
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

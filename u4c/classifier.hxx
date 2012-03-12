@@ -30,11 +30,13 @@ public:
 	results_[1] = matched;
     }
     int classify(const char *, char *, size_t) const;
+    const char *error_string() const;
 
 private:
     char *re_;
     regex_t compiled_re_;
     int results_[2];
+    int error_;
 };
 
 // close the namespace
