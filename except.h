@@ -1,7 +1,7 @@
 #ifndef __U4C_EXCEPT_H__
 #define __U4C_EXCEPT_H__ 1
 
-#include "common.h"
+#include "u4c/common.hxx"
 #include "spiegel/spiegel.hxx"
 #include <setjmp.h>
 

@@ -1,7 +1,7 @@
 #ifndef __U4C_CLASSIFIER_H__
 #define __U4C_CLASSIFIER_H__ 1
 
-#include "common.h"
+#include "u4c/common.hxx"
 #include <regex.h>
 
 namespace u4c {

@@ -1,6 +1,8 @@
-#include "common.h"
+#include "u4c/common.hxx"
 
-const char *__u4c_argv0 = "u4c";
+namespace u4c {
+
+const char *argv0 = "u4c";
 
 static void oom(void) __attribute__((noreturn));
 
@@ -26,7 +28,7 @@ oom(void)
 {
     static const char message[] = ": no memory, exiting\n";
 
-    if (do_write(2, __u4c_argv0, strlen(__u4c_argv0)) < 0)
+    if (do_write(2, argv0, strlen(argv0)) < 0)
 	exit(1);
     if (do_write(2, message, sizeof(message)-1) < 0)
 	exit(1);
@@ -34,7 +36,7 @@ oom(void)
 }
 
 void *
-__u4c_malloc(size_t sz)
+xmalloc(size_t sz)
 {
     void *x;
 
@@ -46,7 +48,7 @@ __u4c_malloc(size_t sz)
 }
 
 char *
-__u4c_strdup(const char *s)
+xstrdup(const char *s)
 {
     char *x;
     size_t len;
@@ -61,7 +63,7 @@ __u4c_strdup(const char *s)
 }
 
 void *
-__u4c_realloc(void *p, size_t sz)
+xrealloc(void *p, size_t sz)
 {
     void *x;
 
@@ -70,3 +72,6 @@ __u4c_realloc(void *p, size_t sz)
 	oom();
     return x;
 }
+
+// close the namespace
+};

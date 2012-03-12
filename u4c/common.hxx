@@ -1,5 +1,5 @@
-#ifndef __U4C_COMMON_H__
-#define __U4C_COMMON_H__ 1
+#ifndef __U4C_COMMON_HXX__
+#define __U4C_COMMON_HXX__ 1
 
 #include <stdio.h>
 #include <limits.h>
@@ -17,16 +17,17 @@
 #include <sys/poll.h>
 #include <valgrind/memcheck.h>
 
-extern void *__u4c_malloc(size_t sz);
-extern void *__u4c_realloc(void *, size_t);
-extern char *__u4c_strdup(const char *s);
-extern const char *__u4c_argv0;
+namespace u4c {
 
-#define xmalloc(sz) __u4c_malloc(sz)
-#define xrealloc(p, sz) __u4c_realloc(p, sz)
-#define xstrdup(s) __u4c_strdup(s)
+extern void *xmalloc(size_t sz);
+extern void *xrealloc(void *, size_t);
+extern char *xstrdup(const char *s);
 #define xfree(v) \
     do { free(v); (v) = NULL; } while(0)
 #define xstr(x)  ((x) ? (x) : "")
+extern const char *argv0;
 
-#endif /* __U4C_COMMON_H__ */
+// close the namespace
+};
+
+#endif /* __U4C_COMMON_HXX__ */

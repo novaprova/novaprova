@@ -58,8 +58,8 @@ add_slmatch(const char *re, u4c_sldisposition_t dis,
     u4c_slmatch_t *slm, **prevp;
     int r;
 
-    slm = (u4c_slmatch_t *)xmalloc(sizeof(*slm));
-    slm->re = xstrdup(re);
+    slm = (u4c_slmatch_t *)u4c::xmalloc(sizeof(*slm));
+    slm->re = u4c::xstrdup(re);
     slm->disposition = dis;
     slm->tag = tag;
 

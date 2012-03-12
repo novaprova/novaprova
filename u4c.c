@@ -1,4 +1,3 @@
-#include "common.h"
 #include "u4c_priv.h"
 #include "except.h"
 #include "spiegel/tok.hxx"
@@ -62,7 +61,7 @@ be_valground(void)
     if (!discover_args(&argc, &argv))
 	return;
 
-    p = newargv = (const char **)xmalloc(sizeof(char *) * (argc+6));
+    p = newargv = (const char **)u4c::xmalloc(sizeof(char *) * (argc+6));
     *p++ = "/usr/bin/valgrind";
     *p++ = "-q";
     *p++ = "--tool=memcheck";

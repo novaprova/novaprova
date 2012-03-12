@@ -18,10 +18,11 @@ depdir=		.deps
 all: libu4c.a
 
 libu4c_SOURCE=	\
-		u4c.c common.c \
+		u4c.c \
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
 		u4c/child.cxx \
 		u4c/classifier.cxx \
+		u4c/common.cxx \
 		u4c/plan.cxx \
 		u4c/proxy_listener.cxx \
 		u4c/runner.cxx \
@@ -31,7 +32,8 @@ libu4c_SOURCE=	\
 		u4c/types.cxx \
 
 libu4c_PRIVHEADERS= \
-		common.h u4c_priv.h \
+		u4c/common.hxx \
+		u4c_priv.h \
 
 libu4c_HEADERS=	u4c.h \
 		u4c/child.hxx \

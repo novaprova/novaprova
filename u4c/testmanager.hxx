@@ -1,7 +1,7 @@
 #ifndef __U4C_TESTMANAGER_H__
 #define __U4C_TESTMANAGER_H__ 1
 
-#include "common.h"
+#include "u4c/common.hxx"
 #include "u4c/types.hxx"
 #include "u4c/testnode.hxx"
 #include <string>

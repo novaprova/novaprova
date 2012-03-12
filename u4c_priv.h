@@ -1,7 +1,7 @@
 #ifndef __U4C_PRIV_H__
 #define __U4C_PRIV_H__ 1
 
-#include "common.h"
+#include "u4c/common.hxx"
 #include "u4c.h"
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"

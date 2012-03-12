@@ -1,7 +1,7 @@
 #ifndef __U4C_RUNNER_H__
 #define __U4C_RUNNER_H__ 1
 
-#include "common.h"
+#include "u4c/common.hxx"
 #include "u4c/types.hxx"
 #include <vector>
 
