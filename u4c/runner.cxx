@@ -9,6 +9,8 @@
 #include "except.h"
 #include <valgrind/memcheck.h>
 
+__u4c_exceptstate_t __u4c_exceptstate;
+
 namespace u4c {
 using namespace std;
 
@@ -20,7 +22,6 @@ using namespace std;
     } while(0)
 
 runner_t *runner_t::running_;
-__u4c_exceptstate_t __u4c_exceptstate;
 
 runner_t::runner_t()
 {
