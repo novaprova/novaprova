@@ -6,13 +6,9 @@
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
 #include "spiegel/filename.hxx"
-#include <bfd.h>
-#include <sys/poll.h>
 #include <vector>
 #include <list>
-
-struct u4c_event_t;
-struct u4c_function_t;
+#include <string>
 
 #include "u4c/types.hxx"
 #include "u4c/classifier.hxx"
@@ -24,7 +20,5 @@ struct u4c_function_t;
 #include "u4c/plan.hxx"
 #include "u4c/testmanager.hxx"
 #include "u4c/runner.hxx"
-
-/* run.c */
 
 #endif /* __U4C_PRIV_H__ */
