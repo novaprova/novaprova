@@ -26,11 +26,5 @@ struct u4c_function_t;
 #include "u4c/runner.hxx"
 
 /* run.c */
-#define __u4c_merge(r1, r2) \
-    do { \
-	u4c::result_t _r1 = (r1), _r2 = (u4c::result_t)(r2); \
-	(r1) = (_r1 > _r2 ? _r1 : _r2); \
-    } while(0)
-
 
 #endif /* __U4C_PRIV_H__ */

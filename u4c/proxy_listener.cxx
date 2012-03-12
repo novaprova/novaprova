@@ -185,13 +185,13 @@ proxy_listener_t::handle_call(int fd, result_t *resp)
 	if ((r = deserialise_event(fd, &ev)) ||
 	    (r = deserialise_uint(fd, &ft)))
 	    return false;    /* failed to decode */
-	__u4c_merge(*resp,
+	*resp = merge(*resp,
 	u4c::runner_t::running()->raise_event(&ev, (functype_t)ft));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))
 	    return false;    /* failed to decode */
-	__u4c_merge(*resp, res);
+	*resp = merge(*resp, (result_t)res);
 	return false;	      /* end of test, expect no more calls */
     default:
 	fprintf(stderr,

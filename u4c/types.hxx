@@ -13,6 +13,11 @@ enum result_t
     R_FAIL
 };
 
+inline result_t merge(result_t r1, result_t r2)
+{
+    return (r1 > r2 ? r1 : r2);
+}
+
 enum functype_t
 {
     FT_UNKNOWN,

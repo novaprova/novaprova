@@ -43,7 +43,7 @@ child_t::poll_handle(struct pollfd &pfd)
 void
 child_t::merge_result(result_t r)
 {
-    __u4c_merge(result_, r);
+    result_ = merge(result_, r);
 }
 
 // close the namespace

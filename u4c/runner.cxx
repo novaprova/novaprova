@@ -450,7 +450,7 @@ runner_t::valgrind_errors()
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
-	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
+	res = merge(res, raise_event(&ev, FT_UNKNOWN));
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
@@ -459,7 +459,7 @@ runner_t::valgrind_errors()
 	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
-	__u4c_merge(res, raise_event(&ev, FT_UNKNOWN));
+	res = merge(res, raise_event(&ev, FT_UNKNOWN));
     }
 
     return res;
@@ -477,7 +477,7 @@ runner_t::run_test_code(testnode_t *tn)
     }
     u4c_catch(ev)
     {
-	__u4c_merge(res, raise_event(ev, FT_BEFORE));
+	res = merge(res, raise_event(ev, FT_BEFORE));
     }
 
     if (res == R_UNKNOWN)
@@ -488,7 +488,7 @@ runner_t::run_test_code(testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, raise_event(ev, FT_TEST));
+	    res = merge(res, raise_event(ev, FT_TEST));
 	}
 
 	u4c_try
@@ -497,15 +497,15 @@ runner_t::run_test_code(testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    __u4c_merge(res, raise_event(ev, FT_AFTER));
+	    res = merge(res, raise_event(ev, FT_AFTER));
 	}
 
 	/* If we got this far and nothing bad
 	 * happened, we might have passed */
-	__u4c_merge(res, R_PASS);
+	res = merge(res, R_PASS);
     }
 
-    __u4c_merge(res, valgrind_errors());
+    res = merge(res, valgrind_errors());
     return res;
 }
 
