@@ -1,5 +1,6 @@
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
+#include "spiegel/platform/common.hxx"
 using namespace std;
 
 #define BASEDIR	"/tmp"
@@ -612,6 +613,153 @@ test_addr2line(int argc, char **argv __attribute__((unused)))
     return 0;
 }
 
+int
+the_function(int x, int y)
+{
+    int i;
+
+    printf("Start of the_function, x=%d y=%d\n", x, y);
+    for (i = 0 ; i < x ; i++)
+    {
+	y *= 5;
+	y--;
+    }
+    printf("End of the_function, returning %d\n", y);
+    return y;
+}
+
+int
+another_function(int x, int y)
+{
+    int i;
+
+    printf("Start of another_function, x=%d y=%d\n", x, y);
+    for (i = 0 ; i < x ; i++)
+    {
+	y *= 2;
+	y++;
+    }
+    printf("End of another_function, returning %d\n", y);
+    return y;
+}
+
+class intercept_tester_t : public spiegel::platform::intercept_t
+{
+public:
+    intercept_tester_t();
+    ~intercept_tester_t();
+
+    void before();
+    void after();
+
+    unsigned int after_count;
+    unsigned int before_count;
+    int x, y, r;
+    bool test_skip;
+    bool test_redirect;
+};
+
+intercept_tester_t::intercept_tester_t()
+ :  intercept_t((spiegel::addr_t)&the_function)
+    // we don't initialise the counts to 0 because the
+    // inherited operator new does that.
+{
+}
+
+intercept_tester_t::~intercept_tester_t()
+{
+}
+
+void
+intercept_tester_t::before()
+{
+    x = get_arg(0);
+    y = get_arg(1);
+    before_count++;
+    printf("BEFORE x=%d y=%d\n", x, y);
+    if (test_skip)
+    {
+	printf("SKIPPING r=%d\n", r);
+	skip(r);
+    }
+    if (test_redirect)
+    {
+	printf("REDIRECTING\n");
+	redirect((spiegel::addr_t)&another_function);
+    }
+}
+
+void
+intercept_tester_t::after()
+{
+    r = get_retval();
+    after_count++;
+    printf("AFTER, returning %d\n", r);
+}
+
+static int
+test_intercept(int argc, char **argv __attribute__((unused)))
+{
+    if (argc > 1)
+    {
+	spiegel::fatal("Usage: testrunner intercept\n");
+    }
+
+    spiegel::dwarf::state_t state;
+    if (!state.add_self())
+	return 1;
+
+    intercept_tester_t *it = new intercept_tester_t();
+    it->install();
+
+    assert(it->x == 0);
+    assert(it->y == 0);
+    assert(it->r == 0);
+    assert(it->before_count == 0);
+    assert(it->after_count == 0);
+
+    the_function(3, 42);
+
+    assert(it->x == 3);
+    assert(it->y == 42);
+    assert(it->r == 5219);
+    assert(it->before_count == 1);
+    assert(it->after_count == 1);
+
+    the_function(7, 27);
+
+    assert(it->x == 7);
+    assert(it->y == 27);
+    assert(it->r == 2089844);
+    assert(it->before_count == 2);
+    assert(it->after_count == 2);
+
+    it->test_skip = true;
+    it->r = 327;
+    the_function(4, 56);
+    it->test_skip = false;
+
+    assert(it->x == 4);
+    assert(it->y == 56);
+    assert(it->r == 327);
+    assert(it->before_count == 3);
+    assert(it->after_count == 2);
+
+    it->test_redirect = true;
+    the_function(3, 42);
+    it->test_redirect = false;
+
+    assert(it->x == 3);
+    assert(it->y == 42);
+    assert(it->r == 343);
+    assert(it->before_count == 4);
+    assert(it->after_count == 3);
+
+    it->uninstall();
+    delete it;
+
+    return 0;
+}
 
 
 int
@@ -642,6 +790,8 @@ main(int argc, char **argv)
 	return test_types(argc-1, argv+1);
     if (!strcmp(argv[1], "addr2line"))
 	return test_addr2line(argc-1, argv+1);
+    if (!strcmp(argv[1], "intercept"))
+	return test_intercept(argc-1, argv+1);
     spiegel::fatal("Usage: testrunner command args...\n");
     return 1;
 }
