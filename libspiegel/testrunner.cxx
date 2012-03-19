@@ -613,12 +613,15 @@ test_addr2line(int argc, char **argv __attribute__((unused)))
     return 0;
 }
 
+static int the_function_count = 0;
+
 int
 the_function(int x, int y)
 {
     int i;
 
     printf("Start of the_function, x=%d y=%d\n", x, y);
+    the_function_count++;
     for (i = 0 ; i < x ; i++)
     {
 	y *= 5;
@@ -628,12 +631,15 @@ the_function(int x, int y)
     return y;
 }
 
+static int another_function_count = 0;
+
 int
 another_function(int x, int y)
 {
     int i;
 
     printf("Start of another_function, x=%d y=%d\n", x, y);
+    another_function_count++;
     for (i = 0 ; i < x ; i++)
     {
 	y *= 2;
@@ -717,6 +723,8 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(it->r == 0);
     assert(it->before_count == 0);
     assert(it->after_count == 0);
+    assert(the_function_count == 0);
+    assert(another_function_count == 0);
 
     the_function(3, 42);
 
@@ -725,6 +733,8 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(it->r == 5219);
     assert(it->before_count == 1);
     assert(it->after_count == 1);
+    assert(the_function_count == 1);
+    assert(another_function_count == 0);
 
     the_function(7, 27);
 
@@ -733,6 +743,8 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(it->r == 2089844);
     assert(it->before_count == 2);
     assert(it->after_count == 2);
+    assert(the_function_count == 2);
+    assert(another_function_count == 0);
 
     it->test_skip = true;
     it->r = 327;
@@ -744,6 +756,8 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(it->r == 327);
     assert(it->before_count == 3);
     assert(it->after_count == 2);
+    assert(the_function_count == 2);
+    assert(another_function_count == 0);
 
     it->test_redirect = true;
     the_function(3, 42);
@@ -754,6 +768,8 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(it->r == 343);
     assert(it->before_count == 4);
     assert(it->after_count == 3);
+    assert(the_function_count == 2);
+    assert(another_function_count == 1);
 
     it->uninstall();
     delete it;
