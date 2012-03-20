@@ -299,7 +299,6 @@ after:
     return rt.retval;
 }
 
-
 static void
 handle_sigtrap(int sig, siginfo_t *si, void *vuc)
 {
@@ -316,7 +315,8 @@ handle_sigtrap(int sig, siginfo_t *si, void *vuc)
 	return;	    /* we got a bogus signal, wtf? */
     if (si->si_signo != SIGTRAP)
 	return;	    /* we got a bogus signal, wtf? */
-    if (si->si_code != SI_KERNEL)
+    if (si->si_code != SI_KERNEL /* natural */ &&
+        si->si_code != TRAP_BRKPT /* via Valgrind */)
 	return;	    /* this is the code we expect from INT3 traps */
     if (si->si_pid != 0)
 	return;	    /* some process sent us SIGTRAP, wtf? */
