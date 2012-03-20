@@ -134,6 +134,13 @@ filename_t::normalise() const
 }
 
 filename_t
+filename_t::basename() const
+{
+    unsigned int tail = find_last_of('/');
+    return (tail == string::npos ? filename_t(*this) : substr(tail+1));
+}
+
+filename_t
 filename_t::current_dir()
 {
     char path[PATH_MAX];

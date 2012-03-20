@@ -22,6 +22,7 @@ public:
     filename_t make_absolute_to_file(filename_t absfile) const;
     filename_t make_absolute_to_dir(filename_t absdir) const;
     filename_t normalise() const;
+    filename_t basename() const;
     static filename_t current_dir();
 
     void pop_back();
