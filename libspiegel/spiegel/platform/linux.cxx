@@ -64,7 +64,8 @@ vector<linkobj_t> self_linkobjs()
 
 /*
  * Functions to ensure some .text space is writable (as well as
- * executable) so we can insert INT3 insns, and to undo the effect.
+ * executable) so we can insert breakpoint insns, and to undo the
+ * effect.
  *
  * Uses per-page reference counting so that multiple calls can be
  * nested.  This is for tidiness so that we can re-map pages back to
@@ -143,10 +144,12 @@ text_restore(addr_t addr, size_t len)
 
 #define INSN_PUSH_EBP	    0x55
 #define INSN_INT3	    0xcc
+#define INSN_HLT	    0xf4
 
 static ucontext_t tramp_uc;
 static bool hack1 = false;
 vector<intercept_t*> intercept_t::installed_;
+static bool using_int3 = false;
 
 intercept_t *
 intercept_t::find_installed(addr_t addr)
@@ -162,7 +165,8 @@ static unsigned long
 intercept_tramp(void)
 {
     intercept_t *icpt = intercept_t::find_installed(
-			    tramp_uc.uc_mcontext.gregs[REG_EIP]-1);
+			    tramp_uc.uc_mcontext.gregs[REG_EIP]
+			    - (using_int3 ? 1 : 0));
     if (!icpt)
 	return 0;
 
@@ -303,30 +307,43 @@ after:
 }
 
 static void
-handle_sigtrap(int sig, siginfo_t *si, void *vuc)
+handle_signal(int sig, siginfo_t *si, void *vuc)
 {
     ucontext_t *uc = (ucontext_t *)vuc;
 
-//     printf("handle_sigtrap: signo=%d errno=%d code=%d EIP 0x%08lx ESP 0x%08lx\n",
+//     printf("handle_signal: signo=%d code=%d pid=%d EIP 0x%08lx EBP 0x%08lx ESP 0x%08lx\n",
 // 	    si->si_signo,
-// 	    si->si_errno,
 // 	    si->si_code,
+// 	    (int)si->si_pid,
 // 	    (unsigned long)uc->uc_mcontext.gregs[REG_EIP],
+// 	    (unsigned long)uc->uc_mcontext.gregs[REG_EBP],
 // 	    (unsigned long)uc->uc_mcontext.gregs[REG_ESP]);
 
-    if (sig != SIGTRAP)
-	return;	    /* we got a bogus signal, wtf? */
-    if (si->si_signo != SIGTRAP)
-	return;	    /* we got a bogus signal, wtf? */
-    if (si->si_code != SI_KERNEL /* natural */ &&
-        si->si_code != TRAP_BRKPT /* via Valgrind */)
-	return;	    /* this is the code we expect from INT3 traps */
+    /* double-check that this is not some spurious signal */
+    unsigned char *eip = (unsigned char *)(uc->uc_mcontext.gregs[REG_EIP]);
+    if (using_int3)
+    {
+	if (sig != SIGTRAP || si->si_signo != SIGTRAP)
+	    return;	    /* we got a bogus signal, wtf? */
+	if (si->si_code != SI_KERNEL /* natural */ &&
+	    si->si_code != TRAP_BRKPT /* via Valgrind */)
+	    return;	    /* this is the code we expect from HLT traps */
+	if (eip[-1] != INSN_INT3)
+	    return;	    /* not an INT3, wtf? */
+    }
+    else
+    {
+	if (sig != SIGSEGV || si->si_signo != SIGSEGV)
+	    return;	    /* we got a bogus signal, wtf? */
+	if (si->si_code != SI_KERNEL)
+	    return;	    /* this is the code we expect from HLT traps */
+	if (eip[0] != INSN_HLT)
+	    return;	    /* not an HLT, wtf? */
+    }
     if (si->si_pid != 0)
-	return;	    /* some process sent us SIGTRAP, wtf? */
-    if (*(unsigned char *)(uc->uc_mcontext.gregs[REG_EIP]-1) != INSN_INT3)
-	return;	    /* not an INT3, wtf? */
+	return;	    /* some process sent us SIGSEGV, wtf? */
 
-//     printf("handle_sigtrap: trap from intercept int3\n");
+//     printf("handle_signal: trap from intercept breakpoint\n");
     /* stash the ucontext for the tramp */
     /* TODO: if we were concerned about the MP case we would
      * push build a stack frame containing this context */
@@ -335,7 +352,7 @@ handle_sigtrap(int sig, siginfo_t *si, void *vuc)
      * the signal into the tramp instead of the
      * original function */
     uc->uc_mcontext.gregs[REG_EIP] = (unsigned long)&intercept_tramp;
-//     printf("handle_sigtrap: ending\n");
+//     printf("handle_signal: ending\n");
 }
 
 int
@@ -348,6 +365,7 @@ intercept_t::install()
     case INSN_PUSH_EBP:
 	/* non-leaf function, all is good */
 	break;
+    case INSN_HLT:
     case INSN_INT3:
 	/* already intercepted, can handle this too */
 	break;
@@ -365,16 +383,18 @@ intercept_t::install()
     {
 	struct sigaction act;
 	memset(&act, 0, sizeof(act));
-	act.sa_sigaction = handle_sigtrap;
+	act.sa_sigaction = handle_signal;
 	act.sa_flags |= SA_SIGINFO;
-	sigaction(SIGTRAP, &act, NULL);
+	if (RUNNING_ON_VALGRIND)
+	    using_int3 = true;
+	sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
 	installed_sigaction = true;
     }
     /* TODO: install the sig handler only when there are
      * any installed intercepts, or the pid has changed */
 
     installed_.push_back(this);
-    *(unsigned char *)addr_ = INSN_INT3;
+    *(unsigned char *)addr_ = (using_int3 ? INSN_INT3 : INSN_HLT);
 
     return 0;
 }
