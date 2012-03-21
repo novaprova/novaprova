@@ -8,6 +8,7 @@
 #include <sys/ucontext.h>
 #include <ucontext.h>
 #include <sys/mman.h>
+#include <valgrind/valgrind.h>
 
 namespace spiegel { namespace platform {
 using namespace std;
@@ -94,6 +95,8 @@ text_map_writable(addr_t addr, size_t len)
 	else
 	    itr->second++;
     }
+
+    VALGRIND_DISCARD_TRANSLATIONS(start, end-start);
 
     /* actually change the underlying mapping in one
      * big system call. */
