@@ -627,8 +627,6 @@ _cacher_t::make_compile_unit(spiegel::dwarf::reference_t ref)
 type_t *
 _cacher_t::make_type(spiegel::dwarf::reference_t ref)
 {
-    if (ref == spiegel::dwarf::reference_t::null)
-	return 0;
     _cacheable_t *cc = find(ref);
     if (!cc)
 	cc = add(new type_t(ref));
