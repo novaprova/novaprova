@@ -737,6 +737,24 @@ intercept_tester_t::after()
     printf("AFTER, returning %d\n", r);
 }
 
+int moe(int x, int y)
+{
+    int r = the_function(x+1, y+1);
+    return r-1;
+}
+
+int curly(int x, int y)
+{
+    int r = moe(x+1, y+1);
+    return r-1;
+}
+
+int larry(int x, int y)
+{
+    int r = curly(x+1, y+1);
+    return r-1;
+}
+
 static int
 test_intercept(int argc, char **argv __attribute__((unused)))
 {
@@ -760,8 +778,9 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(the_function_count == 0);
     assert(another_function_count == 0);
 
-    the_function(3, 42);
+    int r = larry(0, 39);
 
+    assert(r == 5216);
     assert(it->x == 3);
     assert(it->y == 42);
     assert(it->r == 5219);
@@ -770,8 +789,9 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(the_function_count == 1);
     assert(another_function_count == 0);
 
-    the_function(7, 27);
+    r = larry(4, 24);
 
+    assert(r == 2089841);
     assert(it->x == 7);
     assert(it->y == 27);
     assert(it->r == 2089844);
@@ -782,9 +802,10 @@ test_intercept(int argc, char **argv __attribute__((unused)))
 
     it->test_skip = true;
     it->r = 327;
-    the_function(4, 56);
+    r = larry(1, 53);
     it->test_skip = false;
 
+    assert(r == 324);
     assert(it->x == 4);
     assert(it->y == 56);
     assert(it->r == 327);
@@ -794,9 +815,10 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(another_function_count == 0);
 
     it->test_redirect = true;
-    the_function(3, 42);
+    r = larry(0, 39);
     it->test_redirect = false;
 
+    assert(r == 340);
     assert(it->x == 3);
     assert(it->y == 42);
     assert(it->r == 343);
