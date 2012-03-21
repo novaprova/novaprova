@@ -613,6 +613,40 @@ test_addr2line(int argc, char **argv __attribute__((unused)))
     return 0;
 }
 
+#if 0
+static unsigned long top_of_stack;
+
+static void
+__dump_stack(unsigned long ebp, unsigned long eip)
+{
+    unsigned int n = 0;
+    while (ebp < top_of_stack)
+    {
+	printf("%u EBP 0x%08lx EIP 0x%08lx", n, ebp, eip);
+	spiegel::location_t loc;
+	if (spiegel::describe_address(eip, loc))
+	    printf(" <%s+0x%x> at %s:%u",
+		  loc.function_ ? loc.function_->get_name().c_str() : "???",
+		  loc.offset_,
+		  loc.compile_unit_->get_absolute_path().basename().c_str(),
+		  loc.line_);
+	printf("\n");
+	eip = ((unsigned long *)ebp)[1];
+	ebp = ((unsigned long *)ebp)[0];
+	n++;
+    }
+}
+
+#define DUMP_STACK \
+    { \
+	register unsigned long ebp; \
+	register unsigned long eip; \
+	__asm__ volatile("mov %%ebp,%0" : "=r"(ebp)); \
+	__asm__ volatile("call .Lxx; .Lxx: popl %0" : "=r"(eip)); \
+	__dump_stack(ebp, eip); \
+    }
+#endif
+
 static int the_function_count = 0;
 
 int
@@ -781,6 +815,10 @@ test_intercept(int argc, char **argv __attribute__((unused)))
 int
 main(int argc, char **argv)
 {
+#if 0
+    top_of_stack = (unsigned long)&argc;
+#endif
+
     spiegel::argv0 = argv[0];
     if (!strcmp(argv[1], "filenames"))
 	return test_filenames(argc-1, argv+1);
