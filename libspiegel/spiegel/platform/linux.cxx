@@ -193,15 +193,11 @@ intercept_tramp(void)
 	/* any data that we need to keep safe past the call to the
 	 * original function, goes here */
 	i386_linux_call_t call;
-	intercept_t *icpt;
+	addr_t addr;
 	unsigned long our_esp;
     } frame;
 
-    frame.icpt = intercept_t::_find_installed(
-			    tramp_uc.uc_mcontext.gregs[REG_EIP]
-			    - (using_int3 ? 1 : 0));
-    if (!frame.icpt)
-	return 0;
+    frame.addr = tramp_uc.uc_mcontext.gregs[REG_EIP] - (using_int3 ? 1 : 0);
 
     /*
      * This branch is never taken because the variable 'hack1' is never
@@ -242,7 +238,7 @@ intercept_tramp(void)
 
     /* Setup the ucontext to look like we just called the
      * function from immediately before the 'after' label */
-    tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.icpt->get_address() + 1;
+    tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.addr + 1;
     /*
      * Build a new fake stack frame for calling the original
      * function.
@@ -286,7 +282,7 @@ intercept_tramp(void)
      * drama, e.g. as a side effect of failing a U4C_ASSERT().
      */
     frame.call.args_ = frame.args;
-    frame.icpt->before(frame.call);
+    intercept_t::dispatch_before(frame.addr, frame.call);
     if (frame.call.skip_)
 	return frame.call.retval_;	/* before() requested skip() */
     if (frame.call.redirect_)
@@ -339,7 +335,7 @@ after:
      * set_retval().  It should also be able to longjmp() out without
      * drama, e.g. as a side effect of failing a U4C_ASSERT().
      */
-    frame.icpt->after(frame.call);
+    intercept_t::dispatch_after(frame.addr, frame.call);
     return frame.call.retval_;
 }
 
@@ -365,7 +361,8 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 	if (si->si_code != SI_KERNEL /* natural */ &&
 	    si->si_code != TRAP_BRKPT /* via Valgrind */)
 	    return;	    /* this is the code we expect from HLT traps */
-	if (eip[-1] != INSN_INT3)
+	eip--;
+	if (*eip != INSN_INT3)
 	    return;	    /* not an INT3, wtf? */
     }
     else
@@ -374,11 +371,13 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 	    return;	    /* we got a bogus signal, wtf? */
 	if (si->si_code != SI_KERNEL)
 	    return;	    /* this is the code we expect from HLT traps */
-	if (eip[0] != INSN_HLT)
+	if (*eip != INSN_HLT)
 	    return;	    /* not an HLT, wtf? */
     }
     if (si->si_pid != 0)
 	return;	    /* some process sent us SIGSEGV, wtf? */
+    if (!intercept_t::is_intercepted((spiegel::addr_t)eip))
+	return;	    /* not an installed intercept */
 
 //     printf("handle_signal: trap from intercept breakpoint\n");
     /* stash the ucontext for the tramp */
@@ -393,10 +392,9 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 }
 
 int
-install_intercept(spiegel::intercept_t *icpt)
+install_intercept(spiegel::addr_t addr)
 {
     int r;
-    spiegel::addr_t addr = icpt->get_address();
 
     switch (*(unsigned char *)addr)
     {
@@ -431,17 +429,15 @@ install_intercept(spiegel::intercept_t *icpt)
     /* TODO: install the sig handler only when there are
      * any installed intercepts, or the pid has changed */
 
-    icpt->_add_installed();
     *(unsigned char *)addr = (using_int3 ? INSN_INT3 : INSN_HLT);
 
     return 0;
 }
 
 int
-uninstall_intercept(spiegel::intercept_t *icpt __attribute__((unused)))
+uninstall_intercept(spiegel::addr_t addr __attribute__((unused)))
 {
     /* TODO */
-    icpt->_remove_installed();
     return 0;
 }
 

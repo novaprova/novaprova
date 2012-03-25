@@ -72,12 +72,13 @@ struct intercept_t
     int install();
     int uninstall();
 
-    static intercept_t *_find_installed(addr_t);
-    void _add_installed();
-    void _remove_installed();
+    // functions for the platform-specific intercept code
+    static bool is_intercepted(addr_t);
+    static void dispatch_before(addr_t, call_t &);
+    static void dispatch_after(addr_t, call_t &);
 
 private:
-    static std::vector<intercept_t*> installed_;
+    static std::map<addr_t, std::vector<intercept_t*> > installed_;
 
     /* saved parameters */
     addr_t addr_;

@@ -4,40 +4,68 @@
 namespace spiegel {
 using namespace std;
 
-vector<intercept_t*> intercept_t::installed_;
-
-intercept_t *
-intercept_t::_find_installed(addr_t addr)
-{
-    vector<intercept_t*>::iterator itr;
-    for (itr = installed_.begin() ; itr != installed_.end() ; ++itr)
-	if ((*itr)->addr_ == addr)
-	    return *itr;
-    return 0;
-}
-
-void
-intercept_t::_add_installed()
-{
-    installed_.push_back(this);
-}
-
-void
-intercept_t::_remove_installed()
-{
-//     installed_.erase(itr);
-}
+map<addr_t, vector<intercept_t*> > intercept_t::installed_;
 
 int
 intercept_t::install()
 {
-    return spiegel::platform::install_intercept(this);
+    vector<intercept_t*> *v = &installed_[addr_];
+    v->push_back(this);
+    if (v->size() == 1)
+	return spiegel::platform::install_intercept(addr_);
+    return 0;
 }
 
 int
 intercept_t::uninstall()
 {
-    return spiegel::platform::uninstall_intercept(this);
+    vector<intercept_t*> *v = &installed_[addr_];
+    vector<intercept_t*>::iterator itr;
+    for (itr = v->begin() ; itr != v->end() ; ++itr)
+    {
+	if (*itr == this)
+	{
+	    v->erase(itr);
+	    break;
+	}
+    }
+    if (v->size() == 0)
+    {
+	installed_.erase(addr_);
+	return spiegel::platform::uninstall_intercept(addr_);
+    }
+    return 0;
+}
+
+bool
+intercept_t::is_intercepted(addr_t addr)
+{
+    map<addr_t, vector<intercept_t*> >::iterator aitr = installed_.find(addr);
+    return (aitr != installed_.end());
+}
+
+void
+intercept_t::dispatch_before(addr_t addr, call_t &call)
+{
+    map<addr_t, vector<intercept_t*> >::iterator aitr = installed_.find(addr);
+    if (aitr != installed_.end())
+    {
+	vector<intercept_t*>::iterator vitr;
+	for (vitr = aitr->second.begin() ; vitr != aitr->second.end() ; ++vitr)
+	    (*vitr)->before(call);
+    }
+}
+
+void
+intercept_t::dispatch_after(addr_t addr, call_t &call)
+{
+    map<addr_t, vector<intercept_t*> >::iterator aitr = installed_.find(addr);
+    if (aitr != installed_.end())
+    {
+	vector<intercept_t*>::iterator vitr;
+	for (vitr = aitr->second.begin() ; vitr != aitr->second.end() ; ++vitr)
+	    (*vitr)->after(call);
+    }
 }
 
 // close namespace

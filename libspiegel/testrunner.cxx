@@ -826,6 +826,27 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(the_function_count == 2);
     assert(another_function_count == 1);
 
+    intercept_tester_t *it2 = new intercept_tester_t();
+    it2->install();
+
+    r = larry(5, 23);
+
+    assert(r == 10058591);
+    assert(it->x == 8);
+    assert(it->y == 26);
+    assert(it->r == 10058594);
+    assert(it->before_count == 5);
+    assert(it->after_count == 4);
+    assert(it2->x == 8);
+    assert(it2->y == 26);
+    assert(it2->r == 10058594);
+    assert(it2->before_count == 1);
+    assert(it2->after_count == 1);
+    assert(the_function_count == 3);
+    assert(another_function_count == 1);
+
+    it2->uninstall();
+
     it->uninstall();
     delete it;
 

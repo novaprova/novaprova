@@ -21,8 +21,8 @@ extern std::vector<linkobj_t> self_linkobjs();
 
 extern int text_map_writable(addr_t addr, size_t len);
 extern int text_restore(addr_t addr, size_t len);
-extern int install_intercept(spiegel::intercept_t *icpt);
-extern int uninstall_intercept(spiegel::intercept_t *icpt);
+extern int install_intercept(spiegel::addr_t);
+extern int uninstall_intercept(spiegel::addr_t);
 
 // close namespaces
 } }
