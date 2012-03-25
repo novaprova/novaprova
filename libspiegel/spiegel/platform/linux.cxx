@@ -1,4 +1,5 @@
 #include "spiegel/common.hxx"
+#include "spiegel/intercept.hxx"
 #include "common.hxx"
 
 #include <dlfcn.h>
@@ -142,38 +143,65 @@ text_restore(addr_t addr, size_t len)
     return 0;
 }
 
+static unsigned long intercept_tramp(void);
+
+class i386_linux_call_t : public spiegel::call_t
+{
+private:
+    i386_linux_call_t() {}
+
+    unsigned long *args_;
+
+    unsigned long get_arg(unsigned int i) const
+    {
+	return args_[i];
+    }
+    void set_arg(unsigned int i, unsigned long v)
+    {
+	args_[i] = v;
+    }
+
+    friend unsigned long intercept_tramp(void);
+};
+
 #define INSN_PUSH_EBP	    0x55
 #define INSN_INT3	    0xcc
 #define INSN_HLT	    0xf4
 
 static ucontext_t tramp_uc;
+static ucontext_t fpuc;
 static bool hack1 = false;
-vector<intercept_t*> intercept_t::installed_;
 static bool using_int3 = false;
-
-intercept_t *
-intercept_t::find_installed(addr_t addr)
-{
-    vector<intercept_t*>::iterator itr;
-    for (itr = installed_.begin() ; itr != installed_.end() ; ++itr)
-	if ((*itr)->addr_ == addr)
-	    return *itr;
-    return 0;
-}
 
 static unsigned long
 intercept_tramp(void)
 {
-    intercept_t *icpt = intercept_t::find_installed(
+    /*
+     * We put all the local variables for the tramp into a struct so
+     * that we can predict their relative locations on the stack.  This
+     * is important because we are going to be calling the original
+     * function with %esp pointing at the saved_ebp field, and anything
+     * which the compiler might decide to put below that on the stack is
+     * going to be clobbered.
+     */
+    struct
+    {
+	/* fake stack frame for the original function */
+	unsigned long saved_ebp;
+	unsigned long return_addr;
+	unsigned long args[2];
+	/* any data that we need to keep safe past the call to the
+	 * original function, goes here */
+	i386_linux_call_t call;
+	intercept_t *icpt;
+	unsigned long our_esp;
+    } frame;
+
+    frame.icpt = intercept_t::_find_installed(
 			    tramp_uc.uc_mcontext.gregs[REG_EIP]
 			    - (using_int3 ? 1 : 0));
-    if (!icpt)
+    if (!frame.icpt)
 	return 0;
-
-    ucontext_t fpuc;
-    unsigned long rv;
-    unsigned long *esp;
-    intercept_t::runtime_t rt;
 
     /*
      * This branch is never taken because the variable 'hack1' is never
@@ -214,96 +242,105 @@ intercept_tramp(void)
 
     /* Setup the ucontext to look like we just called the
      * function from immediately before the 'after' label */
-    tramp_uc.uc_mcontext.gregs[REG_EIP] = icpt->get_address() + 1;
+    tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.icpt->get_address() + 1;
+    /*
+     * Build a new fake stack frame for calling the original
+     * function.
+     *
+     * The Linux i386 setcontext() calls a system call to set the
+     * sigmask but implements all the register switching in
+     * userspace and doesn't reload EFLAGS.  It probably could do so
+     * if it used the IRET insn instead of RET, but it doesn't.  So
+     * we can't use it to switch to single-step mode.  Rather than
+     * write our own, less broken, setcontext() we avoid
+     * single-stepping (and the second SIGTRAP it implies) entirely
+     * by noting that we only support intercepts at the first byte
+     * of a function and that for non-leaf functions the first byte
+     * will be the 1-byte insn "push %ebp".  We can easily simulate
+     * the effect of that insn right here by adjusting the newly
+     * constructed stack frame.  Another good reason to avoid single-
+     * stepping is that Valgrind doesn't simulate it.
+     *
+     * "Trust me, I know what I'm doing."
+     */
+    frame.saved_ebp = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EBP];
+    frame.return_addr = (unsigned long)&&after;
+    /*
+     * Copy enough of the original stack frame to make it look like
+     * we have the original arguments.
+     */
+    memcpy(frame.args,
+	   (void *)(tramp_uc.uc_mcontext.gregs[REG_ESP]+4),
+	   sizeof(frame.args));
+    /* setup the ucontext's ESP register to point at the new stack frame */
+    tramp_uc.uc_mcontext.gregs[REG_ESP] = (unsigned long)&frame;
+
+    /*
+     * Call the BEFORE method.  This call happens late enough that
+     * we have an entire new stack frame which the method can
+     * examine and modify using get_arg() and set_arg().  The method
+     * can also request that we return early without calling the
+     * original function, by calling skip().  It can also request
+     * that we call a different function instead using redirect().
+     * Finally it should also be able to longjmp() out without
+     * drama, e.g. as a side effect of failing a U4C_ASSERT().
+     */
+    frame.call.args_ = frame.args;
+    frame.icpt->before(frame.call);
+    if (frame.call.skip_)
+	return frame.call.retval_;	/* before() requested skip() */
+    if (frame.call.redirect_)
     {
-	/*
-	 * Build a new fake stack frame for calling the original
-	 * function.  We're doing this in a new {} block so that it will
-	 * be the lowermost object on the stack.
-	 *
-	 * The Linux i386 setcontext() calls a system call to set the
-	 * sigmask but implements all the register switching in
-	 * userspace and doesn't reload EFLAGS.  It probably could do so
-	 * if it used the IRET insn instead of RET, but it doesn't.  So
-	 * we can't use it to switch to single-step mode.  Rather than
-	 * write our own, less broken, setcontext() we avoid
-	 * single-stepping (and the second SIGTRAP it implies) entirely
-	 * by noting that we only support intercepts at the first byte
-	 * of a function and that for non-leaf functions the first byte
-	 * will be the 1-byte insn "push %ebp".  We can easily simulate
-	 * the effect of that insn right here by adjusting the newly
-	 * constructed stack frame.
-	 *
-	 * Trust me, I know what I'm doing.
-	 */
-	struct
-	{
-	    unsigned long saved_ebp;
-	    unsigned long return_addr;
-	    unsigned long args[2];
-	} frame;
-	frame.saved_ebp = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EBP];
-	frame.return_addr = (unsigned long)&&after;
-	/*
-	 * Copy enough of the original stack frame to make it look like
-	 * we have the original arguments.
-	 */
-	esp = (unsigned long *)tramp_uc.uc_mcontext.gregs[REG_ESP];
-	frame.args[0] = esp[1];
-	frame.args[1] = esp[2];
-	/* setup the ucontext's ESP register to point at the new stack frame */
-	tramp_uc.uc_mcontext.gregs[REG_ESP] = (unsigned long)&frame;
-
-	/*
-	 * Call the BEFORE method.  This call happens late enough that
-	 * we have an entire new stack frame which the method can
-	 * examine and modify using get_arg() and set_arg().  The method
-	 * can also request that we return early without calling the
-	 * original function, by calling skip().  It can also request
-	 * that we call a different function instead using redirect().
-	 * Finally it should also be able to longjmp() out without
-	 * drama, e.g. as a side effect of failing a U4C_ASSERT().
-	 */
-	memset(&rt, 0, sizeof(rt));
-	rt.args = frame.args;
-	icpt->call_before(&rt);
-	if (rt.skip)
-	    return rt.retval;	/* before() requested skip() */
-	if (rt.redirect)
-	{
-	    /* before() requested redirect, so setup the context to call
-	     * that function instead. */
-	    tramp_uc.uc_mcontext.gregs[REG_EIP] = rt.redirect;
-	    /* The new function won't be intercepted (well, we hope not)
-	     * so we need to undo emulation of 'push %ebp'.  */
-	    tramp_uc.uc_mcontext.gregs[REG_ESP] += 4;
-	}
-
-	/* switch to the ucontext */
-// 	printf("tramp: about to setcontext(EIP=0x%08lx ESP=0x%08lx EBP=0x%08lx)\n",
-// 	       (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EIP],
-// 	       (unsigned long)tramp_uc.uc_mcontext.gregs[REG_ESP],
-// 	       (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EBP]);
-	setcontext(&tramp_uc);
-	/* notreached - setcontext() should not return */
-	perror("setcontext");
-	exit(1);
+	/* before() requested redirect, so setup the context to call
+	 * that function instead. */
+	tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.call.redirect_;
+	/* The new function won't be intercepted (well, we hope not)
+	 * so we need to undo emulation of 'push %ebp'.  */
+	tramp_uc.uc_mcontext.gregs[REG_ESP] += 4;
     }
+    /* Save our own %esp for later */
+    __asm__ volatile("movl %%esp, %0" : "=m"(frame.our_esp));
+
+    /* switch to the ucontext */
+//     printf("tramp: about to setcontext(EIP=0x%08lx ESP=0x%08lx EBP=0x%08lx)\n",
+// 	   (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EIP],
+// 	   (unsigned long)tramp_uc.uc_mcontext.gregs[REG_ESP],
+// 	   (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EBP]);
+    setcontext(&tramp_uc);
+    /* notreached - setcontext() should not return, unless setting
+     * the signal mask failed, which it doesn't */
+    perror("setcontext");
+    exit(1);
 
 after:
     /* the original function returns here */
-    /* return value is in EAX, save it in 'rv' */
-    __asm__ volatile("pushl %%eax; popl %0" : "=r"(rv));
-//     printf("tramp: at 'after', rv=%lu\n", rv);
+
+    /* return value is in EAX, save it directly into the call_t */
+    __asm__ volatile("movl %%eax, %0" : "=m"(frame.call.retval_));
+
+    /*
+     * The compiler will emit (at least when unoptimised) instructions
+     * in our epilogue that save %eax onto a temporary location on stack
+     * relative to %ebp and then immediately load it again from there.
+     * It's silly, but there you go.  After returning from the original
+     * function our %esp is pointing at @frame, and so that temporary
+     * location is now below %esp, i.e. outside the stack frame.  Of
+     * course that's fine, no function care about that location, and we
+     * just store and load from there.  Unfortunately Valgrind detects
+     * such loads and stores below the stack pointer and warns about
+     * them.  To avoid those two warnings we first restore the %esp we
+     * had before calling the original function.
+     */
+    __asm__ volatile("movl %0, %%esp" : : "m"(frame.our_esp));
+
     /*
      * Call the AFTER method.  The method can examine and modify the
      * return value from the original function using get_retval() and
      * set_retval().  It should also be able to longjmp() out without
      * drama, e.g. as a side effect of failing a U4C_ASSERT().
      */
-    rt.retval = rv;
-    icpt->call_after(&rt);
-    return rt.retval;
+    frame.icpt->after(frame.call);
+    return frame.call.retval_;
 }
 
 static void
@@ -356,11 +393,12 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 }
 
 int
-intercept_t::install()
+install_intercept(spiegel::intercept_t *icpt)
 {
     int r;
+    spiegel::addr_t addr = icpt->get_address();
 
-    switch (*(unsigned char *)addr_)
+    switch (*(unsigned char *)addr)
     {
     case INSN_PUSH_EBP:
 	/* non-leaf function, all is good */
@@ -374,7 +412,7 @@ intercept_t::install()
 	return -1;
     }
 
-    r = text_map_writable(addr_, 1);
+    r = text_map_writable(addr, 1);
     if (r)
 	return -1;
 
@@ -393,17 +431,17 @@ intercept_t::install()
     /* TODO: install the sig handler only when there are
      * any installed intercepts, or the pid has changed */
 
-    installed_.push_back(this);
-    *(unsigned char *)addr_ = (using_int3 ? INSN_INT3 : INSN_HLT);
+    icpt->_add_installed();
+    *(unsigned char *)addr = (using_int3 ? INSN_INT3 : INSN_HLT);
 
     return 0;
 }
 
 int
-intercept_t::uninstall()
+uninstall_intercept(spiegel::intercept_t *icpt __attribute__((unused)))
 {
     /* TODO */
-//     installed_.erase(itr);
+    icpt->_remove_installed();
     return 0;
 }
 

@@ -30,6 +30,7 @@ libspiegel_SOURCES= \
 	spiegel/platform/linux.cxx \
 	spiegel/common.cxx \
 	spiegel/filename.cxx \
+	spiegel/intercept.cxx \
 	spiegel/spiegel.cxx \
 	spiegel/tok.cxx \
 
@@ -47,6 +48,7 @@ libspiegel_PRIVHEADERS= \
 	spiegel/dwarf/walker.hxx \
 	spiegel/platform/common.hxx \
 	spiegel/filename.hxx \
+	spiegel/intercept.hxx \
 	spiegel/common.hxx \
 	spiegel/tok.hxx \
 

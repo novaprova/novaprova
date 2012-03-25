@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "spiegel/dwarf/reference.hxx"
+#include "spiegel/intercept.hxx"
 #include "spiegel/filename.hxx"
 
 #define SPIEGEL_DYNAMIC 1

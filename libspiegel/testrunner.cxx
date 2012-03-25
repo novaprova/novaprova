@@ -1,6 +1,5 @@
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
-#include "spiegel/platform/common.hxx"
 using namespace std;
 
 #define BASEDIR	"/tmp"
@@ -683,14 +682,14 @@ another_function(int x, int y)
     return y;
 }
 
-class intercept_tester_t : public spiegel::platform::intercept_t
+class intercept_tester_t : public spiegel::intercept_t
 {
 public:
     intercept_tester_t();
     ~intercept_tester_t();
 
-    void before();
-    void after();
+    void before(spiegel::call_t &);
+    void after(spiegel::call_t &);
 
     unsigned int after_count;
     unsigned int before_count;
@@ -711,28 +710,28 @@ intercept_tester_t::~intercept_tester_t()
 }
 
 void
-intercept_tester_t::before()
+intercept_tester_t::before(spiegel::call_t &call)
 {
-    x = get_arg(0);
-    y = get_arg(1);
+    x = call.get_arg(0);
+    y = call.get_arg(1);
     before_count++;
     printf("BEFORE x=%d y=%d\n", x, y);
     if (test_skip)
     {
 	printf("SKIPPING r=%d\n", r);
-	skip(r);
+	call.skip(r);
     }
     if (test_redirect)
     {
 	printf("REDIRECTING\n");
-	redirect((spiegel::addr_t)&another_function);
+	call.redirect((spiegel::addr_t)&another_function);
     }
 }
 
 void
-intercept_tester_t::after()
+intercept_tester_t::after(spiegel::call_t &call)
 {
-    r = get_retval();
+    r = call.get_retval();
     after_count++;
     printf("AFTER, returning %d\n", r);
 }
