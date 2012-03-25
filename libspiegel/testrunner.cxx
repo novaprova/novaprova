@@ -830,6 +830,7 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     it->uninstall();
     delete it;
 
+    printf("PASS\n");
     return 0;
 }
 
