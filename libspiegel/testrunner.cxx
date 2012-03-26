@@ -895,6 +895,10 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(the_function_count == 4);
     assert(another_function_count == 1);
 
+//     fprintf(stderr, "About to SEGV\n");
+//     *(char *)0 = 0;
+//     fprintf(stderr, "Done doing SEGV\n");
+
     it->uninstall();
     delete it;
 

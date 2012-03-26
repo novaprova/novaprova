@@ -365,24 +365,24 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 	    return;	    /* we got a bogus signal, wtf? */
 	if (si->si_code != SI_KERNEL /* natural */ &&
 	    si->si_code != TRAP_BRKPT /* via Valgrind */)
-	    return;	    /* this is the code we expect from HLT traps */
+	    goto wtf;	    /* this is the code we expect from HLT traps */
 	eip--;
 	if (*eip != INSN_INT3)
-	    return;	    /* not an INT3, wtf? */
+	    goto wtf;	    /* not an INT3 */
     }
     else
     {
 	if (sig != SIGSEGV || si->si_signo != SIGSEGV)
 	    return;	    /* we got a bogus signal, wtf? */
 	if (si->si_code != SI_KERNEL)
-	    return;	    /* this is the code we expect from HLT traps */
+	    goto wtf;	    /* this is the code we expect from HLT traps */
 	if (*eip != INSN_HLT)
-	    return;	    /* not an HLT, wtf? */
+	    goto wtf;	    /* not an HLT */
     }
     if (si->si_pid != 0)
 	return;	    /* some process sent us SIGSEGV, wtf? */
     if (!intercept_t::is_intercepted((spiegel::addr_t)eip))
-	return;	    /* not an installed intercept */
+	goto wtf;   /* not an installed intercept */
 
 //     printf("handle_signal: trap from intercept breakpoint\n");
     /* stash the ucontext for the tramp */
@@ -394,6 +394,14 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
      * original function */
     uc->uc_mcontext.gregs[REG_EIP] = (unsigned long)&intercept_tramp;
 //     printf("handle_signal: ending\n");
+
+    return;
+
+wtf:
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = SIG_DFL;
+    sigaction(sig, &act, NULL);
 }
 
 int
