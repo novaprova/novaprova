@@ -884,8 +884,26 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     it2->uninstall();
     delete it2;
 
+    r = larry(7, 11);
+
+    assert(r == 134277341);
+    assert(it->x == 10);
+    assert(it->y == 14);
+    assert(it->r == 134277344);
+    assert(it->before_count == 6);
+    assert(it->after_count == 5);
+    assert(the_function_count == 4);
+    assert(another_function_count == 1);
+
     it->uninstall();
     delete it;
+
+    r = larry(3, 7);
+
+    assert(r == 152341);
+    assert(the_function_count == 5);
+    assert(another_function_count == 1);
+
 
     // Test a larger stack frame
     wide_intercept_tester_t *it3 = new wide_intercept_tester_t;

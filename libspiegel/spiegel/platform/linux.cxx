@@ -93,7 +93,7 @@ text_map_writable(addr_t addr, size_t len)
     int r;
 
     /* increment the reference counts on every page we hit */
-    for (a = start ; a < end ; a++)
+    for (a = start ; a < end ; a += page_size())
     {
 	map<addr_t, unsigned int>::iterator itr = pagerefs.find(a);
 	if (itr == pagerefs.end())
@@ -126,7 +126,7 @@ text_restore(addr_t addr, size_t len)
     int r;
 
     /* decrement the reference counts on every page we hit */
-    for (a = start ; a < end ; a++)
+    for (a = start ; a < end ; a += page_size())
     {
 	map<addr_t, unsigned int>::iterator itr = pagerefs.find(a);
 	if (itr == pagerefs.end())
@@ -433,19 +433,25 @@ install_intercept(spiegel::addr_t addr)
 	sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
 	installed_sigaction = true;
     }
+
     /* TODO: install the sig handler only when there are
      * any installed intercepts, or the pid has changed */
-
     *(unsigned char *)addr = (using_int3 ? INSN_INT3 : INSN_HLT);
 
     return 0;
 }
 
 int
-uninstall_intercept(spiegel::addr_t addr __attribute__((unused)))
+uninstall_intercept(spiegel::addr_t addr)
 {
-    /* TODO */
-    return 0;
+    if (*(unsigned char *)addr != (using_int3 ? INSN_INT3 : INSN_HLT))
+    {
+	fprintf(stderr, "spiegel: attempting to uninstall an unintercepted function\n");
+	return -1;
+    }
+    *(unsigned char *)addr = INSN_PUSH_EBP;
+    VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
+    return text_restore(addr, 1);
 }
 
 // close namespace
