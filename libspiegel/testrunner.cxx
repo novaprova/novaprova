@@ -754,6 +754,42 @@ int larry(int x, int y)
     return r-1;
 }
 
+int
+wide_call(int a1, int a2, int a3,
+	  int a4, int a5, int a6,
+	  int a7, int a8, int a9,
+	  int a10, int a11, int a12)
+{
+    return a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
+}
+
+class wide_intercept_tester_t : public spiegel::intercept_t
+{
+public:
+    wide_intercept_tester_t()
+     :  intercept_t((spiegel::addr_t)&wide_call)
+    {
+    }
+    ~wide_intercept_tester_t()
+    {
+    }
+
+    int x[12], r;
+
+    void before(spiegel::call_t &call)
+    {
+	int i;
+	for (i = 0 ; i < 12 ; i++)
+	    x[i] = call.get_arg(i);
+	printf("BEFORE\n");
+    }
+    void after(spiegel::call_t &call)
+    {
+	r = call.get_retval();
+	printf("AFTER, returning %d\n", r);
+    }
+};
+
 static int
 test_intercept(int argc, char **argv __attribute__((unused)))
 {
@@ -846,9 +882,30 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(another_function_count == 1);
 
     it2->uninstall();
+    delete it2;
 
     it->uninstall();
     delete it;
+
+    // Test a larger stack frame
+    wide_intercept_tester_t *it3 = new wide_intercept_tester_t;
+    it3->install();
+    r = wide_call(1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144);
+    assert(it3->x[0] == 1);
+    assert(it3->x[1] == 4);
+    assert(it3->x[2] == 9);
+    assert(it3->x[3] == 16);
+    assert(it3->x[4] == 25);
+    assert(it3->x[5] == 36);
+    assert(it3->x[6] == 49);
+    assert(it3->x[7] == 64);
+    assert(it3->x[8] == 81);
+    assert(it3->x[9] == 100);
+    assert(it3->x[10] == 121);
+    assert(it3->x[11] == 144);
+    assert(it3->r == 650);
+    it3->uninstall();
+    delete it3;
 
     printf("PASS\n");
     return 0;

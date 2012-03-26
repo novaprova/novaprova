@@ -11,6 +11,10 @@
 #include <sys/mman.h>
 #include <valgrind/valgrind.h>
 
+#ifndef MIN
+#define MIN(x, y)   ((x) < (y) ? (x) : (y))
+#endif
+
 namespace spiegel { namespace platform {
 using namespace std;
 
@@ -189,13 +193,14 @@ intercept_tramp(void)
 	/* fake stack frame for the original function */
 	unsigned long saved_ebp;
 	unsigned long return_addr;
-	unsigned long args[2];
+	unsigned long args[32];
 	/* any data that we need to keep safe past the call to the
 	 * original function, goes here */
 	i386_linux_call_t call;
 	addr_t addr;
 	unsigned long our_esp;
     } frame;
+    unsigned long parent_size;
 
     frame.addr = tramp_uc.uc_mcontext.gregs[REG_EIP] - (using_int3 ? 1 : 0);
 
@@ -265,9 +270,11 @@ intercept_tramp(void)
      * Copy enough of the original stack frame to make it look like
      * we have the original arguments.
      */
+    parent_size = tramp_uc.uc_mcontext.gregs[REG_EBP] -
+		  (tramp_uc.uc_mcontext.gregs[REG_ESP]+4);
     memcpy(frame.args,
 	   (void *)(tramp_uc.uc_mcontext.gregs[REG_ESP]+4),
-	   sizeof(frame.args));
+	   MIN(parent_size, sizeof(frame.args)));
     /* setup the ucontext's ESP register to point at the new stack frame */
     tramp_uc.uc_mcontext.gregs[REG_ESP] = (unsigned long)&frame;
 
