@@ -102,8 +102,6 @@ text_map_writable(addr_t addr, size_t len)
 	    itr->second++;
     }
 
-    VALGRIND_DISCARD_TRANSLATIONS(start, end-start);
-
     /* actually change the underlying mapping in one
      * big system call. */
     r = mprotect((void *)start,
@@ -437,6 +435,7 @@ install_intercept(spiegel::addr_t addr)
     /* TODO: install the sig handler only when there are
      * any installed intercepts, or the pid has changed */
     *(unsigned char *)addr = (using_int3 ? INSN_INT3 : INSN_HLT);
+    VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
 
     return 0;
 }
