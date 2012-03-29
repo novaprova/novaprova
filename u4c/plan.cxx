@@ -39,19 +39,21 @@ testnode_t *
 plan_t::next()
 {
     iterator_t *itr = &current_;
+    testnode_t *tn = 0;
 
-    testnode_t *tn = itr->node;
-
-    /* advance tn */
-    for (;;)
+    do
     {
-	tn = tn->next_preorder();
-	if (tn)
-	    return itr->node = tn;
-	if (itr->idx >= (int)nodes_.size()-1)
-	    return itr->node = 0;
-	tn = nodes_[++itr->idx];
-    }
+	if (itr->nitr == nodes_[0]->preorder_end())
+	{
+	    if (itr->idx >= (int)nodes_.size()-1)
+		return 0;
+	    itr->nitr = nodes_[++itr->idx];
+	}
+	tn = *itr->nitr;
+	++itr->nitr;
+    } while (tn && !tn->get_function(FT_TEST));
+
+    return tn;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

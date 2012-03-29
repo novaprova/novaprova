@@ -24,7 +24,6 @@ public:
     void set_function(functype_t, spiegel::function_t *);
 
     testnode_t *detach_common();
-    testnode_t *next_preorder();
     spiegel::function_t *get_function(functype_t type) const
     {
 	return funcs_[type];
@@ -33,12 +32,37 @@ public:
 
     void dump(int level) const;
 
+    class preorder_iterator
+    {
+    public:
+	preorder_iterator()
+	    : base_(0), node_(0) {}
+	preorder_iterator(testnode_t *n)
+	    : base_(n), node_(n) {}
+	testnode_t * operator* () const
+	    { return node_; }
+	preorder_iterator & operator++();
+	int operator== (const preorder_iterator &o) const
+	    { return o.node_ == node_; }
+	preorder_iterator & operator=(testnode_t *n)
+	    { base_ = node_ = n; return *this; }
+    private:
+	testnode_t *base_;
+	testnode_t *node_;
+    };
+    preorder_iterator preorder_begin()
+	{ return preorder_iterator(this); }
+    preorder_iterator preorder_end()
+	{ return preorder_iterator(); }
+
 private:
     testnode_t *next_;
     testnode_t *parent_;
     testnode_t *children_;
     char *name_;
     spiegel::function_t *funcs_[FT_NUM];
+
+    friend class preorder_iterator;
 };
 
 // close the namespace

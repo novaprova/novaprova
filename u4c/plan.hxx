@@ -2,13 +2,12 @@
 #define __U4C_PLAN_H__ 1
 
 #include "u4c/common.hxx"
+#include "u4c/testnode.hxx"
 #include <vector>
 
 class u4c_testmanager_t;
 
 namespace u4c {
-
-class testnode_t;
 
 class plan_t
 {
@@ -27,11 +26,10 @@ public:
 private:
     struct iterator_t
     {
-	iterator_t() : idx(-1), node(0) { }
-	~iterator_t() { }
+	iterator_t() : idx(-1) { }
 
 	int idx;
-	testnode_t *node;
+	testnode_t::preorder_iterator nitr;
     };
 
     std::vector<testnode_t*> nodes_;

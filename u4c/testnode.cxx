@@ -117,24 +117,6 @@ testnode_t::get_fullname() const
 }
 
 testnode_t *
-testnode_t::next_preorder()
-{
-    testnode_t *tn = this;
-    while (tn)
-    {
-	if (tn->children_)
-	    tn = tn->children_;
-	else if (tn->next_)
-	    tn = tn->next_;
-	else if (tn->parent_)
-	    tn = tn->parent_->next_;
-	if (tn && tn->funcs_[FT_TEST])
-	    break;
-    }
-    return tn;
-}
-
-testnode_t *
 testnode_t::detach_common()
 {
     testnode_t *tn;
@@ -185,6 +167,20 @@ testnode_t::find(const char *nm)
     }
 
     return 0;
+}
+
+testnode_t::preorder_iterator &
+testnode_t::preorder_iterator::operator++()
+{
+    if (node_->children_)
+	node_ = node_->children_;
+    else if (node_ != base_ && node_->next_)
+	node_ = node_->next_;
+    else if (node_->parent_ != base_ && node_->parent_)
+	node_ = node_->parent_->next_;
+    else
+	node_ = 0;
+    return *this;
 }
 
 // close the namespace
