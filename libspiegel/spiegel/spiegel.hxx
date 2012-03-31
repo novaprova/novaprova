@@ -276,7 +276,7 @@ public:
     std::vector<type_t*> get_parameter_types() const;
     std::vector<const char *> get_parameter_names() const;
     bool has_unspecified_parameters() const;
-    void *get_address() const;
+    addr_t get_address() const;
 
 //     std::vector<type_t*> get_exception_types() const;
 

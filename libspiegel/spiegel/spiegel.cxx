@@ -537,7 +537,7 @@ function_t::to_string() const
 // Return the address of the function, or 0 if the function is not
 // defined in this compile unit (in which case, good luck finding it in
 // some other compile unit).
-void *
+addr_t
 function_t::get_address() const
 {
     spiegel::dwarf::walker_t w(ref_);
@@ -551,7 +551,7 @@ function_t::invoke(vector<value_t> args __attribute__((unused))) const
 {
     // TODO: check that DW_AT_calling_convention == DW_CC_normal
     // TODO: check that we're talking to self
-    void *addr = get_address();
+    addr_t addr = get_address();
     if (!addr)
 	return value_t::make_invalid();
 
