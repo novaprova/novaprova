@@ -61,8 +61,8 @@ struct intercept_t
     static void *operator new(size_t sz) { return xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
 
-    intercept_t(addr_t a) : addr_(a) {}
-    virtual ~intercept_t() {}
+    intercept_t(addr_t a);
+    virtual ~intercept_t();
 
     virtual void before(call_t &) = 0;
     virtual void after(call_t &) = 0;
@@ -78,6 +78,8 @@ struct intercept_t
     static void dispatch_after(addr_t, call_t &);
 
 private:
+    static addr_t normalise_address(addr_t);
+
     static std::map<addr_t, std::vector<intercept_t*> > installed_;
 
     /* saved parameters */

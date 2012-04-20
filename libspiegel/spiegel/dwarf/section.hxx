@@ -16,10 +16,15 @@ struct section_t
 
     unsigned long get_end() const { return offset + size; }
     void set_end(unsigned long e) { size = e - offset; }
-    bool contains(const section_t &o)
+    bool contains(const section_t &o) const
     {
 	return (offset <= o.offset &&
 		get_end() >= o.get_end());
+    }
+    bool contains(void *p) const
+    {
+	return (map <= p &&
+		(void *)((char *)map + size) >= p);
     }
     void map_from(const section_t &o)
     {

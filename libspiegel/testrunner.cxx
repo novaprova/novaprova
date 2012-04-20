@@ -1,5 +1,7 @@
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
+#include <dlfcn.h>
+#include <libintl.h>
 using namespace std;
 
 #define BASEDIR	"/tmp"
@@ -790,6 +792,34 @@ public:
     }
 };
 
+class plt_intercept_tester_t : public spiegel::intercept_t
+{
+public:
+    plt_intercept_tester_t()
+     :  intercept_t((spiegel::addr_t)&gettext)
+    {
+    }
+    ~plt_intercept_tester_t()
+    {
+    }
+
+    unsigned int after_count;
+    unsigned int before_count;
+
+    void before(spiegel::call_t &call)
+    {
+	printf("BEFORE, arg0 \"%s\"\n", (const char *)call.get_arg(0));
+	before_count++;
+    }
+    void after(spiegel::call_t &call)
+    {
+	const char *s = (const char *)call.get_retval();
+	printf("AFTER, returning \"%s\"\n", s);
+	after_count++;
+	call.set_retval((unsigned long)"world");
+    }
+};
+
 static int
 test_intercept(int argc, char **argv __attribute__((unused)))
 {
@@ -928,6 +958,16 @@ test_intercept(int argc, char **argv __attribute__((unused)))
     assert(it3->r == 650);
     it3->uninstall();
     delete it3;
+
+    plt_intercept_tester_t *it4 = new plt_intercept_tester_t();
+    it4->install();
+    assert(it4->before_count == 0);
+    assert(it4->after_count == 0);
+    const char *s = gettext("hello");
+    assert(!strcmp(s, "world"));
+    assert(it4->before_count == 1);
+    assert(it4->after_count == 1);
+    it4->uninstall();
 
     printf("PASS\n");
     return 0;

@@ -190,6 +190,16 @@ state_t::linkobj_t::unmap_sections()
 }
 
 bool
+state_t::is_in_plt(addr_t addr) const
+{
+    vector<linkobj_t*>::const_iterator i;
+    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+	if ((*i)->sections_[DW_sec_plt].contains((void *)addr))
+	    return true;
+    return false;
+}
+
+bool
 state_t::read_compile_units(linkobj_t *lo)
 {
     reader_t infor = lo->sections_[DW_sec_info].get_contents();

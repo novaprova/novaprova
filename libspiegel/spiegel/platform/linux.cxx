@@ -92,6 +92,15 @@ vector<linkobj_t> self_linkobjs()
     return vec;
 }
 
+spiegel::addr_t follow_plt(spiegel::addr_t addr)
+{
+    Dl_info info;
+    memset(&info, 0, sizeof(info));
+    int r = dladdr((void *)addr, &info);
+    if (!r)
+	return 0;
+    return (spiegel::addr_t)dlsym(RTLD_NEXT, info.dli_sname);
+}
 
 /*
  * Functions to ensure some .text space is writable (as well as

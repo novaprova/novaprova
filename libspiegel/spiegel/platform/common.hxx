@@ -18,6 +18,8 @@ struct linkobj_t
 };
 extern std::vector<linkobj_t> self_linkobjs();
 
+spiegel::addr_t follow_plt(spiegel::addr_t);
+
 // extern spiegel::value_t invoke(void *fnaddr, vector<spiegel::value_t> args);
 
 extern int text_map_writable(addr_t addr, size_t len);

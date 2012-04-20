@@ -94,7 +94,7 @@ testrunner_DFILES= \
 -include $(testrunner_DFILES)
 
 testrunner_LDADD= \
-	$(libspiegel) -lbfd
+	$(libspiegel) -lbfd -ldl
 
 testrunner: $(testrunner_OBJS) $(libspiegel)
 	$(LINK.C) -o testrunner $(testrunner_OBJS) $(testrunner_LDADD)
