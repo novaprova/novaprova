@@ -14,6 +14,7 @@ struct linkobj_t
     const char *name;
     unsigned long addr;
     unsigned long size;
+    unsigned long offset;
 };
 extern std::vector<linkobj_t> self_linkobjs();
 

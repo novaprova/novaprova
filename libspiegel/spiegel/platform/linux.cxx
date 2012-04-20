@@ -46,15 +46,41 @@ self_exe()
 
 static int
 add_one_linkobj(struct dl_phdr_info *info,
-		size_t size, void *closure)
+		size_t size __attribute__((unused)),	// sizeof(*info)
+		void *closure)
 {
     vector<linkobj_t> *vec = (vector<linkobj_t> *)closure;
 
-    linkobj_t lo;
-    lo.name = info->dlpi_name;
-    lo.addr = (unsigned long)info->dlpi_addr;
-    lo.size = (unsigned long)size;
-    vec->push_back(lo);
+    const char *name = info->dlpi_name;
+    if (name && !*name)
+	name = NULL;
+
+    if (!name && info->dlpi_addr)
+	return 0;
+
+#if 0
+    fprintf(stderr, "dl_phdr_info { addr=%p name=%s }\n",
+	    (void *)info->dlpi_addr, info->dlpi_name);
+#endif
+
+    for (int i = 0 ; i < info->dlpi_phnum ; i++)
+    {
+	if (!info->dlpi_phdr[i].p_memsz)
+	    continue;
+
+	linkobj_t lo;
+	lo.name = name;
+	lo.addr = (unsigned long)info->dlpi_addr + info->dlpi_phdr[i].p_vaddr;
+	lo.size = (unsigned long)info->dlpi_phdr[i].p_memsz;
+	lo.offset = (unsigned long)info->dlpi_phdr[i].p_offset;
+
+#if 0
+	fprintf(stderr, "    { offset=%lu size=%lu addr=%p }\n",
+	    lo.offset, lo.size, (void *)lo.addr);
+#endif
+
+	vec->push_back(lo);
+    }
 
     return 0;
 }

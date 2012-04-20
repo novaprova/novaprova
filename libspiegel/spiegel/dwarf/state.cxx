@@ -29,12 +29,22 @@ state_t::~state_t()
     instance_ = 0;
 }
 
+void
+state_t::linkobj_t::add_system_mapping(unsigned long offset,
+				       unsigned long size,
+				       void *addr)
+{
+    section_t sec = { offset, size, addr };
+    system_mappings_.push_back(sec);
+}
+
 bool
 state_t::linkobj_t::map_sections()
 {
     int fd = -1;
     vector<section_t>::iterator m;
     bool r = true;
+    int nsec = 0;
 
     bfd_init();
 
@@ -56,26 +66,36 @@ state_t::linkobj_t::map_sections()
     for (sec = b->sections ; sec ; sec = sec->next)
     {
 	int idx = secnames.to_index(sec->name);
+#if 0
+	printf("Section name=%s size=%lx filepos=%lx => %d\n",
+	    sec->name, (unsigned long)sec->size,
+	    (unsigned long)sec->filepos, idx);
+#endif
 	if (idx == DW_sec_none)
 	    continue;
-#if 0
-	printf("Section [%d], name=%s size=%lx filepos=%lx\n",
-	    idx, sec->name, (unsigned long)sec->size,
-	    (unsigned long)sec->filepos);
-#endif
 	sections_[idx].offset = (unsigned long)sec->filepos;
 	sections_[idx].size = (unsigned long)sec->size;
+
+	/* See if the section can be satisfied out of
+	 * existing system mappings */
+	for (m = system_mappings_.begin() ; m != system_mappings_.end() ; ++m)
+	{
+	    if (m->contains(sections_[idx]))
+	    {
+		sections_[idx].map_from(*m);
+		break;
+	    }
+	}
     }
 
-    /* Coalesce sections into a minimal number of mappings */
+    /* Coalesce unmapped sections into a minimal number of mappings */
     struct section_t *tsec[DW_sec_num];
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
-	tsec[idx] = &sections_[idx];
-    qsort(tsec, DW_sec_num, sizeof(section_t *), section_t::compare_ptrs);
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
+	if (!sections_[idx].map && sections_[idx].size)
+	    tsec[nsec++] = &sections_[idx];
+    qsort(tsec, nsec, sizeof(section_t *), section_t::compare_ptrs);
+    for (int idx = 0 ; idx < nsec ; idx++)
     {
-	if (!tsec[idx]->size)
-	    continue;
 	if (mappings_.size() &&
 	    page_round_up(mappings_.back().get_end()) >= tsec[idx]->offset)
 	{
@@ -121,26 +141,23 @@ state_t::linkobj_t::map_sections()
     }
 
     /* setup sections[].map */
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
+    for (int idx = 0 ; idx < nsec ; idx++)
     {
 	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
 	{
-	    if (m->contains(sections_[idx]))
+	    if (m->contains(*tsec[idx]))
 	    {
-		sections_[idx].map = (void *)(
-		    (char *)m->map +
-		    sections_[idx].offset -
-		    m->offset);
+		tsec[idx]->map_from(*m);
 		break;
 	    }
 	}
-	assert(sections_[idx].map);
+	assert(tsec[idx]->map);
     }
 
 #if 0
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
-	printf("[%d] name=.debug_%s map=0x%lx size=0x%lx\n",
+	printf("[%d] name=%s map=0x%lx size=0x%lx\n",
 		idx, secnames.to_name(idx),
 		(unsigned long)sections_[idx].map,
 		sections_[idx].size);
@@ -228,22 +245,17 @@ state_t::add_self()
     {
 	filename = i->name;
 	if (!filename)
-	    filename = "";
-
-	if (!i->addr && !*filename)
 	    filename = exe;
-	else if (!i->addr || !*filename)
-	    continue;
 
 	if (filename_is_ignored(filename))
 	    continue;
 
-	if (!add_executable(filename))
-	    goto out;
+	linkobj_t *lo = get_linkobj(filename);
+	if (lo)
+	    lo->add_system_mapping(i->offset, i->size, (void *)i->addr);
     }
 
-    r = true;
-out:
+    r = read_linkobjs();
     free(exe);
     return r;
 }
@@ -251,20 +263,42 @@ out:
 bool
 state_t::add_executable(const char *filename)
 {
+    linkobj_t *lo = get_linkobj(filename);
+    if (!lo)
+	return false;
+    return read_linkobjs();
+}
+
+state_t::linkobj_t *
+state_t::get_linkobj(const char *filename)
+{
     if (!filename)
 	return false;
 
-    linkobj_t *lo = new linkobj_t(filename,
-				  linkobjs_.size());
-
-    if (!lo->map_sections() ||
-        !read_compile_units(lo))
+    /* Note: we can actually get multiple plo's with the
+     * same name and different offset/sizes. */
+    vector<linkobj_t*>::iterator i;
+    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
     {
-	delete lo;
-	return false;
+	if (!strcmp((*i)->filename_, filename))
+	    return (*i);
     }
 
+    linkobj_t *lo = new linkobj_t(filename, linkobjs_.size());
     linkobjs_.push_back(lo);
+    return lo;
+}
+
+bool
+state_t::read_linkobjs()
+{
+    vector<linkobj_t*>::iterator i;
+    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+    {
+	if (!(*i)->map_sections() ||
+	    !read_compile_units(*i))
+	    return false;
+    }
     return true;
 }
 

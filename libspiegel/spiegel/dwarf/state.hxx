@@ -63,11 +63,17 @@ private:
 	uint32_t index_;
 	section_t sections_[DW_sec_num];
 	std::vector<section_t> mappings_;
+	std::vector<section_t> system_mappings_;
 
+	void add_system_mapping(unsigned long offset,
+				unsigned long size,
+				void *addr);
 	bool map_sections();
 	void unmap_sections();
     };
 
+    linkobj_t *get_linkobj(const char *filename);
+    bool read_linkobjs();
     bool read_compile_units(linkobj_t *);
     bool is_within(spiegel::addr_t addr, const walker_t &w,
 		   unsigned int &offset) const;

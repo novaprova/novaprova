@@ -18,6 +18,9 @@ enum section_names
     DW_sec_str,
     DW_sec_loc,
     DW_sec_ranges,
+    /* This is not a DWARF section but we need to know
+     * where it is for setting intercepts */
+    DW_sec_plt,
 
     DW_sec_num
 };

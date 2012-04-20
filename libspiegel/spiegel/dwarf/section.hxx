@@ -21,6 +21,10 @@ struct section_t
 	return (offset <= o.offset &&
 		get_end() >= o.get_end());
     }
+    void map_from(const section_t &o)
+    {
+	map = (void *)((char *)o.map + offset - o.offset);
+    }
 
     void expand_to_pages()
     {

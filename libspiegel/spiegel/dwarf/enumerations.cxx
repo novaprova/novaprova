@@ -4,11 +4,11 @@ namespace spiegel { namespace dwarf {
 using namespace std;
 
 static const char * const _secnames[DW_sec_num+1] = {
-    "aranges", "pubnames", "info",
-    "abbrev", "line", "frame",
-    "str", "loc", "ranges", 0
+    ".debug_aranges", ".debug_pubnames", ".debug_info",
+    ".debug_abbrev", ".debug_line", ".debug_frame",
+    ".debug_str", ".debug_loc", ".debug_ranges", ".plt", 0
 };
-string_table_t secnames(".debug_", _secnames);
+string_table_t secnames("", _secnames);
 
 static const char * const _childvals[] = {
     "no", "yes", 0
