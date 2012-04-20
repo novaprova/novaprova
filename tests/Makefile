@@ -7,7 +7,7 @@ CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
 
 INCLUDES=	-I..
-LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lbfd
+LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lbfd -ldl
 DEPS=		../u4c.h ../libu4c.a ../libspiegel/libspiegel.a
 
 TESTS= \

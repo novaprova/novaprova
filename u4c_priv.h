@@ -19,6 +19,7 @@
 #include "u4c/proxy_listener.hxx"
 #include "u4c/plan.hxx"
 #include "u4c/testmanager.hxx"
+#include "u4c/redirect.hxx"
 #include "u4c/runner.hxx"
 
 #endif /* __U4C_PRIV_H__ */

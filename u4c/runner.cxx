@@ -472,6 +472,8 @@ runner_t::run_test_code(testnode_t *tn)
     result_t res = R_UNKNOWN;
     const u4c_event_t *ev;
 
+    tn->pre_fixture();
+
     u4c_try
     {
 	run_fixtures(tn, FT_BEFORE);
@@ -506,6 +508,7 @@ runner_t::run_test_code(testnode_t *tn)
 	res = merge(res, R_PASS);
     }
 
+    tn->post_fixture();
     res = merge(res, valgrind_errors());
     return res;
 }

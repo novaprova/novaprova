@@ -188,7 +188,11 @@ vlogmsg(int prio, const char *fmt, va_list args)
 extern "C" void
 __syslog_chk(int prio,
 	     int whatever __attribute__((unused)),
-	     const char *fmt, ...)
+	     const char *fmt, ...);
+static void
+mock___syslog_chk(int prio,
+		  int whatever __attribute__((unused)),
+		  const char *fmt, ...)
 {
     const char *msg;
     va_list args;
@@ -200,15 +204,15 @@ __syslog_chk(int prio,
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
     u4c_event_t ev(EV_SYSLOG, msg);
-    u4c::runner_t::running()->raise_event(&ev, u4c::FT_UNKNOWN);
+    runner_t::running()->raise_event(&ev, FT_UNKNOWN);
 
     if (find_slmatch(&msg) == SL_FAIL)
 	u4c_throw(eventc(EV_SLMATCH, msg));
 }
 #endif
 
-extern "C" void
-syslog(int prio, const char *fmt, ...)
+static void
+mock_syslog(int prio, const char *fmt, ...)
 {
     const char *msg;
     va_list args;
@@ -220,10 +224,20 @@ syslog(int prio, const char *fmt, ...)
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
     u4c_event_t ev(EV_SYSLOG, msg);
-    u4c::runner_t::running()->raise_event(&ev, u4c::FT_UNKNOWN);
+    runner_t::running()->raise_event(&ev, FT_UNKNOWN);
 
     if (find_slmatch(&msg) == SL_FAIL)
 	u4c_throw(eventc(EV_SLMATCH, msg));
+}
+
+void init_syslog_intercepts(testnode_t *tn)
+{
+    tn->add_mock((spiegel::addr_t)&syslog,
+		 (spiegel::addr_t)&mock_syslog);
+#if defined(__GLIBC__)
+    tn->add_mock((spiegel::addr_t)&__syslog_chk,
+		 (spiegel::addr_t)&mock___syslog_chk);
+#endif
 }
 
 // close the namespace

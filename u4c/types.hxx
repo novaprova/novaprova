@@ -24,8 +24,9 @@ enum functype_t
     FT_BEFORE,
     FT_TEST,
     FT_AFTER,
-
-    FT_NUM
+#define FT_NUM_SINGULAR	(FT_AFTER+1)
+    FT_MOCK,
+#define FT_NUM		(FT_MOCK+1)
 };
 
 extern const char *as_string(functype_t);

@@ -36,6 +36,7 @@ private:
     void add_classifier(const char *re, bool case_sensitive, functype_t type);
     void setup_classifiers();
     void discover_functions();
+    void setup_builtin_intercepts();
 
     static testmanager_t *instance_;
 

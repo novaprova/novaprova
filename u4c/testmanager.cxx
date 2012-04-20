@@ -44,6 +44,7 @@ testmanager_t::instance()
 	new testmanager_t();
 	instance_->setup_classifiers();
 	instance_->discover_functions();
+	instance_->setup_builtin_intercepts();
 	/* TODO: check tree for a) leaves without FT_TEST
 	 * and b) non-leaves with FT_TEST */
 	instance_->root_->dump(0);
@@ -173,6 +174,14 @@ fprintf(stderr, "discover_functions: scanning %s\n", (*i)->get_absolute_path().c
     // Calculate the effective root_ and common_
     common_ = root_;
     root_ = root_->detach_common();
+}
+
+extern void init_syslog_intercepts(testnode_t *);
+
+void
+testmanager_t::setup_builtin_intercepts()
+{
+    init_syslog_intercepts(root_);
 }
 
 // close the namespace

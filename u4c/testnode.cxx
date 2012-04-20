@@ -1,4 +1,5 @@
 #include "u4c/testnode.hxx"
+#include "u4c/redirect.hxx"
 #include "spiegel/tok.hxx"
 
 namespace u4c {
@@ -66,6 +67,18 @@ testnode_t::set_function(functype_t ft, spiegel::function_t *func)
 	funcs_[ft] = func;
 }
 
+void
+testnode_t::add_mock(spiegel::function_t *target, spiegel::function_t *mock)
+{
+    add_mock(target->get_address(), mock->get_address());
+}
+
+void
+testnode_t::add_mock(spiegel::addr_t target, spiegel::addr_t mock)
+{
+    intercepts_.push_back(new redirect_t(target, mock));
+}
+
 static void
 indent(int level)
 {
@@ -83,7 +96,7 @@ testnode_t::dump(int level) const
 		name_, get_fullname().c_str());
     }
 
-    for (int type = 0 ; type < FT_NUM ; type++)
+    for (int type = 0 ; type < FT_NUM_SINGULAR ; type++)
     {
 	if (funcs_[type])
 	{
@@ -167,6 +180,36 @@ testnode_t::find(const char *nm)
     }
 
     return 0;
+}
+
+void
+testnode_t::pre_fixture() const
+{
+    /* Install intercepts from innermost out */
+    for (const testnode_t *a = this ; a ; a = a->parent_)
+    {
+	vector<spiegel::intercept_t*>::const_iterator itr;
+	for (itr = a->intercepts_.begin() ; itr != a->intercepts_.end() ; ++itr)
+	    (*itr)->install();
+    }
+}
+
+void
+testnode_t::post_fixture() const
+{
+    /*
+     * Uninstall intercepts from innermost out.  Probably we should do
+     * this from outermost in to do it in the opposite order to
+     * pre_fixture(), but the order doesn't really matter.  The order
+     * *does* matter for installation, as the install order will be the
+     * execution order should any intercepts double up.
+     */
+    for (const testnode_t *a = this ; a ; a = a->parent_)
+    {
+	vector<spiegel::intercept_t*>::const_iterator itr;
+	for (itr = a->intercepts_.begin() ; itr != a->intercepts_.end() ; ++itr)
+	    (*itr)->uninstall();
+    }
 }
 
 testnode_t::preorder_iterator &

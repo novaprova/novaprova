@@ -11,6 +11,7 @@ as_string(functype_t type)
     case FT_BEFORE: return "before";
     case FT_TEST: return "test";
     case FT_AFTER: return "after";
+    case FT_MOCK: return "mock";
     default: return "INTERNAL ERROR!";
     }
 }

@@ -22,6 +22,8 @@ public:
     testnode_t *find(const char *name);
     testnode_t *make_path(std::string name);
     void set_function(functype_t, spiegel::function_t *);
+    void add_mock(spiegel::function_t *target, spiegel::function_t *mock);
+    void add_mock(spiegel::addr_t target, spiegel::addr_t mock);
 
     testnode_t *detach_common();
     spiegel::function_t *get_function(functype_t type) const
@@ -29,6 +31,8 @@ public:
 	return funcs_[type];
     }
     std::list<spiegel::function_t*> get_fixtures(functype_t type) const;
+    void pre_fixture() const;
+    void post_fixture() const;
 
     void dump(int level) const;
 
@@ -60,7 +64,8 @@ private:
     testnode_t *parent_;
     testnode_t *children_;
     char *name_;
-    spiegel::function_t *funcs_[FT_NUM];
+    spiegel::function_t *funcs_[FT_NUM_SINGULAR];
+    std::vector<spiegel::intercept_t*> intercepts_;
 
     friend class preorder_iterator;
 };
