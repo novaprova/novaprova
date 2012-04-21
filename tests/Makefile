@@ -1,4 +1,4 @@
-CC=		g++
+CC=		gcc
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
 CDEFINES=	-D_GNU_SOURCE
@@ -7,7 +7,7 @@ CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
 
 INCLUDES=	-I..
-LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lbfd -ldl
+LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lstdc++ -lbfd -ldl
 DEPS=		../u4c.h ../libu4c.a ../libspiegel/libspiegel.a
 
 all install:
