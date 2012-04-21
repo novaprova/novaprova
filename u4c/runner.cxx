@@ -388,6 +388,9 @@ runner_t::reap_children()
 	    child->merge_result(raise_event(&ev, FT_UNKNOWN));
 	}
 
+	/* test is finished; if nothing went wrong then PASS */
+	child->merge_result(u4c::R_PASS);
+
 	/* notify listeners */
 	nfailed_ += (child->get_result() == R_FAIL);
 	nrun_++;
