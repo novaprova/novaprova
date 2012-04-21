@@ -29,7 +29,13 @@ struct u4c_event_t
     unsigned int lineno;
     const char *function;
 
-    u4c_event_t() {}
+    u4c_event_t()
+     :  which((enum u4c_events)0),
+        description(0),
+        filename(0),
+        lineno(0),
+        function(0)
+    {}
     u4c_event_t(enum u4c_events w,
 		const char *d,
 		const char *f,
@@ -40,6 +46,16 @@ struct u4c_event_t
         filename(f),
         lineno(l),
         function(fn)
+    {}
+    u4c_event_t(enum u4c_events w,
+		const char *d,
+		const char *f,
+		unsigned int l)
+     :  which(w),
+        description(d),
+        filename(f),
+        lineno(l),
+        function(0)
     {}
     u4c_event_t(enum u4c_events w,
 		const char *d,
