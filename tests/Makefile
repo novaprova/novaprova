@@ -10,6 +10,8 @@ INCLUDES=	-I..
 LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lbfd -ldl
 DEPS=		../u4c.h ../libu4c.a ../libspiegel/libspiegel.a
 
+all install:
+
 TESTS= \
     t000 \
     t001 \

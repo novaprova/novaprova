@@ -15,7 +15,17 @@ INSTALL=	/usr/bin/install -c
 RANLIB=		ranlib
 depdir=		.deps
 
-all: libu4c.a
+SUBDIRS_PRE=	libspiegel
+SUBDIRS_POST=	tests
+
+all clean check install:
+	@for dir in $(SUBDIRS_PRE) ; do $(MAKE) -C $$dir $@ ; done
+	@$(MAKE) $@-local
+	@for dir in $(SUBDIRS_POST) ; do $(MAKE) -C $$dir $@ ; done
+
+install check: all
+
+all-local: libu4c.a
 
 libu4c_SOURCE=	\
 		u4c.c \
@@ -72,7 +82,7 @@ $(depdir)/%.d: %.c
 libu4c.a: $(libu4c_OBJS)
 	$(AR) $(ARFLAGS) libu4c.a $(libu4c_OBJS)
 
-install: all
+install-local:
 	$(INSTALL) -d $(DESTDIR)$(includedir)
 	for hdr in $(libu4c_HEADERS) ; do \
 	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/$$hdr ;\
@@ -81,10 +91,9 @@ install: all
 	$(INSTALL) -m 644 libu4c.a $(DESTDIR)$(libdir)/libu4c.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libu4c.a
 
-clean:
+clean-local:
 	$(RM) libu4c.a $(libu4c_OBJS)
 	$(RM) -r $(depdir)
 
-check: all
-	cd tests ; $(MAKE) $@
+check-local:
 

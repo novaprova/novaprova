@@ -15,6 +15,8 @@ depdir=		.deps
 
 all: testrunner
 
+check install:
+
 libspiegel= libspiegel.a
 
 libspiegel_SOURCES= \
