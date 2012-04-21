@@ -1,20 +1,20 @@
 EVENT SIGNAL child process %PID% died on signal 11
-FAIL u4c.tests.t000.segv
+FAIL t000.segv
 EVENT SIGNAL child process %PID% died on signal 4
-FAIL u4c.tests.t000.sigill
+FAIL t000.sigill
 EVENT ASSERT white == black at t000.c:23 in test test_assert
-FAIL u4c.tests.t000.assert
+FAIL t000.assert
 EVENT EXIT exit(1) at /home/gnb/software/u4c/tests/t000.c:28 in test test_exit
-FAIL u4c.tests.t000.exit
+FAIL t000.exit
 EVENT SYSLOG err: Hello world! at /home/gnb/software/u4c/tests/t000.c:33 in unknown test_syslog
 EVENT SLMATCH err: Hello world! at /home/gnb/software/u4c/tests/t000.c:33 in test test_syslog
-FAIL u4c.tests.t000.syslog
+FAIL t000.syslog
 EVENT VALGRIND 32 bytes of memory leaked in unknown test_syslog
-FAIL u4c.tests.t000.memleak
+FAIL t000.memleak
 EVENT EXPASS U4C_PASS called at t000.c:43 in test test_syslog
-PASS u4c.tests.t000.pass
+PASS t000.pass
 EVENT EXFAIL U4C_FAIL called at t000.c:49 in test test_syslog
-FAIL u4c.tests.t000.fail
+FAIL t000.fail
 EVENT EXNA U4C_NOTAPPLICABLE called at t000.c:55 in test test_syslog
-N/A u4c.tests.t000.notapplicable
+N/A t000.notapplicable
 EXIT 1
