@@ -97,6 +97,8 @@ testmanager_t::setup_classifiers()
     add_classifier("^[tT]ear[dD]own$", false, FT_AFTER);
     add_classifier("^tear_down$", false, FT_AFTER);
     add_classifier("^[cC]leanup$", false, FT_AFTER);
+    add_classifier("^mock_(.*)", false, FT_MOCK);
+    add_classifier("^[mM]ock([A-Z].*)", false, FT_MOCK);
 }
 
 static string
@@ -118,6 +120,24 @@ test_name(spiegel::function_t *fn, char *submatch)
     return name;
 }
 
+spiegel::function_t *
+testmanager_t::find_mock_target(string name)
+{
+    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
+    vector<spiegel::compile_unit_t *>::iterator i;
+    for (i = units.begin() ; i != units.end() ; ++i)
+    {
+	vector<spiegel::function_t *> fns = (*i)->get_functions();
+	vector<spiegel::function_t *>::iterator j;
+	for (j = fns.begin() ; j != fns.end() ; ++j)
+	{
+	    if ((*j)->get_name() == name)
+		return *j;
+	}
+    }
+    return 0;
+}
+
 void
 testmanager_t::discover_functions()
 {
@@ -133,7 +153,7 @@ testmanager_t::discover_functions()
     vector<spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-fprintf(stderr, "discover_functions: scanning %s\n", (*i)->get_absolute_path().c_str());
+// fprintf(stderr, "discover_functions: compile unit %s\n", (*i)->get_absolute_path().c_str());
 	vector<spiegel::function_t *> fns = (*i)->get_functions();
 	vector<spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
@@ -146,28 +166,46 @@ fprintf(stderr, "discover_functions: scanning %s\n", (*i)->get_absolute_path().c
 	    if (!fn->get_address())
 		continue;
 
-	    // We want functions returning void or int
-	    switch (fn->get_return_type()->get_classification())
-	    {
-	    case spiegel::type_t::TC_VOID:
-	    case spiegel::type_t::TC_SIGNED_INT:
-		break;
-	    default:
-		continue;
-	    }
-
-	    // We want functions taking no arguments
-	    if (fn->get_parameter_types().size() != 0)
-		continue;
-
 	    type = classify_function(fn->get_name().c_str(),
 				     submatch, sizeof(submatch));
-	    if (type == FT_UNKNOWN)
+	    switch (type)
+	    {
+	    case FT_UNKNOWN:
 		continue;
-	    if (type == FT_TEST && !submatch[0])
-		continue;
-
-	    root_->make_path(test_name(fn, submatch))->set_function(type, fn);
+	    case FT_TEST:
+		// Test functions need a node name
+		if (!submatch[0])
+		    continue;
+		// Test function return void
+		if (fn->get_return_type()->get_classification() != spiegel::type_t::TC_VOID)
+		    continue;
+		// Test functions take no arguments
+		if (fn->get_parameter_types().size() != 0)
+		    continue;
+		root_->make_path(test_name(fn, submatch))->set_function(type, fn);
+		break;
+	    case FT_BEFORE:
+	    case FT_AFTER:
+		// Before/after functions go into the parent node
+		assert(!submatch[0]);
+		// Before/after functions return int
+		if (fn->get_return_type()->get_classification() != spiegel::type_t::TC_SIGNED_INT)
+		    continue;
+		// Before/after take no arguments
+		if (fn->get_parameter_types().size() != 0)
+		    continue;
+		root_->make_path(test_name(fn, submatch))->set_function(type, fn);
+		break;
+	    case FT_MOCK:
+		// Mock functions need a target name
+		if (!submatch[0])
+		    continue;
+		spiegel::function_t *target = find_mock_target(submatch);
+		if (!target)
+		    continue;
+		root_->make_path(test_name(fn, 0))->add_mock(target, fn);
+		break;
+	    }
 	}
     }
 

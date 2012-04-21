@@ -135,7 +135,7 @@ testnode_t::detach_common()
     testnode_t *tn;
 
     for (tn = this ;
-         tn->children_ && !tn->children_->next_ ;
+         !tn->intercepts_.size() && tn->children_ && !tn->children_->next_ ;
 	 tn = tn->children_)
 	;
     /* tn now points at the highest node with more than 1 child */

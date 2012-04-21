@@ -35,6 +35,7 @@ private:
     functype_t classify_function(const char *func, char *match_return, size_t maxmatch);
     void add_classifier(const char *re, bool case_sensitive, functype_t type);
     void setup_classifiers();
+    spiegel::function_t *find_mock_target(std::string name);
     void discover_functions();
     void setup_builtin_intercepts();
 
