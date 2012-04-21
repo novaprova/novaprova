@@ -78,7 +78,10 @@ deserialise_string(int fd, char *buf, unsigned int maxlen)
     if (len >= maxlen)
 	return -ENAMETOOLONG;
     if (!len)
+    {
+	buf[0] = '\0';
 	return 0;
+    }
     return deserialise_bytes(fd, buf, len+1);
 }
 
