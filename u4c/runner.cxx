@@ -147,93 +147,13 @@ runner_t::end()
     running_ = 0;
 }
 
-const u4c_event_t *
-runner_t::normalise_event(const u4c_event_t *ev)
-{
-    static u4c_event_t norm;
-
-    static char filebuf[1024];
-    static char funcbuf[1024];
-
-    memset(&norm, 0, sizeof(norm));
-    norm.which = ev->which;
-    norm.description = xstr(ev->description);
-    if (ev->lineno == ~0U)
-    {
-	unsigned long pc = (unsigned long)ev->filename;
-	spiegel::location_t loc;
-
-	if (spiegel::describe_address(pc, loc))
-	{
-	    snprintf(filebuf, sizeof(filebuf), "%s",
-		     loc.compile_unit_->get_absolute_path().c_str());
-	    norm.filename = filebuf;
-
-	    norm.lineno = loc.line_;
-
-	    if (loc.class_)
-		snprintf(funcbuf, sizeof(funcbuf), "%s::%s",
-			 loc.class_->get_name().c_str(),
-			 loc.function_->get_name().c_str());
-	    else
-		snprintf(funcbuf, sizeof(funcbuf), "%s",
-			 loc.function_->get_name().c_str());
-	    norm.function = funcbuf;
-	}
-	else
-	{
-	    snprintf(funcbuf, sizeof(funcbuf), "(0x%lx)", pc);
-	    norm.function = funcbuf;
-	    norm.filename = "";
-	}
-    }
-    else if (ev->lineno == ~0U-1)
-    {
-	spiegel::function_t *f = (spiegel::function_t *)ev->function;
-
-	snprintf(filebuf, sizeof(filebuf), "%s",
-		 f->get_compile_unit()->get_absolute_path().c_str());
-	norm.filename = filebuf;
-
-	snprintf(funcbuf, sizeof(funcbuf), "%s",
-		 f->get_name().c_str());
-	norm.function = funcbuf;
-    }
-    else
-    {
-	norm.filename = xstr(ev->filename);
-	norm.lineno = ev->lineno;
-	norm.function = xstr(ev->function);
-    }
-
-    return &norm;
-}
 
 result_t
-runner_t::raise_event(const u4c_event_t *ev, functype_t ft)
+runner_t::raise_event(const event_t *ev)
 {
-    ev = normalise_event(ev);
-    dispatch_listeners(add_event, ev, ft);
-
-    switch (ev->which)
-    {
-    case EV_ASSERT:
-    case EV_EXIT:
-    case EV_SIGNAL:
-    case EV_FIXTURE:
-    case EV_VALGRIND:
-    case EV_SLMATCH:
-	return R_FAIL;
-    case EV_EXPASS:
-	return R_PASS;
-    case EV_EXFAIL:
-	return R_FAIL;
-    case EV_EXNA:
-	return R_NOTAPPLICABLE;
-    default:
-	/* there was an event, but it makes no difference */
-	return R_UNKNOWN;
-    }
+    ev = ev->normalise();
+    dispatch_listeners(add_event, ev);
+    return ev->get_result();
 }
 
 child_t *
@@ -372,20 +292,20 @@ runner_t::reap_children()
 	{
 	    if (WEXITSTATUS(status))
 	    {
-		u4c_event_t ev(EV_EXIT, msg, NULL, 0, NULL);
 		snprintf(msg, sizeof(msg),
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
-		child->merge_result(raise_event(&ev, FT_UNKNOWN));
+		event_t ev(EV_EXIT, msg);
+		child->merge_result(raise_event(&ev));
 	    }
 	}
 	else if (WIFSIGNALED(status))
 	{
-	    u4c_event_t ev(EV_SIGNAL, msg, NULL, 0, NULL);
 	    snprintf(msg, sizeof(msg),
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
-	    child->merge_result(raise_event(&ev, FT_UNKNOWN));
+	    event_t ev(EV_SIGNAL, msg);
+	    child->merge_result(raise_event(&ev));
 	}
 
 	/* test is finished; if nothing went wrong then PASS */
@@ -425,7 +345,7 @@ runner_t::run_function(functype_t ft, spiegel::function_t *f)
 	{
 	    static char cond[64];
 	    snprintf(cond, sizeof(cond), "fixture returned %d", r);
-	    u4c_throw(u4c_event_t(EV_FIXTURE, cond, f));
+	    u4c_throw(event_t(EV_FIXTURE, cond).in_function(f));
 	}
     }
 }
@@ -451,19 +371,19 @@ runner_t::valgrind_errors()
     VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
     if (leaked)
     {
-	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
-	res = merge(res, raise_event(&ev, FT_UNKNOWN));
+	event_t ev(EV_VALGRIND, msg);
+	res = merge(res, raise_event(&ev));
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
     if (nerrors)
     {
-	u4c_event_t ev(EV_VALGRIND, msg, NULL, 0, NULL);
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
-	res = merge(res, raise_event(&ev, FT_UNKNOWN));
+	event_t ev(EV_VALGRIND, msg);
+	res = merge(res, raise_event(&ev));
     }
 
     return res;
@@ -473,7 +393,7 @@ result_t
 runner_t::run_test_code(testnode_t *tn)
 {
     result_t res = R_UNKNOWN;
-    const u4c_event_t *ev;
+    event_t *ev;
 
     tn->pre_fixture();
 
@@ -483,7 +403,8 @@ runner_t::run_test_code(testnode_t *tn)
     }
     u4c_catch(ev)
     {
-	res = merge(res, raise_event(ev, FT_BEFORE));
+	ev->in_functype(FT_BEFORE);
+	res = merge(res, raise_event(ev));
     }
 
     if (res == R_UNKNOWN)
@@ -494,7 +415,8 @@ runner_t::run_test_code(testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    res = merge(res, raise_event(ev, FT_TEST));
+	    ev->in_functype(FT_TEST);
+	    res = merge(res, raise_event(ev));
 	}
 
 	u4c_try
@@ -503,7 +425,8 @@ runner_t::run_test_code(testnode_t *tn)
 	}
 	u4c_catch(ev)
 	{
-	    res = merge(res, raise_event(ev, FT_AFTER));
+	    ev->in_functype(FT_AFTER);
+	    res = merge(res, raise_event(ev));
 	}
 
 	/* If we got this far and nothing bad

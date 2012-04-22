@@ -15,8 +15,8 @@ __assert_fail(const char *condition,
 {
     VALGRIND_PRINTF_BACKTRACE("Assert %s failed at %s:%u\n",
 			      condition, filename, lineno);
-    u4c_throw(event(EV_ASSERT, condition,
-	      filename, lineno, function));
+    u4c_throw(u4c::event_t(u4c::EV_ASSERT, condition).at_line(
+	      filename, lineno).in_function(function));
 }
 
 void
@@ -27,8 +27,8 @@ __assert_perror_fail(int errnum,
 {
     VALGRIND_PRINTF_BACKTRACE("Error %d (%s) encountered at %s:%u\n",
 			      errnum, strerror(errnum), filename, lineno);
-    u4c_throw(event(EV_ASSERT, strerror(errnum),
-	      filename, lineno, function));
+    u4c_throw(u4c::event_t(u4c::EV_ASSERT, strerror(errnum)).at_line(
+	      filename, lineno).in_function(function));
 }
 
 #endif
@@ -40,7 +40,7 @@ __assert(const char *condition,
 {
     VALGRIND_PRINTF_BACKTRACE("Assert %s failed at %s:%u\n",
 			      condition, filename, lineno);
-    u4c_throw(event(EV_ASSERT, condition,
-	      filename, lineno, 0));
+    u4c_throw(u4c::event_t(u4c::EV_ASSERT, condition).at_line(
+	      filename, lineno));
 }
 

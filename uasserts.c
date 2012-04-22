@@ -7,7 +7,7 @@
 void
 __u4c_pass(const char *file, int line)
 {
-    u4c_throw(u4c_event_t(EV_EXPASS, "U4C_PASS called", file, line));
+    u4c_throw(u4c::event_t(u4c::EV_EXPASS, "U4C_PASS called").at_line(file, line));
 }
 
 void
@@ -15,13 +15,13 @@ __u4c_fail(const char *file, int line)
 {
     VALGRIND_PRINTF_BACKTRACE("U4C_FAIL failed at %s:%u\n",
 			      file, line);
-    u4c_throw(u4c_event_t(EV_EXFAIL, "U4C_FAIL called", file, line));
+    u4c_throw(u4c::event_t(u4c::EV_EXFAIL, "U4C_FAIL called").at_line(file, line));
 }
 
 void
 __u4c_notapplicable(const char *file, int line)
 {
-    u4c_throw(u4c_event_t(EV_EXNA, "U4C_NOTAPPLICABLE called", file, line));
+    u4c_throw(u4c::event_t(u4c::EV_EXNA, "U4C_NOTAPPLICABLE called").at_line(file, line));
 }
 
 void
@@ -39,6 +39,6 @@ __u4c_assert_failed(const char *file,
 
     VALGRIND_PRINTF_BACKTRACE("Assert %s failed at %s:%u\n",
 			      condition, file, line);
-    u4c_throw(u4c_event_t(EV_ASSERT, condition, file, line));
+    u4c_throw(u4c::event_t(u4c::EV_ASSERT, condition).at_line(file, line));
 }
 

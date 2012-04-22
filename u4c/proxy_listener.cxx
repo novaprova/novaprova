@@ -31,13 +31,15 @@ serialise_string(int fd, const char *s)
 }
 
 static void
-serialise_event(int fd, const u4c_event_t *ev)
+serialise_event(int fd, const event_t *ev)
 {
     serialise_uint(fd, ev->which);
     serialise_string(fd, ev->description);
+    serialise_uint(fd, ev->locflags);
     serialise_string(fd, ev->filename);
     serialise_uint(fd, ev->lineno);
     serialise_string(fd, ev->function);
+    serialise_uint(fd, ev->functype);
 }
 
 static int
@@ -86,11 +88,13 @@ deserialise_string(int fd, char *buf, unsigned int maxlen)
 }
 
 static bool
-deserialise_event(int fd, u4c_event_t *ev)
+deserialise_event(int fd, event_t *ev)
 {
     int r;
     unsigned int which;
+    unsigned int locflags;
     unsigned int lineno;
+    unsigned int ft;
     static char description_buf[1024];
     static char filename_buf[1024];
     static char function_buf[1024];
@@ -100,6 +104,8 @@ deserialise_event(int fd, u4c_event_t *ev)
     if ((r = deserialise_string(fd, description_buf,
 				sizeof(description_buf))))
 	return r;
+    if ((r = deserialise_uint(fd, &locflags)))
+	return r;
     if ((r = deserialise_string(fd, filename_buf,
 				sizeof(filename_buf))))
 	return r;
@@ -108,11 +114,15 @@ deserialise_event(int fd, u4c_event_t *ev)
     if ((r = deserialise_string(fd, function_buf,
 				sizeof(function_buf))))
 	return r;
-    ev->which = (enum u4c_events)which;
+    if ((r = deserialise_uint(fd, &ft)))
+	return r;
+    ev->which = (enum events_t)which;
     ev->description = description_buf;
+    ev->locflags = locflags;
     ev->lineno = lineno;
     ev->filename = filename_buf;
     ev->function = function_buf;
+    ev->functype = (functype_t)ft;
     return 0;
 }
 
@@ -148,11 +158,10 @@ proxy_listener_t::end_node(const testnode_t *)
 }
 
 void
-proxy_listener_t::add_event(const u4c_event_t *ev, functype_t ft)
+proxy_listener_t::add_event(const event_t *ev)
 {
     serialise_uint(fd_, PROXY_EVENT);
     serialise_event(fd_, ev);
-    serialise_uint(fd_, ft);
 }
 
 void
@@ -174,8 +183,7 @@ bool
 proxy_listener_t::handle_call(int fd, result_t *resp)
 {
     unsigned int which;
-    u4c_event_t ev;
-    unsigned int ft;
+    event_t ev;
     unsigned int res;
     int r;
 
@@ -185,11 +193,9 @@ proxy_listener_t::handle_call(int fd, result_t *resp)
     switch (which)
     {
     case PROXY_EVENT:
-	if ((r = deserialise_event(fd, &ev)) ||
-	    (r = deserialise_uint(fd, &ft)))
+	if ((r = deserialise_event(fd, &ev)))
 	    return false;    /* failed to decode */
-	*resp = merge(*resp,
-	u4c::runner_t::running()->raise_event(&ev, (functype_t)ft));
+	*resp = merge(*resp, u4c::runner_t::running()->raise_event(&ev));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))

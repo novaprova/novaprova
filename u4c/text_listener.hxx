@@ -15,7 +15,7 @@ public:
     void end();
     void begin_node(const testnode_t *tn);
     void end_node(const testnode_t *tn);
-    void add_event(const u4c_event_t *ev, functype_t ft);
+    void add_event(const event_t *ev);
     void finished(result_t res);
 
 private:

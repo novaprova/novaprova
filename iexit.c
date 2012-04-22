@@ -12,7 +12,7 @@ void exit(int status)
 	static char cond[64];
 	VALGRIND_PRINTF_BACKTRACE("exit(%d) called\n", status);
 	snprintf(cond, sizeof(cond), "exit(%d)", status);
-	u4c_throw(eventc(EV_EXIT, cond));
+	u4c_throw(u4c::event_t(u4c::EV_EXIT, cond));
     }
     _exit(status);
 }

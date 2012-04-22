@@ -3,21 +3,21 @@ FAIL t003.invalid_regex
 EVENT SLMATCH Unmatched syslog tag 1 at t003.c:18
 FAIL t003.unmatched_tag
 PASS t003.no_messages
-EVENT SYSLOG err: fnarp at /home/gnb/software/u4c/tests/t003.c:34 in unknown test_one_message_no_matches
-EVENT SLMATCH err: fnarp at /home/gnb/software/u4c/tests/t003.c:34 in test test_one_message_no_matches
+EVENT SYSLOG err: fnarp
+EVENT SLMATCH err: fnarp
 FAIL t003.one_message_no_matches
-EVENT SYSLOG err: fnarp at /home/gnb/software/u4c/tests/t003.c:42 in unknown test_one_message_unmatched
-EVENT SLMATCH err: fnarp at /home/gnb/software/u4c/tests/t003.c:42 in test test_one_message_unmatched
+EVENT SYSLOG err: fnarp
+EVENT SLMATCH err: fnarp
 FAIL t003.one_message_unmatched
-EVENT SYSLOG err: fnarp at /home/gnb/software/u4c/tests/t003.c:50 in unknown test_one_message_ignored
+EVENT SYSLOG err: fnarp
 PASS t003.one_message_ignored
-EVENT SYSLOG err: foo bar baz at /home/gnb/software/u4c/tests/t003.c:59 in unknown test_one_message_one_match
+EVENT SYSLOG err: foo bar baz
 PASS t003.one_message_one_match
-EVENT SYSLOG err: foo bar baz at /home/gnb/software/u4c/tests/t003.c:69 in unknown test_one_message_one_match_want_five
-EVENT ASSERT U4C_ASSERT_EQUAL(u4c_syslog_count(m1)=1, 5=5) at t003.c:70 in test test_one_message_one_match_want_five
+EVENT SYSLOG err: foo bar baz
+EVENT ASSERT U4C_ASSERT_EQUAL(u4c_syslog_count(m1)=1, 5=5) at t003.c:70 in (test) test_one_message_one_match_want_five
 FAIL t003.one_message_one_match_want_five
-EVENT SYSLOG err: fuu bleah bas at /home/gnb/software/u4c/tests/t003.c:78 in unknown test_one_message_multiple_matches_same_tag
+EVENT SYSLOG err: fuu bleah bas
 PASS t003.one_message_multiple_matches_same_tag
-EVENT SYSLOG err: fuu bleah bas at /home/gnb/software/u4c/tests/t003.c:89 in unknown test_one_message_multiple_matches_different_tags
+EVENT SYSLOG err: fuu bleah bas
 PASS t003.one_message_multiple_matches_different_tags
 EXIT 1

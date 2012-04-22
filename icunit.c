@@ -15,8 +15,8 @@ bool CU_assertImplementation(bool bValue,
     {
 	VALGRIND_PRINTF_BACKTRACE("Assert %s failed at %s:%u\n",
 				  strCondition, strFile, uiLine);
-	u4c_throw(event(EV_ASSERT, strCondition,
-		  strFile, uiLine, strFunction));
+	u4c_throw(u4c::event_t(u4c::EV_ASSERT, strCondition).at_line(
+		  strFile, uiLine).in_function(strFunction));
     }
     return true;
 }

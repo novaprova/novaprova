@@ -54,38 +54,10 @@ text_listener_t::end_node(const testnode_t *tn)
 }
 
 void
-text_listener_t::add_event(const u4c_event_t *ev, functype_t ft)
+text_listener_t::add_event(const event_t *ev)
 {
-    const char *type;
-    char buf[2048];
-
-    switch (ev->which)
-    {
-    case EV_ASSERT: type = "ASSERT"; break;
-    case EV_EXIT: type = "EXIT"; break;
-    case EV_SIGNAL: type = "SIGNAL"; break;
-    case EV_SYSLOG: type = "SYSLOG"; break;
-    case EV_FIXTURE: type = "FIXTURE"; break;
-    case EV_EXPASS: type = "EXPASS"; break;
-    case EV_EXFAIL: type = "EXFAIL"; break;
-    case EV_EXNA: type = "EXNA"; break;
-    case EV_VALGRIND: type = "VALGRIND"; break;
-    case EV_SLMATCH: type = "SLMATCH"; break;
-    default: type = "unknown"; break;
-    }
-    snprintf(buf, sizeof(buf), "EVENT %s %s",
-		type, ev->description);
-    if (*ev->filename && ev->lineno)
-	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
-		 " at %s:%u",
-		 ev->filename, ev->lineno);
-    if (*ev->function)
-	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
-		 " in %s %s",
-		 as_string(ft),
-		 ev->function);
-    strcat(buf, "\n");
-    fputs(buf, stderr);
+    fputs(ev->as_string().c_str(), stderr);
+    fputc('\n', stderr);
 }
 
 void

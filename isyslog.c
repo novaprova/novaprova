@@ -55,7 +55,7 @@ add_slmatch(const char *re, sldisposition_t dis,
     {
 	const char *msg = slm->classifier_.error_string();
 	delete slm;
-	u4c_throw(event(EV_SLMATCH, msg, file, line, 0));
+	u4c_throw(event_t(EV_SLMATCH, msg).at_line(file, line));
     }
 
     /* order shouldn't matter due to the way we
@@ -105,7 +105,7 @@ __u4c_syslog_count(int tag, const char *file, int line)
     {
 	static char buf[64];
 	snprintf(buf, sizeof(buf), "Unmatched syslog tag %d", tag);
-	u4c_throw(event(EV_SLMATCH, buf, file, line, 0));
+	u4c_throw(event_t(EV_SLMATCH, buf).at_line(file, line));
     }
     return count;
 }
@@ -203,11 +203,11 @@ mock___syslog_chk(int prio,
 
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
-    u4c_event_t ev(EV_SYSLOG, msg);
-    runner_t::running()->raise_event(&ev, FT_UNKNOWN);
+    event_t ev(EV_SYSLOG, msg);
+    runner_t::running()->raise_event(&ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
-	u4c_throw(eventc(EV_SLMATCH, msg));
+	u4c_throw(event_t(EV_SLMATCH, msg));
 }
 #endif
 
@@ -223,11 +223,11 @@ mock_syslog(int prio, const char *fmt, ...)
 
     VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
 
-    u4c_event_t ev(EV_SYSLOG, msg);
-    runner_t::running()->raise_event(&ev, FT_UNKNOWN);
+    event_t ev(EV_SYSLOG, msg);
+    runner_t::running()->raise_event(&ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
-	u4c_throw(eventc(EV_SLMATCH, msg));
+	u4c_throw(event_t(EV_SLMATCH, msg));
 }
 
 void init_syslog_intercepts(testnode_t *tn)

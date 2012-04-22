@@ -7,10 +7,9 @@
 
 namespace spiegel { class function_t; };
 
-struct u4c_event_t;
-
 namespace u4c {
 
+struct event_t;
 class listener_t;
 class plan_t;
 class child_t;
@@ -29,13 +28,12 @@ public:
     void list_tests(plan_t *) const;
     int run_tests(plan_t *);
     static runner_t *running() { return running_; }
-    result_t raise_event(const u4c_event_t *, functype_t);
+    result_t raise_event(const event_t *);
 
 private:
     void begin();
     void end();
     void set_listener(listener_t *);
-    const u4c_event_t *normalise_event(const u4c_event_t *ev);
     child_t *fork_child(testnode_t *tn);
     void handle_events();
     void reap_children();
