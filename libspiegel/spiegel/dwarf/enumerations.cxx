@@ -98,6 +98,17 @@ static const char * const _tagnames[] = {
     "variant_part",	    /* 0x33, */
     "variable",		    /* 0x34, */
     "volatile_type",	    /* 0x35, */
+    "dwarf_procedure",	    /* 0x36 */
+    "restrict_type",	    /* 0x37 */
+    "interface_type",	    /* 0x38 */
+    "namespace_type",	    /* 0x39 */
+    "imported_module",	    /* 0x3a */
+    "unspecified_type",	    /* 0x3b */
+    "partial_unit",	    /* 0x3c */
+    "imported_unit",	    /* 0x3d */
+    "",
+    "condition",	    /* 0x3f */
+    "shared_type",	    /* 0x40 */
     0
 };
 string_table_t tagnames("DW_TAG_", _tagnames);

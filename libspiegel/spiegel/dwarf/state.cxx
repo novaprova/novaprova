@@ -359,6 +359,9 @@ describe_type(const walker_t &ow, reference_t ref)
     case DW_TAG_enumeration_type:
 	printf("enum %s ", (name ? name : "{...}"));
 	break;
+    case DW_TAG_namespace_type:
+	printf("namespace %s ", (name ? name : "{...}"));
+	break;
     case DW_TAG_array_type:
 	describe_type(w, e->get_reference_attribute(DW_AT_type));
 	for (e = w.move_down() ; e ; e = w.move_next())

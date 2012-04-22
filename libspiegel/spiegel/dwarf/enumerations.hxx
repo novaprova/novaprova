@@ -105,6 +105,17 @@ enum tag_names
     DW_TAG_variant_part = 0x33,
     DW_TAG_variable = 0x34,
     DW_TAG_volatile_type = 0x35,
+    // DWARF3 tags
+    DW_TAG_dwarf_procedure = 0x36,
+    DW_TAG_restrict_type = 0x37,
+    DW_TAG_interface_type = 0x38,
+    DW_TAG_namespace_type = 0x39,
+    DW_TAG_imported_module = 0x3a,
+    DW_TAG_unspecified_type = 0x3b,
+    DW_TAG_partial_unit = 0x3c,
+    DW_TAG_imported_unit = 0x3d,
+    DW_TAG_condition = 0x3f,
+    DW_TAG_shared_type = 0x40,
 
 // DW_TAG_lo_user = 0x4080,
 // DW_TAG_hi_user = 0xffff

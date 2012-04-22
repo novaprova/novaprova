@@ -187,6 +187,7 @@ type_t::get_name() const
     case DW_TAG_union_type:
     case DW_TAG_class_type:
     case DW_TAG_enumeration_type:
+    case DW_TAG_namespace_type:
 	return (name ? name : "");
 	break;
     case DW_TAG_pointer_type:
@@ -240,6 +241,9 @@ type_t::to_string(string inner) const
 	break;
     case DW_TAG_enumeration_type:
 	s = string("enum ") + (name ? name : "{...}");
+	break;
+    case DW_TAG_namespace_type:
+	s = string("namespace ") + (name ? name : "{...}");
 	break;
     case DW_TAG_array_type:
 	{
