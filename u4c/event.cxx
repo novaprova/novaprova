@@ -3,19 +3,6 @@
 namespace u4c {
 using namespace std;
 
-string hex(unsigned long x)
-{
-    char buf[32];
-    snprintf(buf, sizeof(buf), "0x%lx", x);
-    return string(buf);
-}
-
-string dec(unsigned int x)
-{
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%u", x);
-    return string(buf);
-}
 
 const event_t *
 event_t::normalise() const

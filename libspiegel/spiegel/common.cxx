@@ -162,6 +162,22 @@ page_round_down(unsigned long x)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+string hex(unsigned long x)
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "0x%lx", x);
+    return string(buf);
+}
+
+string dec(unsigned int x)
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%u", x);
+    return string(buf);
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
 // close the namespace 
 };
 

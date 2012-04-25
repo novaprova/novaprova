@@ -16,6 +16,7 @@
 #include <sys/signal.h>
 #include <sys/poll.h>
 #include <valgrind/memcheck.h>
+#include <string>
 
 namespace u4c {
 
@@ -26,6 +27,9 @@ extern char *xstrdup(const char *s);
     do { free(v); (v) = NULL; } while(0)
 #define xstr(x)  ((x) ? (x) : "")
 extern const char *argv0;
+
+extern std::string hex(unsigned long x);
+extern std::string dec(unsigned int x);
 
 // close the namespace
 };

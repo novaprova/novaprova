@@ -48,6 +48,7 @@
 #include <stdint.h>
 #endif
 
+#include <string>
 #include <map>
 #include <vector>
 #include <exception>
@@ -90,6 +91,9 @@ extern char *xstrdup(const char *s);
 extern unsigned long page_size(void);
 extern unsigned long page_round_up(unsigned long x);
 extern unsigned long page_round_down(unsigned long x);
+
+extern std::string hex(unsigned long x);
+extern std::string dec(unsigned int x);
 
 // close the namespace
 };
