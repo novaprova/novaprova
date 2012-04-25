@@ -56,8 +56,12 @@ text_listener_t::end_node(const testnode_t *tn)
 void
 text_listener_t::add_event(const event_t *ev)
 {
-    fputs(ev->as_string().c_str(), stderr);
-    fputc('\n', stderr);
+    string s = string("EVENT ") +
+		ev->as_string() +
+	       "\nCalled from\n" +
+	       ev->get_long_location() +
+	       "\n";
+    fputs(s.c_str(), stderr);
 }
 
 void

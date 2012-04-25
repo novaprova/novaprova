@@ -13,10 +13,8 @@ bool CU_assertImplementation(bool bValue,
 //     fprintf(stderr, "    %s at %s:%u\n", strCondition, strFile, uiLine);
     if (!bValue)
     {
-	VALGRIND_PRINTF_BACKTRACE("Assert %s failed at %s:%u\n",
-				  strCondition, strFile, uiLine);
 	u4c_throw(u4c::event_t(u4c::EV_ASSERT, strCondition).at_line(
-		  strFile, uiLine).in_function(strFunction));
+		  strFile, uiLine).in_function(strFunction).with_stack());
     }
     return true;
 }

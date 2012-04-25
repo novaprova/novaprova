@@ -28,12 +28,14 @@ public:
     enum locflags_t
     {
 	LT_NONE		= 0,
-	LT_FILENAME	= (1<<0),
-	LT_LINENO	= (1<<1),
-	LT_FUNCNAME	= (1<<2),
-	LT_SPIEGELFUNC	= (1<<3),
-	LT_CALLER	= (1<<4),
-	LT_FUNCTYPE	= (1<<5),
+	LT_FILENAME	= (1<<0),   /* filename */
+	LT_LINENO	= (1<<1),   /* lineno */
+	LT_FUNCNAME	= (1<<2),   /* function */
+	LT_SPIEGELFUNC	= (1<<3),   /* function */
+	LT_STACK	= (1<<4),   /* function */
+	LT_FUNCTYPE	= (1<<5),   /* functype */
+
+	LT__function	= (LT_FUNCNAME|LT_SPIEGELFUNC|LT_STACK)
     };
 
     // default c'tor
@@ -62,7 +64,6 @@ public:
     // of c'tors.
     event_t &at_line(const char *f, unsigned int l)
     {
-	locflags &= ~(LT_CALLER);
 	locflags |= LT_FILENAME|LT_LINENO;
 	filename = f;
 	lineno = l;
@@ -74,7 +75,6 @@ public:
     }
     event_t &in_file(const char *f)
     {
-	locflags &= ~(LT_CALLER);
 	locflags |= LT_FILENAME;
 	filename = f;
 	return *this;
@@ -85,7 +85,7 @@ public:
     }
     event_t &in_function(const char *fn)
     {
-	locflags &= ~(LT_SPIEGELFUNC|LT_CALLER);
+	locflags &= ~LT__function;
 	locflags |= LT_FUNCNAME;
 	function = fn;
 	return *this;
@@ -96,7 +96,7 @@ public:
     }
     event_t &in_function(const spiegel::function_t *fn)
     {
-	locflags &= ~(LT_FUNCNAME|LT_CALLER|LT_LINENO);
+	locflags &= ~LT__function;
 	locflags |= LT_SPIEGELFUNC;
         function = (const char *)fn;
 	return *this;
@@ -107,17 +107,13 @@ public:
         functype = ft;
 	return *this;
     }
-    inline event_t &from_caller()
-    {
-	locflags &= ~(LT_FUNCNAME|LT_SPIEGELFUNC|LT_LINENO);
-	locflags |= LT_CALLER;
-        function = (const char *)__builtin_return_address(0);
-	return *this;
-    }
+    event_t &with_stack();
 
     const event_t *normalise() const;
     result_t get_result() const;
     std::string as_string() const;
+    std::string get_short_location() const;
+    std::string get_long_location() const;
 
 // private:
 // This needs to be public for {de,}serialise_event

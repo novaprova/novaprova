@@ -5,7 +5,6 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <regex.h>
-#include <valgrind/valgrind.h>
 
 /*
  * Includes code copied from Cyrus IMAPD, which is
@@ -201,13 +200,12 @@ mock___syslog_chk(int prio,
     msg = vlogmsg(prio, fmt, args);
     va_end(args);
 
-    VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
-
     event_t ev(EV_SYSLOG, msg);
+    ev.with_stack();
     runner_t::running()->raise_event(&ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
-	u4c_throw(event_t(EV_SLMATCH, msg));
+	u4c_throw(event_t(EV_SLMATCH, msg).with_stack());
 }
 #endif
 
@@ -221,13 +219,12 @@ mock_syslog(int prio, const char *fmt, ...)
     msg = vlogmsg(prio, fmt, args);
     va_end(args);
 
-    VALGRIND_PRINTF_BACKTRACE("syslog %s\n", msg);
-
     event_t ev(EV_SYSLOG, msg);
+    ev.with_stack();
     runner_t::running()->raise_event(&ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
-	u4c_throw(event_t(EV_SLMATCH, msg));
+	u4c_throw(event_t(EV_SLMATCH, msg).with_stack());
 }
 
 void init_syslog_intercepts(testnode_t *tn)

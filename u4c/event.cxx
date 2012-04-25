@@ -3,6 +3,27 @@
 namespace u4c {
 using namespace std;
 
+event_t &event_t::with_stack()
+{
+    string trace = spiegel::describe_stacktrace();
+    if (trace.length())
+    {
+	/* only clobber `function' if we have something better */
+	locflags &= ~LT__function;
+	locflags |= LT_STACK;
+
+	/* It's really really annoying that we have to do this,
+	 * but it avoids Valgrind complaining about the stack
+	 * trace string being potentially leaked.
+	 * TODO: work out why the hell Valgrind complains about
+	 * this string and not about the ones in normalise() */
+	static char tracebuf[2048];
+	strncpy(tracebuf, trace.c_str(), sizeof(tracebuf));
+	memcpy(tracebuf+sizeof(tracebuf)-5, "...\0", 4);
+	function = tracebuf;;
+    }
+    return *this;
+}
 
 const event_t *
 event_t::normalise() const
@@ -18,31 +39,7 @@ event_t::normalise() const
     if (locflags & LT_FUNCTYPE)
 	norm.in_functype(functype);
 
-    if (locflags & LT_CALLER)
-    {
-	unsigned long pc = (unsigned long)function;
-	spiegel::location_t loc;
-
-	if (spiegel::describe_address(pc, loc))
-	{
-	    filebuf = loc.compile_unit_->get_absolute_path();
-	    norm.at_line(filebuf, loc.line_);
-
-	    if (loc.class_)
-		funcbuf = loc.class_->get_name() +
-			  "::" +
-			  loc.function_->get_name();
-	    else
-		funcbuf = loc.function_->get_name();
-	    norm.in_function(funcbuf);
-	}
-	else
-	{
-	    funcbuf = "(" + hex(pc) + ")";
-	    norm.in_function(funcbuf);
-	}
-    }
-    else if (locflags & LT_SPIEGELFUNC)
+    if (locflags & LT_SPIEGELFUNC)
     {
 	spiegel::function_t *f = (spiegel::function_t *)function;
 
@@ -61,6 +58,11 @@ event_t::normalise() const
 
 	if (locflags & LT_FUNCNAME)
 	    norm.in_function(xstr(function));
+	if (locflags & LT_STACK)
+	{
+	    norm.locflags |= LT_STACK;
+	    norm.function = xstr(function);
+	}
     }
 
     return &norm;
@@ -104,7 +106,12 @@ event_t::as_string() const
     const char *wstr = ((unsigned)which < arraysize(whichstrs))
 			? whichstrs[(unsigned)which] : "unknown";
 
-    string s = string("EVENT ") + wstr + " " + description;
+    return string(wstr) + " " + description;
+}
+
+string event_t::get_short_location() const
+{
+    string s = "";
 
     if (locflags & LT_FILENAME)
     {
@@ -131,6 +138,14 @@ event_t::as_string() const
 
     return s;
 }
+
+string event_t::get_long_location() const
+{
+    if (locflags & LT_STACK)
+	return string(function);
+    return get_short_location() + "\n";
+}
+
 
 // close the namespace
 };
