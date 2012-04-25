@@ -496,5 +496,79 @@ uninstall_intercept(spiegel::addr_t addr)
     return text_restore(addr, 1);
 }
 
+/* This trick doesn't work - Valgrind actively prevents
+ * the simulated program from hijacking it's log fd */
+#if 0
+    if (RUNNING_ON_VALGRIND)
+    {
+	/* ok, this is cheating */
+	int old_stderr = -1;
+	int fd;
+	int r;
+
+	strncpy(buf, "/tmp/spiegel-stack-XXXXXX", maxlen);
+	fd = mkstemp(buf);
+	if (fd < 0)
+	    return -errno;
+	unlink(buf);
+
+	old_stderr = dup(STDERR_FILENO);
+	dup2(fd, STDERR_FILENO);
+	close(fd);
+
+	VALGRIND_PRINTF_BACKTRACE("\n");
+
+	lseek(STDERR_FILENO, 0, SEEK_SET);
+	r = read(STDERR_FILENO, buf, sizeof(buf)-1);
+	if (r < 0)
+	{
+	    r = -errno;
+	    goto out;
+	}
+	buf[r] = '\0';
+	r = 0;
+out:
+	if (old_stderr > 0)
+	{
+	    dup2(old_stderr, STDERR_FILENO);
+	    close(old_stderr);
+	}
+	return r;
+    }
+#endif
+
+vector<spiegel::addr_t> get_stacktrace()
+{
+    /* This only works if a frame pointer is used, i.e. it breaks
+     * with -fomit-frame-pointer.
+     *
+     * TODO: use DWARF2 unwind info and handle -fomit-frame-pointer
+     *
+     * TODO: terminating the unwind loop is tricky to do properly,
+     *       we need to estimate the stack boundaries.  Instead
+     *       we approximate
+     *
+     * TODO: should return a vector of {ip=%eip,fp=%ebp,sp=%esp}
+     */
+    unsigned long bp;
+    vector<spiegel::addr_t> stack;
+
+    __asm__ volatile("movl %%ebp, %0" : "=r"(bp));
+    for (;;)
+    {
+	stack.push_back(((unsigned long *)bp)[1]-5);
+	unsigned long nextbp = ((unsigned long *)bp)[0];
+	if (!nextbp)
+	    break;
+	if (nextbp < bp)
+	    break;	// moving in the wrong direction
+	if ((nextbp - bp) > 16384)
+	    break;	// moving a heuristic "too far"
+	bp = nextbp;
+    };
+    return stack;
+}
+
+
 // close namespace
 } }

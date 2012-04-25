@@ -327,6 +327,8 @@ private:
     static std::map<spiegel::dwarf::reference_t, _cacheable_t*> cache_;
 };
 
+extern std::string describe_stacktrace();
+
 }; // namespace spiegel
 
 #endif // __spiegel_spiegel_hxx__

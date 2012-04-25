@@ -3,6 +3,7 @@
 #include "spiegel/dwarf/walker.hxx"
 #include "spiegel/dwarf/entry.hxx"
 #include "spiegel/dwarf/enumerations.hxx"
+#include "spiegel/platform/common.hxx"
 
 namespace spiegel {
 using namespace std;
@@ -654,6 +655,39 @@ _cacher_t::make_function(spiegel::dwarf::reference_t ref)
     spiegel::dwarf::walker_t w(ref);
     const spiegel::dwarf::entry_t *e = w.move_next();
     return (e ? make_function(w) : 0);
+}
+
+std::string describe_stacktrace()
+{
+    string s;
+    vector<addr_t> stack = spiegel::platform::get_stacktrace();
+    vector<addr_t>::iterator i;
+    bool done = false;
+    for (i = stack.begin() ; !done && i != stack.end() ; ++i)
+    {
+	s += hex(*i);
+	location_t loc;
+	if (describe_address(*i, loc))
+	{
+	    s += " ";
+
+	    if (loc.class_)
+		s += loc.class_->get_name() + "::";
+	    s += loc.function_->get_name();
+
+	    if (loc.compile_unit_ && loc.line_)
+	    {
+		s += " at ";
+		s += loc.compile_unit_->get_name();
+		s += ":";
+		s += dec(loc.line_);
+	    }
+	    if (loc.function_->get_name() == "main")
+		done = true;
+	}
+	s += "\n";
+    }
+    return s;
 }
 
 // close namespace
