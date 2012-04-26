@@ -78,8 +78,6 @@ struct intercept_t
     static void dispatch_after(addr_t, call_t &);
 
 private:
-    static addr_t normalise_address(addr_t);
-
     static std::map<addr_t, std::vector<intercept_t*> > installed_;
 
     /* saved parameters */

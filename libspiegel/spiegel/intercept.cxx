@@ -9,7 +9,7 @@ map<addr_t, vector<intercept_t*> > intercept_t::installed_;
 
 intercept_t::intercept_t(addr_t a)
 {
-    addr_ = normalise_address(a);
+    addr_ = spiegel::platform::normalise_address(a);
 }
 
 intercept_t::~intercept_t()
@@ -76,14 +76,6 @@ intercept_t::dispatch_after(addr_t addr, call_t &call)
 	for (vitr = aitr->second.begin() ; vitr != aitr->second.end() ; ++vitr)
 	    (*vitr)->after(call);
     }
-}
-
-addr_t
-intercept_t::normalise_address(addr_t addr)
-{
-    if (spiegel::dwarf::state_t::instance()->is_in_plt(addr))
-	addr = spiegel::platform::follow_plt(addr);
-    return addr;
 }
 
 // close namespace

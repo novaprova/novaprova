@@ -151,6 +151,9 @@ state_t::linkobj_t::map_sections()
     }
 #endif
 
+    if (sections_[DW_sec_plt].is_mapped())
+	spiegel::platform::add_plt(sections_[DW_sec_plt]);
+
     goto out;
 error:
     unmap_sections();
@@ -170,16 +173,6 @@ state_t::linkobj_t::unmap_sections()
     {
 	m->munmap();
     }
-}
-
-bool
-state_t::is_in_plt(addr_t addr) const
-{
-    vector<linkobj_t*>::const_iterator i;
-    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
-	if ((*i)->sections_[DW_sec_plt].contains((void *)addr))
-	    return true;
-    return false;
 }
 
 bool

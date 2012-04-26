@@ -4,8 +4,6 @@
 #include <spiegel/mapping.hxx>
 #include <vector>
 
-namespace spiegel { class intercept_t; }
-
 namespace spiegel { namespace platform {
 
 extern char *self_exe();
@@ -17,7 +15,8 @@ struct linkobj_t
 };
 extern std::vector<linkobj_t> get_linkobjs();
 
-spiegel::addr_t follow_plt(spiegel::addr_t);
+void add_plt(const spiegel::mapping_t &);
+spiegel::addr_t normalise_address(spiegel::addr_t);
 
 // extern spiegel::value_t invoke(void *fnaddr, vector<spiegel::value_t> args);
 

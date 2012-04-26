@@ -44,8 +44,6 @@ public:
 	return compile_units_[ref.cu];
     }
 
-    bool is_in_plt(addr_t) const;
-
 private:
     struct linkobj_t
     {
