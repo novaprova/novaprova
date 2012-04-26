@@ -1,5 +1,4 @@
 #include "spiegel/common.hxx"
-#include <sys/mman.h>
 #include <sys/fcntl.h>
 #include <bfd.h>
 #include "state.hxx"
@@ -34,8 +33,7 @@ state_t::linkobj_t::add_system_mapping(unsigned long offset,
 				       unsigned long size,
 				       void *addr)
 {
-    section_t sec = { offset, size, addr };
-    system_mappings_.push_back(sec);
+    system_mappings_.push_back(mapping_t(offset, size, addr));
 }
 
 bool
@@ -73,16 +71,17 @@ state_t::linkobj_t::map_sections()
 #endif
 	if (idx == DW_sec_none)
 	    continue;
-	sections_[idx].offset = (unsigned long)sec->filepos;
-	sections_[idx].size = (unsigned long)sec->size;
+	sections_[idx].set_range((unsigned long)sec->filepos,
+				 (unsigned long)sec->size);
 
 	/* See if the section can be satisfied out of
 	 * existing system mappings */
-	for (m = system_mappings_.begin() ; m != system_mappings_.end() ; ++m)
+	vector<mapping_t>::iterator sm;
+	for (sm = system_mappings_.begin() ; sm != system_mappings_.end() ; ++sm)
 	{
-	    if (m->contains(sections_[idx]))
+	    if (sm->contains(sections_[idx]))
 	    {
-		sections_[idx].map_from(*m);
+		sections_[idx].map_from(*sm);
 		break;
 	    }
 	}
@@ -91,13 +90,14 @@ state_t::linkobj_t::map_sections()
     /* Coalesce unmapped sections into a minimal number of mappings */
     struct section_t *tsec[DW_sec_num];
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
-	if (!sections_[idx].map && sections_[idx].size)
+	if (!sections_[idx].is_mapped() &&
+	    sections_[idx].get_size())
 	    tsec[nsec++] = &sections_[idx];
-    qsort(tsec, nsec, sizeof(section_t *), section_t::compare_ptrs);
+    qsort(tsec, nsec, sizeof(section_t *), mapping_t::compare_by_offset);
     for (int idx = 0 ; idx < nsec ; idx++)
     {
 	if (mappings_.size() &&
-	    page_round_up(mappings_.back().get_end()) >= tsec[idx]->offset)
+	    page_round_up(mappings_.back().get_end()) >= tsec[idx]->get_offset())
 	{
 	    /* section abuts the last mapping, extend it */
 	    mappings_.back().set_end(tsec[idx]->get_end());
@@ -114,7 +114,7 @@ state_t::linkobj_t::map_sections()
     for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
 	printf("offset=%lx size=%lx end=%lx\n",
-	       m->offset, m->size, m->get_end());
+	       m->get_offset(), m->get_size(), m->get_end());
     }
 #endif
 
@@ -128,16 +128,11 @@ state_t::linkobj_t::map_sections()
 
     for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
-	m->expand_to_pages();
-	void *map = mmap(NULL, m->size,
-			 PROT_READ, MAP_SHARED, fd,
-			 m->offset);
-	if (map == MAP_FAILED)
+	if (m->mmap(fd, /*read-only*/false) < 0)
 	{
 	    perror("mmap");
 	    goto error;
 	}
-	m->map = map;
     }
 
     /* setup sections[].map */
@@ -151,7 +146,7 @@ state_t::linkobj_t::map_sections()
 		break;
 	    }
 	}
-	assert(tsec[idx]->map);
+	assert(tsec[idx]->is_mapped());
     }
 
 #if 0
@@ -159,8 +154,8 @@ state_t::linkobj_t::map_sections()
     {
 	printf("[%d] name=%s map=0x%lx size=0x%lx\n",
 		idx, secnames.to_name(idx),
-		(unsigned long)sections_[idx].map,
-		sections_[idx].size);
+		(unsigned long)sections_[idx].get_map(),
+		sections_[idx].get_size());
     }
 #endif
 
@@ -181,11 +176,7 @@ state_t::linkobj_t::unmap_sections()
     vector<section_t>::iterator m;
     for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
-	if (m->map)
-	{
-	    munmap(m->map, m->size);
-	    m->map = NULL;
-	}
+	m->munmap();
     }
 }
 

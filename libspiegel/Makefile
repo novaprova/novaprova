@@ -33,6 +33,7 @@ libspiegel_SOURCES= \
 	spiegel/common.cxx \
 	spiegel/filename.cxx \
 	spiegel/intercept.cxx \
+	spiegel/mapping.cxx \
 	spiegel/spiegel.cxx \
 	spiegel/tok.cxx \
 
@@ -52,6 +53,7 @@ libspiegel_PRIVHEADERS= \
 	spiegel/filename.hxx \
 	spiegel/intercept.hxx \
 	spiegel/common.hxx \
+	spiegel/mapping.hxx \
 	spiegel/tok.hxx \
 
 libspiegel_HEADERS= \

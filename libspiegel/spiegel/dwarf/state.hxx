@@ -65,7 +65,7 @@ private:
 	uint32_t index_;
 	section_t sections_[DW_sec_num];
 	std::vector<section_t> mappings_;
-	std::vector<section_t> system_mappings_;
+	std::vector<spiegel::mapping_t> system_mappings_;
 
 	void add_system_mapping(unsigned long offset,
 				unsigned long size,
