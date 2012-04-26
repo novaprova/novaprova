@@ -148,12 +148,12 @@ proxy_listener_t::end()
 }
 
 void
-proxy_listener_t::begin_node(const testnode_t *)
+proxy_listener_t::begin_job(const job_t *)
 {
 }
 
 void
-proxy_listener_t::end_node(const testnode_t *)
+proxy_listener_t::end_job(const job_t *)
 {
 }
 

@@ -7,7 +7,7 @@
 
 namespace u4c {
 
-class testnode_t;
+class job_t;
 
 class child_t
 {
@@ -15,11 +15,11 @@ public:
     static void *operator new(size_t sz) { return xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
 
-    child_t(pid_t pid, int fd, testnode_t *tn);
+    child_t(pid_t pid, int fd, job_t *);
     ~child_t();
 
     pid_t get_pid() const { return pid_; }
-    testnode_t *get_node() const { return node_; }
+    job_t *get_job() const { return job_; }
     result_t get_result() const { return result_; }
 
     void poll_setup(struct pollfd &);
@@ -29,7 +29,7 @@ public:
 private:
     pid_t pid_;
     int event_pipe_;	    /* read end of the pipe */
-    testnode_t *node_;
+    job_t *job_;
     result_t result_;
     bool finished_;
 };

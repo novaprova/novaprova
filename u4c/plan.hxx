@@ -9,6 +9,8 @@ class u4c_testmanager_t;
 
 namespace u4c {
 
+class job_t;
+
 class plan_t
 {
 public:
@@ -21,7 +23,7 @@ public:
     void add_node(testnode_t *tn);
     bool add_specs(int nspec, const char **specs);
 
-    testnode_t *next();
+    job_t *next();
 
 private:
     struct iterator_t

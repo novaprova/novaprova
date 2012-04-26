@@ -1,14 +1,15 @@
 #include "u4c/child.hxx"
 #include "u4c/testnode.hxx"
+#include "u4c/job.hxx"
 #include "u4c/proxy_listener.hxx"
 #include "u4c_priv.h"
 
 namespace u4c {
 
-child_t::child_t(pid_t pid, int fd, testnode_t *tn)
+child_t::child_t(pid_t pid, int fd, job_t *j)
  :  pid_(pid),
     event_pipe_(fd),
-    node_(tn),
+    job_(j),
     result_(R_UNKNOWN),
     finished_(false)
 {
@@ -17,6 +18,7 @@ child_t::child_t(pid_t pid, int fd, testnode_t *tn)
 child_t::~child_t()
 {
     close(event_pipe_);
+    delete job_;
 }
 
 void

@@ -13,8 +13,8 @@ public:
 
     void begin();
     void end();
-    void begin_node(const testnode_t *tn);
-    void end_node(const testnode_t *tn);
+    void begin_job(const job_t *wi);
+    void end_job(const job_t *wi);
     void add_event(const event_t *ev);
     void finished(result_t res);
 

@@ -14,6 +14,7 @@ class listener_t;
 class plan_t;
 class child_t;
 class testnode_t;
+class job_t;
 
 class runner_t
 {
@@ -34,14 +35,14 @@ private:
     void begin();
     void end();
     void set_listener(listener_t *);
-    child_t *fork_child(testnode_t *tn);
+    child_t *fork_child(job_t *);
     void handle_events();
     void reap_children();
     void run_function(functype_t ft, spiegel::function_t *f);
     void run_fixtures(testnode_t *tn, functype_t type);
     result_t valgrind_errors();
-    result_t run_test_code(testnode_t *tn);
-    void begin_test(testnode_t *);
+    result_t run_test_code(job_t *);
+    void begin_job(job_t *);
     void wait();
 
     static runner_t *running_;

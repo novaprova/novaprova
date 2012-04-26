@@ -1,5 +1,5 @@
 #include "u4c/text_listener.hxx"
-#include "u4c/testnode.hxx"
+#include "u4c/job.hxx"
 #include "except.h"
 
 namespace u4c {
@@ -23,32 +23,32 @@ text_listener_t::end()
 }
 
 void
-text_listener_t::begin_node(const testnode_t *tn)
+text_listener_t::begin_job(const job_t *j)
 {
-    fprintf(stderr, "u4c: running: \"%s\"\n", tn->get_fullname().c_str());
+    fprintf(stderr, "u4c: running: \"%s\"\n", j->as_string().c_str());
     result_ = u4c::R_UNKNOWN;
 }
 
 void
-text_listener_t::end_node(const testnode_t *tn)
+text_listener_t::end_job(const job_t *j)
 {
-    string fullname = tn->get_fullname();
+    string nm = j->as_string();
 
     nrun_++;
     switch (result_)
     {
     case R_PASS:
-	fprintf(stderr, "PASS %s\n", fullname.c_str());
+	fprintf(stderr, "PASS %s\n", nm.c_str());
 	break;
     case R_NOTAPPLICABLE:
-	fprintf(stderr, "N/A %s\n", fullname.c_str());
+	fprintf(stderr, "N/A %s\n", nm.c_str());
 	break;
     case R_FAIL:
 	nfailed_++;
-	fprintf(stderr, "FAIL %s\n", fullname.c_str());
+	fprintf(stderr, "FAIL %s\n", nm.c_str());
 	break;
     default:
-	fprintf(stderr, "??? (result %d) %s\n", result_, fullname.c_str());
+	fprintf(stderr, "??? (result %d) %s\n", result_, nm.c_str());
 	break;
     }
 }

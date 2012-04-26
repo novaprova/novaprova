@@ -8,7 +8,7 @@
 namespace u4c {
 
 class event_t;
-class testnode_t;
+class job_t;
 
 class listener_t
 {
@@ -18,8 +18,8 @@ public:
 
     virtual void begin() = 0;
     virtual void end() = 0;
-    virtual void begin_node(const testnode_t *) = 0;
-    virtual void end_node(const testnode_t *) = 0;
+    virtual void begin_job(const job_t *) = 0;
+    virtual void end_job(const job_t *) = 0;
     virtual void add_event(const event_t *) = 0;
     virtual void finished(result_t) = 0;
 };

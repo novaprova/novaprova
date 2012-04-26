@@ -1,5 +1,6 @@
 #include "u4c/plan.hxx"
 #include "u4c/testnode.hxx"
+#include "u4c/job.hxx"
 #include "u4c/testmanager.hxx"
 #include "u4c_priv.h"
 
@@ -35,7 +36,7 @@ plan_t::add_specs(int nspec, const char **specs)
     return true;
 }
 
-testnode_t *
+job_t *
 plan_t::next()
 {
     iterator_t *itr = &current_;
@@ -53,7 +54,9 @@ plan_t::next()
 	++itr->nitr;
     } while (tn && !tn->get_function(FT_TEST));
 
-    return tn;
+    if (tn)
+	return new job_t(tn);
+    return 0;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

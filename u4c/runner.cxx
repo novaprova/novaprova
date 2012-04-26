@@ -1,5 +1,6 @@
 #include "u4c/runner.hxx"
 #include "u4c/testnode.hxx"
+#include "u4c/job.hxx"
 #include "u4c/plan.hxx"
 #include "u4c/text_listener.hxx"
 #include "u4c/proxy_listener.hxx"
@@ -48,8 +49,6 @@ runner_t::set_concurrency(int n)
 void
 runner_t::list_tests(plan_t *plan) const
 {
-    testnode_t *tn;
-
     bool ourplan = false;
     if (!plan)
     {
@@ -60,8 +59,9 @@ runner_t::list_tests(plan_t *plan) const
     }
 
     /* iterate over all tests */
-    while ((tn = plan->next()))
-	printf("%s\n", tn->get_fullname().c_str());
+    job_t *j;
+    while ((j = plan->next()))
+	printf("%s\n", j->as_string().c_str());
 
     if (ourplan)
 	delete plan;
@@ -70,8 +70,6 @@ runner_t::list_tests(plan_t *plan) const
 int
 runner_t::run_tests(plan_t *plan)
 {
-    testnode_t *tn;
-
     bool ourplan = false;
     if (!plan)
     {
@@ -87,9 +85,10 @@ runner_t::run_tests(plan_t *plan)
     begin();
     for (;;)
     {
+	job_t *j;
 	while (children_.size() < maxchildren_ &&
-	       (tn = plan->next()))
-	    begin_test(tn);
+	       (j = plan->next()))
+	    begin_job(j);
 	if (!children_.size())
 	    break;
 	wait();
@@ -157,7 +156,7 @@ runner_t::raise_event(const event_t *ev)
 }
 
 child_t *
-runner_t::fork_child(testnode_t *tn)
+runner_t::fork_child(job_t *j)
 {
     pid_t pid;
 #define PIPE_READ 0
@@ -206,9 +205,9 @@ runner_t::fork_child(testnode_t *tn)
     /* parent process */
 
     fprintf(stderr, "u4c: spawned child process %d for %s\n",
-	    (int)pid, tn->get_fullname().c_str());
+	    (int)pid, j->as_string().c_str());
     close(pipefd[PIPE_WRITE]);
-    child = new child_t(pid, pipefd[PIPE_READ], tn);
+    child = new child_t(pid, pipefd[PIPE_READ], j);
     children_.push_back(child);
 
     return child;
@@ -315,7 +314,7 @@ runner_t::reap_children()
 	nfailed_ += (child->get_result() == R_FAIL);
 	nrun_++;
 	dispatch_listeners(finished, child->get_result());
-	dispatch_listeners(end_node, child->get_node());
+	dispatch_listeners(end_job, child->get_job());
 
 	/* detach and clean up */
 	children_.erase(itr);
@@ -390,8 +389,9 @@ runner_t::valgrind_errors()
 }
 
 result_t
-runner_t::run_test_code(testnode_t *tn)
+runner_t::run_test_code(job_t *j)
 {
+    testnode_t *tn = j->get_node();
     result_t res = R_UNKNOWN;
     event_t *ev;
 
@@ -441,7 +441,7 @@ runner_t::run_test_code(testnode_t *tn)
 
 
 void
-runner_t::begin_test(testnode_t *tn)
+runner_t::begin_job(job_t *j)
 {
     child_t *child;
     result_t res;
@@ -453,20 +453,21 @@ runner_t::begin_test(testnode_t *tn)
     }
 
     fprintf(stderr, "%s: begin test %s\n",
-	    u4c_reltimestamp(), tn->get_fullname().c_str());
+	    u4c_reltimestamp(), j->as_string().c_str());
 
-    dispatch_listeners(begin_node, tn);
+    dispatch_listeners(begin_job, j);
 
-    child = fork_child(tn);
+    child = fork_child(j);
     if (child)
 	return; /* parent process */
 
     /* child process */
     set_listener(new proxy_listener_t(event_pipe_));
-    res = run_test_code(tn);
+    res = run_test_code(j);
     dispatch_listeners(finished, res);
     fprintf(stderr, "u4c: child process %d (%s) finishing\n",
-	    (int)getpid(), tn->get_fullname().c_str());
+	    (int)getpid(), j->as_string().c_str());
+    delete j;
     exit(0);
 }
 
