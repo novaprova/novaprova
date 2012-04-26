@@ -57,35 +57,33 @@ add_one_linkobj(struct dl_phdr_info *info,
 
     if (!name && info->dlpi_addr)
 	return 0;
+    if (!info->dlpi_phnum)
+	return 0;
 
 #if 0
     fprintf(stderr, "dl_phdr_info { addr=%p name=%s }\n",
 	    (void *)info->dlpi_addr, info->dlpi_name);
 #endif
 
+    linkobj_t lo;
+    lo.name = name;
+
     for (int i = 0 ; i < info->dlpi_phnum ; i++)
     {
 	if (!info->dlpi_phdr[i].p_memsz)
 	    continue;
 
-	linkobj_t lo;
-	lo.name = name;
-	lo.addr = (unsigned long)info->dlpi_addr + info->dlpi_phdr[i].p_vaddr;
-	lo.size = (unsigned long)info->dlpi_phdr[i].p_memsz;
-	lo.offset = (unsigned long)info->dlpi_phdr[i].p_offset;
-
-#if 0
-	fprintf(stderr, "    { offset=%lu size=%lu addr=%p }\n",
-	    lo.offset, lo.size, (void *)lo.addr);
-#endif
-
-	vec->push_back(lo);
+	const ElfW(Phdr) *ph = &info->dlpi_phdr[i];
+	lo.mappings.push_back(mapping_t(
+		(unsigned long)ph->p_offset, (unsigned long)ph->p_memsz,
+		(void *)((unsigned long)info->dlpi_addr + ph->p_vaddr)));
     }
+    vec->push_back(lo);
 
     return 0;
 }
 
-vector<linkobj_t> self_linkobjs()
+vector<linkobj_t> get_linkobjs()
 {
     vector<linkobj_t> vec;
     dl_iterate_phdr(add_one_linkobj, &vec);

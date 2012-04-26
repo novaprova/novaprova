@@ -67,9 +67,6 @@ private:
 	std::vector<section_t> mappings_;
 	std::vector<spiegel::mapping_t> system_mappings_;
 
-	void add_system_mapping(unsigned long offset,
-				unsigned long size,
-				void *addr);
 	bool map_sections();
 	void unmap_sections();
     };

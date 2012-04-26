@@ -1,6 +1,7 @@
 #ifndef __libspiegel_platform_common_hxx__
 #define __libspiegel_platform_common_hxx__ 1
 
+#include <spiegel/mapping.hxx>
 #include <vector>
 
 namespace spiegel { class intercept_t; }
@@ -12,11 +13,9 @@ extern char *self_exe();
 struct linkobj_t
 {
     const char *name;
-    unsigned long addr;
-    unsigned long size;
-    unsigned long offset;
+    std::vector<spiegel::mapping_t> mappings;
 };
-extern std::vector<linkobj_t> self_linkobjs();
+extern std::vector<linkobj_t> get_linkobjs();
 
 spiegel::addr_t follow_plt(spiegel::addr_t);
 

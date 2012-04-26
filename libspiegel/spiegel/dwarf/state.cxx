@@ -28,14 +28,6 @@ state_t::~state_t()
     instance_ = 0;
 }
 
-void
-state_t::linkobj_t::add_system_mapping(unsigned long offset,
-				       unsigned long size,
-				       void *addr)
-{
-    system_mappings_.push_back(mapping_t(offset, size, addr));
-}
-
 bool
 state_t::linkobj_t::map_sections()
 {
@@ -239,7 +231,7 @@ state_t::add_self()
     char *exe = spiegel::platform::self_exe();
     bool r = false;
 
-    vector<spiegel::platform::linkobj_t> los = spiegel::platform::self_linkobjs();
+    vector<spiegel::platform::linkobj_t> los = spiegel::platform::get_linkobjs();
     vector<spiegel::platform::linkobj_t>::iterator i;
     const char *filename;
     for (i = los.begin() ; i != los.end() ; ++i)
@@ -253,7 +245,7 @@ state_t::add_self()
 
 	linkobj_t *lo = get_linkobj(filename);
 	if (lo)
-	    lo->add_system_mapping(i->offset, i->size, (void *)i->addr);
+	    lo->system_mappings_ = i->mappings;
     }
 
     r = read_linkobjs();
@@ -276,8 +268,6 @@ state_t::get_linkobj(const char *filename)
     if (!filename)
 	return false;
 
-    /* Note: we can actually get multiple plo's with the
-     * same name and different offset/sizes. */
     vector<linkobj_t*>::iterator i;
     for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
     {
