@@ -42,6 +42,7 @@ struct value_t
     static value_t make_void();
     static value_t make_sint(int64_t i);
     static value_t make_sint(int32_t i);
+    static value_t make_pointer(void *p);
 };
 #endif
 

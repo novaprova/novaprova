@@ -45,6 +45,16 @@ value_t::make_sint(int32_t i)
     return v;
 }
 
+value_t
+value_t::make_pointer(void *p)
+{
+    value_t v;
+    memset(&v, 0, sizeof(v));
+    v.which = type_t::TC_POINTER;
+    v.val.vpointer = p;
+    return v;
+}
+
 unsigned int
 type_t::get_classification() const
 {
@@ -571,6 +581,8 @@ function_t::invoke(vector<value_t> args __attribute__((unused))) const
 	return value_t::make_void();
     case type_t::TC_SIGNED_INT:
 	return value_t::make_sint(((int32_t (*)(void))addr)());
+    case type_t::TC_POINTER:
+	return value_t::make_pointer(((void *(*)(void))addr)());
     }
     return value_t::make_invalid();
 //     return spiegel::platform::invoke(addr, args);
