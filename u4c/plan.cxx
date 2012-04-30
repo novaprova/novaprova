@@ -5,6 +5,7 @@
 #include "u4c_priv.h"
 
 namespace u4c {
+using namespace std;
 
 plan_t::plan_t()
 {
@@ -36,27 +37,56 @@ plan_t::add_specs(int nspec, const char **specs)
     return true;
 }
 
-job_t *
-plan_t::next()
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+plan_t::iterator::iterator(vector<testnode_t*>::iterator first,
+			   vector<testnode_t*>::iterator last)
+ :  vitr_(first),
+    vend_(last)
 {
-    iterator_t *itr = &current_;
-    testnode_t *tn = 0;
-
-    do
+    if (vitr_ != vend_)
     {
-	if (itr->nitr == nodes_[0]->preorder_end())
-	{
-	    if (itr->idx >= (int)nodes_.size()-1)
-		return 0;
-	    itr->nitr = nodes_[++itr->idx];
-	}
-	tn = *itr->nitr;
-	++itr->nitr;
-    } while (tn && !tn->get_function(FT_TEST));
+	nitr_ = *vitr_;
+	find_testable_node();
+    }
+}
 
-    if (tn)
-	return new job_t(tn);
-    return 0;
+plan_t::iterator &
+plan_t::iterator::operator++()
+{
+    // walk to the next assignment state
+    if (!bump(assigns_))
+	return *this;
+    assigns_.clear();
+
+    // no more assignment states: walk to the next node
+    // in preorder which has a test function
+    ++nitr_;
+    find_testable_node();
+    return *this;
+}
+
+// walk to the first testnode at or after the iterator's
+// current state, which has a test function
+void plan_t::iterator::find_testable_node()
+{
+    for (;;)
+    {
+	if (nitr_ == (*vitr_)->preorder_end())
+	{
+	    // no more nodes in this subtree: walk to the
+	    // next subtree in the vector
+	    ++vitr_;
+	    if (vitr_ == vend_)
+		return;	    // end of iteration
+	}
+	if ((*nitr_)->get_function(FT_TEST))
+	{
+	    assigns_ = (*nitr_)->create_assignments();
+	    return;		    // found a node
+	}
+	++nitr_;
+    }
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

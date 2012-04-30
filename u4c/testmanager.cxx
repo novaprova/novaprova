@@ -1,3 +1,4 @@
+#include "u4c.h"
 #include "u4c/testmanager.hxx"
 #include "u4c/testnode.hxx"
 #include "u4c/classifier.hxx"
@@ -99,6 +100,7 @@ testmanager_t::setup_classifiers()
     add_classifier("^[cC]leanup$", false, FT_AFTER);
     add_classifier("^mock_(.*)", false, FT_MOCK);
     add_classifier("^[mM]ock([A-Z].*)", false, FT_MOCK);
+    add_classifier("^__u4c_parameter_(.*)", false, FT_PARAM);
 }
 
 static string
@@ -136,6 +138,14 @@ testmanager_t::find_mock_target(string name)
 	}
     }
     return 0;
+}
+
+static const struct __u4c_param_dec *
+get_param_dec(spiegel::function_t *fn)
+{
+    vector<spiegel::value_t> args;
+    spiegel::value_t ret = fn->invoke(args);
+    return (const struct __u4c_param_dec *)ret.val.vpointer;
 }
 
 void
@@ -200,10 +210,20 @@ testmanager_t::discover_functions()
 		// Mock functions need a target name
 		if (!submatch[0])
 		    continue;
-		spiegel::function_t *target = find_mock_target(submatch);
-		if (!target)
+		{
+		    spiegel::function_t *target = find_mock_target(submatch);
+		    if (!target)
+			continue;
+		    root_->make_path(test_name(fn, 0))->add_mock(target, fn);
+		}
+		break;
+	    case FT_PARAM:
+		// Parameters need a name
+		if (!submatch[0])
 		    continue;
-		root_->make_path(test_name(fn, 0))->add_mock(target, fn);
+		const struct __u4c_param_dec *dec = get_param_dec(fn);
+		root_->make_path(test_name(fn, 0))->add_parameter(
+				submatch, dec->var, dec->values);
 		break;
 	    }
 	}

@@ -36,6 +36,40 @@ public:
 
     void dump(int level) const;
 
+    struct parameter_t
+    {
+	parameter_t(const char *, char **, const char *);
+	~parameter_t();
+
+	// I tried using std::string for name_ and values_ but the
+	// string memory management is sufficiently obscure that it
+	// results in valgrind in the forked child reporting leaks.
+
+	char *name_;
+	char **variable_;
+	std::vector<char*> values_;
+    };
+
+    class assignment_t
+    {
+    public:
+	assignment_t(const parameter_t *p) : param_(p), idx_(0) {}
+	void apply() const;
+	void unapply() const;
+	std::string as_string() const;
+
+    private:
+	const parameter_t *param_;
+	unsigned int idx_;
+
+	friend bool bump(std::vector<testnode_t::assignment_t> &a);
+	friend int operator==(const std::vector<testnode_t::assignment_t> &a,
+			      const std::vector<testnode_t::assignment_t> &b);
+    };
+
+    void add_parameter(const char *, char **, const char *);
+    std::vector<assignment_t> create_assignments() const;
+
     class preorder_iterator
     {
     public:
@@ -66,9 +100,14 @@ private:
     char *name_;
     spiegel::function_t *funcs_[FT_NUM_SINGULAR];
     std::vector<spiegel::intercept_t*> intercepts_;
+    std::vector<parameter_t*> parameters_;
 
     friend class preorder_iterator;
 };
+
+bool bump(std::vector<testnode_t::assignment_t> &a);
+int operator==(const std::vector<testnode_t::assignment_t> &a,
+	       const std::vector<testnode_t::assignment_t> &b);
 
 // close the namespace
 };

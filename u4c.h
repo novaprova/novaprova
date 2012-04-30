@@ -134,6 +134,21 @@ extern unsigned int __u4c_syslog_count(int tag, const char *, int);
 #define u4c_syslog_count(tag) \
     __u4c_syslog_count((tag), __FILE__, __LINE__)
 
+/* parameter support */
+struct __u4c_param_dec
+{
+    char **var;
+    const char *values;
+};
+#define U4C_PARAMETER(nm, vals) \
+    static char * nm ;\
+    static const struct __u4c_param_dec *__u4c_parameter_##nm(void) __attribute__((unused)); \
+    static const struct __u4c_param_dec *__u4c_parameter_##nm(void) \
+    { \
+	static const struct __u4c_param_dec d = { & nm , vals }; \
+	return &d; \
+    }
+
 #ifdef __cplusplus
 };
 #endif

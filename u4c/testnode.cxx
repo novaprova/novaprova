@@ -135,7 +135,9 @@ testnode_t::detach_common()
     testnode_t *tn;
 
     for (tn = this ;
-         !tn->intercepts_.size() && tn->children_ && !tn->children_->next_ ;
+         !tn->intercepts_.size() &&
+         !tn->parameters_.size() &&
+	 tn->children_ && !tn->children_->next_ ;
 	 tn = tn->children_)
 	;
     /* tn now points at the highest node with more than 1 child */
@@ -224,6 +226,97 @@ testnode_t::preorder_iterator::operator++()
     else
 	node_ = 0;
     return *this;
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+testnode_t::parameter_t::parameter_t(const char *n, char **v, const char *vals)
+ :  name_(xstrdup(n)),
+    variable_(v)
+{
+    /* TODO: need a split() function */
+    spiegel::tok_t valtok(vals, ", \t");
+    const char *val;
+    while ((val = valtok.next()))
+	values_.push_back(xstrdup(val));
+}
+
+testnode_t::parameter_t::~parameter_t()
+{
+    xfree(name_);
+    vector<char*>::iterator i;
+    for (i = values_.begin() ; i != values_.end() ; ++i)
+	free(*i);
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+void testnode_t::assignment_t::apply() const
+{
+    free(*param_->variable_);
+    *param_->variable_ = xstrdup(param_->values_[idx_]);
+}
+
+void testnode_t::assignment_t::unapply() const
+{
+    free(*param_->variable_);
+    *param_->variable_ = 0;
+}
+
+string testnode_t::assignment_t::as_string() const
+{
+    return string(param_->name_) + "=" + param_->values_[idx_];
+}
+
+// Bump the assignment vector to the next next value in order, clearing
+// the vector and returning true if we run off the end of the values.
+bool bump(std::vector<testnode_t::assignment_t> &a)
+{
+    vector<testnode_t::assignment_t>::iterator i;
+    for (i = a.begin() ; i != a.end() ; ++i)
+    {
+	if (++i->idx_ < i->param_->values_.size())
+	    return false;
+	i->idx_ = 0;
+    }
+    a.clear();
+    return true;
+}
+
+int operator==(const std::vector<testnode_t::assignment_t> &a,
+	       const std::vector<testnode_t::assignment_t> &b)
+{
+    if (a.size() != b.size())
+	return 0;
+
+    std::vector<testnode_t::assignment_t>::const_iterator ia;
+    std::vector<testnode_t::assignment_t>::const_iterator ib;
+    for (ia = a.begin(), ib = b.begin() ; ia != a.end() ; ++ia, ++ib)
+	if (ia->idx_ != ib->idx_)
+	    return 0;
+    return 1;
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+void
+testnode_t::add_parameter(const char *name, char **var, const char *vals)
+{
+    parameters_.push_back(new parameter_t(name, var, vals));
+}
+
+vector<testnode_t::assignment_t>
+testnode_t::create_assignments() const
+{
+    vector<assignment_t> assigns;
+
+    for (const testnode_t *a = this ; a ; a = a->parent_)
+    {
+	vector<parameter_t*>::const_iterator i;
+	for (i = a->parameters_.begin() ; i != a->parameters_.end() ; ++i)
+	    assigns.push_back(assignment_t(*i));
+    }
+    return assigns;
 }
 
 // close the namespace

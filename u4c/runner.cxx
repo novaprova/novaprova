@@ -59,9 +59,18 @@ runner_t::list_tests(plan_t *plan) const
     }
 
     /* iterate over all tests */
-    job_t *j;
-    while ((j = plan->next()))
-	printf("%s\n", j->as_string().c_str());
+    testnode_t *tn = 0;
+    plan_t::iterator pitr = plan->begin();
+    plan_t::iterator pend = plan->end();
+    while (pitr != pend)
+    {
+	if (pitr.get_node() != tn)
+	{
+	    tn = pitr.get_node();
+	    printf("%s\n", tn->get_fullname().c_str());
+	}
+	++pitr;
+    }
 
     if (ourplan)
 	delete plan;
@@ -83,12 +92,15 @@ runner_t::run_tests(plan_t *plan)
 	add_listener(new text_listener_t);
 
     begin();
+    plan_t::iterator pitr = plan->begin();
+    plan_t::iterator pend = plan->end();
     for (;;)
     {
-	job_t *j;
-	while (children_.size() < maxchildren_ &&
-	       (j = plan->next()))
-	    begin_job(j);
+	while (children_.size() < maxchildren_ && pitr != pend)
+	{
+	    begin_job(new job_t(pitr));
+	    ++pitr;
+	}
 	if (!children_.size())
 	    break;
 	wait();
@@ -395,6 +407,7 @@ runner_t::run_test_code(job_t *j)
     result_t res = R_UNKNOWN;
     event_t *ev;
 
+    j->apply_assignments();
     tn->pre_fixture();
 
     u4c_try
@@ -435,6 +448,7 @@ runner_t::run_test_code(job_t *j)
     }
 
     tn->post_fixture();
+    j->unapply_assignments();
     res = merge(res, valgrind_errors());
     return res;
 }
@@ -452,7 +466,7 @@ runner_t::begin_job(job_t *j)
 	    return;
     }
 
-    fprintf(stderr, "%s: begin test %s\n",
+    fprintf(stderr, "%s: begin job %s\n",
 	    u4c_reltimestamp(), j->as_string().c_str());
 
     dispatch_listeners(begin_job, j);

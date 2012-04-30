@@ -18,6 +18,7 @@ TESTS= \
     t002 \
     t003 \
     t005 \
+    t006 \
 
 tests: $(TESTS)
 

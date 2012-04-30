@@ -3,6 +3,7 @@
 
 #include "u4c/common.hxx"
 #include "u4c/testnode.hxx"
+#include "u4c/plan.hxx"
 
 namespace u4c {
 
@@ -12,25 +13,20 @@ public:
     static void *operator new(size_t sz) { return xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
 
-    job_t(testnode_t *tn)
-     :  id_(next_id_++),
-        node_(tn)
-    {}
-    ~job_t() {}
+    job_t(const plan_t::iterator &);
+    ~job_t();
 
-    std::string as_string() const
-    {
-	return dec(id_) + ": " + node_->get_fullname();
-    }
-
+    std::string as_string() const;
     testnode_t *get_node() const { return node_; }
+    void apply_assignments() const;
+    void unapply_assignments() const;
 
 private:
     static unsigned int next_id_;
 
     unsigned int id_;
     testnode_t *node_;
-    // TODO: vector of parameter value indeces
+    std::vector<testnode_t::assignment_t> assigns_;
 };
 
 // close the namespace

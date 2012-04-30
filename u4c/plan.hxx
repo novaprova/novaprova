@@ -9,7 +9,6 @@ class u4c_testmanager_t;
 
 namespace u4c {
 
-class job_t;
 
 class plan_t
 {
@@ -23,19 +22,56 @@ public:
     void add_node(testnode_t *tn);
     bool add_specs(int nspec, const char **specs);
 
-    job_t *next();
+    class iterator
+    {
+    public:
+	iterator() {}
+	iterator(const iterator &o)
+	 :  vitr_(o.vitr_),
+	    vend_(o.vend_),
+	    nitr_(o.nitr_),
+	    assigns_(o.assigns_)
+	{}
+	iterator &operator++();
+	iterator &operator=(const iterator &o)
+	{
+	    vitr_ = o.vitr_;
+	    vend_ = o.vend_;
+	    nitr_ = o.nitr_;
+	    assigns_ = o.assigns_;
+	    return *this;
+	}
+	int operator==(const iterator &o) const
+	{
+	    return (vitr_ == o.vitr_ &&
+		    nitr_ == o.nitr_ &&
+		    assigns_ == o.assigns_);
+	}
+	int operator!=(const iterator &o) const
+	{
+	    return !operator==(o);
+	}
+
+	testnode_t *get_node() const { return *nitr_; }
+	std::vector<testnode_t::assignment_t> const &get_assignments() const { return assigns_; }
+
+    private:
+	iterator(std::vector<testnode_t*>::iterator first,
+		 std::vector<testnode_t*>::iterator last);
+	void find_testable_node();
+
+	std::vector<testnode_t*>::iterator vitr_;
+	std::vector<testnode_t*>::iterator vend_;
+	testnode_t::preorder_iterator nitr_;
+	std::vector<testnode_t::assignment_t> assigns_;
+
+	friend class plan_t;
+    };
+    iterator begin() { return iterator(nodes_.begin(), nodes_.end()); }
+    iterator end() { return iterator(nodes_.end(), nodes_.end()); }
 
 private:
-    struct iterator_t
-    {
-	iterator_t() : idx(-1) { }
-
-	int idx;
-	testnode_t::preorder_iterator nitr;
-    };
-
     std::vector<testnode_t*> nodes_;
-    iterator_t current_;
 };
 
 // close the namespace
