@@ -26,16 +26,15 @@ void
 text_listener_t::begin_job(const job_t *j)
 {
     fprintf(stderr, "u4c: running: \"%s\"\n", j->as_string().c_str());
-    result_ = u4c::R_UNKNOWN;
 }
 
 void
-text_listener_t::end_job(const job_t *j)
+text_listener_t::end_job(const job_t *j, result_t res)
 {
     string nm = j->as_string();
 
     nrun_++;
-    switch (result_)
+    switch (res)
     {
     case R_PASS:
 	fprintf(stderr, "PASS %s\n", nm.c_str());
@@ -48,13 +47,14 @@ text_listener_t::end_job(const job_t *j)
 	fprintf(stderr, "FAIL %s\n", nm.c_str());
 	break;
     default:
-	fprintf(stderr, "??? (result %d) %s\n", result_, nm.c_str());
+	fprintf(stderr, "??? (result %d) %s\n", res, nm.c_str());
 	break;
     }
 }
 
 void
-text_listener_t::add_event(const event_t *ev)
+text_listener_t::add_event(const job_t *j __attribute__((unused)),
+			   const event_t *ev)
 {
     string s = string("EVENT ") +
 		ev->as_string() +
@@ -62,12 +62,6 @@ text_listener_t::add_event(const event_t *ev)
 	       ev->get_long_location() +
 	       "\n";
     fputs(s.c_str(), stderr);
-}
-
-void
-text_listener_t::finished(result_t res)
-{
-    result_ = res;
 }
 
 // close the namespace

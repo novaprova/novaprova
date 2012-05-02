@@ -153,22 +153,19 @@ proxy_listener_t::begin_job(const job_t *)
 }
 
 void
-proxy_listener_t::end_job(const job_t *)
-{
-}
-
-void
-proxy_listener_t::add_event(const event_t *ev)
-{
-    serialise_uint(fd_, PROXY_EVENT);
-    serialise_event(fd_, ev);
-}
-
-void
-proxy_listener_t::finished(result_t res)
+proxy_listener_t::end_job(const job_t *j __attribute__((unused)),
+			  result_t res)
 {
     serialise_uint(fd_, PROXY_FINISHED);
     serialise_uint(fd_, res);
+}
+
+void
+proxy_listener_t::add_event(const job_t *j __attribute__((unused)),
+			    const event_t *ev)
+{
+    serialise_uint(fd_, PROXY_EVENT);
+    serialise_event(fd_, ev);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -180,7 +177,7 @@ proxy_listener_t::finished(result_t res)
  * Updates *@resp if necessary.
  */
 bool
-proxy_listener_t::handle_call(int fd, result_t *resp)
+proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 {
     unsigned int which;
     event_t ev;
@@ -195,7 +192,7 @@ proxy_listener_t::handle_call(int fd, result_t *resp)
     case PROXY_EVENT:
 	if ((r = deserialise_event(fd, &ev)))
 	    return false;    /* failed to decode */
-	*resp = merge(*resp, u4c::runner_t::running()->raise_event(&ev));
+	*resp = merge(*resp, u4c::runner_t::running()->raise_event(j, &ev));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))

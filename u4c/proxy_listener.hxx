@@ -15,12 +15,11 @@ public:
     void begin();
     void end();
     void begin_job(const job_t *);
-    void end_job(const job_t *);
-    void add_event(const event_t *ev);
-    void finished(result_t res);
+    void end_job(const job_t *, result_t);
+    void add_event(const job_t *, const event_t *ev);
 
     /* proxyl.c */
-    static bool handle_call(int fd, result_t *resp);
+    static bool handle_call(int fd, job_t *, result_t *resp);
 
 private:
     int fd_;

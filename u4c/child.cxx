@@ -38,7 +38,7 @@ child_t::poll_handle(struct pollfd &pfd)
 	return;
     if (!(pfd.revents & POLLIN))
 	return;
-    if (!proxy_listener_t::handle_call(event_pipe_, &result_))
+    if (!proxy_listener_t::handle_call(event_pipe_, job_, &result_))
 	finished_ = true;
 }
 

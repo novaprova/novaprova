@@ -202,7 +202,7 @@ mock___syslog_chk(int prio,
 
     event_t ev(EV_SYSLOG, msg);
     ev.with_stack();
-    runner_t::running()->raise_event(&ev);
+    runner_t::running()->raise_event(0, &ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
 	u4c_throw(event_t(EV_SLMATCH, msg).with_stack());
@@ -221,7 +221,7 @@ mock_syslog(int prio, const char *fmt, ...)
 
     event_t ev(EV_SYSLOG, msg);
     ev.with_stack();
-    runner_t::running()->raise_event(&ev);
+    runner_t::running()->raise_event(0, &ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
 	u4c_throw(event_t(EV_SLMATCH, msg).with_stack());

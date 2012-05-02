@@ -13,15 +13,13 @@ public:
 
     void begin();
     void end();
-    void begin_job(const job_t *wi);
-    void end_job(const job_t *wi);
-    void add_event(const event_t *ev);
-    void finished(result_t res);
+    void begin_job(const job_t *);
+    void end_job(const job_t *, result_t);
+    void add_event(const job_t *, const event_t *ev);
 
 private:
     unsigned int nrun_;
     unsigned int nfailed_;
-    result_t result_; /* for the current test */
 };
 
 // close the namespace

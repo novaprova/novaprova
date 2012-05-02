@@ -160,10 +160,10 @@ runner_t::end()
 
 
 result_t
-runner_t::raise_event(const event_t *ev)
+runner_t::raise_event(job_t *j, const event_t *ev)
 {
     ev = ev->normalise();
-    dispatch_listeners(add_event, ev);
+    dispatch_listeners(add_event, j, ev);
     return ev->get_result();
 }
 
@@ -307,7 +307,7 @@ runner_t::reap_children()
 			 "child process %d exited with %d",
 			 (int)pid, WEXITSTATUS(status));
 		event_t ev(EV_EXIT, msg);
-		child->merge_result(raise_event(&ev));
+		child->merge_result(raise_event(child->get_job(), &ev));
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -316,7 +316,7 @@ runner_t::reap_children()
 		    "child process %d died on signal %d",
 		    (int)pid, WTERMSIG(status));
 	    event_t ev(EV_SIGNAL, msg);
-	    child->merge_result(raise_event(&ev));
+	    child->merge_result(raise_event(child->get_job(), &ev));
 	}
 
 	/* test is finished; if nothing went wrong then PASS */
@@ -325,8 +325,7 @@ runner_t::reap_children()
 	/* notify listeners */
 	nfailed_ += (child->get_result() == R_FAIL);
 	nrun_++;
-	dispatch_listeners(finished, child->get_result());
-	dispatch_listeners(end_job, child->get_job());
+	dispatch_listeners(end_job, child->get_job(), child->get_result());
 
 	/* detach and clean up */
 	children_.erase(itr);
@@ -371,7 +370,7 @@ runner_t::run_fixtures(testnode_t *tn, functype_t type)
 }
 
 result_t
-runner_t::valgrind_errors()
+runner_t::valgrind_errors(job_t *j)
 {
     unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
     unsigned long nerrors;
@@ -385,7 +384,7 @@ runner_t::valgrind_errors()
 	snprintf(msg, sizeof(msg),
 		 "%lu bytes of memory leaked", leaked);
 	event_t ev(EV_VALGRIND, msg);
-	res = merge(res, raise_event(&ev));
+	res = merge(res, raise_event(j, &ev));
     }
 
     nerrors = VALGRIND_COUNT_ERRORS;
@@ -394,7 +393,7 @@ runner_t::valgrind_errors()
 	snprintf(msg, sizeof(msg),
 		 "%lu unsuppressed errors found by valgrind", nerrors);
 	event_t ev(EV_VALGRIND, msg);
-	res = merge(res, raise_event(&ev));
+	res = merge(res, raise_event(j, &ev));
     }
 
     return res;
@@ -417,7 +416,7 @@ runner_t::run_test_code(job_t *j)
     u4c_catch(ev)
     {
 	ev->in_functype(FT_BEFORE);
-	res = merge(res, raise_event(ev));
+	res = merge(res, raise_event(j, ev));
     }
 
     if (res == R_UNKNOWN)
@@ -429,7 +428,7 @@ runner_t::run_test_code(job_t *j)
 	u4c_catch(ev)
 	{
 	    ev->in_functype(FT_TEST);
-	    res = merge(res, raise_event(ev));
+	    res = merge(res, raise_event(j, ev));
 	}
 
 	u4c_try
@@ -439,7 +438,7 @@ runner_t::run_test_code(job_t *j)
 	u4c_catch(ev)
 	{
 	    ev->in_functype(FT_AFTER);
-	    res = merge(res, raise_event(ev));
+	    res = merge(res, raise_event(j, ev));
 	}
 
 	/* If we got this far and nothing bad
@@ -449,7 +448,7 @@ runner_t::run_test_code(job_t *j)
 
     tn->post_fixture();
     j->unapply_assignments();
-    res = merge(res, valgrind_errors());
+    res = merge(res, valgrind_errors(j));
     return res;
 }
 
@@ -478,7 +477,7 @@ runner_t::begin_job(job_t *j)
     /* child process */
     set_listener(new proxy_listener_t(event_pipe_));
     res = run_test_code(j);
-    dispatch_listeners(finished, res);
+    dispatch_listeners(end_job, j, res);
     fprintf(stderr, "u4c: child process %d (%s) finishing\n",
 	    (int)getpid(), j->as_string().c_str());
     delete j;

@@ -29,7 +29,7 @@ public:
     void list_tests(plan_t *) const;
     int run_tests(plan_t *);
     static runner_t *running() { return running_; }
-    result_t raise_event(const event_t *);
+    result_t raise_event(job_t *, const event_t *);
 
 private:
     void begin();
@@ -40,7 +40,7 @@ private:
     void reap_children();
     void run_function(functype_t ft, spiegel::function_t *f);
     void run_fixtures(testnode_t *tn, functype_t type);
-    result_t valgrind_errors();
+    result_t valgrind_errors(job_t *);
     result_t run_test_code(job_t *);
     void begin_job(job_t *);
     void wait();
