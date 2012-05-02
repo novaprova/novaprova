@@ -19,6 +19,7 @@ public:
     ~testnode_t();
 
     std::string get_fullname() const;
+    testnode_t *get_parent() { return parent_; }
     testnode_t *find(const char *name);
     testnode_t *make_path(std::string name);
     void set_function(functype_t, spiegel::function_t *);

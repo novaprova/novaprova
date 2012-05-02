@@ -7,7 +7,8 @@ CC=		g++
 CXX=		g++
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-D_GNU_SOURCE -Ilibspiegel -I.
+CDEFINES=	-D_GNU_SOURCE -Ilibspiegel -I. \
+		$(shell pkg-config --cflags libxml++-2.6)
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 CXXFLAGS=	$(CFLAGS)
@@ -35,6 +36,7 @@ libu4c_SOURCE=	\
 		u4c/common.cxx \
 		u4c/event.cxx \
 		u4c/job.cxx \
+		u4c/junit_listener.cxx \
 		u4c/plan.cxx \
 		u4c/proxy_listener.cxx \
 		u4c/runner.cxx \
@@ -52,6 +54,7 @@ libu4c_HEADERS=	u4c.h \
 		u4c/classifier.hxx \
 		u4c/event.hxx \
 		u4c/job.hxx \
+		u4c/junit_listener.hxx \
 		u4c/listener.hxx \
 		u4c/plan.hxx \
 		u4c/proxy_listener.hxx \

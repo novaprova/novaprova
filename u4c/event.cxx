@@ -25,6 +25,47 @@ event_t &event_t::with_stack()
     return *this;
 }
 
+event_t *
+event_t::clone() const
+{
+    event_t *e = new event_t;
+    *e = *this;
+    e->save_strings();
+    return e;
+}
+
+void
+event_t::save_strings()
+{
+    size_t len = 0;
+    if (description)
+	len += strlen(description)+1;
+    if (filename)
+	len += strlen(filename)+1;
+    if (function && !(locflags & LT_SPIEGELFUNC))
+	len += strlen(function)+1;
+
+    char *p = freeme_ = (char *)xmalloc(len);
+    if (description)
+    {
+	strcpy(p, description);
+	description = p;
+	p += strlen(p)+1;
+    }
+    if (filename)
+    {
+	strcpy(p, filename);
+	filename = p;
+	p += strlen(p)+1;
+    }
+    if (function && !(locflags & LT_SPIEGELFUNC))
+    {
+	strcpy(p, function);
+	function = p;
+	p += strlen(p)+1;
+    }
+}
+
 const event_t *
 event_t::normalise() const
 {
@@ -95,7 +136,7 @@ event_t::get_result() const
 #define arraysize(x) sizeof(x)/sizeof(x[0])
 
 string
-event_t::as_string() const
+event_t::which_as_string() const
 {
     static const char * const whichstrs[] =
     {
@@ -105,8 +146,13 @@ event_t::as_string() const
     };
     const char *wstr = ((unsigned)which < arraysize(whichstrs))
 			? whichstrs[(unsigned)which] : "unknown";
+    return string(wstr);
+}
 
-    return string(wstr) + " " + description;
+string
+event_t::as_string() const
+{
+    return which_as_string() + " " + description;
 }
 
 string event_t::get_short_location() const

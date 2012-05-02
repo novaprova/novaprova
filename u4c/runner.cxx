@@ -4,6 +4,7 @@
 #include "u4c/plan.hxx"
 #include "u4c/text_listener.hxx"
 #include "u4c/proxy_listener.hxx"
+#include "u4c/junit_listener.hxx"
 #include "u4c/child.hxx"
 #include "spiegel/spiegel.hxx"
 #include "u4c_priv.h"
@@ -31,6 +32,7 @@ runner_t::runner_t()
 
 runner_t::~runner_t()
 {
+    destroy_listeners();
 }
 
 void
@@ -114,6 +116,15 @@ runner_t::run_tests(plan_t *plan)
 }
 
 void
+runner_t::destroy_listeners()
+{
+    vector<listener_t*>::iterator i;
+    for (i = listeners_.begin() ; i != listeners_.end() ; ++i)
+	delete *i;
+    listeners_.clear();
+}
+
+void
 runner_t::add_listener(listener_t *l)
 {
     /* append to the list.  The order of adding is preserved for
@@ -124,8 +135,7 @@ runner_t::add_listener(listener_t *l)
 void
 runner_t::set_listener(listener_t *l)
 {
-    /* just throw away the old ones */
-    listeners_.clear();
+    destroy_listeners();
     listeners_.push_back(l);
 }
 
@@ -503,6 +513,15 @@ extern "C" void
 u4c_list_tests(u4c_runner_t *runner, u4c_plan_t *plan)
 {
     runner->list_tests(plan);
+}
+
+extern "C" void
+u4c_set_output_format(u4c_runner_t *runner, const char *fmt)
+{
+    if (!strcmp(fmt, "junit"))
+	runner->add_listener(new junit_listener_t);
+    else if (!strcmp(fmt, "text"))
+	runner->add_listener(new text_listener_t);
 }
 
 extern "C" int

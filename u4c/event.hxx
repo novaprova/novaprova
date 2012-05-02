@@ -46,7 +46,8 @@ public:
         filename(0),
         lineno(0),
         function(0),
-	functype(FT_UNKNOWN)
+	functype(FT_UNKNOWN),
+	freeme_(0)
     {}
     event_t(enum events_t w,
 	    const char *d)
@@ -56,8 +57,13 @@ public:
         filename(0),
         lineno(0),
         function(0),
-	functype(FT_UNKNOWN)
+	functype(FT_UNKNOWN),
+	freeme_(0)
     {}
+    ~event_t()
+    {
+	xfree(freeme_);
+    }
 
     // auxiliary functions designed to enable complex
     // initialisation sequences without a profusion
@@ -109,8 +115,10 @@ public:
     }
     event_t &with_stack();
 
+    event_t *clone() const;
     const event_t *normalise() const;
     result_t get_result() const;
+    std::string which_as_string() const;
     std::string as_string() const;
     std::string get_short_location() const;
     std::string get_long_location() const;
@@ -124,6 +132,11 @@ public:
     unsigned int lineno;
     const char *function;
     functype_t functype;
+
+private:
+
+    void save_strings();
+    char *freeme_;
 };
 
 // close the namespace

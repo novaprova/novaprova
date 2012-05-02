@@ -30,8 +30,10 @@ TEST="$1"
 
 function runtest
 {
+    [ -e $TEST-pre.sh ] && bash $TEST-pre.sh $TEST
     ./$TEST
     echo "EXIT $?"
+    [ -e $TEST-post.sh ] && bash $TEST-post.sh $TEST
 }
 
 if [ $verbose ] ; then

@@ -32,6 +32,7 @@ public:
     result_t raise_event(job_t *, const event_t *);
 
 private:
+    void destroy_listeners();
     void begin();
     void end();
     void set_listener(listener_t *);

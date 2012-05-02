@@ -7,7 +7,8 @@ CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
 
 INCLUDES=	-I..
-LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lstdc++ -lbfd -ldl
+LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lstdc++ -lbfd -ldl \
+		$(shell pkg-config --libs libxml++-2.6)
 DEPS=		../u4c.h ../libu4c.a ../libspiegel/libspiegel.a
 
 all install:
@@ -19,6 +20,7 @@ TESTS= \
     t003 \
     t005 \
     t006 \
+    t007 \
 
 tests: $(TESTS)
 

@@ -20,6 +20,7 @@ typedef struct u4c_plan u4c_plan_t;
 extern u4c_runner_t *u4c_init(void);
 extern void u4c_list_tests(u4c_runner_t *, u4c_plan_t *);
 extern void u4c_set_concurrency(u4c_runner_t *, int);
+extern void u4c_set_output_format(u4c_runner_t *, const char *);
 extern int u4c_run_tests(u4c_runner_t *, u4c_plan_t *);
 extern void u4c_done(u4c_runner_t *);
 
