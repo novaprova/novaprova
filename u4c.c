@@ -8,25 +8,6 @@ using namespace std;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-const char *
-u4c_reltimestamp(void)
-{
-    static char buf[32];
-    static struct timeval first;
-    struct timeval now;
-    struct timeval delta;
-    gettimeofday(&now, NULL);
-    if (!first.tv_sec)
-	first = now;
-    timersub(&now, &first, &delta);
-    snprintf(buf, sizeof(buf), "%lu.%06lu",
-	     (unsigned long)delta.tv_sec,
-	     (unsigned long)delta.tv_usec);
-    return buf;
-}
-
-/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-
 extern char **environ;
 
 static bool
@@ -79,7 +60,7 @@ extern "C" u4c_runner_t *
 u4c_init(void)
 {
     be_valground();
-    u4c_reltimestamp();
+    u4c::rel_timestamp();
     u4c::testmanager_t::instance();
     return new u4c::runner_t;
 }

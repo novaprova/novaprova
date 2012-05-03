@@ -476,7 +476,7 @@ runner_t::begin_job(job_t *j)
     }
 
     fprintf(stderr, "%s: begin job %s\n",
-	    u4c_reltimestamp(), j->as_string().c_str());
+	    rel_timestamp().c_str(), j->as_string().c_str());
 
     dispatch_listeners(begin_job, j);
 

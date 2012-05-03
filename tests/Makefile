@@ -7,7 +7,7 @@ CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
 
 INCLUDES=	-I..
-LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lstdc++ -lbfd -ldl \
+LIBS=		-L.. -L../libspiegel -lu4c -lspiegel -lstdc++ -lbfd -ldl -lrt \
 		$(shell pkg-config --libs libxml++-2.6)
 DEPS=		../u4c.h ../libu4c.a ../libspiegel/libspiegel.a
 

@@ -31,6 +31,12 @@ extern const char *argv0;
 extern std::string hex(unsigned long x);
 extern std::string dec(unsigned int x);
 
+extern int64_t rel_now();
+extern int64_t abs_now();
+extern std::string abs_to_iso8601(int64_t);
+extern std::string rel_to_elapsed(int64_t);
+extern std::string rel_timestamp();
+
 // close the namespace
 };
 

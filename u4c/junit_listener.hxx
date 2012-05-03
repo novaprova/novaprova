@@ -12,7 +12,6 @@ public:
     ~junit_listener_t() {}
 
     // TODO: methods to allow changing the base directory
-    // TODO: measure job times
     // TODO: capture job stdout/stderr
 
     void begin();
@@ -27,6 +26,8 @@ private:
 	std::string name_;
 	result_t result_;
 	event_t *event_;
+	int64_t start_ns_;
+	int64_t end_ns_;
     };
 
     struct suite_t

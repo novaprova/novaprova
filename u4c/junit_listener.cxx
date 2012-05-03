@@ -22,23 +22,11 @@ junit_listener_t::get_hostname() const
     return (r < 0 ? string("localhost") : string(hostname));
 }
 
-string
-junit_listener_t::get_timestamp() const
-{
-    time_t clock;
-    struct tm tm;
-    char buf[20];
-    time(&clock);
-    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S",
-	     localtime_r(&clock, &tm));
-    return string(buf);
-}
-
 void
 junit_listener_t::end()
 {
     string hostname = get_hostname();
-    string timestamp = get_timestamp();
+    string timestamp = abs_to_iso8601(abs_now());
 
     map<string, suite_t>::iterator sitr;
     for (sitr = suites_.begin() ; sitr != suites_.end() ; ++sitr)
@@ -53,7 +41,6 @@ junit_listener_t::end()
 	xmlpp::Element *xsuite = xdoc->create_root_node("testsuite");
 	xsuite->set_attribute("name", suitename);
 	xsuite->set_attribute("failures", "0");
-	xsuite->set_attribute("time", "0.1");
 	xsuite->set_attribute("tests", dec(s->cases_.size()));
 	xsuite->set_attribute("hostname", hostname);
 	xsuite->set_attribute("timestamp", timestamp);
@@ -61,6 +48,7 @@ junit_listener_t::end()
 	xsuite->add_child("properties");
 
 	unsigned int nerrs = 0;
+	int64_t sns = 0;
 	map<string, case_t>::iterator citr;
 	for (citr = s->cases_.begin() ; citr != s->cases_.end() ; ++citr)
 	{
@@ -71,7 +59,10 @@ junit_listener_t::end()
 	    xcase->set_attribute("name", casename);
 	    // TODO: this is wrong
 	    xcase->set_attribute("classname", casename);
-	    xcase->set_attribute("time", "0.1");
+
+	    int64_t ns = c->end_ns_ - c->start_ns_;
+	    sns += ns;
+	    xcase->set_attribute("time", rel_to_elapsed(ns));
 
 	    if (c->event_)
 	    {
@@ -87,6 +78,7 @@ junit_listener_t::end()
 		nerrs++;
 	}
 	xsuite->set_attribute("errors", dec(nerrs));
+	xsuite->set_attribute("time", rel_to_elapsed(sns));
 
 	xsuite->add_child("system-out");
 	xsuite->add_child("system-err");
@@ -111,8 +103,10 @@ junit_listener_t::find_case(const job_t *j)
 }
 
 void
-junit_listener_t::begin_job(const job_t *j __attribute__((unused)))
+junit_listener_t::begin_job(const job_t *j)
 {
+    case_t *c = find_case(j);
+    c->start_ns_ = rel_now();
 }
 
 void
@@ -120,6 +114,7 @@ junit_listener_t::end_job(const job_t *j, result_t res)
 {
     case_t *c = find_case(j);
     c->result_ = res;
+    c->end_ns_ = rel_now();
 }
 
 void

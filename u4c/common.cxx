@@ -88,5 +88,58 @@ string dec(unsigned int x)
     return string(buf);
 }
 
+#define NANOSEC_PER_SEC	    1000000000
+static int64_t posix_now(int clock)
+{
+    struct timespec ts;
+    memset(&ts, 0, sizeof(ts));
+    int r = clock_gettime(clock, &ts);
+    return ts.tv_sec * NANOSEC_PER_SEC + ts.tv_nsec;
+}
+
+int64_t abs_now()
+{
+    return posix_now(CLOCK_REALTIME);
+}
+
+int64_t rel_now()
+{
+    return posix_now(CLOCK_MONOTONIC);
+}
+
+string abs_to_iso8601(int64_t abs)
+{
+    time_t clock = abs / NANOSEC_PER_SEC;
+    struct tm tm;
+    char buf[20];
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S",
+	     localtime_r(&clock, &tm));
+    return string(buf);
+}
+
+string rel_to_elapsed(int64_t rel)
+{
+    const char *sign = "";
+    if (rel < 0)
+    {
+	rel = -rel;
+	sign = "-";
+    }
+    int sec = rel / NANOSEC_PER_SEC;
+    int ns = rel % NANOSEC_PER_SEC;
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%s%u.%03u", sign, sec, ns);
+    return string(buf);
+}
+
+string rel_timestamp()
+{
+    static int64_t first;
+    int64_t now = rel_now();
+    if (!first)
+	first = now;
+    return rel_to_elapsed(now - first);
+}
+
 // close the namespace
 };

@@ -23,9 +23,9 @@ foreach my $i (1..$N)
 static void
 test_$i(void)
 {
-    fprintf(stderr, "%s test_$i begins\\n", u4c_reltimestamp()); fflush(stderr);
+    fprintf(stderr, "%s test_$i begins\\n", u4c::reltimestamp().c_str()); fflush(stderr);
     usleep($d);
-    fprintf(stderr, "%s test_$i ends\\n", u4c_reltimestamp()); fflush(stderr);
+    fprintf(stderr, "%s test_$i ends\\n", u4c::reltimestamp().c_str()); fflush(stderr);
 }
 
 EOF
