@@ -93,7 +93,7 @@ static int64_t posix_now(int clock)
 {
     struct timespec ts;
     memset(&ts, 0, sizeof(ts));
-    int r = clock_gettime(clock, &ts);
+    clock_gettime(clock, &ts);
     return ts.tv_sec * NANOSEC_PER_SEC + ts.tv_nsec;
 }
 
