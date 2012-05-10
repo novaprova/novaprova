@@ -26,8 +26,7 @@ private:
 	std::string name_;
 	result_t result_;
 	event_t *event_;
-	int64_t start_ns_;
-	int64_t end_ns_;
+	int64_t elapsed_;
     };
 
     struct suite_t

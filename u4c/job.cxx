@@ -26,8 +26,14 @@ string job_t::as_string() const
 }
 
 void
-job_t::pre_run()
+job_t::pre_run(bool in_parent)
 {
+    if (in_parent)
+    {
+	start_ = rel_now();
+	return;
+    }
+
     vector<testnode_t::assignment_t>::const_iterator i;
     for (i = assigns_.begin() ; i != assigns_.end() ; ++i)
 	i->apply();
@@ -36,13 +42,28 @@ job_t::pre_run()
 }
 
 void
-job_t::post_run()
+job_t::post_run(bool in_parent)
 {
+    if (in_parent)
+    {
+	end_ = rel_now();
+	return;
+    }
+
     node_->post_run();
 
     vector<testnode_t::assignment_t>::const_iterator i;
     for (i = assigns_.begin() ; i != assigns_.end() ; ++i)
 	i->unapply();
+}
+
+int64_t
+job_t::get_elapsed() const
+{
+    int64_t end = end_;
+    if (!end)
+	end = rel_now();
+    return end - start_;
 }
 
 // close the namespace

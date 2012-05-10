@@ -18,8 +18,10 @@ public:
 
     std::string as_string() const;
     testnode_t *get_node() const { return node_; }
-    void pre_run();
-    void post_run();
+    void pre_run(bool in_parent);
+    void post_run(bool in_parent);
+
+    int64_t get_elapsed() const;
 
 private:
     static unsigned int next_id_;
@@ -27,6 +29,8 @@ private:
     unsigned int id_;
     testnode_t *node_;
     std::vector<testnode_t::assignment_t> assigns_;
+    int64_t start_;
+    int64_t end_;
 };
 
 // close the namespace

@@ -335,6 +335,7 @@ runner_t::reap_children()
 	/* notify listeners */
 	nfailed_ += (child->get_result() == R_FAIL);
 	nrun_++;
+	child->get_job()->post_run(true);
 	dispatch_listeners(end_job, child->get_job(), child->get_result());
 
 	/* detach and clean up */
@@ -416,7 +417,7 @@ runner_t::run_test_code(job_t *j)
     result_t res = R_UNKNOWN;
     event_t *ev;
 
-    j->pre_run();
+    j->pre_run(false);
 
     u4c_try
     {
@@ -455,7 +456,7 @@ runner_t::run_test_code(job_t *j)
 	res = merge(res, R_PASS);
     }
 
-    j->post_run();
+    j->post_run(false);
     res = merge(res, valgrind_errors(j));
     return res;
 }
@@ -477,6 +478,7 @@ runner_t::begin_job(job_t *j)
 	    rel_timestamp().c_str(), j->as_string().c_str());
 
     dispatch_listeners(begin_job, j);
+    j->pre_run(true);
 
     child = fork_child(j);
     if (child)

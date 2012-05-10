@@ -60,9 +60,8 @@ junit_listener_t::end()
 	    // TODO: this is wrong
 	    xcase->set_attribute("classname", casename);
 
-	    int64_t ns = c->end_ns_ - c->start_ns_;
-	    sns += ns;
-	    xcase->set_attribute("time", rel_format(ns_));
+	    sns += c->elapsed_;
+	    xcase->set_attribute("time", rel_format(c->elapsed_));
 
 	    if (c->event_)
 	    {
@@ -103,10 +102,8 @@ junit_listener_t::find_case(const job_t *j)
 }
 
 void
-junit_listener_t::begin_job(const job_t *j)
+junit_listener_t::begin_job(const job_t *j __attribute__((unused)))
 {
-    case_t *c = find_case(j);
-    c->start_ns_ = rel_now();
 }
 
 void
@@ -114,7 +111,7 @@ junit_listener_t::end_job(const job_t *j, result_t res)
 {
     case_t *c = find_case(j);
     c->result_ = res;
-    c->end_ns_ = rel_now();
+    c->elapsed_ = j->get_elapsed();
 }
 
 void
