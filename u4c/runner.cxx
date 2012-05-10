@@ -416,8 +416,7 @@ runner_t::run_test_code(job_t *j)
     result_t res = R_UNKNOWN;
     event_t *ev;
 
-    j->apply_assignments();
-    tn->pre_fixture();
+    j->pre_run();
 
     u4c_try
     {
@@ -456,8 +455,7 @@ runner_t::run_test_code(job_t *j)
 	res = merge(res, R_PASS);
     }
 
-    tn->post_fixture();
-    j->unapply_assignments();
+    j->post_run();
     res = merge(res, valgrind_errors(j));
     return res;
 }

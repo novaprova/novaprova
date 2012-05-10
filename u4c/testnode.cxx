@@ -185,7 +185,7 @@ testnode_t::find(const char *nm)
 }
 
 void
-testnode_t::pre_fixture() const
+testnode_t::pre_run() const
 {
     /* Install intercepts from innermost out */
     for (const testnode_t *a = this ; a ; a = a->parent_)
@@ -197,7 +197,7 @@ testnode_t::pre_fixture() const
 }
 
 void
-testnode_t::post_fixture() const
+testnode_t::post_run() const
 {
     /*
      * Uninstall intercepts from innermost out.  Probably we should do

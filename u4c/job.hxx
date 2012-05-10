@@ -18,8 +18,8 @@ public:
 
     std::string as_string() const;
     testnode_t *get_node() const { return node_; }
-    void apply_assignments() const;
-    void unapply_assignments() const;
+    void pre_run();
+    void post_run();
 
 private:
     static unsigned int next_id_;

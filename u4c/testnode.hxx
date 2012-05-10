@@ -32,8 +32,8 @@ public:
 	return funcs_[type];
     }
     std::list<spiegel::function_t*> get_fixtures(functype_t type) const;
-    void pre_fixture() const;
-    void post_fixture() const;
+    void pre_run() const;
+    void post_run() const;
 
     void dump(int level) const;
 

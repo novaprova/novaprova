@@ -26,16 +26,20 @@ string job_t::as_string() const
 }
 
 void
-job_t::apply_assignments() const
+job_t::pre_run()
 {
     vector<testnode_t::assignment_t>::const_iterator i;
     for (i = assigns_.begin() ; i != assigns_.end() ; ++i)
 	i->apply();
+
+    node_->pre_run();
 }
 
 void
-job_t::unapply_assignments() const
+job_t::post_run()
 {
+    node_->post_run();
+
     vector<testnode_t::assignment_t>::const_iterator i;
     for (i = assigns_.begin() ; i != assigns_.end() ; ++i)
 	i->unapply();
