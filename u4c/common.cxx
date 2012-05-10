@@ -107,7 +107,7 @@ int64_t rel_now()
     return posix_now(CLOCK_MONOTONIC);
 }
 
-string abs_to_iso8601(int64_t abs)
+string abs_format_iso8601(int64_t abs)
 {
     time_t clock = abs / NANOSEC_PER_SEC;
     struct tm tm;
@@ -117,7 +117,7 @@ string abs_to_iso8601(int64_t abs)
     return string(buf);
 }
 
-string rel_to_elapsed(int64_t rel)
+string rel_format(int64_t rel)
 {
     const char *sign = "";
     if (rel < 0)
@@ -138,7 +138,7 @@ string rel_timestamp()
     int64_t now = rel_now();
     if (!first)
 	first = now;
-    return rel_to_elapsed(now - first);
+    return rel_format(now - first);
 }
 
 // close the namespace

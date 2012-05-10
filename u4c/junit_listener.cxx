@@ -26,7 +26,7 @@ void
 junit_listener_t::end()
 {
     string hostname = get_hostname();
-    string timestamp = abs_to_iso8601(abs_now());
+    string timestamp = abs_format_iso8601(abs_now());
 
     map<string, suite_t>::iterator sitr;
     for (sitr = suites_.begin() ; sitr != suites_.end() ; ++sitr)
@@ -62,7 +62,7 @@ junit_listener_t::end()
 
 	    int64_t ns = c->end_ns_ - c->start_ns_;
 	    sns += ns;
-	    xcase->set_attribute("time", rel_to_elapsed(ns));
+	    xcase->set_attribute("time", rel_format(ns_));
 
 	    if (c->event_)
 	    {
@@ -78,7 +78,7 @@ junit_listener_t::end()
 		nerrs++;
 	}
 	xsuite->set_attribute("errors", dec(nerrs));
-	xsuite->set_attribute("time", rel_to_elapsed(sns));
+	xsuite->set_attribute("time", rel_format(sns));
 
 	xsuite->add_child("system-out");
 	xsuite->add_child("system-err");
