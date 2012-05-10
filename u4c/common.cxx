@@ -128,7 +128,7 @@ string rel_format(int64_t rel)
     int sec = rel / NANOSEC_PER_SEC;
     int ns = rel % NANOSEC_PER_SEC;
     char buf[32];
-    snprintf(buf, sizeof(buf), "%s%u.%03u", sign, sec, ns);
+    snprintf(buf, sizeof(buf), "%s%u.%03u", sign, sec, ns/1000000);
     return string(buf);
 }
 
