@@ -22,8 +22,8 @@ public:
     job_t *get_job() const { return job_; }
     result_t get_result() const { return result_; }
 
-    void poll_setup(struct pollfd &);
-    void poll_handle(struct pollfd &);
+    int get_input_fd() { return (finished_ ? -1 : event_pipe_); }
+    void handle_input();
     void merge_result(result_t r);
 
 private:

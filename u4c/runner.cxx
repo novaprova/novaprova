@@ -247,12 +247,20 @@ runner_t::handle_events()
 
     while (!caught_sigchld)
     {
-	pfd_.resize(children_.size());
+	pfd_.clear();
 	vector<child_t*>::iterator citr;
-	vector<struct pollfd>::iterator pitr;
-	for (pitr = pfd_.begin(), citr = children_.begin() ;
-	     citr != children_.end() ; ++pitr, ++citr)
-	    (*citr)->poll_setup(*pitr);
+	for (citr = children_.begin() ; citr != children_.end() ; ++citr)
+	{
+	    struct pollfd p;
+	    memset(&p, 0, sizeof(struct pollfd));
+	    int fd = (*citr)->get_input_fd();
+	    if (fd >= 0)
+	    {
+		p.fd = fd;
+		p.events |= POLLIN;
+	    }
+	    pfd_.push_back(p);
+	}
 
 	r = poll(pfd_.data(), pfd_.size(), -1);
 	if (r < 0)
@@ -264,9 +272,15 @@ runner_t::handle_events()
 	}
 	/* TODO: implement test timeout handling here */
 
-	for (pitr = pfd_.begin(), citr = children_.begin() ;
-	     citr != children_.end() ; ++pitr, ++citr)
-	    (*citr)->poll_handle(*pitr);
+	if (r > 0)
+	{
+	    /* poll indicated some fds are available */
+	    vector<struct pollfd>::iterator pitr;
+	    for (pitr = pfd_.begin(), citr = children_.begin() ;
+		 citr != children_.end() ; ++pitr, ++citr)
+		if ((pitr->revents & POLLIN))
+		    (*citr)->handle_input();
+	}
     }
 }
 

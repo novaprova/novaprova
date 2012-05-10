@@ -22,21 +22,9 @@ child_t::~child_t()
 }
 
 void
-child_t::poll_setup(struct pollfd &pfd)
-{
-    memset(&pfd, 0, sizeof(struct pollfd));
-    if (finished_)
-	return;
-    pfd.fd = event_pipe_;
-    pfd.events = POLLIN;
-}
-
-void
-child_t::poll_handle(struct pollfd &pfd)
+child_t::handle_input()
 {
     if (finished_)
-	return;
-    if (!(pfd.revents & POLLIN))
 	return;
     if (!proxy_listener_t::handle_call(event_pipe_, job_, &result_))
 	finished_ = true;
