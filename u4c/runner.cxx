@@ -241,12 +241,15 @@ void
 runner_t::handle_events()
 {
     int r;
+    unsigned int nzeroes = 0;
 
     if (!children_.size())
 	return;
 
     while (!caught_sigchld)
     {
+	int64_t start = rel_now();
+	int64_t timeout = -1;
 	pfd_.clear();
 	vector<child_t*>::iterator citr;
 	for (citr = children_.begin() ; citr != children_.end() ; ++citr)
@@ -260,9 +263,30 @@ runner_t::handle_events()
 		p.events |= POLLIN;
 	    }
 	    pfd_.push_back(p);
+
+	    int64_t deadline = (*citr)->get_deadline();
+	    if (deadline)
+	    {
+		int64_t to = deadline - start;
+		if (to <= 0)
+		    timeout = 0;	/* already overdue */
+		else if (timeout < 0 || timeout > to)
+		    timeout = to;
+	    }
 	}
 
-	r = poll(pfd_.data(), pfd_.size(), -1);
+	if (timeout == 0)
+	{
+	    if (++nzeroes > 5)
+		timeout = NANOSEC_PER_SEC;
+	}
+	else
+	{
+	    nzeroes = 0;
+	}
+
+	r = poll(pfd_.data(), pfd_.size(),
+		 (timeout < 0 ? -1 : (timeout+500000)/1000000));
 	if (r < 0)
 	{
 	    if (errno == EINTR)
@@ -270,9 +294,14 @@ runner_t::handle_events()
 	    perror("u4c: poll");
 	    return;
 	}
-	/* TODO: implement test timeout handling here */
-
-	if (r > 0)
+	if (r == 0)
+	{
+	    /* poll() timed out */
+	    int64_t end = rel_now();
+	    for (citr = children_.begin() ; citr != children_.end() ; ++citr)
+		(*citr)->handle_timeout(end);
+	}
+	else
 	{
 	    /* poll indicated some fds are available */
 	    vector<struct pollfd>::iterator pitr;

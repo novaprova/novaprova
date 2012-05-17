@@ -22,8 +22,10 @@ public:
     job_t *get_job() const { return job_; }
     result_t get_result() const { return result_; }
 
-    int get_input_fd() { return (finished_ ? -1 : event_pipe_); }
+    int get_input_fd() const { return (state_ == FINISHED ? -1 : event_pipe_); }
     void handle_input();
+    int64_t get_deadline() const { return deadline_; }
+    void handle_timeout(int64_t);
     void merge_result(result_t r);
 
 private:
@@ -31,7 +33,13 @@ private:
     int event_pipe_;	    /* read end of the pipe */
     job_t *job_;
     result_t result_;
-    bool finished_;
+    enum {
+	RUNNING,
+	TIMEOUT1,
+	TIMEOUT2,
+	FINISHED,
+    } state_;
+    int64_t deadline_;
 };
 
 // close the namespace

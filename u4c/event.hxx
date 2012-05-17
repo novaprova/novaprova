@@ -20,6 +20,7 @@ enum events_t
     EV_EXNA,		/* ... */
     EV_VALGRIND,	/* Valgrind spotted a memleak or error */
     EV_SLMATCH,		/* syslog matching */
+    EV_TIMEOUT,		/* child took too long */
 };
 
 class event_t

@@ -21,6 +21,7 @@ public:
     void pre_run(bool in_parent);
     void post_run(bool in_parent);
 
+    int64_t get_start() const { return start_; }
     int64_t get_elapsed() const;
 
 private:

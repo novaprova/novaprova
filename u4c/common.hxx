@@ -31,6 +31,7 @@ extern const char *argv0;
 extern std::string hex(unsigned long x);
 extern std::string dec(unsigned int x);
 
+#define NANOSEC_PER_SEC	    (1000000000LL)
 extern int64_t rel_now();
 extern int64_t abs_now();
 extern std::string abs_format_iso8601(int64_t);

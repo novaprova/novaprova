@@ -21,6 +21,7 @@ TESTS= \
     t005 \
     t006 \
     t007 \
+    t008 \
 
 tests: $(TESTS)
 

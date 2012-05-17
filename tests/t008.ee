@@ -1,0 +1,4 @@
+EVENT TIMEOUT Child timed out
+EVENT SIGNAL child process %PID% died on signal 15
+FAIL 1:timeout
+EXIT 1

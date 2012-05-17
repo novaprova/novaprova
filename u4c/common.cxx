@@ -88,7 +88,6 @@ string dec(unsigned int x)
     return string(buf);
 }
 
-#define NANOSEC_PER_SEC	    1000000000
 static int64_t posix_now(int clock)
 {
     struct timespec ts;
