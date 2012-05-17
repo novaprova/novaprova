@@ -11,10 +11,10 @@ EVENT SLMATCH err: Hello world!
 FAIL t000.syslog
 EVENT VALGRIND 32 bytes of memory leaked
 FAIL t000.memleak
-EVENT EXPASS U4C_PASS called at t000.c:43
+EVENT EXPASS NP_PASS called at t000.c:43
 PASS t000.pass
-EVENT EXFAIL U4C_FAIL called at t000.c:49
+EVENT EXFAIL NP_FAIL called at t000.c:49
 FAIL t000.fail
-EVENT EXNA U4C_NOTAPPLICABLE called at t000.c:55
+EVENT EXNA NP_NOTAPPLICABLE called at t000.c:55
 N/A t000.notapplicable
 EXIT 1

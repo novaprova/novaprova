@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-U4C_PARAMETER(pastry, "donut,bearclaw,danish");
+NP_PARAMETER(pastry, "donut,bearclaw,danish");
 
 static void test_param(void)
 {

@@ -6,10 +6,13 @@ CWARNFLAGS=	-Wall -Wextra -Wno-unused-function -Wno-unused-parameter
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
 
+CXX=		g++
+CXXFLAGS=	$(CFLAGS)
+
 INCLUDES=	-I..
-LIBS=		-L.. -L../libspiegel -lnp -lspiegel -lstdc++ -lbfd -ldl -lrt \
+LIBS=		-L.. -lnp -lstdc++ -lbfd -ldl -lrt \
 		$(shell pkg-config --libs libxml++-2.6)
-DEPS=		../np.h ../libnp.a ../libspiegel/libspiegel.a
+DEPS=		../np.h ../libnp.a
 
 all install:
 
@@ -23,7 +26,7 @@ TESTS= \
     t007 \
     t008 \
 
-tests: $(TESTS)
+tests: $(TESTS) spiegeltest
 
 # Default to verbose for now
 V=1
@@ -40,8 +43,11 @@ check: $(TESTS)
 %: %.c $(DEPS)
 	$(LINK.c) -o $@ $< $(LIBS)
 
+%: %.cxx $(DEPS)
+	$(LINK.C) -o $@ $< $(LIBS)
+
 %.c: %-genc.pl
 	perl $< > $@
 
 clean:
-	$(RM) $(TESTS)
+	$(RM) $(TESTS) spiegeltest

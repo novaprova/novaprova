@@ -10,20 +10,20 @@ static void test_invalid_regex(void)
 {
     np_syslog_match("[foo", m1);	    /* fail */
     syslog(LOG_ERR, "fnarp");
-    U4C_ASSERT_EQUAL(np_syslog_count(m1), 0);
+    NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
 }
 
 static void test_unmatched_tag(void)
 {
     int x = np_syslog_count(m1);	/* fail */
-    U4C_ASSERT_EQUAL(x, 0);
+    NP_ASSERT_EQUAL(x, 0);
 }
 
 static void test_no_messages(void)
 {
     /* no syslog messages => count is 0 */
     np_syslog_match("foo.*baz", m1);
-    U4C_ASSERT_EQUAL(np_syslog_count(m1), 0);
+    NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
     /* pass */
 }
 
@@ -40,7 +40,7 @@ static void test_one_message_unmatched(void)
      * messages FAIL the test */
     np_syslog_match("foo.*baz", m1);
     syslog(LOG_ERR, "fnarp");	    /* fail */
-    U4C_ASSERT_EQUAL(np_syslog_count(m1), 0);
+    NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
 }
 
 static void test_one_message_ignored(void)
@@ -57,7 +57,7 @@ static void test_one_message_one_match(void)
      * both macros succeed */
     np_syslog_match("foo.*baz", m1);
     syslog(LOG_ERR, "foo bar baz");
-    U4C_ASSERT_EQUAL(np_syslog_count(m1), 1);
+    NP_ASSERT_EQUAL(np_syslog_count(m1), 1);
     /* pass */
 }
 
@@ -67,7 +67,7 @@ static void test_one_message_one_match_want_five(void)
      * we check for 5 */
     np_syslog_match("foo.*baz", m1);
     syslog(LOG_ERR, "foo bar baz");
-    U4C_ASSERT_EQUAL(np_syslog_count(m1), 5);	/* fail */
+    NP_ASSERT_EQUAL(np_syslog_count(m1), 5);	/* fail */
 }
 
 static void test_one_message_multiple_matches_same_tag(void)
@@ -76,7 +76,7 @@ static void test_one_message_multiple_matches_same_tag(void)
     np_syslog_match("fuu.*bas", m1);
     np_syslog_match("bleah", m1);
     syslog(LOG_ERR, "fuu bleah bas");
-    U4C_ASSERT_EQUAL(np_syslog_count(m1), 1);
+    NP_ASSERT_EQUAL(np_syslog_count(m1), 1);
     /* pass */
 }
 
@@ -87,8 +87,8 @@ static void test_one_message_multiple_matches_different_tags(void)
     np_syslog_match("fuu.*bas", m1);
     np_syslog_match("bleah", m2);
     syslog(LOG_ERR, "fuu bleah bas");
-    U4C_ASSERT_EQUAL(np_syslog_count(m1), 1);
-    U4C_ASSERT_EQUAL(np_syslog_count(m2), 0);
+    NP_ASSERT_EQUAL(np_syslog_count(m1), 1);
+    NP_ASSERT_EQUAL(np_syslog_count(m2), 0);
     /* pass */
 }
 

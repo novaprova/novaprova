@@ -16,7 +16,7 @@ INSTALL=	/usr/bin/install -c
 RANLIB=		ranlib
 depdir=		.deps
 
-SUBDIRS_PRE=	libspiegel
+SUBDIRS_PRE=
 SUBDIRS_POST=	tests
 
 all clean check install:

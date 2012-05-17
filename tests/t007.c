@@ -40,19 +40,19 @@ static void test_memleak(void)
 
 static void test_pass(void)
 {
-    U4C_PASS;
+    NP_PASS;
     syslog(LOG_ERR, "Should never be seen\n");
 }
 
 static void test_fail(void)
 {
-    U4C_FAIL;
+    NP_FAIL;
     syslog(LOG_ERR, "Should never be seen\n");
 }
 
 static void test_notapplicable(void)
 {
-    U4C_NOTAPPLICABLE;
+    NP_NOTAPPLICABLE;
     syslog(LOG_ERR, "Should never be seen\n");
 }
 
