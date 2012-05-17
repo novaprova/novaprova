@@ -18,6 +18,18 @@
 #include <valgrind/memcheck.h>
 #include <string>
 
+// Provide an empty definition of __attribute__ so
+// we can just use it even on non-gcc compilers
+#if !defined(__GNUC__) && !defined(__attribute__)
+#define __attribute__(x)
+#endif
+
+/**
+ * Main NovaProva library namespace.
+ *
+ * Most of the NovaProva library appears in the `u4c` namespace.
+ * For now the C++ API is undocumented.
+ */
 namespace u4c {
 
 extern void *xmalloc(size_t sz);

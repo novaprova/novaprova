@@ -89,7 +89,11 @@ $(depdir)/%.d: %.c
 libu4c.a: $(libu4c_OBJS)
 	$(AR) $(ARFLAGS) libu4c.a $(libu4c_OBJS)
 
-install-local:
+documentation:
+	$(RM) -r doc/html doc/man
+	doxygen
+
+install-local: documentation
 	$(INSTALL) -d $(DESTDIR)$(includedir)
 	for hdr in $(libu4c_HEADERS) ; do \
 	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/$$hdr ;\
@@ -100,6 +104,7 @@ install-local:
 
 clean-local:
 	$(RM) libu4c.a $(libu4c_OBJS)
+	$(RM) -r doc/html doc/man
 	$(RM) -r $(depdir)
 
 check-local:

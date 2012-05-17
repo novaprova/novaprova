@@ -65,6 +65,15 @@
 // #define SPIEGEL_ADDRSIZE    8
 // #define SPIEGEL_MAXADDR	    (0xffffffffffffffffULL)
 
+/**
+ * NovaProva reflection library namespace.
+ *
+ * The `spiegel` namespace is a set of utilities which implement true runtime
+ * reflection for C and C++ programs, using the DWARF debug information
+ * standard.
+ *
+ * For now the spiegel C++ interface is undocumented.
+ */
 namespace spiegel {
 
 #if SPIEGEL_ADDRSIZE == 4

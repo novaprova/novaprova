@@ -546,18 +546,52 @@ runner_t::wait()
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+/**
+ * Set the limit on test job parallelism
+ *
+ * Set the maximum number of test jobs which will be run at the same
+ * time, to `n`.  The default value is 1, meaning tests will be run
+ * serially.  A value of 0 is shorthand for one job per online CPU in
+ * the system, which is likely to be the most efficient use of the
+ * system.
+ */
 extern "C" void
 u4c_set_concurrency(u4c_runner_t *runner, int n)
 {
     runner->set_concurrency(n);
 }
 
+/**
+ * Print the names of the tests in the plan to stdout.
+ *
+ * If `plan` is NULL, a temporary default plan is created which
+ * will result in all the discovered tests being listed in testnode tree
+ * order.
+ */
 extern "C" void
 u4c_list_tests(u4c_runner_t *runner, u4c_plan_t *plan)
 {
     runner->list_tests(plan);
 }
 
+/**
+ * Set the output format.
+ *
+ * Set the format in which test results will be emitted.  Available
+ * formats are:
+ *
+ *  - *"junit"* a directory called _reports/_ will be created with XML
+ *    files in jUnit format, suitable for use with upstream processors
+ *    which accept jUnit files, such as the Jenkins CI server.
+ *
+ *  - *"text"* a stream of tests and events is emitted to stdout,
+ *    co-mingled with anything emitted to stdout by the test code.
+ *    This is the default if `u4c_set_output_format` is not called.
+ *
+ * Note that the function is a misnomer, it actually *adds* an output
+ * format. Also note that if the C++ API were documented, you could
+ * write your own output formats by deriving from `u4c::listener_t`.
+ */
 extern "C" void
 u4c_set_output_format(u4c_runner_t *runner, const char *fmt)
 {
@@ -567,6 +601,16 @@ u4c_set_output_format(u4c_runner_t *runner, const char *fmt)
 	runner->add_listener(new text_listener_t);
 }
 
+/**
+ * Run all the tests in the plan.
+ *
+ * Uses the `runner` object to run all the tests described in the `plan`
+ * object.  If `plan` is NULL, a temporary default plan is created which
+ * will result in all the discovered tests being run in testnode tree
+ * order.
+ *
+ * Returns 0 on success or non-zero if any tests failed.
+ */
 extern "C" int
 u4c_run_tests(u4c_runner_t *runner, u4c_plan_t *plan)
 {

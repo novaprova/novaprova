@@ -91,18 +91,42 @@ void plan_t::iterator::find_testable_node()
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+/**
+ * Create a new `u4c_plan_t` object.
+ *
+ * A plan object can be used to configure a `u4c_runner_t` object to run
+ * (or list to stdout) a subset of all the discovered tests.  Note that
+ * if you want to run all tests, you do not need to create a plan at
+ * all; passing NULL to `u4c_run_tests` has that effect.
+ */
 extern "C" u4c_plan_t *
 u4c_plan_new(void)
 {
     return new plan_t();
 }
 
+/**
+ * Delete a plan object.
+ */
 extern "C" void
 u4c_plan_delete(u4c_plan_t *plan)
 {
     delete plan;
 }
 
+/**
+ * Add test specifications to a plan object.
+ *
+ * Add a sequence of test specifications to the plan object.  Each test
+ * specification is a string which matches a testnode in the discovered
+ * testnode hierarchy, and will cause that node plus all of its
+ * descendants to be added to the plan.  The interface is designed to
+ * take command-line arguments from your test runner program after
+ * options have been parsed with `getopt`.
+ *
+ * Returns false if any of the test specifications could not be found,
+ * true on success.
+ */
 extern "C" bool
 u4c_plan_add_specs(u4c_plan_t *plan, int nspec, const char **spec)
 {
