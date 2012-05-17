@@ -24,7 +24,7 @@
 #define __attribute__(x)
 #endif
 
-/**
+/*
  * Main NovaProva library namespace.
  *
  * Most of the NovaProva library appears in the `u4c` namespace.
