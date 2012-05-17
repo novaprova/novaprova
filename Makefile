@@ -7,7 +7,7 @@ CC=		g++
 CXX=		g++
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-D_GNU_SOURCE -Ilibspiegel -I. \
+CDEFINES=	-D_GNU_SOURCE -I. \
 		$(shell pkg-config --cflags libxml++-2.6)
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
@@ -44,10 +44,44 @@ libnp_SOURCE=	\
 		np/testnode.cxx \
 		np/text_listener.cxx \
 		np/types.cxx \
+		spiegel/dwarf/abbrev.cxx \
+		spiegel/dwarf/compile_unit.cxx \
+		spiegel/dwarf/entry.cxx \
+		spiegel/dwarf/enumerations.cxx \
+		spiegel/dwarf/reference.cxx \
+		spiegel/dwarf/state.cxx \
+		spiegel/dwarf/string_table.cxx \
+		spiegel/dwarf/value.cxx \
+		spiegel/dwarf/walker.cxx \
+		spiegel/platform/linux.cxx \
+		spiegel/common.cxx \
+		spiegel/filename.cxx \
+		spiegel/intercept.cxx \
+		spiegel/mapping.cxx \
+		spiegel/spiegel.cxx \
+		spiegel/tok.cxx \
 
 libnp_PRIVHEADERS= \
 		np/common.hxx \
 		np_priv.h \
+		spiegel/dwarf/abbrev.hxx \
+		spiegel/dwarf/compile_unit.hxx \
+		spiegel/dwarf/entry.hxx \
+		spiegel/dwarf/enumerations.hxx \
+		spiegel/dwarf/reader.hxx \
+		spiegel/dwarf/reference.hxx \
+		spiegel/dwarf/section.hxx \
+		spiegel/dwarf/state.hxx \
+		spiegel/dwarf/string_table.hxx \
+		spiegel/dwarf/value.hxx \
+		spiegel/dwarf/walker.hxx \
+		spiegel/platform/common.hxx \
+		spiegel/filename.hxx \
+		spiegel/intercept.hxx \
+		spiegel/common.hxx \
+		spiegel/mapping.hxx \
+		spiegel/spiegel.hxx \
+		spiegel/tok.hxx \
 
 libnp_HEADERS=	np.h \
 		np/child.hxx \
