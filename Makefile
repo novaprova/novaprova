@@ -19,7 +19,7 @@ depdir=		.deps
 SUBDIRS_PRE=
 SUBDIRS_POST=	tests
 
-all clean check install:
+all clean distclean check install:
 	@for dir in $(SUBDIRS_PRE) ; do $(MAKE) -C $$dir $@ ; done
 	@$(MAKE) $@-local
 	@for dir in $(SUBDIRS_POST) ; do $(MAKE) -C $$dir $@ ; done
@@ -138,6 +138,8 @@ install-local: documentation
 
 clean-local:
 	$(RM) libnp.a $(libnp_OBJS)
+
+distclean-local: clean-local
 	$(RM) -r doc/html doc/man
 	$(RM) -r $(depdir)
 
