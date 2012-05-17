@@ -1,7 +1,11 @@
+PACKAGE=	novaprova
+VERSION=	0.1
 
 prefix=		/usr/local
 includedir=	$(prefix)/include
 libdir=		$(prefix)/lib
+mandir=		$(prefix)/share/man
+pkgdocdir=	$(prefix)/share/doc/$(PACKAGE)
 
 CC=		g++
 CXX=		g++
@@ -124,23 +128,31 @@ libnp.a: $(libnp_OBJS)
 	$(AR) $(ARFLAGS) libnp.a $(libnp_OBJS)
 
 documentation:
-	$(RM) -r doc/html doc/man
+	$(RM) -r doc/api-ref doc/man
 	doxygen
+	cd doc ;\
+	    ln -s api-ref api-ref-$(VERSION) ;\
+	    tar -chjvf api-ref-$(VERSION).tar.bz2 api-ref-$(VERSION) ;\
+	    rm -f api-ref-$(VERSION)
 
 install-local: documentation
-	$(INSTALL) -d $(DESTDIR)$(includedir)
+	$(INSTALL) -d $(DESTDIR)$(includedir)/np
 	for hdr in $(libnp_HEADERS) ; do \
 	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/$$hdr ;\
 	done
 	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 644 libnp.a $(DESTDIR)$(libdir)/libnp.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libnp.a
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
+	$(INSTALL) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
+	$(INSTALL) -d $(DESTDIR)$(pkgdocdir)/api-ref
+	$(INSTALL) doc/api-ref/* $(DESTDIR)$(pkgdocdir)/api-ref
 
 clean-local:
 	$(RM) libnp.a $(libnp_OBJS)
 
 distclean-local: clean-local
-	$(RM) -r doc/html doc/man
+	$(RM) -r doc/api-ref doc/man
 	$(RM) -r $(depdir)
 
 check-local:

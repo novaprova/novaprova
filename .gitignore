@@ -2,4 +2,5 @@
 *.a
 .deps
 doc/man
-doc/html
+doc/api-ref
+doc/api-ref-*.tar.bz2
