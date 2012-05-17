@@ -1,10 +1,10 @@
-#ifndef __U4C_PROXY_LISTENER_H__
-#define __U4C_PROXY_LISTENER_H__ 1
+#ifndef __NP_PROXY_LISTENER_H__
+#define __NP_PROXY_LISTENER_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/listener.hxx"
+#include "np/common.hxx"
+#include "np/listener.hxx"
 
-namespace u4c {
+namespace np {
 
 class proxy_listener_t : public listener_t
 {
@@ -28,4 +28,4 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_PROXY_LISTENER_H__ */
+#endif /* __NP_PROXY_LISTENER_H__ */

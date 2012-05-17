@@ -1,13 +1,13 @@
-#ifndef __U4C_PLAN_H__
-#define __U4C_PLAN_H__ 1
+#ifndef __NP_PLAN_H__
+#define __NP_PLAN_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/testnode.hxx"
+#include "np/common.hxx"
+#include "np/testnode.hxx"
 #include <vector>
 
-class u4c_testmanager_t;
+class np_testmanager_t;
 
-namespace u4c {
+namespace np {
 
 
 class plan_t
@@ -77,4 +77,4 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_PLAN_H__ */
+#endif /* __NP_PLAN_H__ */

@@ -1,8 +1,8 @@
-#include "u4c/proxy_listener.hxx"
+#include "np/proxy_listener.hxx"
 #include "except.h"
-#include "u4c_priv.h"
+#include "np_priv.h"
 
-namespace u4c {
+namespace np {
 
 enum proxy_call
 {
@@ -51,11 +51,11 @@ deserialise_bytes(int fd, char *p, unsigned int len)
     {
 	r = read(fd, p, len);
 	if (r < 0) {
-	    perror("u4c: error reading from proxy");
+	    perror("np: error reading from proxy");
 	    return -errno;
 	}
 	if (r == 0) {
-	    fprintf(stderr, "u4c: unexpected EOF deserialising from proxy\n");
+	    fprintf(stderr, "np: unexpected EOF deserialising from proxy\n");
 	    return -EINVAL;
 	}
 	len -= r;
@@ -192,7 +192,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
     case PROXY_EVENT:
 	if ((r = deserialise_event(fd, &ev)))
 	    return false;    /* failed to decode */
-	*resp = merge(*resp, u4c::runner_t::running()->raise_event(j, &ev));
+	*resp = merge(*resp, np::runner_t::running()->raise_event(j, &ev));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
 	if ((r = deserialise_uint(fd, &res)))
@@ -201,7 +201,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 	return false;	      /* end of test, expect no more calls */
     default:
 	fprintf(stderr,
-		"u4c: can't decode proxy call (which=%u)\n",
+		"np: can't decode proxy call (which=%u)\n",
 		which);
 	return false;
     }

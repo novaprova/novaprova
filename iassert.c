@@ -1,5 +1,5 @@
 /* iassert.c - intercept assert() failures in CUT */
-#include "u4c_priv.h"
+#include "np_priv.h"
 #include "except.h"
 #include <assert.h>
 #include <unistd.h>
@@ -12,7 +12,7 @@ __assert_fail(const char *condition,
 	      unsigned int lineno,
 	      const char *function)
 {
-    u4c_throw(u4c::event_t(u4c::EV_ASSERT, condition).at_line(
+    np_throw(np::event_t(np::EV_ASSERT, condition).at_line(
 	      filename, lineno).in_function(function).with_stack());
 }
 
@@ -22,7 +22,7 @@ __assert_perror_fail(int errnum,
 		     unsigned int lineno,
 		     const char *function)
 {
-    u4c_throw(u4c::event_t(u4c::EV_ASSERT, strerror(errnum)).at_line(
+    np_throw(np::event_t(np::EV_ASSERT, strerror(errnum)).at_line(
 	      filename, lineno).in_function(function).with_stack());
 }
 
@@ -33,7 +33,7 @@ __assert(const char *condition,
 	 const char *filename,
 	 int lineno)
 {
-    u4c_throw(u4c::event_t(u4c::EV_ASSERT, condition).at_line(
+    np_throw(np::event_t(np::EV_ASSERT, condition).at_line(
 	      filename, lineno).with_stack());
 }
 

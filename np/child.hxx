@@ -1,11 +1,11 @@
-#ifndef __U4C_CHILD_H__
-#define __U4C_CHILD_H__ 1
+#ifndef __NP_CHILD_H__
+#define __NP_CHILD_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/types.hxx"
+#include "np/common.hxx"
+#include "np/types.hxx"
 #include <sys/poll.h>
 
-namespace u4c {
+namespace np {
 
 class job_t;
 
@@ -45,4 +45,4 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_CHILD_H__ */
+#endif /* __NP_CHILD_H__ */

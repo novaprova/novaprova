@@ -14,7 +14,7 @@ PASS t003.one_message_ignored
 EVENT SYSLOG err: foo bar baz
 PASS t003.one_message_one_match
 EVENT SYSLOG err: foo bar baz
-EVENT ASSERT U4C_ASSERT_EQUAL(u4c_syslog_count(m1)=1, 5=5) at t003.c:70 in (test) test_one_message_one_match_want_five
+EVENT ASSERT NP_ASSERT_EQUAL(np_syslog_count(m1)=1, 5=5) at t003.c:70 in (test) test_one_message_one_match_want_five
 FAIL t003.one_message_one_match_want_five
 EVENT SYSLOG err: fuu bleah bas
 PASS t003.one_message_multiple_matches_same_tag

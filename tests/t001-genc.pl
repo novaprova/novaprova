@@ -11,7 +11,7 @@ print <<EOF;
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
-#include "u4c.h"
+#include "np.h"
 
 EOF
 
@@ -23,9 +23,9 @@ foreach my $i (1..$N)
 static void
 test_$i(void)
 {
-//    fprintf(stderr, "%s test_$i begins\\n", u4c::reltimestamp().c_str()); fflush(stderr);
+//    fprintf(stderr, "%s test_$i begins\\n", np::reltimestamp().c_str()); fflush(stderr);
     usleep($d);
-//    fprintf(stderr, "%s test_$i ends\\n", u4c::reltimestamp().c_str()); fflush(stderr);
+//    fprintf(stderr, "%s test_$i ends\\n", np::reltimestamp().c_str()); fflush(stderr);
 }
 
 EOF
@@ -36,10 +36,10 @@ int
 main(int argc, char **argv)
 {
     int ec = 0;
-    u4c_runner_t *runner = u4c_init();
-    u4c_set_concurrency(runner, /*maximal*/0);
-    ec = u4c_run_tests(runner, 0);
-    u4c_done(runner);
+    np_runner_t *runner = np_init();
+    np_set_concurrency(runner, /*maximal*/0);
+    ec = np_run_tests(runner, 0);
+    np_done(runner);
     exit(ec);
 }
 EOF

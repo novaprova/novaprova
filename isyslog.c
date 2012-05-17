@@ -1,6 +1,6 @@
 /* isyslog.c - intercept syslog() calls from CUT */
 #define SYSLOG_NAMES 1
-#include "u4c_priv.h"
+#include "np_priv.h"
 #include "except.h"
 #include <syslog.h>
 #include <unistd.h>
@@ -14,7 +14,7 @@
  * This product includes software developed by Computing Services
  * at Carnegie Mellon University (http://www.cmu.edu/computing/).
  */
-namespace u4c {
+namespace np {
 using namespace std;
 
 enum sldisposition_t
@@ -54,7 +54,7 @@ add_slmatch(const char *re, sldisposition_t dis,
     {
 	const char *msg = slm->classifier_.error_string();
 	delete slm;
-	u4c_throw(event_t(EV_SLMATCH, msg).at_line(file, line));
+	np_throw(event_t(EV_SLMATCH, msg).at_line(file, line));
     }
 
     /* order shouldn't matter due to the way we
@@ -65,25 +65,25 @@ add_slmatch(const char *re, sldisposition_t dis,
 }
 
 extern "C" void
-__u4c_syslog_fail(const char *re, const char *file, int line)
+__np_syslog_fail(const char *re, const char *file, int line)
 {
     add_slmatch(re, SL_FAIL, 0, file, line);
 }
 
 extern "C" void
-__u4c_syslog_ignore(const char *re, const char *file, int line)
+__np_syslog_ignore(const char *re, const char *file, int line)
 {
     add_slmatch(re, SL_IGNORE, 0, file, line);
 }
 
 extern "C" void
-__u4c_syslog_match(const char *re, int tag, const char *file, int line)
+__np_syslog_match(const char *re, int tag, const char *file, int line)
 {
     add_slmatch(re, SL_COUNT, tag, file, line);
 }
 
 extern "C" unsigned int
-__u4c_syslog_count(int tag, const char *file, int line)
+__np_syslog_count(int tag, const char *file, int line)
 {
     unsigned int count = 0;
     int nmatches = 0;
@@ -104,7 +104,7 @@ __u4c_syslog_count(int tag, const char *file, int line)
     {
 	static char buf[64];
 	snprintf(buf, sizeof(buf), "Unmatched syslog tag %d", tag);
-	u4c_throw(event_t(EV_SLMATCH, buf).at_line(file, line));
+	np_throw(event_t(EV_SLMATCH, buf).at_line(file, line));
     }
     return count;
 }
@@ -205,7 +205,7 @@ mock___syslog_chk(int prio,
     runner_t::running()->raise_event(0, &ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
-	u4c_throw(event_t(EV_SLMATCH, msg).with_stack());
+	np_throw(event_t(EV_SLMATCH, msg).with_stack());
 }
 #endif
 
@@ -224,7 +224,7 @@ mock_syslog(int prio, const char *fmt, ...)
     runner_t::running()->raise_event(0, &ev);
 
     if (find_slmatch(&msg) == SL_FAIL)
-	u4c_throw(event_t(EV_SLMATCH, msg).with_stack());
+	np_throw(event_t(EV_SLMATCH, msg).with_stack());
 }
 
 void init_syslog_intercepts(testnode_t *tn)

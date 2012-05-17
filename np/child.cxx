@@ -1,11 +1,11 @@
-#include "u4c/child.hxx"
-#include "u4c/testnode.hxx"
-#include "u4c/job.hxx"
-#include "u4c/event.hxx"
-#include "u4c/proxy_listener.hxx"
-#include "u4c_priv.h"
+#include "np/child.hxx"
+#include "np/testnode.hxx"
+#include "np/job.hxx"
+#include "np/event.hxx"
+#include "np/proxy_listener.hxx"
+#include "np_priv.h"
 
-namespace u4c {
+namespace np {
 
 child_t::child_t(pid_t pid, int fd, job_t *j)
  :  pid_(pid),
@@ -41,7 +41,7 @@ child_t::handle_timeout(int64_t end)
 	if (deadline_ <= end)
 	{
 	    event_t ev(EV_TIMEOUT, "Child timed out");
-	    merge_result(u4c::runner_t::running()->raise_event(job_, &ev));
+	    merge_result(np::runner_t::running()->raise_event(job_, &ev));
 
 	    kill(pid_, SIGTERM);
 	    state_ = TIMEOUT1;

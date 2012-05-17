@@ -1,10 +1,10 @@
-#include "u4c/plan.hxx"
-#include "u4c/testnode.hxx"
-#include "u4c/job.hxx"
-#include "u4c/testmanager.hxx"
-#include "u4c_priv.h"
+#include "np/plan.hxx"
+#include "np/testnode.hxx"
+#include "np/job.hxx"
+#include "np/testmanager.hxx"
+#include "np_priv.h"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 plan_t::plan_t()
@@ -92,15 +92,15 @@ void plan_t::iterator::find_testable_node()
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 /**
- * Create a new `u4c_plan_t` object.
+ * Create a new `np_plan_t` object.
  *
- * A plan object can be used to configure a `u4c_runner_t` object to run
+ * A plan object can be used to configure a `np_runner_t` object to run
  * (or list to stdout) a subset of all the discovered tests.  Note that
  * if you want to run all tests, you do not need to create a plan at
- * all; passing NULL to `u4c_run_tests` has that effect.
+ * all; passing NULL to `np_run_tests` has that effect.
  */
-extern "C" u4c_plan_t *
-u4c_plan_new(void)
+extern "C" np_plan_t *
+np_plan_new(void)
 {
     return new plan_t();
 }
@@ -109,7 +109,7 @@ u4c_plan_new(void)
  * Delete a plan object.
  */
 extern "C" void
-u4c_plan_delete(u4c_plan_t *plan)
+np_plan_delete(np_plan_t *plan)
 {
     delete plan;
 }
@@ -128,7 +128,7 @@ u4c_plan_delete(u4c_plan_t *plan)
  * true on success.
  */
 extern "C" bool
-u4c_plan_add_specs(u4c_plan_t *plan, int nspec, const char **spec)
+np_plan_add_specs(np_plan_t *plan, int nspec, const char **spec)
 {
     return plan->add_specs(nspec, spec);
 }

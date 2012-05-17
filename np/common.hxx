@@ -1,5 +1,5 @@
-#ifndef __U4C_COMMON_HXX__
-#define __U4C_COMMON_HXX__ 1
+#ifndef __NP_COMMON_HXX__
+#define __NP_COMMON_HXX__ 1
 
 #include <stdio.h>
 #include <limits.h>
@@ -27,10 +27,10 @@
 /*
  * Main NovaProva library namespace.
  *
- * Most of the NovaProva library appears in the `u4c` namespace.
+ * Most of the NovaProva library appears in the `np` namespace.
  * For now the C++ API is undocumented.
  */
-namespace u4c {
+namespace np {
 
 extern void *xmalloc(size_t sz);
 extern void *xrealloc(void *, size_t);
@@ -53,4 +53,4 @@ extern std::string rel_timestamp();
 // close the namespace
 };
 
-#endif /* __U4C_COMMON_HXX__ */
+#endif /* __NP_COMMON_HXX__ */

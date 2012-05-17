@@ -1,6 +1,6 @@
-#include "u4c/job.hxx"
+#include "np/job.hxx"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 unsigned int job_t::next_id_ = 1;

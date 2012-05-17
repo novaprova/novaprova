@@ -1,30 +1,30 @@
 /* uasserts.c - functions for graceful CuT failures */
-#include "u4c.h"
-#include "u4c_priv.h"
+#include "np.h"
+#include "np_priv.h"
 #include "except.h"
 
 void
-__u4c_pass(const char *file, int line)
+__np_pass(const char *file, int line)
 {
-    u4c_throw(u4c::event_t(u4c::EV_EXPASS, "U4C_PASS called").at_line(file, line));
+    np_throw(np::event_t(np::EV_EXPASS, "U4C_PASS called").at_line(file, line));
 }
 
 void
-__u4c_fail(const char *file, int line)
+__np_fail(const char *file, int line)
 {
-    u4c_throw(u4c::event_t(u4c::EV_EXFAIL, "U4C_FAIL called")
+    np_throw(np::event_t(np::EV_EXFAIL, "U4C_FAIL called")
 		.at_line(file, line).with_stack());
 }
 
 void
-__u4c_notapplicable(const char *file, int line)
+__np_notapplicable(const char *file, int line)
 {
-    u4c_throw(u4c::event_t(u4c::EV_EXNA, "U4C_NOTAPPLICABLE called")
+    np_throw(np::event_t(np::EV_EXNA, "U4C_NOTAPPLICABLE called")
 		.at_line(file, line).with_stack());
 }
 
 void
-__u4c_assert_failed(const char *file,
+__np_assert_failed(const char *file,
 		    int line,
 		    const char *fmt,
 		    ...)
@@ -36,7 +36,7 @@ __u4c_assert_failed(const char *file,
     vsnprintf(condition, sizeof(condition), fmt, args);
     va_end(args);
 
-    u4c_throw(u4c::event_t(u4c::EV_ASSERT, condition)
+    np_throw(np::event_t(np::EV_ASSERT, condition)
 	    .at_line(file, line).with_stack());
 }
 

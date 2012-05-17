@@ -1,7 +1,7 @@
 
 #include "classifier.hxx"
 
-namespace u4c {
+namespace np {
 
 const char *
 classifier_t::error_string() const
@@ -25,7 +25,7 @@ classifier_t::set_regexp(const char *re, bool case_sensitive)
 		    REG_EXTENDED|(case_sensitive ? 0 : REG_ICASE));
     if (error_)
     {
-	fprintf(stderr, "u4c: bad classifier %s\n", error_string());
+	fprintf(stderr, "np: bad classifier %s\n", error_string());
 	return false;
     }
     return true;
@@ -52,7 +52,7 @@ classifier_t::classify(const char *func,
 	    size_t len = match[1].rm_eo - match[1].rm_so;
 	    if (len >= maxmatch)
 	    {
-		fprintf(stderr, "u4c: match for classifier %s too long\n",
+		fprintf(stderr, "np: match for classifier %s too long\n",
 				re_);
 		return results_[0];
 	    }
@@ -66,7 +66,7 @@ classifier_t::classify(const char *func,
     if (r != REG_NOMATCH)
     {
 	/* some runtime error */
-	fprintf(stderr, "u4c: failed matching \"%s\": %s\n",
+	fprintf(stderr, "np: failed matching \"%s\": %s\n",
 		func, error_string());
     }
 

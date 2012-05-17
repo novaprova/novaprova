@@ -1,11 +1,11 @@
-#ifndef __U4C_LISTENER_H__
-#define __U4C_LISTENER_H__ 1
+#ifndef __NP_LISTENER_H__
+#define __NP_LISTENER_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/types.hxx"
+#include "np/common.hxx"
+#include "np/types.hxx"
 
 
-namespace u4c {
+namespace np {
 
 class event_t;
 class job_t;
@@ -26,4 +26,4 @@ public:
 // close the namespace
 };
 
-#endif /* __U4C_LISTENER_H__ */
+#endif /* __NP_LISTENER_H__ */

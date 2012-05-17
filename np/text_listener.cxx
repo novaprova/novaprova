@@ -1,8 +1,8 @@
-#include "u4c/text_listener.hxx"
-#include "u4c/job.hxx"
+#include "np/text_listener.hxx"
+#include "np/job.hxx"
 #include "except.h"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -12,20 +12,20 @@ text_listener_t::begin()
 {
     nrun_ = 0;
     nfailed_ = 0;
-    fprintf(stderr, "u4c: running\n");
+    fprintf(stderr, "np: running\n");
 }
 
 void
 text_listener_t::end()
 {
-    fprintf(stderr, "u4c: %u run %u failed\n",
+    fprintf(stderr, "np: %u run %u failed\n",
 	    nrun_, nfailed_);
 }
 
 void
 text_listener_t::begin_job(const job_t *j)
 {
-    fprintf(stderr, "u4c: running: \"%s\"\n", j->as_string().c_str());
+    fprintf(stderr, "np: running: \"%s\"\n", j->as_string().c_str());
 }
 
 void

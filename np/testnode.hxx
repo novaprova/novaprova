@@ -1,13 +1,13 @@
-#ifndef __U4C_TESTNODE_H__
-#define __U4C_TESTNODE_H__ 1
+#ifndef __NP_TESTNODE_H__
+#define __NP_TESTNODE_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/types.hxx"
+#include "np/common.hxx"
+#include "np/types.hxx"
 #include "spiegel/spiegel.hxx"
 #include <string>
 #include <list>
 
-namespace u4c {
+namespace np {
 
 class testnode_t
 {
@@ -113,4 +113,4 @@ int operator==(const std::vector<testnode_t::assignment_t> &a,
 // close the namespace
 };
 
-#endif /* __U4C_TESTNODE_H__ */
+#endif /* __NP_TESTNODE_H__ */

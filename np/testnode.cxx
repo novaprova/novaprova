@@ -1,8 +1,8 @@
-#include "u4c/testnode.hxx"
-#include "u4c/redirect.hxx"
+#include "np/testnode.hxx"
+#include "np/redirect.hxx"
 #include "spiegel/tok.hxx"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 testnode_t::testnode_t(const char *name)
@@ -56,7 +56,7 @@ void
 testnode_t::set_function(functype_t ft, spiegel::function_t *func)
 {
     if (funcs_[ft])
-	fprintf(stderr, "u4c: WARNING: duplicate %s functions: "
+	fprintf(stderr, "np: WARNING: duplicate %s functions: "
 			"%s:%s and %s:%s\n",
 			as_string(ft),
 			funcs_[ft]->get_compile_unit()->get_absolute_path().c_str(),

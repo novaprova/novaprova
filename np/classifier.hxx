@@ -1,10 +1,10 @@
-#ifndef __U4C_CLASSIFIER_H__
-#define __U4C_CLASSIFIER_H__ 1
+#ifndef __NP_CLASSIFIER_H__
+#define __NP_CLASSIFIER_H__ 1
 
-#include "u4c/common.hxx"
+#include "np/common.hxx"
 #include <regex.h>
 
-namespace u4c {
+namespace np {
 
 class classifier_t
 {
@@ -42,5 +42,5 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_CLASSIFIER_H__ */
+#endif /* __NP_CLASSIFIER_H__ */
 

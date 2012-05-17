@@ -1,6 +1,6 @@
-#include "u4c/types.hxx"
+#include "np/types.hxx"
 
-namespace u4c {
+namespace np {
 
 const char *
 as_string(functype_t type)

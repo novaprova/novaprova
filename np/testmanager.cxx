@@ -1,11 +1,11 @@
-#include "u4c.h"
-#include "u4c/testmanager.hxx"
-#include "u4c/testnode.hxx"
-#include "u4c/classifier.hxx"
+#include "np.h"
+#include "np/testmanager.hxx"
+#include "np/testnode.hxx"
+#include "np/classifier.hxx"
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 testmanager_t *testmanager_t::instance_ = 0;
@@ -100,7 +100,7 @@ testmanager_t::setup_classifiers()
     add_classifier("^[cC]leanup$", false, FT_AFTER);
     add_classifier("^mock_(.*)", false, FT_MOCK);
     add_classifier("^[mM]ock([A-Z].*)", false, FT_MOCK);
-    add_classifier("^__u4c_parameter_(.*)", false, FT_PARAM);
+    add_classifier("^__np_parameter_(.*)", false, FT_PARAM);
 }
 
 static string
@@ -140,12 +140,12 @@ testmanager_t::find_mock_target(string name)
     return 0;
 }
 
-static const struct __u4c_param_dec *
+static const struct __np_param_dec *
 get_param_dec(spiegel::function_t *fn)
 {
     vector<spiegel::value_t> args;
     spiegel::value_t ret = fn->invoke(args);
-    return (const struct __u4c_param_dec *)ret.val.vpointer;
+    return (const struct __np_param_dec *)ret.val.vpointer;
 }
 
 void
@@ -221,7 +221,7 @@ testmanager_t::discover_functions()
 		// Parameters need a name
 		if (!submatch[0])
 		    continue;
-		const struct __u4c_param_dec *dec = get_param_dec(fn);
+		const struct __np_param_dec *dec = get_param_dec(fn);
 		root_->make_path(test_name(fn, 0))->add_parameter(
 				submatch, dec->var, dec->values);
 		break;

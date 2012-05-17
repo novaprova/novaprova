@@ -1,6 +1,6 @@
-#include "u4c/event.hxx"
+#include "np/event.hxx"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 event_t &event_t::with_stack()
@@ -177,7 +177,7 @@ string event_t::get_short_location() const
 	if (locflags & LT_FUNCTYPE)
 	{
 	    s += "(";
-	    s += u4c::as_string((functype_t)functype);
+	    s += np::as_string((functype_t)functype);
 	    s += ") ";
 	}
 	s += function;

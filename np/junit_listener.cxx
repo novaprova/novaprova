@@ -1,10 +1,10 @@
-#include "u4c/common.hxx"
+#include "np/common.hxx"
 #include <libxml++/document.h>
-#include "u4c/junit_listener.hxx"
-#include "u4c/job.hxx"
+#include "np/junit_listener.hxx"
+#include "np/job.hxx"
 #include "except.h"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

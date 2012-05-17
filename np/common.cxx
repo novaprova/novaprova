@@ -1,9 +1,9 @@
-#include "u4c/common.hxx"
+#include "np/common.hxx"
 
-namespace u4c {
+namespace np {
 using namespace std;
 
-const char *argv0 = "u4c";
+const char *argv0 = "np";
 
 static void oom(void) __attribute__((noreturn));
 

@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
-#include <u4c.h>
+#include <np.h>
 
 static void test_assert_fail(void)
 {
@@ -125,8 +125,8 @@ int
 main(int argc, char **argv)
 {
     int ec = 0;
-    u4c_runner_t *runner = u4c_init();
-    ec = u4c_run_tests(runner, 0);
-    u4c_done(runner);
+    np_runner_t *runner = np_init();
+    ec = np_run_tests(runner, 0);
+    np_done(runner);
     exit(ec);
 }

@@ -1,19 +1,19 @@
-#include "u4c/runner.hxx"
-#include "u4c/testnode.hxx"
-#include "u4c/job.hxx"
-#include "u4c/plan.hxx"
-#include "u4c/text_listener.hxx"
-#include "u4c/proxy_listener.hxx"
-#include "u4c/junit_listener.hxx"
-#include "u4c/child.hxx"
+#include "np/runner.hxx"
+#include "np/testnode.hxx"
+#include "np/job.hxx"
+#include "np/plan.hxx"
+#include "np/text_listener.hxx"
+#include "np/proxy_listener.hxx"
+#include "np/junit_listener.hxx"
+#include "np/child.hxx"
 #include "spiegel/spiegel.hxx"
-#include "u4c_priv.h"
+#include "np_priv.h"
 #include "except.h"
 #include <valgrind/memcheck.h>
 
-__u4c_exceptstate_t __u4c_exceptstate;
+__np_exceptstate_t __np_exceptstate;
 
-namespace u4c {
+namespace np {
 using namespace std;
 
 #define dispatch_listeners(func, ...) \
@@ -192,7 +192,7 @@ runner_t::fork_child(job_t *j)
     r = pipe(pipefd);
     if (r < 0)
     {
-	perror("u4c: pipe");
+	perror("np: pipe");
 	exit(1);
     }
 
@@ -204,13 +204,13 @@ runner_t::fork_child(job_t *j)
 	    if (errno == EAGAIN && max_sleeps-- > 0)
 	    {
 		/* rats, we fork-bombed, try again after a delay */
-		fprintf(stderr, "u4c: fork bomb! sleeping %u ms.\n",
+		fprintf(stderr, "np: fork bomb! sleeping %u ms.\n",
 			delay_ms);
 		poll(0, 0, delay_ms);
 		delay_ms += (delay_ms>>1);	/* exponential backoff */
 		continue;
 	    }
-	    perror("u4c: fork");
+	    perror("np: fork");
 	    exit(1);
 	}
 	break;
@@ -226,7 +226,7 @@ runner_t::fork_child(job_t *j)
 
     /* parent process */
 
-    fprintf(stderr, "u4c: spawned child process %d for %s\n",
+    fprintf(stderr, "np: spawned child process %d for %s\n",
 	    (int)pid, j->as_string().c_str());
     close(pipefd[PIPE_WRITE]);
     child = new child_t(pid, pipefd[PIPE_READ], j);
@@ -291,7 +291,7 @@ runner_t::handle_events()
 	{
 	    if (errno == EINTR)
 		continue;
-	    perror("u4c: poll");
+	    perror("np: poll");
 	    return;
 	}
 	if (r == 0)
@@ -329,12 +329,12 @@ runner_t::reap_children()
 	{
 	    if (errno == ESRCH || errno == ECHILD)
 		break;
-	    perror("u4c: waitpid");
+	    perror("np: waitpid");
 	    return;
 	}
 	if (WIFSTOPPED(status))
 	{
-	    fprintf(stderr, "u4c: process %d stopped on signal %d, ignoring\n",
+	    fprintf(stderr, "np: process %d stopped on signal %d, ignoring\n",
 		    (int)pid, WSTOPSIG(status));
 	    continue;
 	}
@@ -346,7 +346,7 @@ runner_t::reap_children()
 	if (itr == children_.end())
 	{
 	    /* some other process */
-	    fprintf(stderr, "u4c: reaped stray process %d\n", (int)pid);
+	    fprintf(stderr, "np: reaped stray process %d\n", (int)pid);
 	    /* TODO: this is probably eventworthy */
 	    continue;	    /* whatever */
 	}
@@ -373,7 +373,7 @@ runner_t::reap_children()
 	}
 
 	/* test is finished; if nothing went wrong then PASS */
-	child->merge_result(u4c::R_PASS);
+	child->merge_result(np::R_PASS);
 
 	/* notify listeners */
 	nfailed_ += (child->get_result() == R_FAIL);
@@ -409,7 +409,7 @@ runner_t::run_function(functype_t ft, spiegel::function_t *f)
 	{
 	    static char cond[64];
 	    snprintf(cond, sizeof(cond), "fixture returned %d", r);
-	    u4c_throw(event_t(EV_FIXTURE, cond).in_function(f));
+	    np_throw(event_t(EV_FIXTURE, cond).in_function(f));
 	}
     }
 }
@@ -462,11 +462,11 @@ runner_t::run_test_code(job_t *j)
 
     j->pre_run(false);
 
-    u4c_try
+    np_try
     {
 	run_fixtures(tn, FT_BEFORE);
     }
-    u4c_catch(ev)
+    np_catch(ev)
     {
 	ev->in_functype(FT_BEFORE);
 	res = merge(res, raise_event(j, ev));
@@ -474,21 +474,21 @@ runner_t::run_test_code(job_t *j)
 
     if (res == R_UNKNOWN)
     {
-	u4c_try
+	np_try
 	{
 	    run_function(FT_TEST, tn->get_function(FT_TEST));
 	}
-	u4c_catch(ev)
+	np_catch(ev)
 	{
 	    ev->in_functype(FT_TEST);
 	    res = merge(res, raise_event(j, ev));
 	}
 
-	u4c_try
+	np_try
 	{
 	    run_fixtures(tn, FT_AFTER);
 	}
-	u4c_catch(ev)
+	np_catch(ev)
 	{
 	    ev->in_functype(FT_AFTER);
 	    res = merge(res, raise_event(j, ev));
@@ -531,7 +531,7 @@ runner_t::begin_job(job_t *j)
     set_listener(new proxy_listener_t(event_pipe_));
     res = run_test_code(j);
     dispatch_listeners(end_job, j, res);
-    fprintf(stderr, "u4c: child process %d (%s) finishing\n",
+    fprintf(stderr, "np: child process %d (%s) finishing\n",
 	    (int)getpid(), j->as_string().c_str());
     delete j;
     exit(0);
@@ -556,7 +556,7 @@ runner_t::wait()
  * system.
  */
 extern "C" void
-u4c_set_concurrency(u4c_runner_t *runner, int n)
+np_set_concurrency(np_runner_t *runner, int n)
 {
     runner->set_concurrency(n);
 }
@@ -569,7 +569,7 @@ u4c_set_concurrency(u4c_runner_t *runner, int n)
  * order.
  */
 extern "C" void
-u4c_list_tests(u4c_runner_t *runner, u4c_plan_t *plan)
+np_list_tests(np_runner_t *runner, np_plan_t *plan)
 {
     runner->list_tests(plan);
 }
@@ -586,14 +586,14 @@ u4c_list_tests(u4c_runner_t *runner, u4c_plan_t *plan)
  *
  *  - *"text"* a stream of tests and events is emitted to stdout,
  *    co-mingled with anything emitted to stdout by the test code.
- *    This is the default if `u4c_set_output_format` is not called.
+ *    This is the default if `np_set_output_format` is not called.
  *
  * Note that the function is a misnomer, it actually *adds* an output
  * format. Also note that if the C++ API were documented, you could
- * write your own output formats by deriving from `u4c::listener_t`.
+ * write your own output formats by deriving from `np::listener_t`.
  */
 extern "C" void
-u4c_set_output_format(u4c_runner_t *runner, const char *fmt)
+np_set_output_format(np_runner_t *runner, const char *fmt)
 {
     if (!strcmp(fmt, "junit"))
 	runner->add_listener(new junit_listener_t);
@@ -612,7 +612,7 @@ u4c_set_output_format(u4c_runner_t *runner, const char *fmt)
  * Returns 0 on success or non-zero if any tests failed.
  */
 extern "C" int
-u4c_run_tests(u4c_runner_t *runner, u4c_plan_t *plan)
+np_run_tests(np_runner_t *runner, np_plan_t *plan)
 {
     return runner->run_tests(plan);
 }

@@ -1,11 +1,11 @@
-#ifndef __U4C_JOB_H__
-#define __U4C_JOB_H__ 1
+#ifndef __NP_JOB_H__
+#define __NP_JOB_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/testnode.hxx"
-#include "u4c/plan.hxx"
+#include "np/common.hxx"
+#include "np/testnode.hxx"
+#include "np/plan.hxx"
 
-namespace u4c {
+namespace np {
 
 class job_t
 {
@@ -37,4 +37,4 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_JOB_H__ */
+#endif /* __NP_JOB_H__ */

@@ -1,13 +1,13 @@
-#ifndef __U4C_RUNNER_H__
-#define __U4C_RUNNER_H__ 1
+#ifndef __NP_RUNNER_H__
+#define __NP_RUNNER_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/types.hxx"
+#include "np/common.hxx"
+#include "np/types.hxx"
 #include <vector>
 
 namespace spiegel { class function_t; };
 
-namespace u4c {
+namespace np {
 
 struct event_t;
 class listener_t;
@@ -61,5 +61,5 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_RUNNER_H__ */
+#endif /* __NP_RUNNER_H__ */
 

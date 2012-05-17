@@ -1,7 +1,7 @@
-#ifndef __U4C_TYPES_H__
-#define __U4C_TYPES_H__ 1
+#ifndef __NP_TYPES_H__
+#define __NP_TYPES_H__ 1
 
-namespace u4c {
+namespace np {
 
 enum result_t
 {
@@ -35,4 +35,4 @@ extern const char *as_string(functype_t);
 // close the namespace
 };
 
-#endif /* __U4C_TYPES_H__ */
+#endif /* __NP_TYPES_H__ */

@@ -1,9 +1,9 @@
-#ifndef __U4C_JUNIT_LISTENER_H__
-#define __U4C_JUNIT_LISTENER_H__ 1
+#ifndef __NP_JUNIT_LISTENER_H__
+#define __NP_JUNIT_LISTENER_H__ 1
 
-#include "u4c/listener.hxx"
+#include "np/listener.hxx"
 
-namespace u4c {
+namespace np {
 
 class junit_listener_t : public listener_t
 {
@@ -44,4 +44,4 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_JUNIT_LISTENER_H__ */
+#endif /* __NP_JUNIT_LISTENER_H__ */

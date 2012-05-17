@@ -1,15 +1,15 @@
-#ifndef __U4C_TESTMANAGER_H__
-#define __U4C_TESTMANAGER_H__ 1
+#ifndef __NP_TESTMANAGER_H__
+#define __NP_TESTMANAGER_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/types.hxx"
-#include "u4c/testnode.hxx"
+#include "np/common.hxx"
+#include "np/types.hxx"
+#include "np/testnode.hxx"
 #include <string>
 #include <vector>
 
 namespace spiegel { namespace dwarf { class state_t; } }
 
-namespace u4c {
+namespace np {
 
 class classifier_t;
 
@@ -50,4 +50,4 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_TESTMANAGER_H__ */
+#endif /* __NP_TESTMANAGER_H__ */

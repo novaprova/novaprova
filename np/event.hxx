@@ -1,12 +1,12 @@
-#ifndef __U4C_EVENT_H__
-#define __U4C_EVENT_H__ 1
+#ifndef __NP_EVENT_H__
+#define __NP_EVENT_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c/types.hxx"
+#include "np/common.hxx"
+#include "np/types.hxx"
 #include "spiegel/spiegel.hxx"
 #include <string>
 
-namespace u4c {
+namespace np {
 
 enum events_t
 {
@@ -15,7 +15,7 @@ enum events_t
     EV_SIGNAL,		/* CuT caused a fatal signal */
     EV_SYSLOG,		/* CuT did a syslog() */
     EV_FIXTURE,		/* fixture code returned an error */
-    EV_EXPASS,		/* CuT explicitly called U4C_PASS */
+    EV_EXPASS,		/* CuT explicitly called NP_PASS */
     EV_EXFAIL,		/* ... */
     EV_EXNA,		/* ... */
     EV_VALGRIND,	/* Valgrind spotted a memleak or error */
@@ -143,4 +143,4 @@ private:
 // close the namespace
 };
 
-#endif /* __U4C_EVENT_H__ */
+#endif /* __NP_EVENT_H__ */

@@ -1,5 +1,5 @@
 /* icunit.c - intercept CUnit assert failures in CUT */
-#include "u4c_priv.h"
+#include "np_priv.h"
 #include "except.h"
 #include <valgrind/valgrind.h>
 
@@ -13,7 +13,7 @@ bool CU_assertImplementation(bool bValue,
 //     fprintf(stderr, "    %s at %s:%u\n", strCondition, strFile, uiLine);
     if (!bValue)
     {
-	u4c_throw(u4c::event_t(u4c::EV_ASSERT, strCondition).at_line(
+	np_throw(np::event_t(np::EV_ASSERT, strCondition).at_line(
 		  strFile, uiLine).in_function(strFunction).with_stack());
     }
     return true;

@@ -1,8 +1,8 @@
-#ifndef __U4C_PRIV_H__
-#define __U4C_PRIV_H__ 1
+#ifndef __NP_PRIV_H__
+#define __NP_PRIV_H__ 1
 
-#include "u4c/common.hxx"
-#include "u4c.h"
+#include "np/common.hxx"
+#include "np.h"
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
 #include "spiegel/filename.hxx"
@@ -10,16 +10,16 @@
 #include <list>
 #include <string>
 
-#include "u4c/types.hxx"
-#include "u4c/classifier.hxx"
-#include "u4c/child.hxx"
-#include "u4c/testnode.hxx"
-#include "u4c/listener.hxx"
-#include "u4c/text_listener.hxx"
-#include "u4c/proxy_listener.hxx"
-#include "u4c/plan.hxx"
-#include "u4c/testmanager.hxx"
-#include "u4c/redirect.hxx"
-#include "u4c/runner.hxx"
+#include "np/types.hxx"
+#include "np/classifier.hxx"
+#include "np/child.hxx"
+#include "np/testnode.hxx"
+#include "np/listener.hxx"
+#include "np/text_listener.hxx"
+#include "np/proxy_listener.hxx"
+#include "np/plan.hxx"
+#include "np/testmanager.hxx"
+#include "np/redirect.hxx"
+#include "np/runner.hxx"
 
-#endif /* __U4C_PRIV_H__ */
+#endif /* __NP_PRIV_H__ */
