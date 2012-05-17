@@ -4,7 +4,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-/** @file np.h NovaProva C API */
+/** @file np.h
+ * NovaProva C API.
+ * @author Greg Banks <gnb@fastmail.fm>
+ */
 
 #ifdef __cplusplus
 namespace np {
