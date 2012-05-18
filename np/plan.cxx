@@ -94,6 +94,8 @@ void plan_t::iterator::find_testable_node()
 /**
  * Create a new `np_plan_t` object.
  *
+ * @return	a new plan object
+ *
  * A plan object can be used to configure a `np_runner_t` object to run
  * (or list to stdout) a subset of all the discovered tests.  Note that
  * if you want to run all tests, you do not need to create a plan at
@@ -106,7 +108,8 @@ np_plan_new(void)
 }
 
 /**
- * Delete a plan object.
+ * Destroys a plan object.
+ * @param plan	    the plan object to destroy
  */
 extern "C" void
 np_plan_delete(np_plan_t *plan)
@@ -117,15 +120,17 @@ np_plan_delete(np_plan_t *plan)
 /**
  * Add test specifications to a plan object.
  *
+ * @param plan	    the plan object
+ * @param nspec	    number of specification strings
+ * @param spec	    array of specification strings
+ * @return	    false if any of the test specifications could not be found, true on success.
+ *
  * Add a sequence of test specifications to the plan object.  Each test
  * specification is a string which matches a testnode in the discovered
  * testnode hierarchy, and will cause that node plus all of its
  * descendants to be added to the plan.  The interface is designed to
  * take command-line arguments from your test runner program after
  * options have been parsed with `getopt`.
- *
- * Returns false if any of the test specifications could not be found,
- * true on success.
  */
 extern "C" bool
 np_plan_add_specs(np_plan_t *plan, int nspec, const char **spec)

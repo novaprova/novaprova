@@ -59,6 +59,8 @@ be_valground(void)
 /**
  * Initialise the NovaProva library.
  *
+ * @return	a new runner object
+ *
  * You should call `np_init()` to initialise NovaProva before running
  * any tests.  It discovers tests in the current executable, and returns
  * a pointer to a `np_runner_t` object which you can pass to
@@ -81,6 +83,8 @@ np_init(void)
 
 /**
  * Shut down the NovaProva library.
+ *
+ * @param runner    The runner object to destroy
  *
  * Destroys the given `np_runner_t` object and shuts down the library.
  */

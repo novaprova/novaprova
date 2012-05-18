@@ -182,6 +182,8 @@ extern void __np_assert_failed(const char *filename, int lineno,
 extern void __np_syslog_fail(const char *re, const char *, int);
 /** Set up to FAIL the test on syslog messages matching a regexp.
  *
+ * @param re	    POSIX extended regular expression to match
+ *
  * From this point until the end of the test, if any code emits a
  * message to `syslog` which matches the given regular expression, the
  * test will FAIL immediately as if `NP_FAIL` had been called from
@@ -191,6 +193,8 @@ extern void __np_syslog_fail(const char *re, const char *, int);
     __np_syslog_fail((re), __FILE__, __LINE__)
 extern void __np_syslog_ignore(const char *re, const char *, int);
 /** Set up to ignore syslog messages matching a regexp.
+ *
+ * @param re	    POSIX extended regular expression to match
  *
  * From this point until the end of the test function, if any code emits
  * a message to `syslog` which matches the given regular expression,
@@ -202,6 +206,9 @@ extern void __np_syslog_ignore(const char *re, const char *, int);
     __np_syslog_ignore((re), __FILE__, __LINE__)
 extern void __np_syslog_match(const char *re, int tag, const char *, int);
 /** Set up to count syslog messages matching a regexp.
+ *
+ * @param re	    POSIX extended regular expression to match
+ * @param tag	    tag for later matching of counts
  *
  * From this point until the end of the test function, if any code emits
  * a message to `syslog` which matches the given regular expression, a
@@ -215,9 +222,12 @@ extern void __np_syslog_match(const char *re, int tag, const char *, int);
 extern unsigned int __np_syslog_count(int tag, const char *, int);
 /** Return the number of syslog matches for the given tag.
  *
- * Returns the number of messages emited to `syslog` which matched a
- * regexp set up earlier using `np_syslog_match`.  If `tag` is less
- * than zero, all match counts will be returned, otherwise only the
+ * @param tag	    tag to choose which matches to count, or -1 for all
+ * @return	    count of matched messages
+ *
+ * Calculate and return the number of messages emitted to `syslog` which
+ * matched a regexp set up earlier using `np_syslog_match`.  If `tag` is
+ * less than zero, all match counts will be returned, otherwise only the
  * match counts for regexps registered with the same tag will be
  * returned.
  */
@@ -232,6 +242,9 @@ struct __np_param_dec
 };
 /**
  * Statically define a test parameter and its values.
+ *
+ * @param nm	    C identifier of the variable to be declared
+ * @param vals	    string literal with the set of values to apply
  *
  * Define a `static char *` variable called `nm`, and declare it as a
  * test parameter on the testnode corresponding to the source file in

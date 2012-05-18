@@ -549,6 +549,9 @@ runner_t::wait()
 /**
  * Set the limit on test job parallelism
  *
+ * @param runner	the runner object
+ * @param n		concurrency value to set
+ *
  * Set the maximum number of test jobs which will be run at the same
  * time, to `n`.  The default value is 1, meaning tests will be run
  * serially.  A value of 0 is shorthand for one job per online CPU in
@@ -564,6 +567,9 @@ np_set_concurrency(np_runner_t *runner, int n)
 /**
  * Print the names of the tests in the plan to stdout.
  *
+ * @param runner	the runner object
+ * @param plan		optional plan object
+ *
  * If `plan` is NULL, a temporary default plan is created which
  * will result in all the discovered tests being listed in testnode tree
  * order.
@@ -576,6 +582,9 @@ np_list_tests(np_runner_t *runner, np_plan_t *plan)
 
 /**
  * Set the output format.
+ *
+ * @param runner	the runner object
+ * @param fmt		string naming the output format
  *
  * Set the format in which test results will be emitted.  Available
  * formats are:
@@ -604,12 +613,14 @@ np_set_output_format(np_runner_t *runner, const char *fmt)
 /**
  * Run all the tests in the plan.
  *
+ * @param runner	the runner object
+ * @param plan		optional plan object
+ * @return		0 on success or non-zero if any tests failed.
+ *
  * Uses the `runner` object to run all the tests described in the `plan`
  * object.  If `plan` is NULL, a temporary default plan is created which
  * will result in all the discovered tests being run in testnode tree
  * order.
- *
- * Returns 0 on success or non-zero if any tests failed.
  */
 extern "C" int
 np_run_tests(np_runner_t *runner, np_plan_t *plan)
