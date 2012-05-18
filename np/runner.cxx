@@ -553,7 +553,7 @@ runner_t::wait()
  * @param n		concurrency value to set
  *
  * Set the maximum number of test jobs which will be run at the same
- * time, to `n`.  The default value is 1, meaning tests will be run
+ * time, to @a n.  The default value is 1, meaning tests will be run
  * serially.  A value of 0 is shorthand for one job per online CPU in
  * the system, which is likely to be the most efficient use of the
  * system.
@@ -570,7 +570,7 @@ np_set_concurrency(np_runner_t *runner, int n)
  * @param runner	the runner object
  * @param plan		optional plan object
  *
- * If `plan` is NULL, a temporary default plan is created which
+ * If @a plan is NULL, a temporary default plan is created which
  * will result in all the discovered tests being listed in testnode tree
  * order.
  */
@@ -589,17 +589,17 @@ np_list_tests(np_runner_t *runner, np_plan_t *plan)
  * Set the format in which test results will be emitted.  Available
  * formats are:
  *
- *  - *"junit"* a directory called _reports/_ will be created with XML
+ *  - @b "junit" a directory called @c reports/ will be created with XML
  *    files in jUnit format, suitable for use with upstream processors
  *    which accept jUnit files, such as the Jenkins CI server.
  *
- *  - *"text"* a stream of tests and events is emitted to stdout,
+ *  - @b "text" a stream of tests and events is emitted to stdout,
  *    co-mingled with anything emitted to stdout by the test code.
- *    This is the default if `np_set_output_format` is not called.
+ *    This is the default if @c np_set_output_format is not called.
  *
- * Note that the function is a misnomer, it actually *adds* an output
+ * Note that the function is a misnomer, it actually @b adds an output
  * format. Also note that if the C++ API were documented, you could
- * write your own output formats by deriving from `np::listener_t`.
+ * write your own output formats by deriving from @c np::listener_t.
  */
 extern "C" void
 np_set_output_format(np_runner_t *runner, const char *fmt)
@@ -617,8 +617,8 @@ np_set_output_format(np_runner_t *runner, const char *fmt)
  * @param plan		optional plan object
  * @return		0 on success or non-zero if any tests failed.
  *
- * Uses the `runner` object to run all the tests described in the `plan`
- * object.  If `plan` is NULL, a temporary default plan is created which
+ * Uses the @a runner object to run all the tests described in the @a plan
+ * object.  If @a plan is NULL, a temporary default plan is created which
  * will result in all the discovered tests being run in testnode tree
  * order.
  */
