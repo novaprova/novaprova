@@ -1,7 +1,7 @@
 #ifndef __NP_JOB_H__
 #define __NP_JOB_H__ 1
 
-#include "np/common.hxx"
+#include "np/util/common.hxx"
 #include "np/testnode.hxx"
 #include "np/plan.hxx"
 

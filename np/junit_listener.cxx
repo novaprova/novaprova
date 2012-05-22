@@ -1,4 +1,4 @@
-#include "np/common.hxx"
+#include "np/util/common.hxx"
 #include <libxml++/document.h>
 #include "np/junit_listener.hxx"
 #include "np/job.hxx"

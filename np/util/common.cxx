@@ -1,4 +1,4 @@
-#include "np/common.hxx"
+#include "np/util/common.hxx"
 
 namespace np {
 using namespace std;

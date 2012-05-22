@@ -1,5 +1,5 @@
 /* iexit.c - intercept exit() calls from CUT */
-#include "np/common.hxx"
+#include "np/util/common.hxx"
 #include "except.h"
 #include <stdlib.h>
 #include <unistd.h>

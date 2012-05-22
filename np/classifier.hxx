@@ -1,7 +1,7 @@
 #ifndef __NP_CLASSIFIER_H__
 #define __NP_CLASSIFIER_H__ 1
 
-#include "np/common.hxx"
+#include "np/util/common.hxx"
 #include <regex.h>
 
 namespace np {

@@ -37,7 +37,6 @@ libnp_SOURCE=	\
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
 		np/child.cxx \
 		np/classifier.cxx \
-		np/common.cxx \
 		np/event.cxx \
 		np/job.cxx \
 		np/junit_listener.cxx \
@@ -48,6 +47,7 @@ libnp_SOURCE=	\
 		np/testnode.cxx \
 		np/text_listener.cxx \
 		np/types.cxx \
+		np/util/common.cxx \
 		spiegel/dwarf/abbrev.cxx \
 		spiegel/dwarf/compile_unit.cxx \
 		spiegel/dwarf/entry.cxx \
@@ -66,8 +66,8 @@ libnp_SOURCE=	\
 		spiegel/tok.cxx \
 
 libnp_PRIVHEADERS= \
-		np/common.hxx \
 		np_priv.h \
+		np/util/common.hxx \
 		spiegel/dwarf/abbrev.hxx \
 		spiegel/dwarf/compile_unit.hxx \
 		spiegel/dwarf/entry.hxx \

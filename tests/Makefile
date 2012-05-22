@@ -51,3 +51,5 @@ check: $(TESTS)
 
 clean:
 	$(RM) $(TESTS) spiegeltest
+
+distclean: clean
