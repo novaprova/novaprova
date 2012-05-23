@@ -1,5 +1,5 @@
-#include "spiegel/common.hxx"
-#include "spiegel/intercept.hxx"
+#include "np/spiegel/common.hxx"
+#include "np/spiegel/intercept.hxx"
 #include "common.hxx"
 
 #include <dlfcn.h>
@@ -15,7 +15,7 @@
 #define MIN(x, y)   ((x) < (y) ? (x) : (y))
 #endif
 
-namespace spiegel { namespace platform {
+namespace np { namespace spiegel { namespace platform {
 using namespace std;
 using namespace np::util;
 
@@ -91,16 +91,16 @@ vector<linkobj_t> get_linkobjs()
     return vec;
 }
 
-static vector<spiegel::mapping_t> plts;
+static vector<np::spiegel::mapping_t> plts;
 
-void add_plt(const spiegel::mapping_t &m)
+void add_plt(const np::spiegel::mapping_t &m)
 {
     plts.push_back(m);
 }
 
-static bool is_in_plt(spiegel::addr_t addr)
+static bool is_in_plt(np::spiegel::addr_t addr)
 {
-    vector<spiegel::mapping_t>::const_iterator i;
+    vector<np::spiegel::mapping_t>::const_iterator i;
     for (i = plts.begin() ; i != plts.end() ; ++i)
     {
 	if (i->contains((void *)addr))
@@ -109,7 +109,7 @@ static bool is_in_plt(spiegel::addr_t addr)
     return false;
 }
 
-spiegel::addr_t normalise_address(spiegel::addr_t addr)
+np::spiegel::addr_t normalise_address(np::spiegel::addr_t addr)
 {
     if (is_in_plt(addr))
     {
@@ -117,7 +117,7 @@ spiegel::addr_t normalise_address(spiegel::addr_t addr)
 	memset(&info, 0, sizeof(info));
 	int r = dladdr((void *)addr, &info);
 	if (r)
-	    return (spiegel::addr_t)dlsym(RTLD_NEXT, info.dli_sname);
+	    return (np::spiegel::addr_t)dlsym(RTLD_NEXT, info.dli_sname);
     }
     return addr;
 }
@@ -202,7 +202,7 @@ text_restore(addr_t addr, size_t len)
 
 static unsigned long intercept_tramp(void);
 
-class i386_linux_call_t : public spiegel::call_t
+class i386_linux_call_t : public np::spiegel::call_t
 {
 private:
     i386_linux_call_t() {}
@@ -436,7 +436,7 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
     }
     if (si->si_pid != 0)
 	return;	    /* some process sent us SIGSEGV, wtf? */
-    if (!intercept_t::is_intercepted((spiegel::addr_t)eip))
+    if (!intercept_t::is_intercepted((np::spiegel::addr_t)eip))
 	goto wtf;   /* not an installed intercept */
 
 //     printf("handle_signal: trap from intercept breakpoint\n");
@@ -460,7 +460,7 @@ wtf:
 }
 
 int
-install_intercept(spiegel::addr_t addr)
+install_intercept(np::spiegel::addr_t addr)
 {
     int r;
 
@@ -504,7 +504,7 @@ install_intercept(spiegel::addr_t addr)
 }
 
 int
-uninstall_intercept(spiegel::addr_t addr)
+uninstall_intercept(np::spiegel::addr_t addr)
 {
     if (*(unsigned char *)addr != (using_int3 ? INSN_INT3 : INSN_HLT))
     {
@@ -557,7 +557,7 @@ out:
     }
 #endif
 
-vector<spiegel::addr_t> get_stacktrace()
+vector<np::spiegel::addr_t> get_stacktrace()
 {
     /* This only works if a frame pointer is used, i.e. it breaks
      * with -fomit-frame-pointer.
@@ -571,7 +571,7 @@ vector<spiegel::addr_t> get_stacktrace()
      * TODO: should return a vector of {ip=%eip,fp=%ebp,sp=%esp}
      */
     unsigned long bp;
-    vector<spiegel::addr_t> stack;
+    vector<np::spiegel::addr_t> stack;
 
     __asm__ volatile("movl %%ebp, %0" : "=r"(bp));
     for (;;)
@@ -589,6 +589,6 @@ vector<spiegel::addr_t> get_stacktrace()
     return stack;
 }
 
+// close namespaces
+}; }; };
 
-// close namespace
-} }

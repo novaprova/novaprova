@@ -1,6 +1,6 @@
 #include "enumerations.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
 static const char * const _secnames[DW_sec_num+1] = {
@@ -237,5 +237,5 @@ static const char * const _encvals[] = {
 };
 string_table_t encvals("DW_ATE_", _encvals);
 
-// close namespace
-} }
+// close namespaces
+}; }; };

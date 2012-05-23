@@ -3,8 +3,8 @@
 
 #include "np/util/common.hxx"
 #include "np.h"
-#include "spiegel/spiegel.hxx"
-#include "spiegel/dwarf/state.hxx"
+#include "np/spiegel/spiegel.hxx"
+#include "np/spiegel/dwarf/state.hxx"
 #include "np/util/filename.hxx"
 #include <vector>
 #include <list>

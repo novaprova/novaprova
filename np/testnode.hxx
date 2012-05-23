@@ -3,8 +3,7 @@
 
 #include "np/util/common.hxx"
 #include "np/types.hxx"
-#include "spiegel/spiegel.hxx"
-#include <string>
+#include "np/spiegel/spiegel.hxx"
 #include <list>
 
 namespace np {
@@ -22,16 +21,16 @@ public:
     testnode_t *get_parent() { return parent_; }
     testnode_t *find(const char *name);
     testnode_t *make_path(std::string name);
-    void set_function(functype_t, spiegel::function_t *);
-    void add_mock(spiegel::function_t *target, spiegel::function_t *mock);
-    void add_mock(spiegel::addr_t target, spiegel::addr_t mock);
+    void set_function(functype_t, np::spiegel::function_t *);
+    void add_mock(np::spiegel::function_t *target, np::spiegel::function_t *mock);
+    void add_mock(np::spiegel::addr_t target, np::spiegel::addr_t mock);
 
     testnode_t *detach_common();
-    spiegel::function_t *get_function(functype_t type) const
+    np::spiegel::function_t *get_function(functype_t type) const
     {
 	return funcs_[type];
     }
-    std::list<spiegel::function_t*> get_fixtures(functype_t type) const;
+    std::list<np::spiegel::function_t*> get_fixtures(functype_t type) const;
     void pre_run() const;
     void post_run() const;
 
@@ -99,8 +98,8 @@ private:
     testnode_t *parent_;
     testnode_t *children_;
     char *name_;
-    spiegel::function_t *funcs_[FT_NUM_SINGULAR];
-    std::vector<spiegel::intercept_t*> intercepts_;
+    np::spiegel::function_t *funcs_[FT_NUM_SINGULAR];
+    std::vector<np::spiegel::intercept_t*> intercepts_;
     std::vector<parameter_t*> parameters_;
 
     friend class preorder_iterator;

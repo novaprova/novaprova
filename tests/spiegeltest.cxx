@@ -1,8 +1,9 @@
-#include "spiegel/spiegel.hxx"
-#include "spiegel/dwarf/state.hxx"
+#include "np/spiegel/spiegel.hxx"
+#include "np/spiegel/dwarf/state.hxx"
 #include <dlfcn.h>
 #include <libintl.h>
 using namespace std;
+using namespace np::util;
 
 #define BASEDIR	"/tmp"
 #define TESTDIR	BASEDIR"/ggcov.filename.test"
@@ -66,15 +67,15 @@ static int
 test_filenames(int argc, char **argv __attribute__((unused)))
 {
     if (argc != 1)
-	spiegel::fatal("Usage: testrunner filenames\n");
+	np::spiegel::fatal("Usage: testrunner filenames\n");
 
     filenames_setup();
 
 #define TESTCASE(in, expected) \
 { \
-    spiegel::filename_t _in(in); \
-    spiegel::filename_t _out = _in.make_absolute(); \
-    spiegel::filename_t _exp(expected); \
+    np::spiegel::filename_t _in(in); \
+    np::spiegel::filename_t _out = _in.make_absolute(); \
+    np::spiegel::filename_t _exp(expected); \
     fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
 	_in.c_str(), _out.c_str(), _exp.c_str()); \
     assert(!strcmp(_out.c_str(), _exp.c_str())); \
@@ -100,9 +101,9 @@ test_filenames(int argc, char **argv __attribute__((unused)))
     filenames_setup();
 #define TESTCASE(in, expected) \
 { \
-    spiegel::filename_t _in(in); \
-    spiegel::filename_t _out = _in.normalise(); \
-    spiegel::filename_t _exp(expected); \
+    np::spiegel::filename_t _in(in); \
+    np::spiegel::filename_t _out = _in.normalise(); \
+    np::spiegel::filename_t _exp(expected); \
     fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
 	_in.c_str(), _out.c_str(), _exp.c_str()); \
     assert(!strcmp(_out.c_str(), _exp.c_str())); \
@@ -159,7 +160,7 @@ test_info(int argc, char **argv)
 	else if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner info [--preorder|--recursive] [--paths] [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner info [--preorder|--recursive] [--paths] [executable]\n");
 	}
 	else
 	{
@@ -169,7 +170,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -194,7 +195,7 @@ test_abbrevs(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner abbrevs [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner abbrevs [executable]\n");
 	}
 	else
 	{
@@ -204,7 +205,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -230,7 +231,7 @@ test_functions_dwarf(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner functions_dwarf [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner functions_dwarf [executable]\n");
 	}
 	else
 	{
@@ -240,7 +241,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -266,7 +267,7 @@ test_variables(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner variables [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner variables [executable]\n");
 	}
 	else
 	{
@@ -276,7 +277,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -302,7 +303,7 @@ test_structs(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner structs [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner structs [executable]\n");
 	}
 	else
 	{
@@ -312,7 +313,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -336,7 +337,7 @@ test_read_uleb128(int argc __attribute__((unused)),
 #define TESTCASE(in, out) \
     { \
 	printf(". read_uleb128(%u) ", out); fflush(stdout); \
-	spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
+	np::spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
 	uint32_t v; \
 	if (!r.read_uleb128(v) || v != out) \
 	{ \
@@ -363,7 +364,7 @@ test_read_sleb128(int argc __attribute__((unused)),
 #define TESTCASE(in, out) \
     { \
 	printf(". read_sleb128(%d) ", out); fflush(stdout); \
-	spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
+	np::spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
 	int32_t v; \
 	if (!r.read_sleb128(v) || v != out) \
 	{ \
@@ -395,7 +396,7 @@ test_compile_units(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner compile_units [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner compile_units [executable]\n");
 	}
 	else
 	{
@@ -405,7 +406,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -420,8 +421,8 @@ usage:
     printf("Compile Units\n");
     printf("=============\n");
 
-    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
-    vector<spiegel::compile_unit_t *>::iterator i;
+    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 	printf("compile_unit\n");
@@ -445,7 +446,7 @@ test_functions(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner functions [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner functions [executable]\n");
 	}
 	else
 	{
@@ -455,7 +456,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -470,14 +471,14 @@ usage:
     printf("Functions\n");
     printf("=========\n");
 
-    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
-    vector<spiegel::compile_unit_t *>::iterator i;
+    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 	printf("%s\n", (*i)->get_absolute_path().c_str());
 
-	vector<spiegel::function_t *> fns = (*i)->get_functions();
-	vector<spiegel::function_t *>::iterator j;
+	vector<np::spiegel::function_t *> fns = (*i)->get_functions();
+	vector<np::spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
 	{
 	    unsigned long addr = (unsigned long)(*j)->get_address();
@@ -504,7 +505,7 @@ test_types(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    spiegel::fatal("Usage: testrunner types [executable]\n");
+	    np::spiegel::fatal("Usage: testrunner types [executable]\n");
 	}
 	else
 	{
@@ -514,7 +515,7 @@ usage:
 	}
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -529,8 +530,8 @@ usage:
     printf("Types\n");
     printf("=====\n");
 
-    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
-    vector<spiegel::compile_unit_t *>::iterator i;
+    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 	printf("%s\n", (*i)->get_absolute_path().c_str());
@@ -544,9 +545,9 @@ usage:
 
 static void addr2line(unsigned long addr)
 {
-    spiegel::location_t loc;
+    np::spiegel::location_t loc;
 
-    if (!spiegel::describe_address(addr, loc))
+    if (!np::spiegel::describe_address(addr, loc))
     {
 	printf("address 0x%lx filename - line - class - function -\n", addr);
 	return;
@@ -580,10 +581,10 @@ test_addr2line(int argc, char **argv __attribute__((unused)))
     }
     if (argc > 3)
     {
-	spiegel::fatal("Usage: testrunner addr2line [addr [executable]]\n");
+	np::spiegel::fatal("Usage: testrunner addr2line [addr [executable]]\n");
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -624,8 +625,8 @@ __dump_stack(unsigned long ebp, unsigned long eip)
     while (ebp < top_of_stack)
     {
 	printf("%u EBP 0x%08lx EIP 0x%08lx", n, ebp, eip);
-	spiegel::location_t loc;
-	if (spiegel::describe_address(eip, loc))
+	np::spiegel::location_t loc;
+	if (np::spiegel::describe_address(eip, loc))
 	    printf(" <%s+0x%x> at %s:%u",
 		  loc.function_ ? loc.function_->get_name().c_str() : "???",
 		  loc.offset_,
@@ -684,14 +685,14 @@ another_function(int x, int y)
     return y;
 }
 
-class intercept_tester_t : public spiegel::intercept_t
+class intercept_tester_t : public np::spiegel::intercept_t
 {
 public:
     intercept_tester_t();
     ~intercept_tester_t();
 
-    void before(spiegel::call_t &);
-    void after(spiegel::call_t &);
+    void before(np::spiegel::call_t &);
+    void after(np::spiegel::call_t &);
 
     unsigned int after_count;
     unsigned int before_count;
@@ -701,7 +702,7 @@ public:
 };
 
 intercept_tester_t::intercept_tester_t()
- :  intercept_t((spiegel::addr_t)&the_function)
+ :  intercept_t((np::spiegel::addr_t)&the_function)
     // we don't initialise the counts to 0 because the
     // inherited operator new does that.
 {
@@ -712,7 +713,7 @@ intercept_tester_t::~intercept_tester_t()
 }
 
 void
-intercept_tester_t::before(spiegel::call_t &call)
+intercept_tester_t::before(np::spiegel::call_t &call)
 {
     x = call.get_arg(0);
     y = call.get_arg(1);
@@ -726,12 +727,12 @@ intercept_tester_t::before(spiegel::call_t &call)
     if (test_redirect)
     {
 	printf("REDIRECTING\n");
-	call.redirect((spiegel::addr_t)&another_function);
+	call.redirect((np::spiegel::addr_t)&another_function);
     }
 }
 
 void
-intercept_tester_t::after(spiegel::call_t &call)
+intercept_tester_t::after(np::spiegel::call_t &call)
 {
     r = call.get_retval();
     after_count++;
@@ -765,11 +766,11 @@ wide_call(int a1, int a2, int a3,
     return a1+a2+a3+a4+a5+a6+a7+a8+a9+a10+a11+a12;
 }
 
-class wide_intercept_tester_t : public spiegel::intercept_t
+class wide_intercept_tester_t : public np::spiegel::intercept_t
 {
 public:
     wide_intercept_tester_t()
-     :  intercept_t((spiegel::addr_t)&wide_call)
+     :  intercept_t((np::spiegel::addr_t)&wide_call)
     {
     }
     ~wide_intercept_tester_t()
@@ -778,25 +779,25 @@ public:
 
     int x[12], r;
 
-    void before(spiegel::call_t &call)
+    void before(np::spiegel::call_t &call)
     {
 	int i;
 	for (i = 0 ; i < 12 ; i++)
 	    x[i] = call.get_arg(i);
 	printf("BEFORE\n");
     }
-    void after(spiegel::call_t &call)
+    void after(np::spiegel::call_t &call)
     {
 	r = call.get_retval();
 	printf("AFTER, returning %d\n", r);
     }
 };
 
-class plt_intercept_tester_t : public spiegel::intercept_t
+class plt_intercept_tester_t : public np::spiegel::intercept_t
 {
 public:
     plt_intercept_tester_t()
-     :  intercept_t((spiegel::addr_t)&gettext)
+     :  intercept_t((np::spiegel::addr_t)&gettext)
     {
     }
     ~plt_intercept_tester_t()
@@ -806,12 +807,12 @@ public:
     unsigned int after_count;
     unsigned int before_count;
 
-    void before(spiegel::call_t &call)
+    void before(np::spiegel::call_t &call)
     {
 	printf("BEFORE, arg0 \"%s\"\n", (const char *)call.get_arg(0));
 	before_count++;
     }
-    void after(spiegel::call_t &call)
+    void after(np::spiegel::call_t &call)
     {
 	const char *s = (const char *)call.get_retval();
 	printf("AFTER, returning \"%s\"\n", s);
@@ -825,10 +826,10 @@ test_intercept(int argc, char **argv __attribute__((unused)))
 {
     if (argc > 1)
     {
-	spiegel::fatal("Usage: testrunner intercept\n");
+	np::spiegel::fatal("Usage: testrunner intercept\n");
     }
 
-    spiegel::dwarf::state_t state;
+    np::spiegel::dwarf::state_t state;
     if (!state.add_self())
 	return 1;
 
@@ -981,7 +982,7 @@ main(int argc, char **argv)
     top_of_stack = (unsigned long)&argc;
 #endif
 
-    spiegel::argv0 = argv[0];
+    np::spiegel::argv0 = argv[0];
     if (!strcmp(argv[1], "filenames"))
 	return test_filenames(argc-1, argv+1);
     if (!strcmp(argv[1], "info"))
@@ -1008,7 +1009,7 @@ main(int argc, char **argv)
 	return test_addr2line(argc-1, argv+1);
     if (!strcmp(argv[1], "intercept"))
 	return test_intercept(argc-1, argv+1);
-    spiegel::fatal("Usage: testrunner command args...\n");
+    fatal("Usage: testrunner command args...\n");
     return 1;
 }
 

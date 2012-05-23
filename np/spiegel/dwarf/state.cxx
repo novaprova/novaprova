@@ -1,13 +1,13 @@
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 #include <sys/fcntl.h>
 #include <bfd.h>
 #include "state.hxx"
 #include "reader.hxx"
 #include "compile_unit.hxx"
 #include "walker.hxx"
-#include "spiegel/platform/common.hxx"
+#include "np/spiegel/platform/common.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 using namespace np::util;
 
@@ -153,7 +153,7 @@ state_t::linkobj_t::map_sections()
 #endif
 
     if (sections_[DW_sec_plt].is_mapped())
-	spiegel::platform::add_plt(sections_[DW_sec_plt]);
+	np::spiegel::platform::add_plt(sections_[DW_sec_plt]);
 
     goto out;
 error:
@@ -222,11 +222,11 @@ filename_is_ignored(const char *filename)
 bool
 state_t::add_self()
 {
-    char *exe = spiegel::platform::self_exe();
+    char *exe = np::spiegel::platform::self_exe();
     bool r = false;
 
-    vector<spiegel::platform::linkobj_t> los = spiegel::platform::get_linkobjs();
-    vector<spiegel::platform::linkobj_t>::iterator i;
+    vector<np::spiegel::platform::linkobj_t> los = np::spiegel::platform::get_linkobjs();
+    vector<np::spiegel::platform::linkobj_t>::iterator i;
     const char *filename;
     for (i = los.begin() ; i != los.end() ; ++i)
     {
@@ -585,7 +585,7 @@ state_t::dump_abbrevs()
 }
 
 bool
-state_t::is_within(spiegel::addr_t addr, const walker_t &w,
+state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 		   unsigned int &offset) const
 {
     const entry_t *e = w.get_entry();
@@ -616,8 +616,8 @@ state_t::is_within(spiegel::addr_t addr, const walker_t &w,
     {
 	reader_t r = w.get_section_contents(DW_sec_ranges);
 	r.skip(ranges);
-	spiegel::addr_t base = 0; // TODO: compile unit base
-	spiegel::addr_t start, end;
+	np::spiegel::addr_t base = 0; // TODO: compile unit base
+	np::spiegel::addr_t start, end;
 	for (;;)
 	{
 	    if (!r.read_addr(start) || !r.read_addr(end))
@@ -644,7 +644,7 @@ state_t::is_within(spiegel::addr_t addr, const walker_t &w,
 }
 
 bool
-state_t::describe_address(spiegel::addr_t addr,
+state_t::describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
 			  unsigned int &lineno,
 			  reference_t &classref,
@@ -694,5 +694,5 @@ state_t::describe_address(spiegel::addr_t addr,
     return false;
 }
 
-// close namespace
-} }
+// close namespaces
+}; }; };

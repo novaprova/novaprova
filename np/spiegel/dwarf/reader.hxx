@@ -1,8 +1,9 @@
-#ifndef __libspiegel_dwarf_reader_hxx__
-#define __libspiegel_dwarf_reader_hxx__ 1
+#ifndef __np_spiegel_dwarf_reader_hxx__
+#define __np_spiegel_dwarf_reader_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 
+namespace np {
 namespace spiegel {
 namespace dwarf {
 
@@ -79,7 +80,7 @@ public:
 	return true;
     }
 
-    bool read_addr(spiegel::addr_t &v)
+    bool read_addr(np::spiegel::addr_t &v)
     {
 #if SPIEGEL_ADDRSIZE == 4
 	return read_u32(v);
@@ -176,6 +177,6 @@ private:
 };
 
 // close namespaces
-} }
+}; }; };
 
-#endif // __libspiegel_dwarf_reader_hxx__
+#endif // __np_spiegel_dwarf_reader_hxx__

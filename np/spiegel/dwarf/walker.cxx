@@ -2,7 +2,7 @@
 #include "enumerations.hxx"
 #include "state.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 using namespace np::util;
 
@@ -374,5 +374,5 @@ walker_t::move_up()
 
 #undef RETURN
 
-// close namespace
-} }
+// close namespaces
+}; }; };

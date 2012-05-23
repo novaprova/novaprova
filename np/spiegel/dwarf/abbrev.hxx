@@ -1,8 +1,9 @@
-#ifndef __libspiegel_dwarf_abbrev_hxx__
-#define __libspiegel_dwarf_abbrev_hxx__ 1
+#ifndef __np_spiegel_dwarf_abbrev_hxx__
+#define __np_spiegel_dwarf_abbrev_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 
+namespace np {
 namespace spiegel {
 namespace dwarf {
 
@@ -39,6 +40,6 @@ struct abbrev_t
 };
 
 // close namespaces
-} }
+}; }; };
 
-#endif // __libspiegel_dwarf_abbrev_hxx__
+#endif // __np_spiegel_dwarf_abbrev_hxx__

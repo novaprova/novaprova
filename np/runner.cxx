@@ -6,7 +6,7 @@
 #include "np/proxy_listener.hxx"
 #include "np/junit_listener.hxx"
 #include "np/child.hxx"
-#include "spiegel/spiegel.hxx"
+#include "np/spiegel/spiegel.hxx"
 #include "np_priv.h"
 #include "except.h"
 #include <valgrind/memcheck.h>
@@ -392,18 +392,18 @@ runner_t::reap_children()
 }
 
 void
-runner_t::run_function(functype_t ft, spiegel::function_t *f)
+runner_t::run_function(functype_t ft, np::spiegel::function_t *f)
 {
-    vector<spiegel::value_t> args;
-    spiegel::value_t ret = f->invoke(args);
+    vector<np::spiegel::value_t> args;
+    np::spiegel::value_t ret = f->invoke(args);
 
     if (ft == FT_TEST)
     {
-	assert(ret.which == spiegel::type_t::TC_VOID);
+	assert(ret.which == np::spiegel::type_t::TC_VOID);
     }
     else
     {
-	assert(ret.which == spiegel::type_t::TC_SIGNED_INT);
+	assert(ret.which == np::spiegel::type_t::TC_SIGNED_INT);
 	int r = ret.val.vsint;
 
 	if (r)
@@ -418,8 +418,8 @@ runner_t::run_function(functype_t ft, spiegel::function_t *f)
 void
 runner_t::run_fixtures(testnode_t *tn, functype_t type)
 {
-    list<spiegel::function_t*> fixtures = tn->get_fixtures(type);
-    list<spiegel::function_t*>::iterator itr;
+    list<np::spiegel::function_t*> fixtures = tn->get_fixtures(type);
+    list<np::spiegel::function_t*>::iterator itr;
     for (itr = fixtures.begin() ; itr != fixtures.end() ; ++itr)
 	run_function(type, *itr);
 }

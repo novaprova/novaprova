@@ -1,10 +1,11 @@
 #include "spiegel.hxx"
-#include "spiegel/dwarf/state.hxx"
-#include "spiegel/dwarf/walker.hxx"
-#include "spiegel/dwarf/entry.hxx"
-#include "spiegel/dwarf/enumerations.hxx"
-#include "spiegel/platform/common.hxx"
+#include "np/spiegel/dwarf/state.hxx"
+#include "np/spiegel/dwarf/walker.hxx"
+#include "np/spiegel/dwarf/entry.hxx"
+#include "np/spiegel/dwarf/enumerations.hxx"
+#include "np/spiegel/platform/common.hxx"
 
+namespace np {
 namespace spiegel {
 using namespace std;
 using namespace np::util;
@@ -59,11 +60,11 @@ value_t::make_pointer(void *p)
 unsigned int
 type_t::get_classification() const
 {
-    if (ref_ == spiegel::dwarf::reference_t::null)
+    if (ref_ == np::spiegel::dwarf::reference_t::null)
 	return TC_VOID;
 
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     if (!e)
 	return TC_INVALID;	// TODO: exception
 
@@ -139,11 +140,11 @@ type_t::get_classification_as_string() const
 unsigned int
 type_t::get_sizeof() const
 {
-    if (ref_ == spiegel::dwarf::reference_t::null)
+    if (ref_ == np::spiegel::dwarf::reference_t::null)
 	return 0;   // sizeof(void)
 
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     if (!e)
 	return 0;	// TODO: exception
 
@@ -182,11 +183,11 @@ type_t::get_sizeof() const
 string
 type_t::get_name() const
 {
-    if (ref_ == spiegel::dwarf::reference_t::null)
+    if (ref_ == np::spiegel::dwarf::reference_t::null)
 	return "";
 
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     if (!e)
 	return "wtf?";
 
@@ -210,18 +211,18 @@ type_t::get_name() const
     case DW_TAG_subroutine_type:
 	return "";
     default:
-	return spiegel::dwarf::tagnames.to_name(e->get_tag());
+	return np::spiegel::dwarf::tagnames.to_name(e->get_tag());
     }
 }
 
 string
 type_t::to_string(string inner) const
 {
-    if (ref_ == spiegel::dwarf::reference_t::null)
+    if (ref_ == np::spiegel::dwarf::reference_t::null)
 	return (inner.length() ? "void " + inner : "void");
 
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     if (!e)
 	return (inner.length() ? "wtf? " + inner : "wtf?");
 
@@ -309,7 +310,7 @@ type_t::to_string(string inner) const
 	    return return_type.to_string(inner);
 	}
     default:
-	s = spiegel::dwarf::tagnames.to_name(e->get_tag());
+	s = np::spiegel::dwarf::tagnames.to_name(e->get_tag());
 	break;
     }
     if (inner.length())
@@ -332,11 +333,11 @@ compile_unit_t::get_absolute_path() const
 vector<compile_unit_t *>
 get_compile_units()
 {
-    vector<spiegel::compile_unit_t *> res;
+    vector<np::spiegel::compile_unit_t *> res;
 
-    const vector<spiegel::dwarf::compile_unit_t*> &units =
-	spiegel::dwarf::state_t::instance()->get_compile_units();
-    vector<spiegel::dwarf::compile_unit_t*>::const_iterator i;
+    const vector<np::spiegel::dwarf::compile_unit_t*> &units =
+	np::spiegel::dwarf::state_t::instance()->get_compile_units();
+    vector<np::spiegel::dwarf::compile_unit_t*>::const_iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 	compile_unit_t *cu = _cacher_t::make_compile_unit((*i)->make_root_reference());
@@ -349,9 +350,9 @@ get_compile_units()
 bool
 compile_unit_t::populate()
 {
-    spiegel::dwarf::walker_t w(ref_);
+    np::spiegel::dwarf::walker_t w(ref_);
     // move to DW_TAG_compile_unit
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     if (!e)
 	return false;
 
@@ -375,14 +376,14 @@ compile_unit_t::populate()
 vector<function_t *>
 compile_unit_t::get_functions()
 {
-    spiegel::dwarf::walker_t w(ref_);
+    np::spiegel::dwarf::walker_t w(ref_);
     // move to DW_TAG_compile_unit
     w.move_next();
 
     vector<function_t *> res;
 
     // scan children of DW_TAG_compile_unit for functions
-    for (const spiegel::dwarf::entry_t *e = w.move_down() ; e ; e = w.move_next())
+    for (const np::spiegel::dwarf::entry_t *e = w.move_down() ; e ; e = w.move_next())
     {
 	if (e->get_tag() != DW_TAG_subprogram ||
 	    !e->get_string_attribute(DW_AT_name))
@@ -396,20 +397,20 @@ compile_unit_t::get_functions()
 const char *
 compile_unit_t::get_executable() const
 {
-    spiegel::dwarf::compile_unit_t *cu =
-	spiegel::dwarf::state_t::instance()->get_compile_unit(ref_);
+    np::spiegel::dwarf::compile_unit_t *cu =
+	np::spiegel::dwarf::state_t::instance()->get_compile_unit(ref_);
     return cu->get_executable();
 }
 
 void
 compile_unit_t::dump_types()
 {
-    spiegel::dwarf::walker_t w(ref_);
+    np::spiegel::dwarf::walker_t w(ref_);
     w.move_next();
-    for (const spiegel::dwarf::entry_t *e = w.move_down() ; e ; e = w.move_next())
+    for (const np::spiegel::dwarf::entry_t *e = w.move_down() ; e ; e = w.move_next())
     {
 	// filter for all types
-	const char *tagname = spiegel::dwarf::tagnames.to_name(e->get_tag());
+	const char *tagname = np::spiegel::dwarf::tagnames.to_name(e->get_tag());
 	switch (e->get_tag())
 	{
 	case DW_TAG_base_type:
@@ -442,7 +443,7 @@ compile_unit_t::dump_types()
     }
 }
 
-member_t::member_t(spiegel::dwarf::walker_t &w)
+member_t::member_t(np::spiegel::dwarf::walker_t &w)
  :  _cacheable_t(w.get_reference()),
     name_(w.get_entry()->get_string_attribute(DW_AT_name))
 {
@@ -453,16 +454,16 @@ member_t::member_t(spiegel::dwarf::walker_t &w)
 const compile_unit_t *
 member_t::get_compile_unit() const
 {
-    spiegel::dwarf::state_t *state = spiegel::dwarf::state_t::instance();
-    spiegel::dwarf::compile_unit_t *dcu = state->get_compile_unit(ref_);
+    np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
+    np::spiegel::dwarf::compile_unit_t *dcu = state->get_compile_unit(ref_);
     return _cacher_t::make_compile_unit(dcu->make_root_reference());
 }
 
 type_t *
 function_t::get_return_type() const
 {
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     return _cacher_t::make_type(e->get_reference_attribute(DW_AT_type));
 }
 
@@ -471,8 +472,8 @@ function_t::get_parameter_types() const
 {
     vector<type_t *> res;
 
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     for (e = w.move_down() ; e ; e = w.move_next())
     {
 	if (e->get_tag() == DW_TAG_formal_parameter)
@@ -488,8 +489,8 @@ function_t::get_parameter_names() const
 {
     vector<const char *> res;
 
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     for (e = w.move_down() ; e ; e = w.move_next())
     {
 	if (e->get_tag() == DW_TAG_formal_parameter)
@@ -508,8 +509,8 @@ function_t::get_parameter_names() const
 bool
 function_t::has_unspecified_parameters() const
 {
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     for (e = w.move_down() ; e ; e = w.move_next())
     {
 	if (e->get_tag() == DW_TAG_unspecified_parameters)
@@ -521,8 +522,8 @@ function_t::has_unspecified_parameters() const
 string
 function_t::to_string() const
 {
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     type_t return_type(e->get_reference_attribute(DW_AT_type));
     string inner = name_;
     inner += "(";
@@ -556,8 +557,8 @@ function_t::to_string() const
 addr_t
 function_t::get_address() const
 {
-    spiegel::dwarf::walker_t w(ref_);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     return e->get_address_attribute(DW_AT_low_pc);
 }
 
@@ -586,17 +587,17 @@ function_t::invoke(vector<value_t> args __attribute__((unused))) const
 	return value_t::make_pointer(((void *(*)(void))addr)());
     }
     return value_t::make_invalid();
-//     return spiegel::platform::invoke(addr, args);
+//     return np::spiegel::platform::invoke(addr, args);
 }
 #endif
 
 bool describe_address(addr_t addr, class location_t &loc)
 {
-    spiegel::dwarf::state_t *state = spiegel::dwarf::state_t::instance();
+    np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
 
-    spiegel::dwarf::reference_t curef;
-    spiegel::dwarf::reference_t classref;
-    spiegel::dwarf::reference_t funcref;
+    np::spiegel::dwarf::reference_t curef;
+    np::spiegel::dwarf::reference_t classref;
+    np::spiegel::dwarf::reference_t funcref;
     if (!state->describe_address(addr, curef, loc.line_,
 				 classref, funcref, loc.offset_))
 	return false;
@@ -607,12 +608,12 @@ bool describe_address(addr_t addr, class location_t &loc)
     return true;
 }
 
-map<spiegel::dwarf::reference_t, _cacheable_t*> _cacher_t::cache_;
+map<np::spiegel::dwarf::reference_t, _cacheable_t*> _cacher_t::cache_;
 
 _cacheable_t *
-_cacher_t::find(spiegel::dwarf::reference_t ref)
+_cacher_t::find(np::spiegel::dwarf::reference_t ref)
 {
-    std::map<spiegel::dwarf::reference_t, _cacheable_t*>::const_iterator i = cache_.find(ref);
+    std::map<np::spiegel::dwarf::reference_t, _cacheable_t*>::const_iterator i = cache_.find(ref);
     if (i == cache_.end())
 	return 0;
     return i->second;
@@ -626,9 +627,9 @@ _cacher_t::add(_cacheable_t *cc)
 }
 
 compile_unit_t *
-_cacher_t::make_compile_unit(spiegel::dwarf::reference_t ref)
+_cacher_t::make_compile_unit(np::spiegel::dwarf::reference_t ref)
 {
-    if (ref == spiegel::dwarf::reference_t::null)
+    if (ref == np::spiegel::dwarf::reference_t::null)
 	return 0;
     _cacheable_t *cc = find(ref);
     if (!cc)
@@ -643,7 +644,7 @@ _cacher_t::make_compile_unit(spiegel::dwarf::reference_t ref)
 }
 
 type_t *
-_cacher_t::make_type(spiegel::dwarf::reference_t ref)
+_cacher_t::make_type(np::spiegel::dwarf::reference_t ref)
 {
     _cacheable_t *cc = find(ref);
     if (!cc)
@@ -652,7 +653,7 @@ _cacher_t::make_type(spiegel::dwarf::reference_t ref)
 }
 
 function_t *
-_cacher_t::make_function(spiegel::dwarf::walker_t &w)
+_cacher_t::make_function(np::spiegel::dwarf::walker_t &w)
 {
     _cacheable_t *cc = find(w.get_reference());
     if (!cc)
@@ -661,19 +662,19 @@ _cacher_t::make_function(spiegel::dwarf::walker_t &w)
 }
 
 function_t *
-_cacher_t::make_function(spiegel::dwarf::reference_t ref)
+_cacher_t::make_function(np::spiegel::dwarf::reference_t ref)
 {
-    if (ref == spiegel::dwarf::reference_t::null)
+    if (ref == np::spiegel::dwarf::reference_t::null)
 	return 0;
-    spiegel::dwarf::walker_t w(ref);
-    const spiegel::dwarf::entry_t *e = w.move_next();
+    np::spiegel::dwarf::walker_t w(ref);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
     return (e ? make_function(w) : 0);
 }
 
 std::string describe_stacktrace()
 {
     string s;
-    vector<addr_t> stack = spiegel::platform::get_stacktrace();
+    vector<addr_t> stack = np::spiegel::platform::get_stacktrace();
     vector<addr_t>::iterator i;
     bool done = false;
     for (i = stack.begin() ; !done && i != stack.end() ; ++i)
@@ -703,5 +704,5 @@ std::string describe_stacktrace()
     return s;
 }
 
-// close namespace
-};
+// close the namespaces
+}; };

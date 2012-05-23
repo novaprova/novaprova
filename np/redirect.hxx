@@ -3,7 +3,7 @@
 
 #include "np/util/common.hxx"
 #include "np/types.hxx"
-#include "spiegel/spiegel.hxx"
+#include "np/spiegel/spiegel.hxx"
 
 namespace np {
 

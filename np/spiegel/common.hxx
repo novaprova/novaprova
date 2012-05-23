@@ -28,6 +28,7 @@
 // #define SPIEGEL_ADDRSIZE    8
 // #define SPIEGEL_MAXADDR	    (0xffffffffffffffffULL)
 
+namespace np {
 /**
  * NovaProva reflection library namespace.
  *
@@ -47,8 +48,8 @@ typedef uint64_t addr_t;
 #error "Unknown address size"
 #endif
 
-// close the namespace
-};
+// close the namespaces
+}; };
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 

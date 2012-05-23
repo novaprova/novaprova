@@ -1,9 +1,10 @@
-#ifndef __libspiegel_dwarf_value_hxx__
-#define __libspiegel_dwarf_value_hxx__ 1
+#ifndef __np_spiegel_dwarf_value_hxx__
+#define __np_spiegel_dwarf_value_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 #include "reference.hxx"
 
+namespace np {
 namespace spiegel {
 namespace dwarf {
 
@@ -91,6 +92,6 @@ struct value_t
 };
 
 // close namespaces
-} }
+}; }; };
 
-#endif // __libspiegel_dwarf_value_hxx__
+#endif // __np_spiegel_dwarf_value_hxx__

@@ -1,15 +1,14 @@
 #ifndef __spiegel_spiegel_hxx__
 #define __spiegel_spiegel_hxx__ 1
 
-#include <stdint.h>
-#include <vector>
-#include <string>
-#include "spiegel/dwarf/reference.hxx"
-#include "spiegel/intercept.hxx"
+#include "np/util/common.hxx"
+#include "np/spiegel/dwarf/reference.hxx"
+#include "np/spiegel/intercept.hxx"
 #include "np/util/filename.hxx"
 
 #define SPIEGEL_DYNAMIC 1
 
+namespace np {
 namespace spiegel {
 
 namespace dwarf {
@@ -51,11 +50,11 @@ class function_t;
 class _cacheable_t
 {
 public:
-    _cacheable_t(spiegel::dwarf::reference_t ref) : ref_(ref) {}
+    _cacheable_t(np::spiegel::dwarf::reference_t ref) : ref_(ref) {}
     ~_cacheable_t() {}
 
 protected:
-    spiegel::dwarf::reference_t ref_;
+    np::spiegel::dwarf::reference_t ref_;
 
     friend class _cacher_t;
 };
@@ -74,7 +73,7 @@ public:
     void dump_types();
 
 private:
-    compile_unit_t(spiegel::dwarf::reference_t ref) :  _cacheable_t(ref) {}
+    compile_unit_t(np::spiegel::dwarf::reference_t ref) :  _cacheable_t(ref) {}
     ~compile_unit_t() {}
 
     bool populate();
@@ -86,7 +85,7 @@ private:
     uint32_t language_;
 
     friend class member_t;
-    friend class spiegel::dwarf::state_t;
+    friend class np::spiegel::dwarf::state_t;
     friend class _cacher_t;
 };
 
@@ -194,7 +193,7 @@ public:
 
 private:
     std::string to_string(std::string inner) const;
-    type_t(spiegel::dwarf::reference_t ref) : _cacheable_t(ref) {}
+    type_t(np::spiegel::dwarf::reference_t ref) : _cacheable_t(ref) {}
     ~type_t() {}
 
     friend class function_t;
@@ -211,7 +210,7 @@ public:
 //     int get_modifiers() const;
 
 protected:
-    member_t(spiegel::dwarf::walker_t &w);
+    member_t(np::spiegel::dwarf::walker_t &w);
     ~member_t() {}
 
     const char *name_;
@@ -287,7 +286,7 @@ public:
     std::string to_string() const;
 
 private:
-    function_t(spiegel::dwarf::walker_t &w) : member_t(w) {}
+    function_t(np::spiegel::dwarf::walker_t &w) : member_t(w) {}
     ~function_t() {}
 
     friend class compile_unit_t;
@@ -309,28 +308,29 @@ bool describe_address(addr_t, class location_t &);
 class _cacher_t
 {
 public:
-    static type_t *make_type(spiegel::dwarf::reference_t);
-    static compile_unit_t *make_compile_unit(spiegel::dwarf::reference_t);
-    static function_t *make_function(spiegel::dwarf::walker_t &);
-    static function_t *make_function(spiegel::dwarf::reference_t ref);
-//     static constructor_t *make_constructor(spiegel::dwarf::reference_t);
-//     static destructor_t *make_destructor(spiegel::dwarf::reference_t);
-//     static field_t *make_field(spiegel::dwarf::reference_t);
+    static type_t *make_type(np::spiegel::dwarf::reference_t);
+    static compile_unit_t *make_compile_unit(np::spiegel::dwarf::reference_t);
+    static function_t *make_function(np::spiegel::dwarf::walker_t &);
+    static function_t *make_function(np::spiegel::dwarf::reference_t ref);
+//     static constructor_t *make_constructor(np::spiegel::dwarf::reference_t);
+//     static destructor_t *make_destructor(np::spiegel::dwarf::reference_t);
+//     static field_t *make_field(np::spiegel::dwarf::reference_t);
 
 private:
     // no instances for you
     _cacher_t() {}
     ~_cacher_t() {}
 
-    static _cacheable_t *find(spiegel::dwarf::reference_t ref);
+    static _cacheable_t *find(np::spiegel::dwarf::reference_t ref);
     static _cacheable_t *add(_cacheable_t *cc);
 
-    static std::map<spiegel::dwarf::reference_t, _cacheable_t*> cache_;
+    static std::map<np::spiegel::dwarf::reference_t, _cacheable_t*> cache_;
 };
 
 extern std::string describe_stacktrace();
 
-}; // namespace spiegel
+// close the namespaces
+}; };
 
 #endif // __spiegel_spiegel_hxx__
 

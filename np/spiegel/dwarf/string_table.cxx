@@ -1,6 +1,6 @@
 #include "string_table.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
 int
@@ -47,5 +47,5 @@ string_table_t::to_name(int i) const
     return name;
 }
 
-// close namespace
-} }
+// close namespaces
+}; }; };

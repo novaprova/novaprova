@@ -2,8 +2,8 @@
 #include "np/testmanager.hxx"
 #include "np/testnode.hxx"
 #include "np/classifier.hxx"
-#include "spiegel/spiegel.hxx"
-#include "spiegel/dwarf/state.hxx"
+#include "np/spiegel/spiegel.hxx"
+#include "np/spiegel/dwarf/state.hxx"
 
 namespace np {
 using namespace std;
@@ -104,7 +104,7 @@ testmanager_t::setup_classifiers()
 }
 
 static string
-test_name(spiegel::function_t *fn, char *submatch)
+test_name(np::spiegel::function_t *fn, char *submatch)
 {
     string name = fn->get_compile_unit()->get_absolute_path();
 
@@ -122,15 +122,15 @@ test_name(spiegel::function_t *fn, char *submatch)
     return name;
 }
 
-spiegel::function_t *
+np::spiegel::function_t *
 testmanager_t::find_mock_target(string name)
 {
-    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
-    vector<spiegel::compile_unit_t *>::iterator i;
+    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-	vector<spiegel::function_t *> fns = (*i)->get_functions();
-	vector<spiegel::function_t *>::iterator j;
+	vector<np::spiegel::function_t *> fns = (*i)->get_functions();
+	vector<np::spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
 	{
 	    if ((*j)->get_name() == name)
@@ -141,10 +141,10 @@ testmanager_t::find_mock_target(string name)
 }
 
 static const struct __np_param_dec *
-get_param_dec(spiegel::function_t *fn)
+get_param_dec(np::spiegel::function_t *fn)
 {
-    vector<spiegel::value_t> args;
-    spiegel::value_t ret = fn->invoke(args);
+    vector<np::spiegel::value_t> args;
+    np::spiegel::value_t ret = fn->invoke(args);
     return (const struct __np_param_dec *)ret.val.vpointer;
 }
 
@@ -153,22 +153,22 @@ testmanager_t::discover_functions()
 {
     if (!spiegel_)
     {
-	spiegel_ = new spiegel::dwarf::state_t();
+	spiegel_ = new np::spiegel::dwarf::state_t();
 	spiegel_->add_self();
 	root_ = new testnode_t(0);
     }
     // else: splice common_ and root_ back together
 
-    vector<spiegel::compile_unit_t *> units = spiegel::get_compile_units();
-    vector<spiegel::compile_unit_t *>::iterator i;
+    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 // fprintf(stderr, "discover_functions: compile unit %s\n", (*i)->get_absolute_path().c_str());
-	vector<spiegel::function_t *> fns = (*i)->get_functions();
-	vector<spiegel::function_t *>::iterator j;
+	vector<np::spiegel::function_t *> fns = (*i)->get_functions();
+	vector<np::spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
 	{
-	    spiegel::function_t *fn = *j;
+	    np::spiegel::function_t *fn = *j;
 	    functype_t type;
 	    char submatch[512];
 
@@ -187,7 +187,7 @@ testmanager_t::discover_functions()
 		if (!submatch[0])
 		    continue;
 		// Test function return void
-		if (fn->get_return_type()->get_classification() != spiegel::type_t::TC_VOID)
+		if (fn->get_return_type()->get_classification() != np::spiegel::type_t::TC_VOID)
 		    continue;
 		// Test functions take no arguments
 		if (fn->get_parameter_types().size() != 0)
@@ -199,7 +199,7 @@ testmanager_t::discover_functions()
 		// Before/after functions go into the parent node
 		assert(!submatch[0]);
 		// Before/after functions return int
-		if (fn->get_return_type()->get_classification() != spiegel::type_t::TC_SIGNED_INT)
+		if (fn->get_return_type()->get_classification() != np::spiegel::type_t::TC_SIGNED_INT)
 		    continue;
 		// Before/after take no arguments
 		if (fn->get_parameter_types().size() != 0)
@@ -211,7 +211,7 @@ testmanager_t::discover_functions()
 		if (!submatch[0])
 		    continue;
 		{
-		    spiegel::function_t *target = find_mock_target(submatch);
+		    np::spiegel::function_t *target = find_mock_target(submatch);
 		    if (!target)
 			continue;
 		    root_->make_path(test_name(fn, 0))->add_mock(target, fn);

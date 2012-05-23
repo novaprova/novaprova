@@ -54,7 +54,7 @@ testnode_t::make_path(string name)
 }
 
 void
-testnode_t::set_function(functype_t ft, spiegel::function_t *func)
+testnode_t::set_function(functype_t ft, np::spiegel::function_t *func)
 {
     if (funcs_[ft])
 	fprintf(stderr, "np: WARNING: duplicate %s functions: "
@@ -69,13 +69,13 @@ testnode_t::set_function(functype_t ft, spiegel::function_t *func)
 }
 
 void
-testnode_t::add_mock(spiegel::function_t *target, spiegel::function_t *mock)
+testnode_t::add_mock(np::spiegel::function_t *target, np::spiegel::function_t *mock)
 {
     add_mock(target->get_address(), mock->get_address());
 }
 
 void
-testnode_t::add_mock(spiegel::addr_t target, spiegel::addr_t mock)
+testnode_t::add_mock(np::spiegel::addr_t target, np::spiegel::addr_t mock)
 {
     intercepts_.push_back(new redirect_t(target, mock));
 }
@@ -150,10 +150,10 @@ testnode_t::detach_common()
     return tn;
 }
 
-list<spiegel::function_t*>
+list<np::spiegel::function_t*>
 testnode_t::get_fixtures(functype_t type) const
 {
-    list<spiegel::function_t*> fixtures;
+    list<np::spiegel::function_t*> fixtures;
 
     /* Run FT_BEFORE from outermost in, and FT_AFTER
      * from innermost out */
@@ -191,7 +191,7 @@ testnode_t::pre_run() const
     /* Install intercepts from innermost out */
     for (const testnode_t *a = this ; a ; a = a->parent_)
     {
-	vector<spiegel::intercept_t*>::const_iterator itr;
+	vector<np::spiegel::intercept_t*>::const_iterator itr;
 	for (itr = a->intercepts_.begin() ; itr != a->intercepts_.end() ; ++itr)
 	    (*itr)->install();
     }
@@ -209,7 +209,7 @@ testnode_t::post_run() const
      */
     for (const testnode_t *a = this ; a ; a = a->parent_)
     {
-	vector<spiegel::intercept_t*>::const_iterator itr;
+	vector<np::spiegel::intercept_t*>::const_iterator itr;
 	for (itr = a->intercepts_.begin() ; itr != a->intercepts_.end() ; ++itr)
 	    (*itr)->uninstall();
     }

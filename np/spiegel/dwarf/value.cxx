@@ -1,6 +1,6 @@
 #include "value.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
 void
@@ -44,5 +44,5 @@ value_t::dump() const
     }
 }
 
-// close namespace
-} }
+// close namespaces
+}; }; };

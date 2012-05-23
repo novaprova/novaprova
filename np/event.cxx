@@ -6,7 +6,7 @@ using namespace np::util;
 
 event_t &event_t::with_stack()
 {
-    string trace = spiegel::describe_stacktrace();
+    string trace = np::spiegel::describe_stacktrace();
     if (trace.length())
     {
 	/* only clobber `function' if we have something better */
@@ -83,7 +83,7 @@ event_t::normalise() const
 
     if (locflags & LT_SPIEGELFUNC)
     {
-	spiegel::function_t *f = (spiegel::function_t *)function;
+	np::spiegel::function_t *f = (np::spiegel::function_t *)function;
 
 	filebuf = f->get_compile_unit()->get_absolute_path();
 	norm.in_file(filebuf);

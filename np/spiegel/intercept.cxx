@@ -1,7 +1,8 @@
-#include "spiegel/intercept.hxx"
-#include "spiegel/platform/common.hxx"
-#include "spiegel/dwarf/state.hxx"
+#include "np/spiegel/intercept.hxx"
+#include "np/spiegel/platform/common.hxx"
+#include "np/spiegel/dwarf/state.hxx"
 
+namespace np {
 namespace spiegel {
 using namespace std;
 
@@ -9,7 +10,7 @@ map<addr_t, vector<intercept_t*> > intercept_t::installed_;
 
 intercept_t::intercept_t(addr_t a)
 {
-    addr_ = spiegel::platform::normalise_address(a);
+    addr_ = np::spiegel::platform::normalise_address(a);
 }
 
 intercept_t::~intercept_t()
@@ -22,7 +23,7 @@ intercept_t::install()
     vector<intercept_t*> *v = &installed_[addr_];
     v->push_back(this);
     if (v->size() == 1)
-	return spiegel::platform::install_intercept(addr_);
+	return np::spiegel::platform::install_intercept(addr_);
     return 0;
 }
 
@@ -42,7 +43,7 @@ intercept_t::uninstall()
     if (v->size() == 0)
     {
 	installed_.erase(addr_);
-	return spiegel::platform::uninstall_intercept(addr_);
+	return np::spiegel::platform::uninstall_intercept(addr_);
     }
     return 0;
 }
@@ -78,5 +79,5 @@ intercept_t::dispatch_after(addr_t addr, call_t &call)
     }
 }
 
-// close namespace
-}
+// close the namespaces
+}; };

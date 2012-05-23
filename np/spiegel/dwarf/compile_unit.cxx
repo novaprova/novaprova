@@ -1,10 +1,10 @@
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 #include "state.hxx"
 #include "compile_unit.hxx"
 #include "walker.hxx"
 #include "enumerations.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 using namespace np::util;
 
@@ -118,5 +118,5 @@ compile_unit_t::get_section(uint32_t i) const
     return &lo->sections_[i];
 }
 
-// close namespace
-} }
+// close namespaces
+}; }; };

@@ -229,11 +229,11 @@ mock_syslog(int prio, const char *fmt, ...)
 
 void init_syslog_intercepts(testnode_t *tn)
 {
-    tn->add_mock((spiegel::addr_t)&syslog,
-		 (spiegel::addr_t)&mock_syslog);
+    tn->add_mock((np::spiegel::addr_t)&syslog,
+		 (np::spiegel::addr_t)&mock_syslog);
 #if defined(__GLIBC__)
-    tn->add_mock((spiegel::addr_t)&__syslog_chk,
-		 (spiegel::addr_t)&mock___syslog_chk);
+    tn->add_mock((np::spiegel::addr_t)&__syslog_chk,
+		 (np::spiegel::addr_t)&mock___syslog_chk);
 #endif
 }
 

@@ -1,6 +1,7 @@
-#include "spiegel/mapping.hxx"
+#include "np/spiegel/mapping.hxx"
 #include <sys/mman.h>
 
+namespace np {
 namespace spiegel {
 using namespace std;
 using namespace np::util;
@@ -43,5 +44,5 @@ int mapping_t::compare_by_offset(const void *v1, const void *v2)
     return u64cmp(m1->offset_, m2->offset_);
 }
 
-// close namespace
-}
+// close namespaces
+}; };

@@ -1,15 +1,16 @@
 
-#ifndef __libspiegel_dwarf_section_hxx__
-#define __libspiegel_dwarf_section_hxx__ 1
+#ifndef __np_spiegel_dwarf_section_hxx__
+#define __np_spiegel_dwarf_section_hxx__ 1
 
-#include "spiegel/common.hxx"
-#include "spiegel/mapping.hxx"
+#include "np/spiegel/common.hxx"
+#include "np/spiegel/mapping.hxx"
 #include "reader.hxx"
 
+namespace np {
 namespace spiegel {
 namespace dwarf {
 
-struct section_t : public spiegel::mapping_t
+struct section_t : public np::spiegel::mapping_t
 {
 public:
     reader_t get_contents() const
@@ -32,6 +33,6 @@ public:
 };
 
 // close namespaces
-} }
+}; }; };
 
-#endif // __libspiegel_dwarf_section_hxx__
+#endif // __np_spiegel_dwarf_section_hxx__

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace spiegel { namespace dwarf { class state_t; } }
+namespace np { namespace spiegel { namespace dwarf { class state_t; } } }
 
 namespace np {
 
@@ -27,7 +27,7 @@ public:
 
     static void done() { delete instance_; }
 private:
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
+    static void *operator new(size_t sz) { return util::xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
     testmanager_t();
     ~testmanager_t();
@@ -47,7 +47,7 @@ private:
     testnode_t *common_;	// nodes from filesystem root down to root_
 };
 
-// close the namespace
+// close the namespaces
 };
 
 #endif /* __NP_TESTMANAGER_H__ */

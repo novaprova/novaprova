@@ -1,8 +1,9 @@
-#ifndef __libspiegel_mapping_hxx__
-#define __libspiegel_mapping_hxx__ 1
+#ifndef __np_spiegel_mapping_hxx__
+#define __np_spiegel_mapping_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 
+namespace np {
 namespace spiegel {
 
 struct mapping_t
@@ -65,6 +66,6 @@ protected:
 };
 
 // close namespaces
-}
+}; };
 
-#endif // __libspiegel_mapping_hxx__
+#endif // __np_spiegel_mapping_hxx__

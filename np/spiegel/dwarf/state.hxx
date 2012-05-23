@@ -1,12 +1,13 @@
-#ifndef __libspiegel_dwarf_state_hxx__
-#define __libspiegel_dwarf_state_hxx__ 1
+#ifndef __np_spiegel_dwarf_state_hxx__
+#define __np_spiegel_dwarf_state_hxx__ 1
 
-#include "spiegel/common.hxx"
-#include "spiegel/spiegel.hxx"
+#include "np/spiegel/common.hxx"
+#include "np/spiegel/spiegel.hxx"
 #include "section.hxx"
 #include "reference.hxx"
 #include "enumerations.hxx"
 
+namespace np {
 namespace spiegel {
 namespace dwarf {
 
@@ -28,7 +29,7 @@ public:
     void dump_info(bool preorder, bool paths);
     void dump_abbrevs();
 
-    bool describe_address(spiegel::addr_t addr,
+    bool describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
 			  unsigned int &lineno,
 			  reference_t &classref,
@@ -63,7 +64,7 @@ private:
 	uint32_t index_;
 	section_t sections_[DW_sec_num];
 	std::vector<section_t> mappings_;
-	std::vector<spiegel::mapping_t> system_mappings_;
+	std::vector<np::spiegel::mapping_t> system_mappings_;
 
 	bool map_sections();
 	void unmap_sections();
@@ -72,7 +73,7 @@ private:
     linkobj_t *get_linkobj(const char *filename);
     bool read_linkobjs();
     bool read_compile_units(linkobj_t *);
-    bool is_within(spiegel::addr_t addr, const walker_t &w,
+    bool is_within(np::spiegel::addr_t addr, const walker_t &w,
 		   unsigned int &offset) const;
 
     static state_t *instance_;
@@ -86,6 +87,6 @@ private:
 
 
 // close namespaces
-} }
+}; }; };
 
-#endif // __libspiegel_dwarf_state_hxx__
+#endif // __np_spiegel_dwarf_state_hxx__

@@ -1,7 +1,7 @@
 #include "abbrev.hxx"
 #include "reader.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
 bool
@@ -24,5 +24,5 @@ abbrev_t::read(reader_t &r)
     return true;
 }
 
-// close namespace
-} }
+// close namespaces
+}; }; };

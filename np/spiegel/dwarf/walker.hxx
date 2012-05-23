@@ -1,11 +1,12 @@
-#ifndef __libspiegel_dwarf_walker_hxx__
-#define __libspiegel_dwarf_walker_hxx__ 1
+#ifndef __np_spiegel_dwarf_walker_hxx__
+#define __np_spiegel_dwarf_walker_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 #include "reader.hxx"
 #include "entry.hxx"
 #include "compile_unit.hxx"
 
+namespace np {
 namespace spiegel {
 namespace dwarf {
 
@@ -76,6 +77,6 @@ private:
 
 
 // close namespaces
-} }
+}; }; };
 
-#endif // __libspiegel_dwarf_walker_hxx__
+#endif // __np_spiegel_dwarf_walker_hxx__

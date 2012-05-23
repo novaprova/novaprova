@@ -1,7 +1,7 @@
 #include "entry.hxx"
 #include "enumerations.hxx"
 
-namespace spiegel { namespace dwarf {
+namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
 void
@@ -39,5 +39,5 @@ entry_t::dump() const
     printf("}\n");
 }
 
-// close namespace
-} }
+// close namespaces
+}; }; };

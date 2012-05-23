@@ -1,8 +1,9 @@
-#ifndef __libspiegel_intercept_hxx__
-#define __libspiegel_intercept_hxx__ 1
+#ifndef __np_spiegel_intercept_hxx__
+#define __np_spiegel_intercept_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 
+namespace np {
 namespace spiegel {
 
 struct call_t
@@ -84,7 +85,7 @@ private:
     addr_t addr_;
 };
 
-// close namespaces
-}
+// close the namespaces
+}; };
 
-#endif // __libspiegel_intercept_hxx__
+#endif // __np_spiegel_intercept_hxx__

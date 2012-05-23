@@ -1,7 +1,7 @@
-#ifndef __libspiegel_dwarf_enumerations_hxx__
-#define __libspiegel_dwarf_enumerations_hxx__ 1
+#ifndef __np_spiegel_dwarf_enumerations_hxx__
+#define __np_spiegel_dwarf_enumerations_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/spiegel/common.hxx"
 #include "string_table.hxx"
 
 enum section_names
@@ -237,6 +237,7 @@ enum encoding_values
 //     DW_ATE_hi_user = 0xff,
 };
 
+namespace np {
 namespace spiegel {
 namespace dwarf {
 
@@ -248,6 +249,6 @@ extern string_table_t attrnames;
 extern string_table_t encvals;
 
 // close namespaces
-}; };
+}; }; };
 
-#endif // __libspiegel_dwarf_enumerations_hxx__
+#endif // __np_spiegel_dwarf_enumerations_hxx__

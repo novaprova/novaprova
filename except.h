@@ -3,7 +3,7 @@
 
 #include "np/util/common.hxx"
 #include "np/event.hxx"
-#include "spiegel/spiegel.hxx"
+#include "np/spiegel/spiegel.hxx"
 #include <setjmp.h>
 
 struct __np_exceptstate_t
