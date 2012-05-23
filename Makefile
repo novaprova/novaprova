@@ -45,6 +45,19 @@ libnovaprova_SOURCE= \
 		np/plan.cxx \
 		np/proxy_listener.cxx \
 		np/runner.cxx \
+		np/spiegel/dwarf/abbrev.cxx \
+		np/spiegel/dwarf/compile_unit.cxx \
+		np/spiegel/dwarf/entry.cxx \
+		np/spiegel/dwarf/enumerations.cxx \
+		np/spiegel/dwarf/reference.cxx \
+		np/spiegel/dwarf/state.cxx \
+		np/spiegel/dwarf/string_table.cxx \
+		np/spiegel/dwarf/value.cxx \
+		np/spiegel/dwarf/walker.cxx \
+		np/spiegel/intercept.cxx \
+		np/spiegel/mapping.cxx \
+		np/spiegel/platform/linux.cxx \
+		np/spiegel/spiegel.cxx \
 		np/testmanager.cxx \
 		np/testnode.cxx \
 		np/text_listener.cxx \
@@ -52,41 +65,28 @@ libnovaprova_SOURCE= \
 		np/util/common.cxx \
 		np/util/filename.cxx \
 		np/util/tok.cxx \
-		spiegel/dwarf/abbrev.cxx \
-		spiegel/dwarf/compile_unit.cxx \
-		spiegel/dwarf/entry.cxx \
-		spiegel/dwarf/enumerations.cxx \
-		spiegel/dwarf/reference.cxx \
-		spiegel/dwarf/state.cxx \
-		spiegel/dwarf/string_table.cxx \
-		spiegel/dwarf/value.cxx \
-		spiegel/dwarf/walker.cxx \
-		spiegel/platform/linux.cxx \
-		spiegel/intercept.cxx \
-		spiegel/mapping.cxx \
-		spiegel/spiegel.cxx \
 
 libnovaprova_PRIVHEADERS= \
-		np_priv.h \
+		np/spiegel/common.hxx \
+		np/spiegel/dwarf/abbrev.hxx \
+		np/spiegel/dwarf/compile_unit.hxx \
+		np/spiegel/dwarf/entry.hxx \
+		np/spiegel/dwarf/enumerations.hxx \
+		np/spiegel/dwarf/reader.hxx \
+		np/spiegel/dwarf/reference.hxx \
+		np/spiegel/dwarf/section.hxx \
+		np/spiegel/dwarf/state.hxx \
+		np/spiegel/dwarf/string_table.hxx \
+		np/spiegel/dwarf/value.hxx \
+		np/spiegel/dwarf/walker.hxx \
+		np/spiegel/intercept.hxx \
+		np/spiegel/mapping.hxx \
+		np/spiegel/platform/common.hxx \
+		np/spiegel/spiegel.hxx \
 		np/util/common.hxx \
 		np/util/filename.hxx \
 		np/util/tok.hxx \
-		spiegel/dwarf/abbrev.hxx \
-		spiegel/dwarf/compile_unit.hxx \
-		spiegel/dwarf/entry.hxx \
-		spiegel/dwarf/enumerations.hxx \
-		spiegel/dwarf/reader.hxx \
-		spiegel/dwarf/reference.hxx \
-		spiegel/dwarf/section.hxx \
-		spiegel/dwarf/state.hxx \
-		spiegel/dwarf/string_table.hxx \
-		spiegel/dwarf/value.hxx \
-		spiegel/dwarf/walker.hxx \
-		spiegel/platform/common.hxx \
-		spiegel/intercept.hxx \
-		spiegel/common.hxx \
-		spiegel/mapping.hxx \
-		spiegel/spiegel.hxx \
+		np_priv.h \
 
 libnovaprova_HEADERS= \
 		np.h \
