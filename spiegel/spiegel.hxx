@@ -6,7 +6,7 @@
 #include <string>
 #include "spiegel/dwarf/reference.hxx"
 #include "spiegel/intercept.hxx"
-#include "spiegel/filename.hxx"
+#include "np/util/filename.hxx"
 
 #define SPIEGEL_DYNAMIC 1
 
@@ -63,9 +63,9 @@ protected:
 class compile_unit_t : public _cacheable_t
 {
 public:
-    filename_t get_name() const { return name_; }
-    filename_t get_compile_dir() const { return comp_dir_; }
-    filename_t get_absolute_path() const;
+    np::util::filename_t get_name() const { return name_; }
+    np::util::filename_t get_compile_dir() const { return comp_dir_; }
+    np::util::filename_t get_absolute_path() const;
     const char *get_executable() const;
 //     static compile_unit_t *for_name(const char *name);
 

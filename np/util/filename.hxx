@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace spiegel {
+namespace np { namespace util {
 
 class filename_t : public std::string
 {
@@ -31,6 +31,7 @@ private:
     filename_t make_absolute_to(filename_t absfile, bool isdir) const;
 };
 
-}; // namespace spiegel
+// close the namespaces
+}; };
 
 #endif // __spiegel_filename_hxx__

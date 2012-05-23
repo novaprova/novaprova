@@ -1,6 +1,6 @@
 #include "np/testnode.hxx"
 #include "np/redirect.hxx"
-#include "spiegel/tok.hxx"
+#include "np/util/tok.hxx"
 
 namespace np {
 using namespace std;
@@ -30,7 +30,7 @@ testnode_t::make_path(string name)
     const char *part;
     testnode_t *child;
     testnode_t **tailp;
-    spiegel::tok_t tok(name.c_str(), "/");
+    tok_t tok(name.c_str(), "/");
 
     while ((part = tok.next()))
     {
@@ -236,7 +236,7 @@ testnode_t::parameter_t::parameter_t(const char *n, char **v, const char *vals)
     variable_(v)
 {
     /* TODO: need a split() function */
-    spiegel::tok_t valtok(vals, ", \t");
+    np::util::tok_t valtok(vals, ", \t");
     const char *val;
     while ((val = valtok.next()))
 	values_.push_back(xstrdup(val));

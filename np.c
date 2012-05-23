@@ -1,6 +1,5 @@
 #include "np_priv.h"
 #include "except.h"
-#include "spiegel/tok.hxx"
 #include <sys/time.h>
 #include <valgrind/valgrind.h>
 

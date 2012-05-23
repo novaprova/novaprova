@@ -48,6 +48,8 @@ libnp_SOURCE=	\
 		np/text_listener.cxx \
 		np/types.cxx \
 		np/util/common.cxx \
+		np/util/filename.cxx \
+		np/util/tok.cxx \
 		spiegel/dwarf/abbrev.cxx \
 		spiegel/dwarf/compile_unit.cxx \
 		spiegel/dwarf/entry.cxx \
@@ -58,15 +60,15 @@ libnp_SOURCE=	\
 		spiegel/dwarf/value.cxx \
 		spiegel/dwarf/walker.cxx \
 		spiegel/platform/linux.cxx \
-		spiegel/filename.cxx \
 		spiegel/intercept.cxx \
 		spiegel/mapping.cxx \
 		spiegel/spiegel.cxx \
-		spiegel/tok.cxx \
 
 libnp_PRIVHEADERS= \
 		np_priv.h \
 		np/util/common.hxx \
+		np/util/filename.hxx \
+		np/util/tok.hxx \
 		spiegel/dwarf/abbrev.hxx \
 		spiegel/dwarf/compile_unit.hxx \
 		spiegel/dwarf/entry.hxx \
@@ -79,12 +81,10 @@ libnp_PRIVHEADERS= \
 		spiegel/dwarf/value.hxx \
 		spiegel/dwarf/walker.hxx \
 		spiegel/platform/common.hxx \
-		spiegel/filename.hxx \
 		spiegel/intercept.hxx \
 		spiegel/common.hxx \
 		spiegel/mapping.hxx \
 		spiegel/spiegel.hxx \
-		spiegel/tok.hxx \
 
 libnp_HEADERS=	np.h \
 		np/child.hxx \

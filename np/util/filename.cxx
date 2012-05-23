@@ -1,8 +1,8 @@
-#include "spiegel/common.hxx"
-#include "spiegel/filename.hxx"
-#include "spiegel/tok.hxx"
+#include "np/util/common.hxx"
+#include "np/util/filename.hxx"
+#include "np/util/tok.hxx"
 
-namespace spiegel {
+namespace np { namespace util {
 using namespace std;
 
 bool
@@ -156,5 +156,5 @@ filename_t::pop_back()
 	resize(p-1);
 }
 
-// close the namespace
-}
+// close the namespaces
+}; };

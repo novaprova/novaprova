@@ -19,10 +19,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "spiegel/tok.hxx"
+#include "np/util/tok.hxx"
 
-namespace spiegel {
-using namespace np::util;
+namespace np { namespace util {
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
@@ -68,6 +67,6 @@ tok_t::next()
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
-// close the namespace
-}
+// close the namespaces
+}; };
 /*END*/

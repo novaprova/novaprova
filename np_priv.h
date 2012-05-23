@@ -5,7 +5,7 @@
 #include "np.h"
 #include "spiegel/spiegel.hxx"
 #include "spiegel/dwarf/state.hxx"
-#include "spiegel/filename.hxx"
+#include "np/util/filename.hxx"
 #include <vector>
 #include <list>
 #include <string>

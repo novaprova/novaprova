@@ -22,9 +22,9 @@
 #ifndef __spiegel_tok_hxx__
 #define __spiegel_tok_hxx__ 1
 
-#include "spiegel/common.hxx"
+#include "np/util/common.hxx"
 
-namespace spiegel {
+namespace np { namespace util {
 
 /*
  * A simple re-entrant string tokenizer, wraps strtok_r().
@@ -54,8 +54,8 @@ private:
     const char *sep_;
 };
 
-// close the namespace
-}
+// close the namespaces
+}; };
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 #endif /* __spiegel_tok_hxx__ */
