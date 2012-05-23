@@ -133,7 +133,7 @@ MARKDOWN= \
     PYTHONPATH=$(PWD)/../markdown-2.1.1/Markdown-2.1.1 \
     python -m markdown.__main__
 # MARKDOWN=   python -m markdown
-MDFLAGS=    -x codehilite
+MDFLAGS=    -x codehilite -x headerid -x fenced_code
 
 documentation: doxygen markdown
 

@@ -7,24 +7,24 @@ recommend.
 
 Here is an example
 
-    :::c
-    #include <stdio.h>
-    #include <np.h>
+~~~~.c
+#include <stdio.h>
+#include <np.h>
 
-    static void test_basic(void)
-    {
-	int x = 42;
-	NP_ASSERT(x == 43);
-    }
+static void test_basic(void)
+{
+    int x = 42;
+    NP_ASSERT(x == 43);
+}
 
-    int
-    main(int argc, char **argv)
-    {
-	int ec = 0;
-	np_runner_t *runner = np_init();
-	ec = np_run_tests(runner, NULL);
-	np_done(runner);
-	exit(ec);
-    }
-
+int
+main(int argc, char **argv)
+{
+    int ec = 0;
+    np_runner_t *runner = np_init();
+    ec = np_run_tests(runner, NULL);
+    np_done(runner);
+    exit(ec);
+}
+~~~~
 And this is after the example.
