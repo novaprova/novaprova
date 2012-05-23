@@ -6,20 +6,20 @@
 void
 __np_pass(const char *file, int line)
 {
-    np_throw(np::event_t(np::EV_EXPASS, "U4C_PASS called").at_line(file, line));
+    np_throw(np::event_t(np::EV_EXPASS, "NP_PASS called").at_line(file, line));
 }
 
 void
 __np_fail(const char *file, int line)
 {
-    np_throw(np::event_t(np::EV_EXFAIL, "U4C_FAIL called")
+    np_throw(np::event_t(np::EV_EXFAIL, "NP_FAIL called")
 		.at_line(file, line).with_stack());
 }
 
 void
 __np_notapplicable(const char *file, int line)
 {
-    np_throw(np::event_t(np::EV_EXNA, "U4C_NOTAPPLICABLE called")
+    np_throw(np::event_t(np::EV_EXNA, "NP_NOTAPPLICABLE called")
 		.at_line(file, line).with_stack());
 }
 

@@ -571,7 +571,7 @@ function_t::invoke(vector<value_t> args __attribute__((unused))) const
     if (!addr)
 	return value_t::make_invalid();
 
-    // Hacky special cases, enough to get U4C working without
+    // Hacky special cases, enough to get NP working without
     // writing the general purpose platform ABI invoke()
     if (get_parameter_types().size() > 0)
 	return value_t::make_invalid();

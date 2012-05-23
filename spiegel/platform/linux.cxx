@@ -339,7 +339,7 @@ intercept_tramp(void)
      * original function, by calling skip().  It can also request
      * that we call a different function instead using redirect().
      * Finally it should also be able to longjmp() out without
-     * drama, e.g. as a side effect of failing a U4C_ASSERT().
+     * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
     frame.call.args_ = frame.args;
     intercept_t::dispatch_before(frame.addr, frame.call);
@@ -393,7 +393,7 @@ after:
      * Call the AFTER method.  The method can examine and modify the
      * return value from the original function using get_retval() and
      * set_retval().  It should also be able to longjmp() out without
-     * drama, e.g. as a side effect of failing a U4C_ASSERT().
+     * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
     intercept_t::dispatch_after(frame.addr, frame.call);
     return frame.call.retval_;
