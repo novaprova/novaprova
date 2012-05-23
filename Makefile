@@ -129,6 +129,12 @@ $(depdir)/%.d: %.c
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
+MARKDOWN= \
+    PYTHONPATH=$(PWD)/../markdown-2.1.1/Markdown-2.1.1 \
+    python -m markdown.__main__
+# MARKDOWN=   python -m markdown
+MDFLAGS=    -x codehilite
+
 documentation:
 	$(RM) -r doc/api-ref doc/man
 	doxygen
@@ -136,6 +142,7 @@ documentation:
 	    ln -s api-ref api-ref-$(VERSION) ;\
 	    tar -chjvf api-ref-$(VERSION).tar.bz2 api-ref-$(VERSION) ;\
 	    rm -f api-ref-$(VERSION)
+	$(MARKDOWN) $(MDFLAGS) doc/get-start/index.md -f doc/get-start/index.html
 
 install-local: documentation
 	$(INSTALL) -d $(DESTDIR)$(includedir)/novaprova/np
