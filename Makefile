@@ -2,10 +2,12 @@ PACKAGE=	novaprova
 VERSION=	0.1
 
 prefix=		/usr/local
+exec_prefix=	$(prefix)
 includedir=	$(prefix)/include
-libdir=		$(prefix)/lib
+libdir=		$(exec_prefix)/lib
 mandir=		$(prefix)/share/man
 pkgdocdir=	$(prefix)/share/doc/$(PACKAGE)
+configdir=	$(libdir)/pkgconfig
 
 CC=		g++
 CXX=		g++
@@ -30,7 +32,7 @@ all clean distclean check install:
 
 install check: all
 
-all-local: libnp.a
+all-local: libnp.a novaprova.pc
 
 libnp_SOURCE=	\
 		np.c \
@@ -135,9 +137,9 @@ documentation:
 	    rm -f api-ref-$(VERSION)
 
 install-local: documentation
-	$(INSTALL) -d $(DESTDIR)$(includedir)/np
+	$(INSTALL) -d $(DESTDIR)$(includedir)/novaprova/np
 	for hdr in $(libnp_HEADERS) ; do \
-	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/$$hdr ;\
+	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/novaprova/$$hdr ;\
 	done
 	$(INSTALL) -d $(DESTDIR)$(libdir)
 	$(INSTALL) -m 644 libnp.a $(DESTDIR)$(libdir)/libnp.a
@@ -146,6 +148,7 @@ install-local: documentation
 	$(INSTALL) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
 	$(INSTALL) -d $(DESTDIR)$(pkgdocdir)/api-ref
 	$(INSTALL) doc/api-ref/* $(DESTDIR)$(pkgdocdir)/api-ref
+	$(INSTALL) novaprova.pc $(DESTDIR)$(configdir)
 
 clean-local:
 	$(RM) libnp.a $(libnp_OBJS)
@@ -156,3 +159,16 @@ distclean-local: clean-local
 
 check-local:
 
+%: %.in
+	sed \
+	    -e 's|@PACKAGE@|$(PACKAGE)|' \
+	    -e 's|@VERSION@|$(VERSION)|' \
+	    -e 's|@prefix@|$(prefix)|' \
+	    -e 's|@exec_prefix@|$(exec_prefix)|' \
+	    -e 's|@includedir@|$(includedir)|' \
+	    -e 's|@libdir@|$(libdir)|' \
+	    -e 's|@mandir@|$(mandir)|' \
+	    -e 's|@pkgdocdir@|$(pkgdocdir)|' \
+	    -e 's|@configdir@|$(configdir)|' \
+	    -e 's|@mandir@|$(mandir)|' \
+	    < $< > $@
