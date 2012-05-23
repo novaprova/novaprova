@@ -4,6 +4,7 @@
 
 namespace np {
 using namespace std;
+using namespace np::util;
 
 testnode_t::testnode_t(const char *name)
  :  name_(name ? xstrdup(name) : 0)

@@ -3,6 +3,7 @@
 
 namespace spiegel {
 using namespace std;
+using namespace np::util;
 
 int mapping_t::mmap(int fd, bool rw)
 {
@@ -26,6 +27,20 @@ int mapping_t::munmap()
 	map_ = NULL;
     }
     return 0;
+}
+
+void mapping_t::expand_to_pages()
+{
+    unsigned long end = page_round_up(offset_ + size_);
+    offset_ = page_round_down(offset_);
+    size_ = end - offset_;
+}
+
+int mapping_t::compare_by_offset(const void *v1, const void *v2)
+{
+    const mapping_t *m1 = *(const mapping_t **)v1;
+    const mapping_t *m2 = *(const mapping_t **)v2;
+    return u64cmp(m1->offset_, m2->offset_);
 }
 
 // close namespace

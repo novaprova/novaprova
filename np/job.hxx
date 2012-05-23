@@ -10,7 +10,7 @@ namespace np {
 class job_t
 {
 public:
-    static void *operator new(size_t sz) { return xmalloc(sz); }
+    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
 
     job_t(const plan_t::iterator &);

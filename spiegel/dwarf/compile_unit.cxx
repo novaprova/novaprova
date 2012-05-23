@@ -6,6 +6,7 @@
 
 namespace spiegel { namespace dwarf {
 using namespace std;
+using namespace np::util;
 
 bool
 compile_unit_t::read_header(reader_t &r)

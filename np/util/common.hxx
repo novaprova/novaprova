@@ -1,8 +1,24 @@
 #ifndef __NP_COMMON_HXX__
 #define __NP_COMMON_HXX__ 1
 
+/* Include autoconf defines */
+// #include <config.h>
+#define HAVE_STDINT_H 1
+
+#if HAVE_STDINT_H
+/*
+ * Glibc <stdint.h> says:
+ * The ISO C 9X standard specifies that in C++ implementations these
+ * macros [UINT64_MAX et al] should only be defined if explicitly requested.
+ */
+#define __STDC_LIMIT_MACROS 1
+#endif
+
 #include <stdio.h>
 #include <limits.h>
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -12,11 +28,17 @@
 #include <malloc.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <assert.h>
 #include <sys/wait.h>
 #include <sys/signal.h>
 #include <sys/poll.h>
 #include <valgrind/memcheck.h>
 #include <string>
+
+#include <string>
+#include <map>
+#include <vector>
+#include <exception>
 
 // Provide an empty definition of __attribute__ so
 // we can just use it even on non-gcc compilers
@@ -31,6 +53,14 @@
  * For now the C++ API is undocumented.
  */
 namespace np {
+namespace util {
+
+extern int u32cmp(uint32_t ul1, uint32_t ul2);
+extern int u64cmp(uint64_t ull1, uint64_t ull2);
+
+extern void fatal(const char *fmt, ...)
+    __attribute__ (( noreturn ))
+    __attribute__ (( format(printf,1,2) ));
 
 extern void *xmalloc(size_t sz);
 extern void *xrealloc(void *, size_t);
@@ -50,7 +80,11 @@ extern std::string abs_format_iso8601(int64_t);
 extern std::string rel_format(int64_t);
 extern std::string rel_timestamp();
 
-// close the namespace
-};
+extern unsigned long page_size(void);
+extern unsigned long page_round_up(unsigned long x);
+extern unsigned long page_round_down(unsigned long x);
+
+// close the namespaces
+}; };
 
 #endif /* __NP_COMMON_HXX__ */

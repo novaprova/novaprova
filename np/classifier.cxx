@@ -20,7 +20,7 @@ classifier_t::error_string() const
 bool
 classifier_t::set_regexp(const char *re, bool case_sensitive)
 {
-    re_ = xstrdup(re);
+    re_ = np::util::xstrdup(re);
     error_ = regcomp(&compiled_re_, re,
 		    REG_EXTENDED|(case_sensitive ? 0 : REG_ICASE));
     if (error_)

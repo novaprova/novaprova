@@ -42,7 +42,7 @@ be_valground(void)
     if (!discover_args(&argc, &argv))
 	return;
 
-    p = newargv = (const char **)np::xmalloc(sizeof(char *) * (argc+6));
+    p = newargv = (const char **)np::util::xmalloc(sizeof(char *) * (argc+6));
     *p++ = "/usr/bin/valgrind";
     *p++ = "-q";
     *p++ = "--tool=memcheck";
@@ -76,7 +76,7 @@ extern "C" np_runner_t *
 np_init(void)
 {
     be_valground();
-    np::rel_timestamp();
+    np::util::rel_timestamp();
     np::testmanager_t::instance();
     return new np::runner_t;
 }

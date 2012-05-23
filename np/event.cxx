@@ -2,6 +2,7 @@
 
 namespace np {
 using namespace std;
+using namespace np::util;
 
 event_t &event_t::with_stack()
 {
@@ -45,7 +46,7 @@ event_t::save_strings()
     if (function && !(locflags & LT_SPIEGELFUNC))
 	len += strlen(function)+1;
 
-    char *p = freeme_ = (char *)xmalloc(len);
+    char *p = freeme_ = (char *)np::util::xmalloc(len);
     if (description)
     {
 	strcpy(p, description);

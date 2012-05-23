@@ -17,6 +17,7 @@
 
 namespace spiegel { namespace platform {
 using namespace std;
+using namespace np::util;
 
 char *
 self_exe()

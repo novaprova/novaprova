@@ -22,6 +22,7 @@
 #include "spiegel/tok.hxx"
 
 namespace spiegel {
+using namespace np::util;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 

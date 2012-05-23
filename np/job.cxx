@@ -2,6 +2,7 @@
 
 namespace np {
 using namespace std;
+using namespace np::util;
 
 unsigned int job_t::next_id_ = 1;
 

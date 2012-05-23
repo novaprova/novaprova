@@ -48,7 +48,7 @@ private:
     struct linkobj_t
     {
 	linkobj_t(const char *n, uint32_t idx)
-	 :  filename_(xstrdup(n)),
+	 :  filename_(np::util::xstrdup(n)),
 	    index_(idx)
 	{
 	    memset(sections_, 0, sizeof(sections_));

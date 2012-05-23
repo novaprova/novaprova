@@ -7,6 +7,7 @@
 
 namespace spiegel {
 using namespace std;
+using namespace np::util;
 
 value_t
 value_t::make_invalid()

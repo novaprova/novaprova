@@ -15,6 +15,7 @@ __np_exceptstate_t __np_exceptstate;
 
 namespace np {
 using namespace std;
+using namespace np::util;
 
 #define dispatch_listeners(func, ...) \
     do { \

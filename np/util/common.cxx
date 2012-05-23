@@ -1,9 +1,29 @@
 #include "np/util/common.hxx"
 
 namespace np {
+namespace util {
 using namespace std;
 
 const char *argv0 = "np";
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+void
+fatal(const char *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    fprintf(stderr, "%s: ", argv0);
+    vfprintf(stderr, fmt, args);
+    fputc('\n', stderr);
+    fflush(stderr);
+    va_end(args);
+
+    exit(1);
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 static void oom(void) __attribute__((noreturn));
 
@@ -74,6 +94,8 @@ xrealloc(void *p, size_t sz)
     return x;
 }
 
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
 string hex(unsigned long x)
 {
     char buf[32];
@@ -87,6 +109,8 @@ string dec(unsigned int x)
     snprintf(buf, sizeof(buf), "%u", x);
     return string(buf);
 }
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 static int64_t posix_now(int clock)
 {
@@ -140,5 +164,53 @@ string rel_timestamp()
     return rel_format(now - first);
 }
 
-// close the namespace
-};
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+int
+u32cmp(uint32_t ul1, uint32_t ul2)
+{
+    if (ul1 > ul2)
+	return 1;
+    if (ul1 < ul2)
+	return -1;
+    return 0;
+}
+
+int
+u64cmp(uint64_t ull1, uint64_t ull2)
+{
+    if (ull1 > ull2)
+	return 1;
+    if (ull1 < ull2)
+	return -1;
+    return 0;
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+unsigned long
+page_size(void)
+{
+    static unsigned long ps;
+    if (!ps)
+	ps = sysconf(_SC_PAGESIZE);
+    return ps;
+}
+
+unsigned long
+page_round_up(unsigned long x)
+{
+    unsigned long ps = page_size();
+    return ((x + ps - 1) / ps) * ps;
+}
+
+unsigned long
+page_round_down(unsigned long x)
+{
+    unsigned long ps = page_size();
+    return (x / ps) * ps;
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+// close the namespaces
+}; };

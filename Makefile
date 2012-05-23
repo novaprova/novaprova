@@ -58,7 +58,6 @@ libnp_SOURCE=	\
 		spiegel/dwarf/value.cxx \
 		spiegel/dwarf/walker.cxx \
 		spiegel/platform/linux.cxx \
-		spiegel/common.cxx \
 		spiegel/filename.cxx \
 		spiegel/intercept.cxx \
 		spiegel/mapping.cxx \

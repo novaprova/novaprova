@@ -4,6 +4,7 @@
 
 namespace spiegel { namespace dwarf {
 using namespace std;
+using namespace np::util;
 
 #define DEBUG_WALK 0
 

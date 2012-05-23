@@ -6,6 +6,7 @@
 
 namespace np {
 using namespace std;
+using namespace np::util;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 

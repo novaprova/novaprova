@@ -9,6 +9,7 @@
 
 namespace spiegel { namespace dwarf {
 using namespace std;
+using namespace np::util;
 
 state_t *state_t::instance_ = 0;
 

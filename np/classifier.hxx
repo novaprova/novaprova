@@ -9,7 +9,7 @@ namespace np {
 class classifier_t
 {
 public:
-    static void *operator new(size_t sz) { return xmalloc(sz); }
+    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
 
     classifier_t()

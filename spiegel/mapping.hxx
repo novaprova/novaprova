@@ -7,7 +7,7 @@ namespace spiegel {
 
 struct mapping_t
 {
-    static void *operator new(size_t sz) { return xmalloc(sz); }
+    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
 
     mapping_t()
@@ -54,19 +54,9 @@ struct mapping_t
     int mmap(int fd, bool rw);
     int munmap();
 
-    void expand_to_pages()
-    {
-	unsigned long end = page_round_up(offset_ + size_);
-	offset_ = page_round_down(offset_);
-	size_ = end - offset_;
-    }
+    void expand_to_pages();
 
-    static int compare_by_offset(const void *v1, const void *v2)
-    {
-	const mapping_t *m1 = *(const mapping_t **)v1;
-	const mapping_t *m2 = *(const mapping_t **)v2;
-	return u64cmp(m1->offset_, m2->offset_);
-    }
+    static int compare_by_offset(const void *v1, const void *v2);
 
 protected:
     unsigned long offset_;

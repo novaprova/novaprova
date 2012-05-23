@@ -19,7 +19,7 @@ class job_t;
 class runner_t
 {
 public:
-    static void *operator new(size_t sz) { return xmalloc(sz); }
+    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
     static void operator delete(void *x) { free(x); }
     runner_t();
     ~runner_t();
