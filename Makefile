@@ -135,13 +135,17 @@ MARKDOWN= \
 # MARKDOWN=   python -m markdown
 MDFLAGS=    -x codehilite
 
-documentation:
+documentation: doxygen markdown
+
+doxygen:
 	$(RM) -r doc/api-ref doc/man
 	doxygen
 	cd doc ;\
 	    ln -s api-ref api-ref-$(VERSION) ;\
 	    tar -chjvf api-ref-$(VERSION).tar.bz2 api-ref-$(VERSION) ;\
 	    rm -f api-ref-$(VERSION)
+
+markdown:
 	$(MARKDOWN) $(MDFLAGS) doc/get-start/index.md -f doc/get-start/index.html
 
 install-local: documentation
