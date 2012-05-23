@@ -32,9 +32,9 @@ all clean distclean check install:
 
 install check: all
 
-all-local: libnp.a novaprova.pc
+all-local: libnovaprova.a novaprova.pc
 
-libnp_SOURCE=	\
+libnovaprova_SOURCE= \
 		np.c \
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
 		np/child.cxx \
@@ -66,7 +66,7 @@ libnp_SOURCE=	\
 		spiegel/mapping.cxx \
 		spiegel/spiegel.cxx \
 
-libnp_PRIVHEADERS= \
+libnovaprova_PRIVHEADERS= \
 		np_priv.h \
 		np/util/common.hxx \
 		np/util/filename.hxx \
@@ -88,7 +88,8 @@ libnp_PRIVHEADERS= \
 		spiegel/mapping.hxx \
 		spiegel/spiegel.hxx \
 
-libnp_HEADERS=	np.h \
+libnovaprova_HEADERS= \
+		np.h \
 		np/child.hxx \
 		np/classifier.hxx \
 		np/event.hxx \
@@ -103,16 +104,16 @@ libnp_HEADERS=	np.h \
 		np/text_listener.hxx \
 		np/types.hxx \
 
-libnp_OBJS=	\
-	$(patsubst %.c,%.o,$(filter %.c,$(libnp_SOURCE))) \
-	$(patsubst %.cxx,%.o,$(filter %.cxx,$(libnp_SOURCE)))
+libnovaprova_OBJS= \
+	$(patsubst %.c,%.o,$(filter %.c,$(libnovaprova_SOURCE))) \
+	$(patsubst %.cxx,%.o,$(filter %.cxx,$(libnovaprova_SOURCE)))
 #
 # Automatic dependency tracking
-libnp_DFILES= \
-	$(patsubst %.c,$(depdir)/%.d,$(filter %.c,$(libnp_SOURCE))) \
-	$(patsubst %.cxx,$(depdir)/%.d,$(filter %.cxx,$(libnp_SOURCE))) \
+libnovaprova_DFILES= \
+	$(patsubst %.c,$(depdir)/%.d,$(filter %.c,$(libnovaprova_SOURCE))) \
+	$(patsubst %.cxx,$(depdir)/%.d,$(filter %.cxx,$(libnovaprova_SOURCE))) \
 
--include $(libnp_DFILES)
+-include $(libnovaprova_DFILES)
 
 %.o: %.cxx
 	$(COMPILE.C) -o $@ $<
@@ -125,8 +126,8 @@ $(depdir)/%.d: %.c
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	$(COMPILE.c) -MM -MF $@ -MT $(patsubst %.c,%.o,$<) $<
 
-libnp.a: $(libnp_OBJS)
-	$(AR) $(ARFLAGS) libnp.a $(libnp_OBJS)
+libnovaprova.a: $(libnovaprova_OBJS)
+	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
 documentation:
 	$(RM) -r doc/api-ref doc/man
@@ -138,12 +139,12 @@ documentation:
 
 install-local: documentation
 	$(INSTALL) -d $(DESTDIR)$(includedir)/novaprova/np
-	for hdr in $(libnp_HEADERS) ; do \
+	for hdr in $(libnovaprova_HEADERS) ; do \
 	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/novaprova/$$hdr ;\
 	done
 	$(INSTALL) -d $(DESTDIR)$(libdir)
-	$(INSTALL) -m 644 libnp.a $(DESTDIR)$(libdir)/libnp.a
-	$(RANLIB) $(DESTDIR)$(libdir)/libnp.a
+	$(INSTALL) -m 644 libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
+	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
 	$(INSTALL) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
 	$(INSTALL) -d $(DESTDIR)$(pkgdocdir)/api-ref
@@ -151,11 +152,12 @@ install-local: documentation
 	$(INSTALL) novaprova.pc $(DESTDIR)$(configdir)
 
 clean-local:
-	$(RM) libnp.a $(libnp_OBJS)
+	$(RM) libnovaprova.a $(libnovaprova_OBJS)
 
 distclean-local: clean-local
 	$(RM) -r doc/api-ref doc/man
 	$(RM) -r $(depdir)
+	$(RM) novaproca.pc
 
 check-local:
 

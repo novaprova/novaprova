@@ -10,9 +10,9 @@ CXX=		g++
 CXXFLAGS=	$(CFLAGS)
 
 INCLUDES=	-I..
-LIBS=		-L.. -lnp -lstdc++ -lbfd -ldl -lrt \
+LIBS=		../libnovaprova.a -lstdc++ -lbfd -ldl -lrt \
 		$(shell pkg-config --libs libxml++-2.6)
-DEPS=		../np.h ../libnp.a
+DEPS=		../np.h ../libnovaprova.a
 
 all install:
 
