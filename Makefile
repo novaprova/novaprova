@@ -23,9 +23,9 @@ RANLIB=		ranlib
 depdir=		.deps
 
 SUBDIRS_PRE=
-SUBDIRS_POST=	tests
+SUBDIRS_POST=	tests doc/get-start
 
-all clean distclean check install:
+all clean distclean check install documentation:
 	@for dir in $(SUBDIRS_PRE) ; do $(MAKE) -C $$dir $@ ; done
 	@$(MAKE) $@-local
 	@for dir in $(SUBDIRS_POST) ; do $(MAKE) -C $$dir $@ ; done
@@ -129,15 +129,7 @@ $(depdir)/%.d: %.c
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
-MARKDOWN= \
-    PYTHONPATH=$(PWD)/../markdown-2.1.1/Markdown-2.1.1 \
-    python -m markdown.__main__
-# MARKDOWN=   python -m markdown
-MDFLAGS=    -x codehilite -x headerid -x fenced_code
-
-documentation: doxygen markdown
-
-doxygen:
+documentation-local:
 	$(RM) -r doc/api-ref doc/man
 	doxygen
 	cd doc ;\
@@ -145,10 +137,9 @@ doxygen:
 	    tar -chjvf api-ref-$(VERSION).tar.bz2 api-ref-$(VERSION) ;\
 	    rm -f api-ref-$(VERSION)
 
-markdown:
-	$(MARKDOWN) $(MDFLAGS) doc/get-start/index.md -f doc/get-start/index.html
+install: documentation
 
-install-local: documentation
+install-local:
 	$(INSTALL) -d $(DESTDIR)$(includedir)/novaprova/np
 	for hdr in $(libnovaprova_HEADERS) ; do \
 	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/novaprova/$$hdr ;\
