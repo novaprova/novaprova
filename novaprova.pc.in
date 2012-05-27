@@ -7,5 +7,5 @@ Name: NovaProva
 Description: New generation unit test framework for C
 Version: @VERSION@
 Requires: libxml++-2.6
-Libs: -L${libdir} -lnp -lstdc++ -lbfd -ldl -lrt
+Libs: -L${libdir} -lnovaprova -lstdc++ -lbfd -ldl -lrt
 Cflags: -I${includedir}
