@@ -1,0 +1,10 @@
+top_builddir=..
+libdir=${top_builddir}
+includedir=${top_builddir}
+
+Name: NovaProva
+Description: New generation unit test framework for C
+Version: 0.1
+Requires: libxml++-2.6
+Libs: -L${libdir} -lnovaprova -lstdc++ -lbfd -ldl -lrt
+Cflags: -I${includedir}

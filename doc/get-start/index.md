@@ -57,15 +57,15 @@ TEST_SOURCE= mytest.c
 TEST_OBJS=  $(TEST_SOURCE:.c=.o)
 
 testrunner:  testrunner.o $(TEST_OBJS) libmycode.a
-	$(LINK) -o $@ testrunner.o $(TEST_OBJS) libmycode.a $(NOVAPROVA_LIBS)
+	$(LINK.c) -o $@ testrunner.o $(TEST_OBJS) libmycode.a $(NOVAPROVA_LIBS)
 ~~~~
 
 NovaProva uses the GNOME _pkgconfig_ system to make it easy to find the
 right set of compile and link flags.
 
 ~~~~.make
-NOVAPROVA_CFLAGS= $(shell pkg-config --cflags novaprova-0.1)
-NOVAPROVA_LIBS= $(shell pkg-config --libs novaprova-0.1)
+NOVAPROVA_CFLAGS= $(shell pkg-config --cflags novaprova)
+NOVAPROVA_LIBS= $(shell pkg-config --libs novaprova)
 
 CFLAGS= ... -g $(NOVAPROVA_CFLAGS) ...
 ~~~~
@@ -114,13 +114,14 @@ use to register tests with the library.  Instead you just name the
 function _test_something_, and NovaProva will automatically create a
 test called _something_ which calls the function.
 
-For example, let's create a test called _simple_ which does a very
-simple test of the function _atoi_ in the standard C library.
+For example, let's create a test called _simple_ which tests
+the function _myatoi_ which has the same signature and semantics
+as the well-known _atoi_ function in the standard C library.
 
 ~~~~.c
 /* mytest.c */
-#include <stdlib.h> /* for atoi */
-#include <np.h>
+#include <np.h>	    /* NovaProva library */
+#include "mycode.h" /* declares the Code Under Test */
 
 static void test_simple(void)
 {
@@ -136,8 +137,14 @@ equal, and if not fails the test.  Note that if the assert fails, the
 test function terminates immediately.  If the test function gets to it's
 end and returns naturally, the test is considered to have passed.
 
-If we build run this test we get the following output from the
-testrunner.
+If we build run this test we get output something like this.
 
 ~~~~.sh
+% make check
+./testrunner
+np: starting valgrind
+np: running
+np: running: "1:simple"
+PASS 1:simple
+np: 1 run 0 failed
 ~~~~

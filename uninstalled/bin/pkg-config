@@ -1,0 +1,5 @@
+#!/bin/bash
+
+top_builddir=$(cd $(dirname $0)/../.. ; pwd)
+export PKG_CONFIG_PATH=$top_builddir/uninstalled/lib/pkgconfig
+exec /usr/bin/pkg-config --define-variable=top_builddir=$top_builddir "$@"
