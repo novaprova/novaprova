@@ -127,7 +127,7 @@ static void test_simple(void)
 {
     int r;
 
-    r = atoi("42");
+    r = myatoi("42");
     NP_ASSERT_EQUAL(r, 42);
 }
 ~~~~
@@ -148,3 +148,62 @@ np: running: "1:simple"
 PASS 1:simple
 np: 1 run 0 failed
 ~~~~
+
+As expected, the test passed.  Now let's add another test.  The _myatoi_
+function is supposed to convert the initial numeric part of the argument
+string, i.e. to stop when it sees a non-numeric character.  Let's feed
+it a string which will exercise this behaviour and see what happens.
+
+~~~~.c
+static void test_initial(void)
+{
+    int r;
+
+    r = myatoi("4=2");
+    NP_ASSERT_EQUAL(r, 4);
+}
+~~~~
+
+Running the tests we see:
+
+~~~~.sh
+% make check
+./testrunner
+np: starting valgrind
+np: running
+np: running: "1:mytest.simple"
+PASS 1:mytest.simple
+np: running: "2:mytest.initial"
+EVENT ASSERT NP_ASSERT_EQUAL(r=532, 4=4)
+Called from
+0x8052a29 spiegel::describe_stacktrace
+0x804c110 ::with_stack
+0x804b2e6 ::__np_assert_failed
+0x804ac27 ::test_initial
+0x805235c ::invoke
+0x804c731 ::run_function
+0x804d5c4 ::run_test_code
+0x804d831 ::begin_job
+0x804e0d4 ::run_tests
+0x804e22c np::np_run_tests
+0x804ab12 ::main
+
+FAIL 2:mytest.initial
+np: 2 run 1 failed
+make: *** [check] Error 1
+~~~~
+
+The first thing we see is that the name of the old test has changed from
+_simple_ to _mytest.simple_.  NovaProva organises tests into a tree whose
+node names are derived from the test source directory, test source filename,
+and test function name.  This tree is pruned down to the smallest possible
+size at which the root of the tree is unique.  So when we added a second test
+in the same source file, the full name of both tests now includes a component
+_mytest_ derived from the name of the source file _mytest.c_.
+
+Note also that the new test failed.  Immediately after the "np: running:"
+message we see that the _NP_ASSERT_EQUAL_ macro has failed, and printed both
+its arguments as well as a stack trace.  We expected the variable _r_ to equal
+to 4 but its actual value at runtime was 532; clearly the _myatoi_ function
+did not behave correctly.  We found a bug!
+

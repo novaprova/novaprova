@@ -9,3 +9,10 @@ static void test_simple(void)
     NP_ASSERT_EQUAL(r, 42);
 }
 
+static void test_initial(void)
+{
+    int r;
+
+    r = myatoi("4=2");
+    NP_ASSERT_EQUAL(r, 4);
+}
