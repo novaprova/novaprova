@@ -48,7 +48,7 @@ testmanager_t::instance()
 	instance_->setup_builtin_intercepts();
 	/* TODO: check tree for a) leaves without FT_TEST
 	 * and b) non-leaves with FT_TEST */
-	instance_->root_->dump(0);
+// 	instance_->root_->dump(0);
     }
     return instance_;
 }
