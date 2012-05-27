@@ -227,8 +227,8 @@ runner_t::fork_child(job_t *j)
 
     /* parent process */
 
-    fprintf(stderr, "np: spawned child process %d for %s\n",
-	    (int)pid, j->as_string().c_str());
+//     fprintf(stderr, "np: spawned child process %d for %s\n",
+// 	    (int)pid, j->as_string().c_str());
     close(pipefd[PIPE_WRITE]);
     child = new child_t(pid, pipefd[PIPE_READ], j);
     children_.push_back(child);
@@ -512,14 +512,14 @@ runner_t::begin_job(job_t *j)
     child_t *child;
     result_t res;
 
-    {
-	static int n = 0;
-	if (++n > 60)
-	    return;
-    }
+//     {
+// 	static int n = 0;
+// 	if (++n > 60)
+// 	    return;
+//     }
 
-    fprintf(stderr, "%s: begin job %s\n",
-	    rel_timestamp().c_str(), j->as_string().c_str());
+//     fprintf(stderr, "%s: begin job %s\n",
+// 	    rel_timestamp().c_str(), j->as_string().c_str());
 
     dispatch_listeners(begin_job, j);
     j->pre_run(true);
@@ -532,8 +532,8 @@ runner_t::begin_job(job_t *j)
     set_listener(new proxy_listener_t(event_pipe_));
     res = run_test_code(j);
     dispatch_listeners(end_job, j, res);
-    fprintf(stderr, "np: child process %d (%s) finishing\n",
-	    (int)getpid(), j->as_string().c_str());
+//     fprintf(stderr, "np: child process %d (%s) finishing\n",
+// 	    (int)getpid(), j->as_string().c_str());
     delete j;
     exit(0);
 }
