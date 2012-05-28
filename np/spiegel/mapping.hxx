@@ -6,11 +6,8 @@
 namespace np {
 namespace spiegel {
 
-struct mapping_t
+struct mapping_t : public np::util::zalloc
 {
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
     mapping_t()
      :  offset_(0), size_(0), map_(0)
     {}

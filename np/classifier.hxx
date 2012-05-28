@@ -6,12 +6,9 @@
 
 namespace np {
 
-class classifier_t
+class classifier_t : public np::util::zalloc
 {
 public:
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
     classifier_t()
     {
 	results_[0] = false;

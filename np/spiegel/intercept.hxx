@@ -57,11 +57,8 @@ public:
     virtual void set_retval(unsigned long rv) { retval_ = rv; }
 };
 
-struct intercept_t
+struct intercept_t : public np::util::zalloc
 {
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
     intercept_t(addr_t a);
     virtual ~intercept_t();
 

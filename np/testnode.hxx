@@ -8,12 +8,9 @@
 
 namespace np {
 
-class testnode_t
+class testnode_t : public np::util::zalloc
 {
 public:
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
     testnode_t(const char *);
     ~testnode_t();
 

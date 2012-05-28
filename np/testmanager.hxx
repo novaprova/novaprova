@@ -13,7 +13,7 @@ namespace np {
 
 class classifier_t;
 
-class testmanager_t
+class testmanager_t : public np::util::zalloc
 {
 public:
     /* testmanager is a singleton */
@@ -27,8 +27,6 @@ public:
 
     static void done() { delete instance_; }
 private:
-    static void *operator new(size_t sz) { return util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
     testmanager_t();
     ~testmanager_t();
 

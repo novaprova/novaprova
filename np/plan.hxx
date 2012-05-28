@@ -10,12 +10,9 @@ class np_testmanager_t;
 namespace np {
 
 
-class plan_t
+class plan_t : public np::util::zalloc
 {
 public:
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
     plan_t();
     ~plan_t();
 

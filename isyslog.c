@@ -25,11 +25,8 @@ enum sldisposition_t
     SL_FAIL,
 };
 
-struct slmatch_t
+struct slmatch_t : public np::util::zalloc
 {
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
     classifier_t classifier_;
     unsigned int count_;
     int tag_;

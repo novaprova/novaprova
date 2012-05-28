@@ -70,6 +70,13 @@ extern char *xstrdup(const char *s);
 #define xstr(x)  ((x) ? (x) : "")
 extern const char *argv0;
 
+class zalloc
+{
+public:
+    void *operator new(size_t sz) { return xmalloc(sz); }
+    void operator delete(void *x) { free(x); }
+};
+
 extern std::string hex(unsigned long x);
 extern std::string dec(unsigned int x);
 

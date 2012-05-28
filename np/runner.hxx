@@ -16,11 +16,9 @@ class child_t;
 class testnode_t;
 class job_t;
 
-class runner_t
+class runner_t : public np::util::zalloc
 {
 public:
-    static void *operator new(size_t sz) { return util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
     runner_t();
     ~runner_t();
 

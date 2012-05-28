@@ -9,12 +9,9 @@ namespace np {
 
 class job_t;
 
-class child_t
+class child_t : public np::util::zalloc
 {
 public:
-    static void *operator new(size_t sz) { return np::util::xmalloc(sz); }
-    static void operator delete(void *x) { free(x); }
-
     child_t(pid_t pid, int fd, job_t *);
     ~child_t();
 
