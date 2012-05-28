@@ -16,7 +16,7 @@ DEPS=		../np.h ../libnovaprova.a
 
 all install documentation:
 
-NP_TESTS= \
+SIMPLE_TESTS= \
     t000 \
     t001 \
     t002 \
@@ -25,24 +25,25 @@ NP_TESTS= \
     t006 \
     t007 \
     t008 \
+    tintercept \
 
-SPIEGEL_TESTS= \
+COMPOUND_TESTS= \
     tinfo \
 
-SPIEGEL_SUBTESTS= \
+COMPOUND_SUBTESTS= \
     namespace \
 
-SPIEGEL_DATA= $(patsubst %,d-%.o,$(SPIEGEL_SUBTESTS))
+COMPOUND_DATA= $(patsubst %,d-%.o,$(COMPOUND_SUBTESTS))
 
-tests: $(NP_TESTS) $(SPIEGEL_TESTS) $(SPIEGEL_DATA) spiegeltest
+tests: $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA) spiegeltest
 
 # Default to verbose for now
 V=1
 
 check: tests run_np run_spiegel
 
-run_np:
-	@e=0 ; for t in $(NP_TESTS) ; do \
+run_simple:
+	@e=0 ; for t in $(SIMPLE_TESTS) ; do \
 	    a= ;\
 	    [ "$V" ] && a="--verbose" ;\
 	    s=runtest.sh ;\
@@ -51,8 +52,8 @@ run_np:
 	done ; exit $$e
 
 run_spiegel:
-	@e=0 ; for t in $(SPIEGEL_TESTS) ; do \
-	    for st in $(SPIEGEL_SUBTESTS) ; do \
+	@e=0 ; for t in $(COMPOUND_TESTS) ; do \
+	    for st in $(COMPOUND_SUBTESTS) ; do \
 		a= ;\
 		[ "$V" ] && a="--verbose" ;\
 		s=spiegel.sh ;\

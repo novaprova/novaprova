@@ -1,5 +1,6 @@
 t[0-9][0-9][0-9]
 tinfo
+tintercept
 t*.log
 reports
 spiegeltest
