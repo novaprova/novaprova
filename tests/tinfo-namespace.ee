@@ -1,0 +1,79 @@
+Info
+====
+compile_unit {
+Entry E1 [0] DW_TAG_compile_unit {
+    DW_AT_language = 0x4
+    DW_AT_name = "d-namespace.cxx"
+}
+Entry E2 [1] DW_TAG_namespace_type {
+    DW_AT_name = "foo"
+    DW_AT_decl_file = 0x1
+    DW_AT_decl_line = 0x3
+    DW_AT_sibling = (ref){0x0,E3}
+}
+Entry E4 [2] DW_TAG_namespace_type {
+    DW_AT_name = "bar"
+    DW_AT_decl_file = 0x1
+    DW_AT_decl_line = 0x5
+}
+Entry E5 [3] DW_TAG_class_type {
+    DW_AT_name = "baz"
+    DW_AT_declaration = 0x1
+}
+Entry E3 [1] DW_TAG_class_type {
+    DW_AT_specification = (ref){0x0,E5}
+    DW_AT_byte_size = 0x1
+    DW_AT_decl_file = 0x1
+    DW_AT_decl_line = 0x7
+    DW_AT_sibling = (ref){0x0,E6}
+}
+Entry E7 [2] DW_TAG_subprogram {
+    DW_AT_external = 0x1
+    DW_AT_name = "quux"
+    DW_AT_decl_file = 0x1
+    DW_AT_decl_line = 0x9
+    DW_AT_0x2007 = "_ZN3foo3bar3baz4quuxEi"
+    DW_AT_type = (ref){0x0,E6}
+    DW_AT_declaration = 0x1
+}
+Entry E8 [3] DW_TAG_formal_parameter {
+    DW_AT_type = (ref){0x0,E9}
+    DW_AT_artificial = 0x1
+}
+Entry E10 [3] DW_TAG_formal_parameter {
+    DW_AT_type = (ref){0x0,E6}
+}
+Entry E6 [1] DW_TAG_base_type {
+    DW_AT_byte_size = 0x4
+    DW_AT_encoding = 0x5
+    DW_AT_name = "int"
+}
+Entry E9 [1] DW_TAG_pointer_type {
+    DW_AT_byte_size = 0x4
+    DW_AT_type = (ref){0x0,E3}
+}
+Entry E11 [1] DW_TAG_subprogram {
+    DW_AT_specification = (ref){0x0,E7}
+    DW_AT_decl_line = 0xc
+    DW_AT_frame_base = 0x0
+    DW_AT_sibling = (ref){0x0,E12}
+}
+Entry E13 [2] DW_TAG_formal_parameter {
+    DW_AT_name = "this"
+    DW_AT_type = (ref){0x0,E12}
+    DW_AT_artificial = 0x1
+    DW_AT_location = 0x91 0x00
+}
+Entry E14 [2] DW_TAG_formal_parameter {
+    DW_AT_name = "x"
+    DW_AT_decl_file = 0x1
+    DW_AT_decl_line = 0xc
+    DW_AT_type = (ref){0x0,E6}
+    DW_AT_location = 0x91 0x04
+}
+Entry E12 [1] DW_TAG_const_type {
+    DW_AT_type = (ref){0x0,E9}
+}
+} compile_unit
+
+

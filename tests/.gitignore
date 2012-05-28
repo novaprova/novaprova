@@ -1,4 +1,5 @@
 t[0-9][0-9][0-9]
-t[0-9][0-9][0-9].log
+tinfo
+t*.log
 reports
 spiegeltest

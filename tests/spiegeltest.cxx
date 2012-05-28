@@ -1,5 +1,6 @@
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
+#include <sys/stat.h>
 #include <dlfcn.h>
 #include <libintl.h>
 using namespace std;
@@ -67,15 +68,15 @@ static int
 test_filenames(int argc, char **argv __attribute__((unused)))
 {
     if (argc != 1)
-	np::spiegel::fatal("Usage: testrunner filenames\n");
+	fatal("Usage: testrunner filenames\n");
 
     filenames_setup();
 
 #define TESTCASE(in, expected) \
 { \
-    np::spiegel::filename_t _in(in); \
-    np::spiegel::filename_t _out = _in.make_absolute(); \
-    np::spiegel::filename_t _exp(expected); \
+    np::util::filename_t _in(in); \
+    np::util::filename_t _out = _in.make_absolute(); \
+    np::util::filename_t _exp(expected); \
     fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
 	_in.c_str(), _out.c_str(), _exp.c_str()); \
     assert(!strcmp(_out.c_str(), _exp.c_str())); \
@@ -101,9 +102,9 @@ test_filenames(int argc, char **argv __attribute__((unused)))
     filenames_setup();
 #define TESTCASE(in, expected) \
 { \
-    np::spiegel::filename_t _in(in); \
-    np::spiegel::filename_t _out = _in.normalise(); \
-    np::spiegel::filename_t _exp(expected); \
+    np::util::filename_t _in(in); \
+    np::util::filename_t _out = _in.normalise(); \
+    np::util::filename_t _exp(expected); \
     fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
 	_in.c_str(), _out.c_str(), _exp.c_str()); \
     assert(!strcmp(_out.c_str(), _exp.c_str())); \
@@ -138,55 +139,6 @@ test_filenames(int argc, char **argv __attribute__((unused)))
 }
 
 static int
-test_info(int argc, char **argv)
-{
-    bool preorder = true;
-    bool paths = false;
-    const char *filename = 0;
-    for (int i = 1 ; i < argc ; i++)
-    {
-	if (!strcmp(argv[i], "--preorder"))
-	{
-	    preorder = true;
-	}
-	else if (!strcmp(argv[i], "--recursive"))
-	{
-	    preorder = false;
-	}
-	else if (!strcmp(argv[i], "--paths"))
-	{
-	    paths = true;
-	}
-	else if (argv[i][0] == '-')
-	{
-usage:
-	    np::spiegel::fatal("Usage: testrunner info [--preorder|--recursive] [--paths] [executable]\n");
-	}
-	else
-	{
-	    if (filename)
-		goto usage;
-	    filename = argv[i];
-	}
-    }
-
-    np::spiegel::dwarf::state_t state;
-    if (filename)
-    {
-	if (!state.add_executable(filename))
-	    return 1;
-    }
-    else
-    {
-	if (!state.add_self())
-	    return 1;
-    }
-    state.dump_info(preorder, paths);
-
-    return 0;
-}
-
-static int
 test_abbrevs(int argc, char **argv)
 {
     const char *filename = 0;
@@ -195,7 +147,7 @@ test_abbrevs(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    np::spiegel::fatal("Usage: testrunner abbrevs [executable]\n");
+	    fatal("Usage: testrunner abbrevs [executable]\n");
 	}
 	else
 	{
@@ -231,7 +183,7 @@ test_functions_dwarf(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    np::spiegel::fatal("Usage: testrunner functions_dwarf [executable]\n");
+	    fatal("Usage: testrunner functions_dwarf [executable]\n");
 	}
 	else
 	{
@@ -267,7 +219,7 @@ test_variables(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    np::spiegel::fatal("Usage: testrunner variables [executable]\n");
+	    fatal("Usage: testrunner variables [executable]\n");
 	}
 	else
 	{
@@ -303,7 +255,7 @@ test_structs(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    np::spiegel::fatal("Usage: testrunner structs [executable]\n");
+	    fatal("Usage: testrunner structs [executable]\n");
 	}
 	else
 	{
@@ -396,7 +348,7 @@ test_compile_units(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    np::spiegel::fatal("Usage: testrunner compile_units [executable]\n");
+	    fatal("Usage: testrunner compile_units [executable]\n");
 	}
 	else
 	{
@@ -446,7 +398,7 @@ test_functions(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    np::spiegel::fatal("Usage: testrunner functions [executable]\n");
+	    fatal("Usage: testrunner functions [executable]\n");
 	}
 	else
 	{
@@ -505,7 +457,7 @@ test_types(int argc, char **argv)
 	if (argv[i][0] == '-')
 	{
 usage:
-	    np::spiegel::fatal("Usage: testrunner types [executable]\n");
+	    fatal("Usage: testrunner types [executable]\n");
 	}
 	else
 	{
@@ -553,11 +505,10 @@ static void addr2line(unsigned long addr)
 	return;
     }
 
-    printf("address 0x%lx filename %s line %u class %s function %s offset 0x%x\n",
+    printf("address 0x%lx filename %s line %u function %s offset 0x%x\n",
 	  addr,
 	  loc.compile_unit_->get_absolute_path().c_str(),
 	  loc.line_,
-	  loc.class_ ? loc.class_->get_name().c_str() : "-",
 	  loc.function_ ? loc.function_->get_name().c_str() : "-",
 	  loc.offset_);
 }
@@ -581,7 +532,7 @@ test_addr2line(int argc, char **argv __attribute__((unused)))
     }
     if (argc > 3)
     {
-	np::spiegel::fatal("Usage: testrunner addr2line [addr [executable]]\n");
+	fatal("Usage: testrunner addr2line [addr [executable]]\n");
     }
 
     np::spiegel::dwarf::state_t state;
@@ -826,7 +777,7 @@ test_intercept(int argc, char **argv __attribute__((unused)))
 {
     if (argc > 1)
     {
-	np::spiegel::fatal("Usage: testrunner intercept\n");
+	fatal("Usage: testrunner intercept\n");
     }
 
     np::spiegel::dwarf::state_t state;
@@ -982,11 +933,9 @@ main(int argc, char **argv)
     top_of_stack = (unsigned long)&argc;
 #endif
 
-    np::spiegel::argv0 = argv[0];
+    np::util::argv0 = argv[0];
     if (!strcmp(argv[1], "filenames"))
 	return test_filenames(argc-1, argv+1);
-    if (!strcmp(argv[1], "info"))
-	return test_info(argc-1, argv+1);
     if (!strcmp(argv[1], "abbrevs"))
 	return test_abbrevs(argc-1, argv+1);
     if (!strcmp(argv[1], "functions"))
