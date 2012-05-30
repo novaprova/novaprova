@@ -78,11 +78,11 @@ run_compound:
 	    done ;\
 	done ; exit $$e
 
-%: %.c fw.o fw.h $(DEPS)
-	$(LINK.c) -o $@ $< fw.o $(LIBS)
+%: %.c fw.a fw.h $(DEPS)
+	$(LINK.c) -o $@ $< fw.a $(LIBS)
 
-%: %.cxx fw.o fw.h $(DEPS)
-	$(LINK.C) -o $@ $< fw.o $(LIBS)
+%: %.cxx fw.a fw.h $(DEPS)
+	$(LINK.C) -o $@ $< fw.a $(LIBS)
 
 d-%.o: d-%.cxx
 	$(CXX) $(CDEBUGFLAGS) -o $@ -c $<
@@ -90,11 +90,16 @@ d-%.o: d-%.cxx
 %.c: %-genc.pl
 	perl $< > $@
 
+fw.a: fw.o fw-stubs.o
+	ar ruv $@ fw.o fw-stubs.o
+	ranlib $@
+
 $(DUMPERS): tdump
 	$(RM) $@
 	ln $< $@
 
 clean:
 	$(RM) $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
+	$(RM) fw.a fw.o fw-stubs.o
 
 distclean: clean

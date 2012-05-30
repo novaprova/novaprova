@@ -19,10 +19,3 @@ int is_verbose(void)
 
 char __testname[1024];
 
-void setup(void)
-{
-}
-
-void teardown(void)
-{
-}

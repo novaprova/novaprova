@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-extern void setup(void);
-extern void teardown(void);
+extern int setup(void);
+extern int teardown(void);
 extern int is_verbose(void);
 extern char __testname[1024];
 
@@ -22,7 +22,12 @@ extern char __testname[1024];
 	printf(". %s ", __testname); \
 	if (is_verbose()) printf("\n"); \
 	fflush(stdout); \
-	setup();
+	if (setup()) { \
+	    if (is_verbose()) printf(". %s ", __testname); \
+	    printf("- setup FAIL\n"); \
+	    fflush(stdout); \
+	    return 1; \
+	} \
 
 #define CHECK(expr) \
 	do { \

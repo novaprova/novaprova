@@ -1,5 +1,6 @@
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
+#include "fw.h"
 #include <sys/stat.h>
 
 using namespace std;
@@ -10,7 +11,7 @@ using namespace np::util;
 
 static char oldcwd[PATH_MAX];
 
-static int
+int
 setup(void)
 {
     struct stat sb;
@@ -49,7 +50,7 @@ setup(void)
     return 0;
 }
 
-static int
+int
 teardown()
 {
     int r;
@@ -70,15 +71,14 @@ main(int argc, char **argv __attribute__((unused)))
     if (argc != 1)
 	fatal("Usage: %s filenames\n", argv0);
 
-    setup();
 #define TESTCASE(in, expected) \
 { \
     np::util::filename_t _in(in); \
+    BEGIN("absolute(\"%s\")", _in.c_str()); \
     np::util::filename_t _out = _in.make_absolute(); \
     np::util::filename_t _exp(expected); \
-    fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
-	_in.c_str(), _out.c_str(), _exp.c_str()); \
-    assert(!strcmp(_out.c_str(), _exp.c_str())); \
+    CHECK(!strcmp(_out.c_str(), _exp.c_str())); \
+    END; \
 }
     TESTCASE("/foo/bar", "/foo/bar");
     TESTCASE("/foo", "/foo");
@@ -97,17 +97,15 @@ main(int argc, char **argv __attribute__((unused)))
     TESTCASE("../../../foo/bar", BASEDIR"/foo/bar");
     TESTCASE("./../.././../foo/bar", BASEDIR"/foo/bar");
 #undef TESTCASE
-    teardown();
 
-    setup();
 #define TESTCASE(in, expected) \
 { \
     np::util::filename_t _in(in); \
+    BEGIN("normalise(\"%s\")", _in.c_str()); \
     np::util::filename_t _out = _in.normalise(); \
     np::util::filename_t _exp(expected); \
-    fprintf(stderr, "absolute(\"%s\") = \"%s\", expecting \"%s\"\n", \
-	_in.c_str(), _out.c_str(), _exp.c_str()); \
-    assert(!strcmp(_out.c_str(), _exp.c_str())); \
+    CHECK(!strcmp(_out.c_str(), _exp.c_str())); \
+    END; \
 }
     TESTCASE("/foo/bar", "/foo/bar");
     TESTCASE("//foo////bar", "/foo/bar");
@@ -134,7 +132,6 @@ main(int argc, char **argv __attribute__((unused)))
     TESTCASE("../../../foo/bar", "../../../foo/bar");
     TESTCASE("./../.././../foo/bar", "../../../foo/bar");
 #undef TESTCASE
-    teardown();
 
     return 0;
 }
