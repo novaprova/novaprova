@@ -1,9 +1,9 @@
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
+#include "fw.h"
 
 using namespace std;
 using namespace np::util;
-
 
 int
 main(int argc __attribute__((unused)),
@@ -11,15 +11,12 @@ main(int argc __attribute__((unused)),
 {
 #define TESTCASE(in, out) \
     { \
-	printf(". read_sleb128(%d) ", out); fflush(stdout); \
+	BEGIN("read_sleb128(%d)", out); \
 	np::spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
-	int32_t v; \
-	if (!r.read_sleb128(v) || v != out) \
-	{ \
-	    printf("FAIL\n"); \
-	    return 1; \
-	} \
-	printf("PASS\n"); \
+	int32_t v = 0; \
+	CHECK(r.read_sleb128(v)); \
+	CHECK(v == out); \
+	END; \
     }
     TESTCASE("\x02", 2);
     TESTCASE("\x7e", -2);
@@ -33,15 +30,12 @@ main(int argc __attribute__((unused)),
 #undef TESTCASE
 #define TESTCASE(in, out) \
     { \
-	printf(". read_uleb128(%u) ", out); fflush(stdout); \
+	BEGIN("read_uleb128(%u)", out); \
 	np::spiegel::dwarf::reader_t r(in, sizeof(in)-1); \
-	uint32_t v; \
-	if (!r.read_uleb128(v) || v != out) \
-	{ \
-	    printf("FAIL\n"); \
-	    return 1; \
-	} \
-	printf("PASS\n"); \
+	uint32_t v = 0; \
+	CHECK(r.read_uleb128(v)); \
+	CHECK(v == out); \
+	END; \
     }
 
     TESTCASE("\x02", 2);

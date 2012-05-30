@@ -37,7 +37,7 @@ function runtest
 }
 
 if [ $verbose ] ; then
-    runtest 2>&1 | tee $TEST-$SUBTEST.log
+    VERBOSE=yes runtest 2>&1 | tee $TEST-$SUBTEST.log
 else
     runtest > $TEST-$SUBTEST.log 2>&1
 fi

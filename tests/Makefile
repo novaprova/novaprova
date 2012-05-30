@@ -78,11 +78,11 @@ run_compound:
 	    done ;\
 	done ; exit $$e
 
-%: %.c $(DEPS)
-	$(LINK.c) -o $@ $< $(LIBS)
+%: %.c fw.o fw.h $(DEPS)
+	$(LINK.c) -o $@ $< fw.o $(LIBS)
 
-%: %.cxx $(DEPS)
-	$(LINK.C) -o $@ $< $(LIBS)
+%: %.cxx fw.o fw.h $(DEPS)
+	$(LINK.C) -o $@ $< fw.o $(LIBS)
 
 d-%.o: d-%.cxx
 	$(CXX) $(CDEBUGFLAGS) -o $@ -c $<
