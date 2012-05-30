@@ -76,8 +76,7 @@ main(int argc, char **argv __attribute__((unused)))
     np::util::filename_t _in(in); \
     BEGIN("absolute(\"%s\")", _in.c_str()); \
     np::util::filename_t _out = _in.make_absolute(); \
-    np::util::filename_t _exp(expected); \
-    CHECK(!strcmp(_out.c_str(), _exp.c_str())); \
+    CHECK(!strcmp(_out.c_str(), expected)); \
     END; \
 }
     TESTCASE("/foo/bar", "/foo/bar");
@@ -103,8 +102,7 @@ main(int argc, char **argv __attribute__((unused)))
     np::util::filename_t _in(in); \
     BEGIN("normalise(\"%s\")", _in.c_str()); \
     np::util::filename_t _out = _in.normalise(); \
-    np::util::filename_t _exp(expected); \
-    CHECK(!strcmp(_out.c_str(), _exp.c_str())); \
+    CHECK(!strcmp(_out.c_str(), expected)); \
     END; \
 }
     TESTCASE("/foo/bar", "/foo/bar");
