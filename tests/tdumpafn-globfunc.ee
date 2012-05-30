@@ -1,0 +1,6 @@
+Functions
+=========
+$PWD/d-globfunc.cxx
+    extern int foo(int x)
+
+

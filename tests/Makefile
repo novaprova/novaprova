@@ -17,6 +17,9 @@ DEPS=		../np.h ../libnovaprova.a
 all install documentation:
 
 SIMPLE_TESTS= \
+    tintercept \
+    treader \
+    tfilename \
     t000 \
     t001 \
     t002 \
@@ -25,22 +28,35 @@ SIMPLE_TESTS= \
     t006 \
     t007 \
     t008 \
-    tintercept \
+
+DUMPERS= \
+    tdumpacu \
+    tdumpafn \
+    tdumpatype \
+    tdumpdabbr \
+    tdumpdfn \
+    tdumpdstruct \
+    tdumpdvar \
+    tdumpvar \
 
 COMPOUND_TESTS= \
+    taddr2line \
     tinfo \
+    $(DUMPERS) \
 
 COMPOUND_SUBTESTS= \
+    globfunc \
+    membfunc \
     namespace \
 
 COMPOUND_DATA= $(patsubst %,d-%.o,$(COMPOUND_SUBTESTS))
 
-tests: $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA) spiegeltest
+tests: $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
 
 # Default to verbose for now
 V=1
 
-check: tests run_np run_spiegel
+check: tests run_simple run_compound
 
 run_simple:
 	@e=0 ; for t in $(SIMPLE_TESTS) ; do \
@@ -51,15 +67,16 @@ run_simple:
 	    env bash $$s $$a $$t || e=1 ;\
 	done ; exit $$e
 
-run_spiegel:
+run_compound:
 	@e=0 ; for t in $(COMPOUND_TESTS) ; do \
 	    for st in $(COMPOUND_SUBTESTS) ; do \
 		a= ;\
 		[ "$V" ] && a="--verbose" ;\
-		s=spiegel.sh ;\
+		s=runcompound.sh ;\
 		[ -f $$t.sh ] && s=$$t.sh ;\
 		env bash $$s $$a $$t $$st || e=1 ;\
-	done ; done ; exit $$e
+	    done ;\
+	done ; exit $$e
 
 %: %.c $(DEPS)
 	$(LINK.c) -o $@ $< $(LIBS)
@@ -73,7 +90,11 @@ d-%.o: d-%.cxx
 %.c: %-genc.pl
 	perl $< > $@
 
+$(DUMPERS): tdump
+	$(RM) $@
+	ln $< $@
+
 clean:
-	$(RM) $(TESTS) spiegeltest
+	$(RM) $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
 
 distclean: clean

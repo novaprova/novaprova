@@ -13,7 +13,7 @@ function msg()
 
 function fail()
 {
-    msg "FAIL $TEST"
+    msg "FAIL $TEST-$SUBTEST"
     exit 1;
 }
 
@@ -45,6 +45,9 @@ fi
 if [ -f $TEST-$SUBTEST.ee ] ; then
     # compare events logged against expected events
     ./$TEST-normalize.pl $TEST-$SUBTEST.log | diff -u $TEST-$SUBTEST.ee - || fail
+else
+    echo "$TEST-$SUBTEST.ee: no such file or directory - create one!"
+    fail
 fi
 
 msg "PASS $TEST-$SUBTEST"

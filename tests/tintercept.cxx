@@ -213,6 +213,9 @@ public:
 int
 main(int argc, char **argv __attribute__((unused)))
 {
+#if 0
+    top_of_stack = (unsigned long)&argc;
+#endif
     if (argc > 1)
     {
 	fatal("Usage: testrunner intercept\n");
