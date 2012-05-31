@@ -18,7 +18,7 @@ extern char __testname[1024];
 
 #define BEGIN(fmt, ...) \
     { \
-	snprintf(__testname, sizeof(__testname), fmt, __VA_ARGS__); \
+	snprintf(__testname, sizeof(__testname), fmt, ## __VA_ARGS__); \
 	printf(". %s ", __testname); \
 	if (is_verbose()) printf("...\n"); \
 	fflush(stdout); \
