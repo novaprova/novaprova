@@ -272,6 +272,7 @@ public:
 class function_t : public member_t
 {
 public:
+    std::string get_full_name() const;
     type_t *get_return_type() const;
     std::vector<type_t*> get_parameter_types() const;
     std::vector<const char *> get_parameter_names() const;
