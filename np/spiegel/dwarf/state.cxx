@@ -649,14 +649,12 @@ bool
 state_t::describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
 			  unsigned int &lineno,
-			  reference_t &classref,
 			  reference_t &funcref,
 			  unsigned int &offset) const
 {
     // initialise all the results to the "dunno" case
     curef = reference_t::null;
     lineno = 0;
-    classref = reference_t::null;
     funcref = reference_t::null;
     offset = 0;
 
@@ -665,29 +663,26 @@ state_t::describe_address(np::spiegel::addr_t addr,
     {
 	walker_t w((*i)->make_root_reference());
 	const entry_t *e = w.move_next();
-	if (is_within(addr, w, offset))
+	for (; e ; e = w.move_next())
 	{
-	    curef = w.get_reference();
-	    for (e = w.move_down() ; e ; e = w.move_next())
+	    if (is_within(addr, w, offset))
 	    {
 		switch (e->get_tag())
 		{
+		case DW_TAG_compile_unit:
+		    curef = w.get_reference();
+		    e = w.move_down();
+		    break;
 		case DW_TAG_subprogram:
-		    if (is_within(addr, w, offset))
-		    {
-			if (e->get_attribute(DW_AT_specification))
-			{
-			    e = w.move_to(e->get_reference_attribute(DW_AT_specification));
-			    funcref = w.get_reference();
-			    e = w.move_up();
-			    classref = (e ? w.get_reference() : reference_t::null);
-			}
-			else
-			{
-			    funcref = w.get_reference();
-			}
-			return true;
-		    }
+		    if (e->get_attribute(DW_AT_specification))
+			e = w.move_to(e->get_reference_attribute(DW_AT_specification));
+		    funcref = w.get_reference();
+		    return true;
+		case DW_TAG_class_type:
+		case DW_TAG_structure_type:
+		case DW_TAG_union_type:
+		case DW_TAG_namespace_type:
+		    e = w.move_down();
 		    break;
 		}
 	    }
