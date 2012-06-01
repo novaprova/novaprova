@@ -605,15 +605,6 @@ state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 	}
 	return false;
     }
-    if (has_lo)
-    {
-	if (addr == lo)
-	{
-	    offset = 0;
-	    return true;
-	}
-	return false;
-    }
     if (ranges)
     {
 	reader_t r = w.get_section_contents(DW_sec_ranges);
@@ -641,6 +632,15 @@ state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 		return true;
 	    }
 	}
+    }
+    if (has_lo)
+    {
+	if (addr == lo)
+	{
+	    offset = 0;
+	    return true;
+	}
+	return false;
     }
     return false;
 }
