@@ -589,12 +589,14 @@ state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 		   unsigned int &offset) const
 {
     const entry_t *e = w.get_entry();
+    bool has_lo = (e->get_attribute(DW_AT_low_pc) != 0);
     uint64_t lo = e->get_uint64_attribute(DW_AT_low_pc);
+    bool has_hi = (e->get_attribute(DW_AT_high_pc) != 0);
     uint64_t hi = e->get_uint64_attribute(DW_AT_high_pc);
     // DW_AT_ranges is a DWARF3 attribute, but g++ generates
     // it (despite only claiming DWARF2 compliance).
     uint64_t ranges = e->get_uint64_attribute(DW_AT_ranges);
-    if (lo && hi)
+    if (has_lo && has_hi)
     {
 	if (addr >= lo && addr <= hi)
 	{
@@ -603,7 +605,7 @@ state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 	}
 	return false;
     }
-    if (lo)
+    if (has_lo)
     {
 	if (addr == lo)
 	{
