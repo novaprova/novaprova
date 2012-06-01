@@ -103,6 +103,13 @@ string hex(unsigned long x)
     return string(buf);
 }
 
+string HEX(unsigned long x)
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "0x%lX", x);
+    return string(buf);
+}
+
 string dec(unsigned int x)
 {
     char buf[32];

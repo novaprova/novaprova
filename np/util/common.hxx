@@ -78,6 +78,7 @@ public:
 };
 
 extern std::string hex(unsigned long x);
+extern std::string HEX(unsigned long x);
 extern std::string dec(unsigned int x);
 
 #define NANOSEC_PER_SEC	    (1000000000LL)
