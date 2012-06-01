@@ -18,7 +18,7 @@ static void addr2line(unsigned long addr)
 
     if (!np::spiegel::describe_address(addr, loc))
     {
-	printf("address 0x%lx filename - line - class - function -\n", addr);
+	printf("address 0x%lx filename - line - function - offset -\n", addr);
 	return;
     }
 
@@ -26,7 +26,7 @@ static void addr2line(unsigned long addr)
 	  addr,
 	  loc.compile_unit_->get_absolute_path().c_str(),
 	  loc.line_,
-	  loc.function_ ? loc.function_->get_name().c_str() : "-",
+	  loc.function_ ? loc.function_->get_full_name().c_str() : "-",
 	  loc.offset_);
 }
 
@@ -49,7 +49,7 @@ main(int argc, char **argv __attribute__((unused)))
     }
     if (argc > 3)
     {
-	fatal("Usage: testrunner addr2line [addr [executable]]\n");
+	fatal("Usage: taddr2line [addr [executable]]\n");
     }
 
     np::spiegel::dwarf::state_t state;

@@ -618,14 +618,12 @@ bool describe_address(addr_t addr, class location_t &loc)
     np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
 
     np::spiegel::dwarf::reference_t curef;
-    np::spiegel::dwarf::reference_t classref;
     np::spiegel::dwarf::reference_t funcref;
     if (!state->describe_address(addr, curef, loc.line_,
-				 classref, funcref, loc.offset_))
+				 funcref, loc.offset_))
 	return false;
 
     loc.compile_unit_ = _cacher_t::make_compile_unit(curef);
-    loc.class_ = _cacher_t::make_type(classref);
     loc.function_ = _cacher_t::make_function(funcref);
     return true;
 }
@@ -707,9 +705,7 @@ std::string describe_stacktrace()
 	{
 	    s += " ";
 
-	    if (loc.class_)
-		s += loc.class_->get_name() + "::";
-	    s += loc.function_->get_name();
+	    s += loc.function_->get_full_name();
 
 	    if (loc.compile_unit_ && loc.line_)
 	    {
