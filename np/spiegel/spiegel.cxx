@@ -696,28 +696,38 @@ std::string describe_stacktrace()
     string s;
     vector<addr_t> stack = np::spiegel::platform::get_stacktrace();
     vector<addr_t>::iterator i;
+    bool first = true;
     bool done = false;
     for (i = stack.begin() ; !done && i != stack.end() ; ++i)
     {
-	s += hex(*i);
+	s += (first ? "at " : "by ");
+	s += HEX(*i);
+	s += ":";
 	location_t loc;
 	if (describe_address(*i, loc))
 	{
-	    s += " ";
-
-	    s += loc.function_->get_full_name();
-
-	    if (loc.compile_unit_ && loc.line_)
+	    if (loc.function_)
 	    {
-		s += " at ";
-		s += loc.compile_unit_->get_name();
-		s += ":";
-		s += dec(loc.line_);
+		s += " ";
+		s += loc.function_->get_full_name();
 	    }
-	    if (loc.function_->get_name() == "main")
+
+	    if (loc.compile_unit_)
+	    {
+		s += " (";
+		s += loc.compile_unit_->get_name();
+		if (loc.line_)
+		{
+		    s += ":";
+		    s += dec(loc.line_);
+		}
+		s += ")";
+	    }
+	    if (loc.function_ && loc.function_->get_name() == "main")
 		done = true;
 	}
 	s += "\n";
+	first = false;
     }
     return s;
 }
