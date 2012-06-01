@@ -28,6 +28,20 @@ TEST="$1"
 
 [ $verbose ] && msg "starting $TEST"
 
+function normalize
+{
+    local f="$1"
+    if [ -f $TEST-normalize.pl ] ; then
+	perl $TEST-normalize.pl < $f
+    elif [ -f $TEST-normalize.awk ] ; then
+	awk -f $TEST-normalize.awk < $f
+    else
+	# Default normalization
+	egrep '^(EVENT|PASS|FAIL|N/A|EXIT|\?\?\?) ' < $f |\
+	    sed -e 's/process [0-9]\+/process %PID%/g'
+    fi
+}
+
 function runtest
 {
     [ -e $TEST-pre.sh ] && bash $TEST-pre.sh $TEST
@@ -44,9 +58,7 @@ fi
 
 if [ -f $TEST.ee ] ; then
     # compare events logged against expected events
-    egrep '^(EVENT|PASS|FAIL|N/A|EXIT|\?\?\?) ' $TEST.log |\
-	sed -e 's/process [0-9]\+/process %PID%/g' |\
-	diff -u $TEST.ee - || fail
+    normalize $TEST.log | diff -u $TEST.ee - || fail
 else
     expstatus=0
     egrep '^(FAIL|EXIT) ' $TEST.log |\

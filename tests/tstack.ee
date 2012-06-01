@@ -1,0 +1,8 @@
+Stacktrace: 
+at 0xXXX: np::spiegel::describe_stacktrace (np/spiegel/spiegel.cxx)
+by 0xXXX: vegan (tstack.cxx)
+by 0xXXX: umami::pickled::irony (tstack.cxx)
+by 0xXXX: leggings::dreamcatcher (tstack.cxx)
+by 0xXXX: main (tstack.cxx)
+
+EXIT 0

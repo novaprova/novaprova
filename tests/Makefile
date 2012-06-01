@@ -20,6 +20,7 @@ SIMPLE_TESTS= \
     tintercept \
     treader \
     tfilename \
+    tstack \
     t000 \
     t001 \
     t002 \
