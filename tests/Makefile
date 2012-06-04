@@ -57,26 +57,18 @@ tests: $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
 # Default to verbose for now
 V=1
 
-check: tests run_simple run_compound
+check: tests run
 
-run_simple:
-	@e=0 ; for t in $(SIMPLE_TESTS) ; do \
-	    a= ;\
-	    [ "$V" ] && a="--verbose" ;\
+TESTS= \
+    $(SIMPLE_TESTS) \
+    $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
+
+run:
+	@e=0 ; [ "$V" -gt 0 ] && export VERBOSE=yes ; for tt in $(TESTS) ; do \
+	    OIFS="$$IFS" ; IFS=% ; set -- $$tt ; IFS="$$OIFS" ;\
 	    s=runtest.sh ;\
-	    [ -f $$t.sh ] && s=$$t.sh ;\
-	    env bash $$s $$a $$t || e=1 ;\
-	done ; exit $$e
-
-run_compound:
-	@e=0 ; for t in $(COMPOUND_TESTS) ; do \
-	    for st in $(COMPOUND_SUBTESTS) ; do \
-		a= ;\
-		[ "$V" ] && a="--verbose" ;\
-		s=runcompound.sh ;\
-		[ -f $$t.sh ] && s=$$t.sh ;\
-		env bash $$s $$a $$t $$st || e=1 ;\
-	    done ;\
+	    [ -f $$1.sh ] && s=$$1.sh ;\
+	    env bash $$s $$* || e=1 ;\
 	done ; exit $$e
 
 %: %.c fw.a fw.h $(DEPS)

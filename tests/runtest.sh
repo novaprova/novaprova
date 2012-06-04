@@ -13,20 +13,30 @@ function msg()
 
 function fail()
 {
-    msg "FAIL $TEST"
-    exit 1;
+    msg "FAIL $TEST $TESTARGS"
+    exit 1
+}
+
+function pass()
+{
+    msg "PASS $TEST $TESTARGS"
+    exit 0
 }
 
 verbose=
-if [ "$1" = "--verbose" ] ; then
+if [ "$VERBOSE" = yes ] ; then
     verbose=yes
-    shift
 fi
 
 TEST="$1"
 [ -x $TEST ] || fatal "$TEST: No such executable"
+shift
+TESTARGS="$*"
 
-[ $verbose ] && msg "starting $TEST"
+ID="$TEST"
+[ -n "$TESTARGS" ] && ID="$ID."$(echo "$TESTARGS"|tr ' ' '.')
+
+[ $verbose ] && msg "starting $TEST $TESTARGS"
 
 function normalize
 {
@@ -44,24 +54,24 @@ function normalize
 
 function runtest
 {
-    [ -e $TEST-pre.sh ] && bash $TEST-pre.sh $TEST
-    ./$TEST
+    [ -e $TEST-pre.sh ] && bash $TEST-pre.sh $TEST $TESTARGS
+    ./$TEST $TESTARGS
     echo "EXIT $?"
-    [ -e $TEST-post.sh ] && bash $TEST-post.sh $TEST
+    [ -e $TEST-post.sh ] && bash $TEST-post.sh $TEST $TESTARGS
 }
 
 if [ $verbose ] ; then
-    VERBOSE=yes runtest 2>&1 | tee $TEST.log
+    VERBOSE=yes runtest 2>&1 | tee $ID.log
 else
-    runtest > $TEST.log 2>&1
+    runtest > $ID.log 2>&1
 fi
 
-if [ -f $TEST.ee ] ; then
-    # compare events logged against expected events
-    normalize $TEST.log | diff -u $TEST.ee - || fail
+if [ -f $ID.ee ] ; then
+    # compare logged output against expected output
+    normalize $ID.log | diff -u $ID.ee - || fail
 else
     expstatus=0
-    egrep '^(FAIL|EXIT) ' $TEST.log |\
+    egrep '^(FAIL|EXIT) ' $ID.log |\
     while read w d ; do
 	case $w in
 	FAIL) expstatus=1 ;;
@@ -70,5 +80,4 @@ else
     done
 fi
 
-msg "PASS $TEST"
-exit 0
+pass
