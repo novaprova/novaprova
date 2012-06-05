@@ -54,8 +54,8 @@ COMPOUND_DATA= $(patsubst %,d-%.o,$(COMPOUND_SUBTESTS))
 
 tests: $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
 
-# Default to verbose for now
-V=1
+# Default to un-verbose
+V=0
 
 check: tests run
 
@@ -64,6 +64,7 @@ TESTS= \
     $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
 
 run:
+	@echo "=== Running tests"
 	@e=0 ; [ "$V" -gt 0 ] && export VERBOSE=yes ; for tt in $(TESTS) ; do \
 	    OIFS="$$IFS" ; IFS=% ; set -- $$tt ; IFS="$$OIFS" ;\
 	    s=runtest.sh ;\
@@ -88,8 +89,7 @@ fw.a: fw.o fw-stubs.o
 	ranlib $@
 
 $(DUMPERS): tdump
-	$(RM) $@
-	ln $< $@
+	ln -f $< $@
 
 clean:
 	$(RM) $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
