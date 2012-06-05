@@ -545,7 +545,11 @@ runner_t::wait()
     reap_children();
 }
 
+// close the namespace
+};
+
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+using namespace np;
 
 /**
  * Set the limit on test job parallelism
@@ -629,6 +633,4 @@ np_run_tests(np_runner_t *runner, np_plan_t *plan)
     return runner->run_tests(plan);
 }
 
-// close the namespace
-};
 
