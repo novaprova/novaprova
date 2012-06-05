@@ -16,7 +16,7 @@ DELIVERABLES= $(GEN_DELIVERABLES) $(STATIC_DELIVERABLES)
 
 all install:
 
-documentation: $(DELIVERABLES)
+docs: $(DELIVERABLES)
 
 pygmentize.css:
 	$(PYGMENTIZE) -S default -f html -a .codehilite > $@

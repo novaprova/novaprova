@@ -14,7 +14,7 @@ LIBS=		../libnovaprova.a -lstdc++ -lbfd -ldl -lrt \
 		$(shell pkg-config --libs libxml++-2.6)
 DEPS=		../np.h ../libnovaprova.a
 
-all install documentation:
+all install docs:
 
 SIMPLE_TESTS= \
     tintercept \

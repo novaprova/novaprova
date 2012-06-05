@@ -25,7 +25,7 @@ depdir=		.deps
 SUBDIRS_PRE=
 SUBDIRS_POST=	tests doc/get-start
 
-all clean distclean check install documentation:
+all clean distclean check install docs:
 	@for dir in $(SUBDIRS_PRE) ; do $(MAKE) -C $$dir $@ ; done
 	@$(MAKE) $@-local
 	@for dir in $(SUBDIRS_POST) ; do $(MAKE) -C $$dir $@ ; done
@@ -129,7 +129,7 @@ $(depdir)/%.d: %.c
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
-documentation-local:
+docs-local:
 	$(RM) -r doc/api-ref doc/man
 	doxygen
 	cd doc ;\
@@ -137,7 +137,7 @@ documentation-local:
 	    tar -chjvf api-ref-$(VERSION).tar.bz2 api-ref-$(VERSION) ;\
 	    rm -f api-ref-$(VERSION)
 
-install: documentation
+install: docs
 
 install-local:
 	$(INSTALL) -d $(DESTDIR)$(includedir)/novaprova/np
