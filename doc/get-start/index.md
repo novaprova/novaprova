@@ -175,18 +175,17 @@ np: running: "1:mytest.simple"
 PASS 1:mytest.simple
 np: running: "2:mytest.initial"
 EVENT ASSERT NP_ASSERT_EQUAL(r=532, 4=4)
-Called from
-0x8052a29 spiegel::describe_stacktrace
-0x804c110 ::with_stack
-0x804b2e6 ::__np_assert_failed
-0x804ac27 ::test_initial
-0x805235c ::invoke
-0x804c731 ::run_function
-0x804d5c4 ::run_test_code
-0x804d831 ::begin_job
-0x804e0d4 ::run_tests
-0x804e22c np::np_run_tests
-0x804ab12 ::main
+at 0x80529F2: np::spiegel::describe_stacktrace (np/spiegel/spiegel.cxx)
+by 0x804C0FC: np::event_t::with_stack (np/event.cxx)
+by 0x804B2D2: __np_assert_failed (uasserts.c)
+by 0x804AC27: test_initial (mytest.c)
+by 0x80522D0: np::spiegel::function_t::invoke (np/spiegel/spiegel.cxx)
+by 0x804C731: np::runner_t::run_function (np/runner.cxx)
+by 0x804D5C4: np::runner_t::run_test_code (np/runner.cxx)
+by 0x804D831: np::runner_t::begin_job (np/runner.cxx)
+by 0x804E0D4: np::runner_t::run_tests (np/runner.cxx)
+by 0x804E22C: np_run_tests (np/runner.cxx)
+by 0x804AB12: main (testrunner.c)
 
 FAIL 2:mytest.initial
 np: 2 run 1 failed
