@@ -58,7 +58,7 @@ text_listener_t::add_event(const job_t *j __attribute__((unused)),
 {
     string s = string("EVENT ") +
 		ev->as_string() +
-	       "\nCalled from\n" +
+	       "\n" +
 	       ev->get_long_location() +
 	       "\n";
     fputs(s.c_str(), stderr);
