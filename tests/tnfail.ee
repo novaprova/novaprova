@@ -1,0 +1,3 @@
+EVENT EXFAIL NP_FAIL called
+FAIL 1:fail
+EXIT 1

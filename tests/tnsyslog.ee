@@ -1,0 +1,4 @@
+EVENT SYSLOG err: Hello world!
+EVENT SLMATCH err: Hello world!
+FAIL 1:syslog
+EXIT 1

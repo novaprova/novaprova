@@ -17,11 +17,21 @@ DEPS=		../np.h ../libnovaprova.a
 all install docs:
 
 SIMPLE_TESTS= \
+    tnassert \
+    tnexit \
+    tnfail \
+    tnmemleak \
+    tnna \
+    tnpass \
+    tnsegv \
+    tnsigill \
+    tnsyslog \
+
+MAINFUL_TESTS= \
+    tfilename \
     tintercept \
     treader \
-    tfilename \
     tstack \
-    t000 \
     t001 \
     t002 \
     t003 \
@@ -52,7 +62,7 @@ COMPOUND_SUBTESTS= \
 
 COMPOUND_DATA= $(patsubst %,d-%.o,$(COMPOUND_SUBTESTS))
 
-tests: $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
+tests: $(SIMPLE_TESTS) $(MAINFUL_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
 
 # Default to un-verbose
 V=0
@@ -61,6 +71,7 @@ check: tests run
 
 TESTS= \
     $(SIMPLE_TESTS) \
+    $(MAINFUL_TESTS) \
     $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
 
 run:
@@ -91,8 +102,11 @@ fw.a: fw.o fw-stubs.o
 $(DUMPERS): tdump
 	ln -f $< $@
 
+$(SIMPLE_TESTS) : % : %.c main.o $(DEPS)
+	$(LINK.c) -o $@ $< main.o $(LIBS)
+
 clean:
-	$(RM) $(SIMPLE_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
+	$(RM) $(SIMPLE_TESTS) $(MAINFUL_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
 	$(RM) fw.a fw.o fw-stubs.o
 
 distclean: clean

@@ -13,7 +13,9 @@ function msg()
 
 function fail()
 {
-    msg "FAIL $TEST $TESTARGS"
+    local mm="$*"
+    [ -n "$mm" ] && mm=" ($mm)"
+    msg "FAIL $TEST $TESTARGS$mm"
     exit 1
 }
 
@@ -48,7 +50,9 @@ function normalize
     else
 	# Default normalization
 	egrep '^(EVENT|PASS|FAIL|N/A|EXIT|\?\?\?) ' < $f |\
-	    sed -e 's/process [0-9]\+/process %PID%/g'
+	    sed -r \
+		-e 's/process [0-9]+/process %PID%/g' \
+		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g'
     fi
 }
 
@@ -68,14 +72,22 @@ fi
 
 if [ -f $ID.ee ] ; then
     # compare logged output against expected output
-    normalize $ID.log | diff -u $ID.ee - || fail
+    normalize $ID.log | diff -u $ID.ee - || fail "differences to golden output"
 else
     expstatus=0
-    egrep '^(FAIL|EXIT) ' $ID.log |\
+    egrep '^(FAIL|EXIT) ' $ID.log > .logx
+    exec < .logx
     while read w d ; do
 	case $w in
 	FAIL) expstatus=1 ;;
-	EXIT) [ $d == $expstatus ] || fail
+	EXIT)
+	    if [ $d != $expstatus ] ; then
+		fail "expecting exit status $expstatus got $d"
+	    fi
+	    if [ $d != 0 ] ; then
+		fail "exit status $d"
+	    fi
+	    ;;
 	esac
     done
 fi

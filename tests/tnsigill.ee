@@ -1,0 +1,3 @@
+EVENT SIGNAL child process %PID% died on signal 4
+FAIL 1:sigill
+EXIT 1

@@ -1,0 +1,3 @@
+EVENT ASSERT white == black
+FAIL 1:assert
+EXIT 1

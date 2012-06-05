@@ -1,4 +1,5 @@
 *.log
+.logx
 reports
 t[0-9][0-9][0-9]
 taddr2line
@@ -13,5 +14,15 @@ tdumpvar
 tfilename
 tinfo
 tintercept
+tnassert
+tnexit
+tnfail
+tnmemleak
+tnna
+tnpass
+tnsegv
+tnsigill
+tnsyslog
 treader
 tstack
+
