@@ -22,3 +22,5 @@ TEST_OBJS=  $(TEST_SOURCE:.c=.o)
 testrunner:  testrunner.o $(TEST_OBJS) libmycode.a
 	$(LINK.c) -o $@ testrunner.o $(TEST_OBJS) libmycode.a $(NOVAPROVA_LIBS)
 
+clean:
+	$(RM) testrunner libmycode.a $(TEST_OBJS) $(MYCODE_OBJS)
