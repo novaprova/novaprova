@@ -1,0 +1,3 @@
+EVENT ASSERT NP_ASSERT_NULL(x=0xbdefaced)
+FAIL 1:assert_null_fail
+EXIT 1

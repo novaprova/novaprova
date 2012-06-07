@@ -17,7 +17,28 @@ DEPS=		../np.h ../libnovaprova.a
 all install docs:
 
 SIMPLE_TESTS= \
+    tnaequalfail \
+    tnaequalpass \
+    tnafail \
+    tnafalsefail \
+    tnafalsepass \
+    tnanequalfail \
+    tnanequalpass \
+    tnannullfail \
+    tnannullpass \
+    tnanullfail \
+    tnanullpass \
+    tnapass \
+    tnapequalfail \
+    tnapequalpass \
+    tnapnequalfail \
+    tnapnequalpass \
+    tnasequalfail \
+    tnasequalpass \
+    tnasnequalfail \
+    tnasnequalpass \
     tnassert \
+    tnatruefail \
     tnexit \
     tnfail \
     tnmemleak \
@@ -33,7 +54,6 @@ MAINFUL_TESTS= \
     treader \
     tstack \
     t001 \
-    t002 \
     t003 \
     t005 \
     t006 \

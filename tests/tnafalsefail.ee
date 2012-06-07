@@ -1,0 +1,3 @@
+EVENT ASSERT NP_ASSERT_FALSE(x=1)
+FAIL 1:assert_false_fail
+EXIT 1

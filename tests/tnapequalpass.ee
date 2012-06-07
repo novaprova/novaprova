@@ -1,0 +1,2 @@
+PASS 1:assert_ptr_equal_pass
+EXIT 0

@@ -1,0 +1,2 @@
+PASS 1:assert_str_equal_pass
+EXIT 0

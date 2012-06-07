@@ -1,0 +1,3 @@
+EVENT ASSERT NP_ASSERT_NOT_EQUAL(r=45, FOO=45)
+FAIL 1:assert_not_equal_fail
+EXIT 1
