@@ -17,7 +17,6 @@ DEPS=		../np.h ../libnovaprova.a
 all install docs:
 
 SIMPLE_TESTS= \
-    t005 \
     tnaequalfail \
     tnaequalpass \
     tnafail \
@@ -43,6 +42,7 @@ SIMPLE_TESTS= \
     tnexit \
     tnfail \
     tnmemleak \
+    tnmocking \
     tnna \
     tnpass \
     tnsegv \
