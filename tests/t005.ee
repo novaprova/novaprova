@@ -1,2 +1,2 @@
-PASS t005.mocking
+PASS 1:t005.mocking
 EXIT 0
