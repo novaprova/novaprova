@@ -60,10 +60,7 @@ public:
 
     const abbrev_t *get_abbrev(uint32_t code) const
     {
-	std::map<uint32_t, abbrev_t*>::const_iterator i = abbrevs_.find(code);
-	if (i == abbrevs_.end())
-	    return 0;
-	return i->second;
+	return (code >= abbrevs_.size() ? 0 : abbrevs_[code]);
     }
 
 private:
@@ -71,7 +68,7 @@ private:
     uint32_t loindex_;
     reader_t reader_;	    // for whole including header
     uint32_t abbrevs_offset_;
-    std::map<uint32_t, abbrev_t*> abbrevs_;
+    std::vector<abbrev_t*> abbrevs_;
 };
 
 // close namespaces

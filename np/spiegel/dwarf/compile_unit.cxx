@@ -70,6 +70,8 @@ compile_unit_t::read_abbrevs(reader_t &r)
 	    delete a;
 	    break;
 	}
+	if (a->code >= abbrevs_.size())
+	    abbrevs_.resize(a->code+1, 0);
 	abbrevs_[a->code] = a;
     }
 }
@@ -80,10 +82,10 @@ compile_unit_t::dump_abbrevs() const
 {
     printf("Abbrevs {\n");
 
-    map<uint32_t, abbrev_t*>::const_iterator itr;
+    vector<abbrev_t*>::const_iterator itr;
     for (itr = abbrevs_.begin() ; itr != abbrevs_.end() ; ++itr)
     {
-	abbrev_t *a = itr->second;
+	abbrev_t *a = *itr;
 	printf("Code %u\n", a->code);
 	printf("    tag 0x%x (%s)\n", a->tag, tagnames.to_name(a->tag));
 	printf("    children %u (%s)\n",
