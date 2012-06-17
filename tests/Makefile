@@ -48,6 +48,7 @@ SIMPLE_TESTS= \
     tnsegv \
     tnsigill \
     tnsyslog \
+    tnsyslogmatch \
 
 MAINFUL_TESTS= \
     tfilename \
@@ -55,7 +56,6 @@ MAINFUL_TESTS= \
     treader \
     tstack \
     t001 \
-    t003 \
     t006 \
     t007 \
     t008 \

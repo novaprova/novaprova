@@ -92,12 +92,3 @@ static void test_one_message_multiple_matches_different_tags(void)
     /* pass */
 }
 
-int
-main(int argc, char **argv)
-{
-    int ec = 0;
-    np_runner_t *runner = np_init();
-    ec = np_run_tests(runner, 0);
-    np_done(runner);
-    exit(ec);
-}
