@@ -44,6 +44,7 @@ SIMPLE_TESTS= \
     tnmemleak \
     tnmocking \
     tnna \
+    tnparameter \
     tnpass \
     tnsegv \
     tnsigill \
@@ -56,7 +57,6 @@ MAINFUL_TESTS= \
     treader \
     tstack \
     t001 \
-    t006 \
     t007 \
     t008 \
 

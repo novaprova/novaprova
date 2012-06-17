@@ -49,7 +49,7 @@ function normalize
 	awk -f $TEST-normalize.awk < $f
     else
 	# Default normalization
-	egrep '^(EVENT|PASS|FAIL|N/A|EXIT|\?\?\?) ' < $f |\
+	egrep '^(EVENT|MSG|PASS|FAIL|N/A|EXIT|\?\?\?) ' < $f |\
 	    sed -r \
 		-e 's/process [0-9]+/process %PID%/g' \
 		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g'

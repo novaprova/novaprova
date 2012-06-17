@@ -1,0 +1,7 @@
+MSG pastry="donut"
+PASS 1:tnparameter.param[pastry=donut]
+MSG pastry="bearclaw"
+PASS 2:tnparameter.param[pastry=bearclaw]
+MSG pastry="danish"
+PASS 3:tnparameter.param[pastry=danish]
+EXIT 0

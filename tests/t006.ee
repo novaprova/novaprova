@@ -1,4 +1,0 @@
-PASS 1:t006.param[pastry=donut]
-PASS 2:t006.param[pastry=bearclaw]
-PASS 3:t006.param[pastry=danish]
-EXIT 0
