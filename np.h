@@ -179,7 +179,6 @@ extern void __np_assert_failed(const char *filename, int lineno,
     } while(0)
 
 /* syslog matching support */
-extern void __np_syslog_fail(const char *re, const char *, int);
 /** Set up to FAIL the test on syslog messages matching a regexp.
  *
  * @param re	    POSIX extended regular expression to match
@@ -189,9 +188,7 @@ extern void __np_syslog_fail(const char *re, const char *, int);
  * test will FAIL immediately as if @c NP_FAIL had been called from
  * inside @c syslog.
  */
-#define np_syslog_fail(re) \
-    __np_syslog_fail((re), __FILE__, __LINE__)
-extern void __np_syslog_ignore(const char *re, const char *, int);
+extern void np_syslog_fail(const char *re);
 /** Set up to ignore syslog messages matching a regexp.
  *
  * @param re	    POSIX extended regular expression to match
@@ -202,9 +199,7 @@ extern void __np_syslog_ignore(const char *re, const char *, int);
  * this call is only useful in complex cases where there are multiple
  * overlapping regexps being used for syslog matching.
  */
-#define np_syslog_ignore(re) \
-    __np_syslog_ignore((re), __FILE__, __LINE__)
-extern void __np_syslog_match(const char *re, int tag, const char *, int);
+extern void np_syslog_ignore(const char *re);
 /** Set up to count syslog messages matching a regexp.
  *
  * @param re	    POSIX extended regular expression to match
@@ -216,9 +211,7 @@ extern void __np_syslog_match(const char *re, int tag, const char *, int);
  * counts can be retrieved by calling @c np_syslog_count.  Note that
  * @a tag does not need to be unique; in fact always passing 0 is reasonable.
  */
-#define np_syslog_match(re, tag) \
-    __np_syslog_match((re), (tag), __FILE__, __LINE__)
-extern unsigned int __np_syslog_count(int tag, const char *, int);
+extern void np_syslog_match(const char *re, int tag);
 /** Return the number of syslog matches for the given tag.
  *
  * @param tag	    tag to choose which matches to count, or -1 for all
@@ -230,8 +223,7 @@ extern unsigned int __np_syslog_count(int tag, const char *, int);
  * match counts for regexps registered with the same tag will be
  * returned.
  */
-#define np_syslog_count(tag) \
-    __np_syslog_count((tag), __FILE__, __LINE__)
+extern unsigned int np_syslog_count(int tag);
 
 /* parameter support */
 struct __np_param_dec

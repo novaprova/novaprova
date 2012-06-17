@@ -43,15 +43,14 @@ struct slmatch_t : public np::util::zalloc
 static vector<slmatch_t*> slmatches;
 
 static void
-add_slmatch(const char *re, sldisposition_t dis,
-	    int tag, const char *file, int line)
+add_slmatch(const char *re, sldisposition_t dis, int tag)
 {
     slmatch_t *slm = new slmatch_t(dis, tag);
     if (!slm->classifier_.set_regexp(re, false))
     {
 	const char *msg = slm->classifier_.error_string();
 	delete slm;
-	np_throw(event_t(EV_SLMATCH, msg).at_line(file, line));
+	np_throw(event_t(EV_SLMATCH, msg).with_stack());
     }
 
     /* order shouldn't matter due to the way we
@@ -62,25 +61,25 @@ add_slmatch(const char *re, sldisposition_t dis,
 }
 
 extern "C" void
-__np_syslog_fail(const char *re, const char *file, int line)
+np_syslog_fail(const char *re)
 {
-    add_slmatch(re, SL_FAIL, 0, file, line);
+    add_slmatch(re, SL_FAIL, 0);
 }
 
 extern "C" void
-__np_syslog_ignore(const char *re, const char *file, int line)
+np_syslog_ignore(const char *re)
 {
-    add_slmatch(re, SL_IGNORE, 0, file, line);
+    add_slmatch(re, SL_IGNORE, 0);
 }
 
 extern "C" void
-__np_syslog_match(const char *re, int tag, const char *file, int line)
+np_syslog_match(const char *re, int tag)
 {
-    add_slmatch(re, SL_COUNT, tag, file, line);
+    add_slmatch(re, SL_COUNT, tag);
 }
 
 extern "C" unsigned int
-__np_syslog_count(int tag, const char *file, int line)
+np_syslog_count(int tag)
 {
     unsigned int count = 0;
     int nmatches = 0;
@@ -101,7 +100,7 @@ __np_syslog_count(int tag, const char *file, int line)
     {
 	static char buf[64];
 	snprintf(buf, sizeof(buf), "Unmatched syslog tag %d", tag);
-	np_throw(event_t(EV_SLMATCH, buf).at_line(file, line));
+	np_throw(event_t(EV_SLMATCH, buf).with_stack());
     }
     return count;
 }
