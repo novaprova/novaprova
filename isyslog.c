@@ -120,7 +120,10 @@ find_slmatch(const char **msgp)
 	{
 	    /* found */
 	    if (!most || dis > mostdis)
+	    {
 		most = slm;
+		mostdis = dis;
+	    }
 	}
     }
 
