@@ -50,6 +50,7 @@ SIMPLE_TESTS= \
     tnsigill \
     tnsyslog \
     tnsyslogmatch \
+    tntimeout \
 
 MAINFUL_TESTS= \
     tfilename \
@@ -58,7 +59,6 @@ MAINFUL_TESTS= \
     tstack \
     t001 \
     t007 \
-    t008 \
 
 DUMPERS= \
     tdumpacu \
