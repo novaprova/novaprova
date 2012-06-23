@@ -9,6 +9,7 @@ tdumpafn
 tdumpatype
 tdumpdabbr
 tdumpdfn
+tdumpdstruct
 tdumpdvar
 tdumpvar
 tfilename
@@ -39,10 +40,14 @@ tnatruefail
 tnexit
 tnfail
 tnmemleak
+tnmocking
 tnna
+tnparameter
 tnpass
 tnsegv
 tnsigill
 tnsyslog
+tnsyslogmatch
+tntimeout
 treader
 tstack
