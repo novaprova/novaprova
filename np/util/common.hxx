@@ -86,7 +86,7 @@ extern int64_t rel_now();
 extern int64_t abs_now();
 extern std::string abs_format_iso8601(int64_t);
 extern std::string rel_format(int64_t);
-extern std::string rel_timestamp();
+extern const char *rel_timestamp();
 
 extern unsigned long page_size(void);
 extern unsigned long page_round_up(unsigned long x);

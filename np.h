@@ -33,6 +33,8 @@ extern np_plan_t *np_plan_new(void);
 extern bool np_plan_add_specs(np_plan_t *, int nspec, const char **spec);
 extern void np_plan_delete(np_plan_t *);
 
+extern const char *np_rel_timestamp(void);
+
 /* Test-callable macros for ending a test with a result */
 extern void __np_pass(const char *file, int line);
 extern void __np_fail(const char *file, int line);

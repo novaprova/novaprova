@@ -94,3 +94,8 @@ np_done(np_runner_t *runner)
     np::testmanager_t::done();
 }
 
+extern "C" const char *
+np_rel_timestamp(void)
+{
+    return np::util::rel_timestamp();
+}

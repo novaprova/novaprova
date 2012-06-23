@@ -147,7 +147,8 @@ string abs_format_iso8601(int64_t abs)
     return string(buf);
 }
 
-string rel_format(int64_t rel)
+static void
+rel_format_buf(int64_t rel, char *buf, int maxlen)
 {
     const char *sign = "";
     if (rel < 0)
@@ -157,12 +158,19 @@ string rel_format(int64_t rel)
     }
     int sec = rel / NANOSEC_PER_SEC;
     int ns = rel % NANOSEC_PER_SEC;
+    snprintf(buf, maxlen, "%s%u.%03u", sign, sec, ns/1000000);
+}
+
+string
+rel_format(int64_t rel)
+{
     char buf[32];
-    snprintf(buf, sizeof(buf), "%s%u.%03u", sign, sec, ns/1000000);
+    rel_format_buf(rel, buf, sizeof(buf));
     return string(buf);
 }
 
-string rel_timestamp()
+const char *
+rel_timestamp()
 {
     static int64_t first;
     int64_t now = rel_now();
@@ -182,7 +190,9 @@ string rel_timestamp()
 	    putenv(buf);
 	}
     }
-    return rel_format(now - first);
+    static char buf[32];
+    rel_format_buf(now-first, buf, sizeof(buf));
+    return buf;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
