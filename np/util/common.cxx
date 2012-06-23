@@ -167,7 +167,21 @@ string rel_timestamp()
     static int64_t first;
     int64_t now = rel_now();
     if (!first)
-	first = now;
+    {
+	static const char var[] = "__NP_EPOCH";
+	const char *e = getenv(var);
+	if (e)
+	{
+	    first = strtoull(e, 0, 0);
+	}
+	else
+	{
+	    first = now;
+	    static char buf[64];
+	    snprintf(buf, sizeof(buf), "%s=%llu", var, first);
+	    putenv(buf);
+	}
+    }
     return rel_format(now - first);
 }
 
