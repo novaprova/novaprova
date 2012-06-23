@@ -143,6 +143,12 @@ testnode_t::detach_common()
 	;
     /* tn now points at the highest node with more than 1 child */
 
+    /* corner case: we have exactly one test; give ourselves at least a
+     * two-deep hierarchy so we don't see a sudden jump in naming when
+     * adding the second test */
+    if (!tn->children_)
+	tn = tn->parent_;
+
     tn->parent_->children_ = 0;
     assert(!tn->next_);
     tn->parent_ = 0;
