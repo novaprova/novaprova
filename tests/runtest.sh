@@ -58,10 +58,22 @@ function normalize
 
 function runtest
 {
-    [ -e $TEST-pre.sh ] && bash $TEST-pre.sh $TEST $TESTARGS
+    for a in $TEST $TESTARGS ; do
+	if [ -e a$a-pre.sh ] ; then
+	    [ $verbose ] && msg "running a$a-pre.sh $TEST $TESTARGS"
+	    bash a$a-pre.sh $TEST $TESTARGS
+	fi
+    done
+
     ./$TEST $TESTARGS
     echo "EXIT $?"
-    [ -e $TEST-post.sh ] && bash $TEST-post.sh $TEST $TESTARGS
+
+    for a in $TEST $TESTARGS ; do
+	if [ -e a$a-post.sh ] ; then
+	    [ $verbose ] && msg "running a$a-post.sh $TEST $TESTARGS"
+	    bash a$a-post.sh $TEST $TESTARGS
+	fi
+    done
 }
 
 if [ $verbose ] ; then

@@ -16,6 +16,20 @@ DEPS=		../np.h ../libnovaprova.a
 
 all install docs:
 
+BASIC_TESTS= \
+    tnassert \
+    tnexit \
+    tnfail \
+    tnmemleak \
+    tnna \
+    tnpass \
+    tnsegv \
+    tnsigill \
+    tnsyslog \
+
+OUTPUT_FORMATS= \
+    junit
+
 SIMPLE_TESTS= \
     tnaequalfail \
     tnaequalpass \
@@ -37,18 +51,9 @@ SIMPLE_TESTS= \
     tnasequalpass \
     tnasnequalfail \
     tnasnequalpass \
-    tnassert \
     tnatruefail \
-    tnexit \
-    tnfail \
-    tnmemleak \
     tnmocking \
-    tnna \
     tnparameter \
-    tnpass \
-    tnsegv \
-    tnsigill \
-    tnsyslog \
     tnsyslogmatch \
     tntimeout \
 
@@ -58,7 +63,6 @@ MAINFUL_TESTS= \
     treader \
     tstack \
     t001 \
-    t007 \
 
 DUMPERS= \
     tdumpacu \
@@ -82,17 +86,29 @@ COMPOUND_SUBTESTS= \
 
 COMPOUND_DATA= $(patsubst %,d-%.o,$(COMPOUND_SUBTESTS))
 
-tests: $(SIMPLE_TESTS) $(MAINFUL_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
+TESTS= \
+    $(SIMPLE_TESTS) \
+    $(foreach t,$(BASIC_TESTS),$t $(foreach s,$(OUTPUT_FORMATS),$t%-f$s)) \
+    $(MAINFUL_TESTS) \
+    $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
+
+TEST_EXES= \
+    $(SIMPLE_TESTS) \
+    $(BASIC_TESTS) \
+    $(MAINFUL_TESTS) \
+    $(COMPOUND_TESTS)
+
+tests: $(TEST_EXES) $(COMPOUND_DATA)
 
 # Default to un-verbose
 V=0
 
 check: tests run
 
-TESTS= \
-    $(SIMPLE_TESTS) \
-    $(MAINFUL_TESTS) \
-    $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
+list:
+	@for t in $(TESTS) ; do \
+	    echo "$$t" | tr '%' ' ' ;\
+	done
 
 run:
 	@echo "=== Running tests"
@@ -122,11 +138,11 @@ fw.a: fw.o fw-stubs.o
 $(DUMPERS): tdump
 	ln -f $< $@
 
-$(SIMPLE_TESTS) : % : %.c main.o $(DEPS)
+$(SIMPLE_TESTS) $(BASIC_TESTS) : % : %.c main.o $(DEPS)
 	$(LINK.c) -o $@ $< main.o $(LIBS)
 
 clean:
-	$(RM) $(SIMPLE_TESTS) $(MAINFUL_TESTS) $(COMPOUND_TESTS) $(COMPOUND_DATA)
+	$(RM) $(TEST_EXES) $(COMPOUND_DATA)
 	$(RM) fw.a fw.o fw-stubs.o
 
 distclean: clean
