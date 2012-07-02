@@ -95,11 +95,10 @@ TESTS= \
     $(MAINFUL_TESTS) \
     $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
 
-TEST_EXES= \
-    $(SIMPLE_TESTS) \
-    $(BASIC_TESTS) \
-    $(MAINFUL_TESTS) \
-    $(COMPOUND_TESTS)
+# Extract only the test executables actually mentioned in $TESTS
+# which allows us to build only those executables actually needed
+# to run the tests named in $TESTS.
+TEST_EXES= $(sort $(foreach t,$(TESTS),$(firstword $(subst %,$(nul) $(nul),$t))))
 
 tests: $(TEST_EXES) $(COMPOUND_DATA)
 
@@ -113,14 +112,14 @@ list:
 	    echo "$$t" | tr '%' ' ' ;\
 	done
 
-run:
+run: .announce-run $(addprefix .run%,$(TESTS))
+
+.PHONEY: .announce-run
+.announce-run:
 	@echo "=== Running tests"
-	@e=0 ; [ "$V" -gt 0 ] && export VERBOSE=yes ; for tt in $(TESTS) ; do \
-	    OIFS="$$IFS" ; IFS=% ; set -- $$tt ; IFS="$$OIFS" ;\
-	    s=runtest.sh ;\
-	    [ -f $$1.sh ] && s=$$1.sh ;\
-	    env bash $$s $$* || e=1 ;\
-	done ; exit $$e
+
+.run%:
+	@[ "$V" -gt 0 ] && export VERBOSE=yes ; env bash runtest.sh $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
 
 %: %.c fw.a fw.h $(DEPS)
 	$(LINK.c) -o $@ $< fw.a $(LIBS)
