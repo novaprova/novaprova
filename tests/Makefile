@@ -140,7 +140,7 @@ fw.a: fw.o fw-stubs.o
 $(DUMPERS): tdump
 	ln -f $< $@
 
-$(SIMPLE_TESTS) $(BASIC_TESTS) : % : %.c main.o $(DEPS)
+$(SIMPLE_TESTS) $(BASIC_TESTS) $(PARALLEL_TESTS): % : %.c main.o $(DEPS)
 	$(LINK.c) -o $@ $< main.o $(LIBS)
 
 clean:
