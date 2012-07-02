@@ -57,12 +57,14 @@ SIMPLE_TESTS= \
     tnsyslogmatch \
     tntimeout \
 
+PARALLEL_TESTS= \
+    tnparallel \
+
 MAINFUL_TESTS= \
     tfilename \
     tintercept \
     treader \
     tstack \
-    t001 \
 
 DUMPERS= \
     tdumpacu \
@@ -88,6 +90,7 @@ COMPOUND_DATA= $(patsubst %,d-%.o,$(COMPOUND_SUBTESTS))
 
 TESTS= \
     $(SIMPLE_TESTS) \
+    $(foreach t,$(PARALLEL_TESTS),$t $(foreach j,1 2 4,$t%-j$j)) \
     $(foreach t,$(BASIC_TESTS),$t $(foreach s,$(OUTPUT_FORMATS),$t%-f$s)) \
     $(MAINFUL_TESTS) \
     $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
