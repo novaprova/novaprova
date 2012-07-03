@@ -56,6 +56,12 @@ private:
     std::vector<struct pollfd> pfd_;
 };
 
+#define np_raise(ev) \
+    do { \
+	event_t _ev = (ev); \
+	runner_t::running()->raise_event(0, &_ev); \
+    } while(0)
+
 // close the namespace
 };
 
