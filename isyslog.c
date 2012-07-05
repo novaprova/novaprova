@@ -22,7 +22,6 @@ enum sldisposition_t
     SL_UNKNOWN,
     SL_IGNORE,
     SL_COUNT,
-    SL_LOG,
     SL_FAIL,
 };
 
@@ -129,7 +128,7 @@ find_slmatch(const char **msgp)
     }
 
     if (!most)
-	return SL_LOG;
+	return SL_FAIL;
     if (mostdis == SL_COUNT)
 	most->count_++;
     return mostdis;
@@ -204,12 +203,10 @@ mock___syslog_chk(int prio,
     case SL_FAIL:
 	np_throw(event_t(EV_SLMATCH, msg).with_stack());
 	break;
-    case SL_LOG:
-	np_raise(event_t(EV_SYSLOG, msg).with_stack());
-	break;
     case SL_UNKNOWN:
     case SL_IGNORE:
     case SL_COUNT:
+	np_raise(event_t(EV_SYSLOG, msg).with_stack());
 	break;
     }
 }
@@ -229,12 +226,10 @@ mock_syslog(int prio, const char *fmt, ...)
     case SL_FAIL:
 	np_throw(event_t(EV_SLMATCH, msg).with_stack());
 	break;
-    case SL_LOG:
-	np_raise(event_t(EV_SYSLOG, msg).with_stack());
-	break;
     case SL_UNKNOWN:
     case SL_IGNORE:
     case SL_COUNT:
+	np_raise(event_t(EV_SYSLOG, msg).with_stack());
 	break;
     }
 }
