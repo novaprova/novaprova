@@ -13,7 +13,7 @@ child_t::child_t(pid_t pid, int fd, job_t *j)
     job_(j),
     result_(R_UNKNOWN),
     state_(RUNNING),
-    deadline_(j->get_start() + 30 * NANOSEC_PER_SEC)
+    deadline_(j->get_start() + 45 * NANOSEC_PER_SEC)
 {
 }
 
