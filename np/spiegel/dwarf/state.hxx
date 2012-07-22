@@ -3,6 +3,7 @@
 
 #include "np/spiegel/common.hxx"
 #include "np/spiegel/spiegel.hxx"
+#include "np/util/rangetree.hxx"
 #include "section.hxx"
 #include "reference.hxx"
 #include "enumerations.hxx"
@@ -28,6 +29,11 @@ public:
     void dump_variables();
     void dump_info(bool preorder, bool paths);
     void dump_abbrevs();
+
+    /* Call this function to prepare an index which will speed up
+     * all later calls to describe_address().  Or don't call it,
+     * if you don't need to build stack traces. */
+    void prepare_address_index();
 
     bool describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
@@ -72,6 +78,7 @@ private:
     linkobj_t *get_linkobj(const char *filename);
     bool read_linkobjs();
     bool read_compile_units(linkobj_t *);
+    void insert_ranges(const walker_t &w, reference_t funcref);
     bool is_within(np::spiegel::addr_t addr, const walker_t &w,
 		   unsigned int &offset) const;
 
@@ -79,6 +86,7 @@ private:
 
     std::vector<linkobj_t*> linkobjs_;
     std::vector<compile_unit_t*> compile_units_;
+    np::util::rangetree<addr_t, reference_t> address_index_;
 
     friend class walker_t;
     friend class compile_unit_t;

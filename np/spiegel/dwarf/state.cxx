@@ -584,6 +584,77 @@ state_t::dump_abbrevs()
     printf("\n\n");
 }
 
+void
+state_t::insert_ranges(const walker_t &w, reference_t funcref)
+{
+    const entry_t *e = w.get_entry();
+    bool has_lo = (e->get_attribute(DW_AT_low_pc) != 0);
+    uint64_t lo = e->get_uint64_attribute(DW_AT_low_pc);
+    bool has_hi = (e->get_attribute(DW_AT_high_pc) != 0);
+    uint64_t hi = e->get_uint64_attribute(DW_AT_high_pc);
+    // DW_AT_ranges is a DWARF3 attribute, but g++ generates
+    // it (despite only claiming DWARF2 compliance).
+    uint64_t ranges = e->get_uint64_attribute(DW_AT_ranges);
+
+    if (has_lo && has_hi)
+    {
+	address_index_.insert(lo, hi, funcref);
+    }
+    else if (ranges)
+    {
+	reader_t r = w.get_section_contents(DW_sec_ranges);
+	r.skip(ranges);
+	np::spiegel::addr_t base = 0; // TODO: compile unit base
+	np::spiegel::addr_t start, end;
+	for (;;)
+	{
+	    if (!r.read_addr(start) || !r.read_addr(end))
+		break;
+	    /* (0,0) marks the end of the list */
+	    if (!start && !end)
+		break;
+	    /* (~0,base) marks a new base address */
+	    if (start == SPIEGEL_MAXADDR)
+	    {
+		base = end;
+		continue;
+	    }
+	    start += base;
+	    end += base;
+	    address_index_.insert(start, end, funcref);
+	}
+    }
+    else if (has_lo)
+    {
+	address_index_.insert(lo, funcref);
+    }
+}
+
+void
+state_t::prepare_address_index()
+{
+    reference_t funcref;
+
+    vector<compile_unit_t*>::iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    {
+	walker_t w(*i);
+	while (const entry_t *e = w.move_preorder())
+	{
+	    switch (e->get_tag())
+	    {
+	    case DW_TAG_subprogram:
+		if (e->get_attribute(DW_AT_specification))
+		    funcref = e->get_reference_attribute(DW_AT_specification);
+		else
+		    funcref = w.get_reference();
+		insert_ranges(w, funcref);
+		break;
+	    }
+	}
+    }
+}
+
 bool
 state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 		   unsigned int &offset) const
@@ -657,6 +728,16 @@ state_t::describe_address(np::spiegel::addr_t addr,
     lineno = 0;
     funcref = reference_t::null;
     offset = 0;
+
+    if (address_index_.size())
+    {
+	np::util::rangetree<addr_t, reference_t>::const_iterator i = address_index_.find(addr);
+	if (i == address_index_.end())
+	    return false;
+	offset = addr - i->first.lo;
+	funcref = i->second;
+	return true;
+    }
 
     vector<compile_unit_t*>::const_iterator i;
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
