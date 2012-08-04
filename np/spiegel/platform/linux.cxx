@@ -1,5 +1,6 @@
 #include "np/spiegel/common.hxx"
 #include "np/spiegel/intercept.hxx"
+#include "np/util/tok.hxx"
 #include "common.hxx"
 
 #include <dlfcn.h>
@@ -42,6 +43,38 @@ self_exe()
     }
     // readlink() doesn't terminate the buffer
     buf[r] = '\0';
+    return xstrdup(buf);
+}
+
+// Return the argv[0] of the given process id.  Isn't Linux' /proc
+// wonderful?  Note that we choose cmdline because it's commonly
+// readable even when the 'exe' symlink isn't.
+static char *
+get_exe_by_pid(pid_t pid)
+{
+    char buf[PATH_MAX];
+    snprintf(buf, sizeof(buf), "/proc/%u/cmdline", (unsigned)pid);
+
+    FILE *fp = fopen(buf, "r");
+    if (!fp)
+    {
+	perror(buf);
+	return 0;
+    }
+
+    int r = fread(buf, 1, sizeof(buf)-1, fp);
+    if (r <= 0)
+    {
+	perror("read");
+	fclose(fp);
+	return 0;
+    }
+    buf[r] = '\0';  /* JIC */
+
+    fclose(fp);
+
+    /* cmdline is \0 separated, so we can just treat the buffer
+     * as a string describing argv[0] of the ptracer */
     return xstrdup(buf);
 }
 
@@ -587,6 +620,100 @@ vector<np::spiegel::addr_t> get_stacktrace()
 	bp = nextbp;
     };
     return stack;
+}
+
+/* Return the process id of any process which is ptrace()ing us, or 0 if
+ * not being ptrace'd, or -1 on error. */
+static pid_t
+get_tracer_pid()
+{
+    static const char procfile[] = "/proc/self/status";
+    FILE *fp;
+    const char *p;
+    pid_t pid = 0;
+    char buf[1024];
+
+    fp = fopen(procfile, "r");
+    if (!fp)
+    {
+	/* most probable cause is that /proc is not mounted */
+	perror(procfile);
+	return -1;
+    }
+
+    while (fgets(buf, sizeof(buf), fp))
+    {
+	tok_t tok(buf);
+	p = tok.next();
+	if (!p || strcmp(p, "TracerPid:"))
+	    continue;
+	p = tok.next();
+	if (p)
+	    pid = strtoul(p, NULL, 10);
+	break;
+    }
+
+    fclose(fp);
+    return pid;
+}
+
+// Determine whether this process is running under a debugger
+bool is_running_under_debugger()
+{
+    static const char * const debuggers[] = { "gdb", NULL };
+    const char *tail;
+    int i;
+    pid_t tracer = 0;
+    char *command;
+
+    // Valgrind doesn't play well with debuggers
+    if (RUNNING_ON_VALGRIND)
+	return false;
+
+    tracer = get_tracer_pid();
+    if (tracer < 0)
+	return false;	    /* no way to tell...so guess */
+    if (!tracer)
+	return false;	/* not being ptrace()d */
+
+    // We know we're being ptrace()d, but that could mean either that
+    // we're being debugged or strace()d.  In the latter case we don't
+    // want to return true because we actually want our process to
+    // behave as normally as possible.  One way of telling is to compare
+    // the name of the program which is ptrace()ing us against a
+    // whitelist of debugger names.  This may not be the best way, only
+    // time will tell.  Note that we choose cmdline because it's
+    // commonly readable even when the 'exe' symlink isn't.
+    command = get_exe_by_pid(tracer);
+    if (!command)
+    {
+	// can't tell for sure, but given we're definitely ptraced,
+	// let's guess that it's a debugger doing it
+	return true;
+    }
+
+    // find the filename
+    tail = strrchr(command, '/');
+    if (tail)
+	tail++;
+    else
+	tail = command;
+
+    // compare against the whitelist
+    for (i = 0 ; debuggers[i] ; i++)
+    {
+	if (!strcmp(tail, debuggers[i]))
+	{
+	    fprintf(stderr, "spiegel: being debugged by %s\n", command);
+	    free(command);
+	    return true;
+	}
+    }
+
+    // didn't match the whitelist, probably strace or something strange
+
+    free(command);
+    return false;
 }
 
 // close namespaces
