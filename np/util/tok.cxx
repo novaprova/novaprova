@@ -37,16 +37,19 @@ tok_t::init(char *str, const char *sep)
 tok_t::tok_t(const char *str, const char *sep)
 {
     init((str == 0 ? 0 : xstrdup(str)), sep);
+    buf_is_ours_ = true;
 }
 
 tok_t::tok_t(char *str, const char *sep)
 {
     init(str, sep);
+    buf_is_ours_ = false;
 }
 
 tok_t::~tok_t()
 {
-    free(buf_);
+    if (buf_is_ours_)
+	free(buf_);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

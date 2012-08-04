@@ -52,6 +52,7 @@ private:
     char *buf_;
     char *state_;
     const char *sep_;
+    bool buf_is_ours_;
 };
 
 // close the namespaces
