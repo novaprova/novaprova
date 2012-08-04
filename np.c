@@ -29,6 +29,7 @@ discover_args(int *argcp, char ***argvp)
 static void
 be_valground(void)
 {
+    const char *env;
     int argc;
     char **argv;
     const char **newargv;
@@ -36,10 +37,16 @@ be_valground(void)
 
     if (RUNNING_ON_VALGRIND)
 	return;
-    fprintf(stderr, "np: starting valgrind\n");
+
+    env = getenv("NOVAPROVA_VALGRIND");
+    if (env && !strcmp(env, "no"))
+	return;
 
     if (!discover_args(&argc, &argv))
 	return;
+
+    fprintf(stderr, "[%s] np: starting valgrind\n",
+	    np::util::rel_timestamp());
 
     p = newargv = (const char **)np::util::xmalloc(sizeof(char *) * (argc+6));
     *p++ = "/usr/bin/valgrind";
