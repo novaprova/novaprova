@@ -7,14 +7,34 @@
 
 namespace np {
 
+static int64_t
+get_timeout()
+{
+    static int64_t timeout = -1;
+
+    if (timeout < 0)
+    {
+	timeout = 45 * NANOSEC_PER_SEC;
+	if (np::spiegel::platform::is_running_under_debugger())
+	{
+	    fprintf(stderr, "spiegel: disabling test timeouts under debugger\n");
+	    timeout = 0;
+	}
+    }
+
+    return timeout;
+}
+
 child_t::child_t(pid_t pid, int fd, job_t *j)
  :  pid_(pid),
     event_pipe_(fd),
     job_(j),
     result_(R_UNKNOWN),
-    state_(RUNNING),
-    deadline_(j->get_start() + 45 * NANOSEC_PER_SEC)
+    state_(RUNNING)
 {
+    int64_t timeout = get_timeout();
+    if (timeout)
+	deadline_ = j->get_start() + timeout;
 }
 
 child_t::~child_t()
