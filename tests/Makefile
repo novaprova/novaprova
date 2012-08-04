@@ -72,7 +72,7 @@ DUMPERS= \
     tdumpatype \
     tdumpdabbr \
     tdumpdfn \
-    tdumpdstruct \
+    tdumpdstr \
     tdumpdvar \
     tdumpvar \
 

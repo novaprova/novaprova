@@ -109,7 +109,7 @@ usage:
     else
 	a0 = argv0;
 
-    if (!strcmp(a0, "tdumpdvar"))
+    if (!strcmp(a0, "tdumpvar"))
 	state.dump_variables();
     else if (!strcmp(a0, "tdumpdabbr"))
 	state.dump_abbrevs();
