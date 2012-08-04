@@ -26,9 +26,24 @@ using namespace np::util;
 
 runner_t *runner_t::running_;
 
+static int
+choose_timeout()
+{
+    if (np::spiegel::platform::is_running_under_debugger())
+    {
+	fprintf(stderr, "spiegel: disabling test timeouts under debugger\n");
+	return 0;
+    }
+    int64_t timeout = 30;
+    if (RUNNING_ON_VALGRIND)
+	timeout *= 3;
+    return timeout;
+}
+
 runner_t::runner_t()
 {
     maxchildren_ = 1;
+    timeout_ = choose_timeout();
 }
 
 runner_t::~runner_t()
@@ -231,6 +246,8 @@ runner_t::fork_child(job_t *j)
 // 	    (int)pid, j->as_string().c_str());
     close(pipefd[PIPE_WRITE]);
     child = new child_t(pid, pipefd[PIPE_READ], j);
+    if (timeout_)
+	child->set_deadline(j->get_start() + timeout_ * NANOSEC_PER_SEC);
     children_.push_back(child);
 
     return child;
@@ -633,4 +650,10 @@ np_run_tests(np_runner_t *runner, np_plan_t *plan)
     return runner->run_tests(plan);
 }
 
+extern "C" int
+np_get_timeout()
+{
+    np_runner_t *runner = runner_t::running();
+    return runner ? runner->get_timeout() : 0;
+}
 

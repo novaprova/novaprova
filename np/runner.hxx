@@ -28,6 +28,7 @@ public:
     int run_tests(plan_t *);
     static runner_t *running() { return running_; }
     result_t raise_event(job_t *, const event_t *);
+    int get_timeout() const { return timeout_; }
 
 private:
     void destroy_listeners();
@@ -54,6 +55,7 @@ private:
     std::vector<child_t*> children_;	// only in the parent process
     unsigned int maxchildren_;
     std::vector<struct pollfd> pfd_;
+    int timeout_;	/* in seconds, 0 to disable */
 };
 
 #define np_raise(ev) \

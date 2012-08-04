@@ -5,15 +5,19 @@
 
 static void test_notimeout(void)
 {
-    fprintf(stderr, "MSG Sleeping for 29 sec\n");
-    sleep(29);
+    int timeout = np_get_timeout();
+    if (!timeout) return;
+    fprintf(stderr, "MSG Sleeping for less than timeout\n");
+    sleep(timeout-1);
     fprintf(stderr, "MSG Awoke!\n");
 }
 
 static void test_timeout(void)
 {
-    fprintf(stderr, "MSG Sleeping for 31 sec\n");
-    sleep(31);
-    fprintf(stderr, "MSG Awoke!\n");
+    int timeout = np_get_timeout();
+    if (!timeout) return;
+    fprintf(stderr, "MSG Sleeping for more than timeout\n");
+    sleep(timeout+1);
+    fprintf(stderr, "MSG Awoke! - shouldn't happen\n");
 }
 

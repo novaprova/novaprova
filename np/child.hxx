@@ -22,6 +22,7 @@ public:
     int get_input_fd() const { return (state_ == FINISHED ? -1 : event_pipe_); }
     void handle_input();
     int64_t get_deadline() const { return deadline_; }
+    void set_deadline(int64_t d) { deadline_ = d; }
     void handle_timeout(int64_t);
     void merge_result(result_t r);
 

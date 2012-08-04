@@ -7,24 +7,6 @@
 
 namespace np {
 
-static int64_t
-get_timeout()
-{
-    static int64_t timeout = -1;
-
-    if (timeout < 0)
-    {
-	timeout = 45 * NANOSEC_PER_SEC;
-	if (np::spiegel::platform::is_running_under_debugger())
-	{
-	    fprintf(stderr, "spiegel: disabling test timeouts under debugger\n");
-	    timeout = 0;
-	}
-    }
-
-    return timeout;
-}
-
 child_t::child_t(pid_t pid, int fd, job_t *j)
  :  pid_(pid),
     event_pipe_(fd),
@@ -32,9 +14,6 @@ child_t::child_t(pid_t pid, int fd, job_t *j)
     result_(R_UNKNOWN),
     state_(RUNNING)
 {
-    int64_t timeout = get_timeout();
-    if (timeout)
-	deadline_ = j->get_start() + timeout;
 }
 
 child_t::~child_t()
@@ -60,7 +39,9 @@ child_t::handle_timeout(int64_t end)
     case RUNNING:
 	if (deadline_ <= end)
 	{
-	    event_t ev(EV_TIMEOUT, "Child timed out");
+	    static char buf[80];
+	    snprintf(buf, sizeof(buf), "Child process %d timed out, killing", (int)pid_);
+	    event_t ev(EV_TIMEOUT, buf);
 	    merge_result(np::runner_t::running()->raise_event(job_, &ev));
 
 	    kill(pid_, SIGTERM);
