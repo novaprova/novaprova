@@ -40,6 +40,7 @@ public:
 			  unsigned int &lineno,
 			  reference_t &funcref,
 			  unsigned int &offset) const;
+    std::string get_full_name(reference_t ref);
 
     // state_t is a Singleton
     static state_t *instance() { return instance_; }

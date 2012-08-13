@@ -462,23 +462,8 @@ member_t::get_compile_unit() const
 string
 function_t::get_full_name() const
 {
-    string full;
-    np::spiegel::dwarf::walker_t w(ref_);
-    const np::spiegel::dwarf::entry_t *e = w.move_next();
-
-    do
-    {
-	if (e->get_attribute(DW_AT_specification))
-	    e = w.move_to(e->get_reference_attribute(DW_AT_specification));
-	if (e->get_tag() == DW_TAG_compile_unit)
-	    break;
-	if (full.length())
-	    full = string("::") + full;
-	full = string(e->get_string_attribute(DW_AT_name)) + full;
-	e = w.move_up();
-    } while (e);
-
-    return full;
+    np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
+    return state->get_full_name(ref_);
 }
 
 type_t *

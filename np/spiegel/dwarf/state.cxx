@@ -407,7 +407,7 @@ state_t::dump_structs()
 	    const char *structname = e->get_string_attribute(DW_AT_name);
 	    if (!structname)
 		continue;
-	    printf("ZZZ %s %s;\n", keyword, structname);
+	    printf("%s %s {\n", keyword, get_full_name(w.get_reference()).c_str());
 
 	    // print members
 	    for (e = w.move_down() ; e ; e = w.move_next())
@@ -448,6 +448,7 @@ state_t::dump_structs()
 		    continue;
 		}
 	    }
+	    printf("} %s\n", keyword);
 	}
 
 	printf("} compile_unit\n");
@@ -506,12 +507,8 @@ state_t::dump_variables()
 	    if (e->get_tag() != DW_TAG_variable)
 		continue;
 
-	    const char *name = e->get_string_attribute(DW_AT_name);
-	    if (!name)
-		continue;
-
 	    describe_type(w, e->get_reference_attribute(DW_AT_type));
-	    printf("%s;\n", name);
+	    printf("%s;\n", get_full_name(w.get_reference()).c_str());
 	}
 
 	printf("} compile_unit\n");
@@ -770,6 +767,28 @@ state_t::describe_address(np::spiegel::addr_t addr,
 	}
     }
     return false;
+}
+
+string
+state_t::get_full_name(reference_t ref)
+{
+    string full;
+    walker_t w(ref);
+    const entry_t *e = w.move_next();
+
+    do
+    {
+	if (e->get_attribute(DW_AT_specification))
+	    e = w.move_to(e->get_reference_attribute(DW_AT_specification));
+	if (e->get_tag() == DW_TAG_compile_unit)
+	    break;
+	if (full.length())
+	    full = string("::") + full;
+	full = string(e->get_string_attribute(DW_AT_name)) + full;
+	e = w.move_up();
+    } while (e);
+
+    return full;
 }
 
 // close namespaces
