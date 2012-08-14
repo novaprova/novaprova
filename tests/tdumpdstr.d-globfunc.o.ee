@@ -1,0 +1,10 @@
+compile_unit {
+struct coffee {
+    /*member*/ int  mcsweeneys;
+} struct
+struct quinoa {
+    /*member*/ int  cosby;
+    /*member*/ float  sweater;
+    /*member*/ struct coffee *  milkshk;
+} struct
+} compile_unit
