@@ -402,7 +402,7 @@ state_t::dump_structs()
 
 	walker_t w(*i);
 	w.move_next();	// at the DW_TAG_compile_unit
-	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
+	while (const entry_t *e = w.move_preorder())
 	{
 	    switch (e->get_tag())
 	    {
@@ -509,8 +509,8 @@ state_t::dump_variables()
 	printf("compile_unit {\n");
 
 	walker_t w(*i);
-	w.move_next();	// at the DW_TAG_compile_unit
-	for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
+	const entry_t *e = w.move_next();	// at the DW_TAG_compile_unit
+	while ((e = w.move_preorder()))
 	{
 	    if (e->get_tag() != DW_TAG_variable)
 		continue;
