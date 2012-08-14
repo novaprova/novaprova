@@ -512,6 +512,8 @@ state_t::dump_variables()
 	{
 	    if (e->get_tag() != DW_TAG_variable)
 		continue;
+	    if (!e->get_attribute(DW_AT_location))
+		continue;
 
 	    describe_type(w);
 	    printf("%s;\n", get_full_name(w.get_reference()).c_str());
