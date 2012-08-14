@@ -288,15 +288,23 @@ state_t::read_linkobjs()
 }
 
 static void
-describe_type(const walker_t &ow, reference_t ref)
+describe_type(const walker_t &ow)
 {
+    walker_t w = ow;
+    const entry_t *e = ow.get_entry();
+    reference_t ref;
+
+    if (e->get_attribute(DW_AT_specification))
+	e = w.move_to(e->get_reference_attribute(DW_AT_specification));
+
+    ref = e->get_reference_attribute(DW_AT_type);
     if (ref == reference_t::null)
     {
 	printf("void ");
 	return;
     }
-    walker_t w = ow;
-    const entry_t *e = w.move_to(ref);
+
+    e = w.move_to(ref);
     if (!e)
     {
 	printf("??? ");
@@ -311,15 +319,15 @@ describe_type(const walker_t &ow, reference_t ref)
 	printf("%s ", name);
 	break;
     case DW_TAG_pointer_type:
-	describe_type(w, e->get_reference_attribute(DW_AT_type));
+	describe_type(w);
 	printf("* ");
 	break;
     case DW_TAG_volatile_type:
-	describe_type(w, e->get_reference_attribute(DW_AT_type));
+	describe_type(w);
 	printf("volatile ");
 	break;
     case DW_TAG_const_type:
-	describe_type(w, e->get_reference_attribute(DW_AT_type));
+	describe_type(w);
 	printf("const ");
 	break;
     case DW_TAG_structure_type:
@@ -338,7 +346,7 @@ describe_type(const walker_t &ow, reference_t ref)
 	printf("namespace %s ", (name ? name : "{...}"));
 	break;
     case DW_TAG_array_type:
-	describe_type(w, e->get_reference_attribute(DW_AT_type));
+	describe_type(w);
 	for (e = w.move_down() ; e ; e = w.move_next())
 	{
 	    uint32_t count;
@@ -369,7 +377,7 @@ describe_function_parameters(walker_t &w)
 	{
 	    if (nparams++)
 		printf(", ");
-	    describe_type(w, e->get_reference_attribute(DW_AT_type));
+	    describe_type(w);
 	}
 	else if (e->get_tag() == DW_TAG_unspecified_parameters)
 	{
@@ -420,7 +428,7 @@ state_t::dump_structs()
 		{
 		case DW_TAG_member:
 		    printf("    /*member*/ ");
-		    describe_type(w, e->get_reference_attribute(DW_AT_type));
+		    describe_type(w);
 		    printf(" %s;\n", name);
 		    break;
 		case DW_TAG_subprogram:
@@ -436,7 +444,7 @@ state_t::dump_structs()
 			else
 			{
 			    printf("    /*function*/ ");
-			    describe_type(w, e->get_reference_attribute(DW_AT_type));
+			    describe_type(w);
 			}
 			printf("%s", name);
 			describe_function_parameters(w);
@@ -478,7 +486,7 @@ state_t::dump_functions()
 	    if (!name)
 		continue;
 
-	    describe_type(w, e->get_reference_attribute(DW_AT_type));
+	    describe_type(w);
 	    printf("%s", name);
 	    describe_function_parameters(w);
 	    printf("\n");
@@ -507,13 +515,12 @@ state_t::dump_variables()
 	    if (e->get_tag() != DW_TAG_variable)
 		continue;
 
-	    describe_type(w, e->get_reference_attribute(DW_AT_type));
+	    describe_type(w);
 	    printf("%s;\n", get_full_name(w.get_reference()).c_str());
 	}
 
 	printf("} compile_unit\n");
     }
-    printf("\n\n");
 }
 
 static void
