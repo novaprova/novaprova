@@ -1,3 +1,3 @@
 EVENT ASSERT NP_ASSERT_PTR_EQUAL(x=0x42, DEFACED=0xbdefaced)
-FAIL 1:assert_ptr_equal_fail
+FAIL 1:tnapequalfail.assert_ptr_equal_fail
 EXIT 1

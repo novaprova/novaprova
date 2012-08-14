@@ -3,10 +3,8 @@ FAIL 1:tnsyslogmatch.invalid_regex
 EVENT SLMATCH Unmatched syslog tag 1
 FAIL 2:tnsyslogmatch.unmatched_tag
 PASS 3:tnsyslogmatch.no_messages
-EVENT SYSLOG err: fnarp
 EVENT SLMATCH err: fnarp
 FAIL 4:tnsyslogmatch.one_message_no_matches
-EVENT SYSLOG err: fnarp
 EVENT SLMATCH err: fnarp
 FAIL 5:tnsyslogmatch.one_message_unmatched
 EVENT SYSLOG err: fnarp

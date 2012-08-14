@@ -1,4 +1,3 @@
-EVENT SYSLOG err: Hello world!
 EVENT SLMATCH err: Hello world!
-FAIL 1:syslog
+FAIL 1:tnsyslog.syslog
 EXIT 1

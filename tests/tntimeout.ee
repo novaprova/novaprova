@@ -1,8 +1,8 @@
-MSG Sleeping for 29 sec
+MSG Sleeping for less than timeout
 MSG Awoke!
 PASS 1:tntimeout.notimeout
-MSG Sleeping for 31 sec
-EVENT TIMEOUT Child timed out
+MSG Sleeping for more than timeout
+EVENT TIMEOUT Child process %PID% timed out, killing
 EVENT SIGNAL child process %PID% died on signal 15
 FAIL 2:tntimeout.timeout
 EXIT 1

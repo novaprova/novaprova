@@ -1,2 +1,3 @@
-PASS 1:memleak
-EXIT 0
+EVENT VALGRIND 32 bytes of memory leaked
+FAIL 1:tnmemleak.memleak
+EXIT 1

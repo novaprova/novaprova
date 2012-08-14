@@ -1,2 +1,3 @@
-PASS 1:pass
+EVENT EXPASS NP_PASS called
+PASS 1:tnpass.pass
 EXIT 0
