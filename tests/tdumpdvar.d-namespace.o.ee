@@ -1,0 +1,5 @@
+compile_unit d-namespace.cxx {
+int cosby::quinoa;
+int cosby::sweater::etsy;
+int cosby::sweater::vegan::dreamcatcher;
+} compile_unit

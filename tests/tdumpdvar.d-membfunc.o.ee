@@ -1,0 +1,3 @@
+compile_unit d-membfunc.cxx {
+int coffee::sartorial;
+} compile_unit

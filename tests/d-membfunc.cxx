@@ -1,11 +1,15 @@
 
-class foo
+class coffee
 {
 public:
-    int bar(int x);
+    int keffiyeh(int x);
+private:
+    static coffee *milkshk;
+    static int sartorial;
 };
 
-int foo::bar(int x)
+int coffee::sartorial = 42;
+int coffee::keffiyeh(int x)
 {
     return x+42;
 }
