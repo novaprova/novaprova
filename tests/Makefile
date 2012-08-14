@@ -74,7 +74,6 @@ DUMPERS= \
     tdumpdfn \
     tdumpdstr \
     tdumpdvar \
-    tdumpvar \
 
 COMPOUND_TESTS= \
     taddr2line \
