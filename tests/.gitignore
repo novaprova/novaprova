@@ -8,9 +8,8 @@ tdumpafn
 tdumpatype
 tdumpdabbr
 tdumpdfn
-tdumpdstruct
+tdumpdstr
 tdumpdvar
-tdumpvar
 tfilename
 tinfo
 tintercept
