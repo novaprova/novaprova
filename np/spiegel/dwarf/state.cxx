@@ -461,7 +461,6 @@ state_t::dump_structs()
 
 	printf("} compile_unit\n");
     }
-    printf("\n\n");
 }
 
 void
@@ -500,16 +499,15 @@ state_t::dump_functions()
 void
 state_t::dump_variables()
 {
-    printf("Variables\n");
-    printf("=========\n");
-
     vector<compile_unit_t*>::iterator i;
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
-	printf("compile_unit {\n");
-
 	walker_t w(*i);
 	const entry_t *e = w.move_next();	// at the DW_TAG_compile_unit
+
+	printf("compile_unit %s {\n",
+	       e->get_string_attribute(DW_AT_name));
+
 	while ((e = w.move_preorder()))
 	{
 	    if (e->get_tag() != DW_TAG_variable)
