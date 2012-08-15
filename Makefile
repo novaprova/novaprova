@@ -14,7 +14,7 @@
 #  limitations under the License.
 #
 PACKAGE=	novaprova
-VERSION=	0.1
+VERSION=	1.0
 
 prefix=		/usr/local
 exec_prefix=	$(prefix)
