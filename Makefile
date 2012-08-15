@@ -202,3 +202,23 @@ check-local:
 	    -e 's|@configdir@|$(configdir)|' \
 	    -e 's|@mandir@|$(mandir)|' \
 	    < $< > $@
+
+DIST_TARBALL=	$(PACKAGE)-$(VERSION).tar.bz2
+
+DIST_FILES= $(shell git ls-files) \
+	doc/get-start/index.html \
+	doc/get-start/pygmentize.css \
+
+DIST_DIRS= \
+	doc/api-ref \
+	doc/man \
+
+dist: docs
+	$(RM) -r $(PACKAGE)-$(VERSION)
+	mkdir $(PACKAGE)-$(VERSION)
+	for file in $(DIST_FILES) `find $(DIST_DIRS) -type f` ; do \
+	    mkdir -p `dirname $(PACKAGE)-$(VERSION)/$$file` ;\
+	    ln $$file $(PACKAGE)-$(VERSION)/$$file ;\
+	done
+	tar -chjvf $(DIST_TARBALL) $(PACKAGE)-$(VERSION)
+	$(RM) -r $(PACKAGE)-$(VERSION)
