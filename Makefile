@@ -144,13 +144,24 @@ $(depdir)/%.d: %.c
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
+DOC_DELIVERABLES= \
+	    get-start/index.html \
+	    get-start/pygmentize.css \
+	    get-start/example1 \
+	    get-start/example1/mytest.c \
+	    get-start/example1/mycode.h \
+	    get-start/example1/mycode.c \
+	    get-start/example1/Makefile \
+	    get-start/example1/testrunner.c \
+	    api-ref \
+	    man \
+
 docs-local:
 	$(RM) -r doc/api-ref doc/man
 	doxygen
-	cd doc ;\
-	    ln -s api-ref api-ref-$(VERSION) ;\
-	    tar -chjvf api-ref-$(VERSION).tar.bz2 api-ref-$(VERSION) ;\
-	    rm -f api-ref-$(VERSION)
+	ln -s doc doc-$(VERSION)
+	tar -chjvf doc-$(VERSION).tar.bz2 $(addprefix doc-$(VERSION)/,$(DOC_DELIVERABLES))
+	$(RM) doc-$(VERSION)
 
 install: docs
 
