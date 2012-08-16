@@ -249,7 +249,7 @@ text_map_writable(addr_t addr, size_t len)
 		 PROT_READ|PROT_WRITE|PROT_EXEC);
     if (r)
     {
-	perror("spiegel: mprotect");
+	perror("np: mprotect");
 	return -1;
     }
     return 0;
@@ -277,7 +277,7 @@ text_restore(addr_t addr, size_t len)
 	r = mprotect((void *)a, (size_t)page_size(), PROT_READ|PROT_EXEC);
 	if (r)
 	{
-	    perror("spiegel: mprotect");
+	    perror("np: mprotect");
 	    return -1;
 	}
     }
@@ -571,7 +571,7 @@ install_intercept(np::spiegel::addr_t addr)
 	/* already intercepted, can handle this too */
 	break;
     default:
-	fprintf(stderr, "spiegel: sorry, cannot intercept leaf functions\n");
+	fprintf(stderr, "np: sorry, cannot intercept leaf functions\n");
 	return -1;
     }
 
@@ -605,7 +605,7 @@ uninstall_intercept(np::spiegel::addr_t addr)
 {
     if (*(unsigned char *)addr != (using_int3 ? INSN_INT3 : INSN_HLT))
     {
-	fprintf(stderr, "spiegel: attempting to uninstall an unintercepted function\n");
+	fprintf(stderr, "np: attempting to uninstall an unintercepted function\n");
 	return -1;
     }
     *(unsigned char *)addr = INSN_PUSH_EBP;
@@ -772,7 +772,7 @@ bool is_running_under_debugger()
     {
 	if (!strcmp(tail, debuggers[i]))
 	{
-	    fprintf(stderr, "spiegel: being debugged by %s\n", command);
+	    fprintf(stderr, "np: being debugged by %s\n", command);
 	    free(command);
 	    return true;
 	}

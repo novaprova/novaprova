@@ -40,7 +40,7 @@ be_valground(void)
 
     if (np::spiegel::platform::is_running_under_debugger())
     {
-	fprintf(stderr, "spiegel: disabling Valgrind under debugger\n");
+	fprintf(stderr, "np: disabling Valgrind under debugger\n");
 	return;
     }
 

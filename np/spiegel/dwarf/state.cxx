@@ -63,7 +63,7 @@ state_t::linkobj_t::map_sections()
     }
     if (!bfd_check_format(b, bfd_object))
     {
-	fprintf(stderr, "spiegel: %s: not an object\n", filename_);
+	fprintf(stderr, "np: %s: not an object\n", filename_);
 	goto error;
     }
 

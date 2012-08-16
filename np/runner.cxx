@@ -46,7 +46,7 @@ choose_timeout()
 {
     if (np::spiegel::platform::is_running_under_debugger())
     {
-	fprintf(stderr, "spiegel: disabling test timeouts under debugger\n");
+	fprintf(stderr, "np: disabling test timeouts under debugger\n");
 	return 0;
     }
     int64_t timeout = 30;
