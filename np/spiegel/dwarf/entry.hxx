@@ -68,7 +68,7 @@ public:
 	nvalues_++;
     }
 
-    size_t get_offset() const { return offset_; }
+    unsigned get_offset() const { return offset_; }
     unsigned get_level() const { return level_; }
     const abbrev_t *get_abbrev() const { return abbrev_; }
     uint32_t get_tag() const { return abbrev_->tag; }
@@ -135,7 +135,7 @@ private:
 	MAX_VALUES = 32,	// the most defined attributes for any tag
 				// in DWARF2 is 23 for DW_TAG_subprogram
     };
-    size_t offset_;
+    unsigned offset_;
     unsigned level_;
     const abbrev_t *abbrev_;
     uint8_t nvalues_;

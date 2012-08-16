@@ -201,7 +201,7 @@ rel_timestamp()
 	{
 	    first = now;
 	    static char buf[64];
-	    snprintf(buf, sizeof(buf), "%s=%llu", var, first);
+	    snprintf(buf, sizeof(buf), "%s=%llu", var, (unsigned long long)first);
 	    putenv(buf);
 	}
     }

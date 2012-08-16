@@ -146,7 +146,7 @@ walker_t::read_entry()
 		}
 		else
 		{
-		    fatal("Strange addrsize %u", sizeof(unsigned long));
+		    fatal("Strange addrsize %u", (unsigned)sizeof(unsigned long));
 		}
 		break;
 	    }

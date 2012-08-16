@@ -151,7 +151,7 @@ filename_t::normalise() const
 filename_t
 filename_t::basename() const
 {
-    unsigned int tail = find_last_of('/');
+    size_t tail = find_last_of('/');
     return (tail == string::npos ? filename_t(*this) : substr(tail+1));
 }
 
