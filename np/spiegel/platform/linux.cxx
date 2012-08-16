@@ -302,8 +302,27 @@ intercept_tramp(void)
 	unsigned long our_esp;
     } frame;
     unsigned long parent_size;
+    int eip, ebp, esp;
 
-    frame.addr = tramp_uc.uc_mcontext.gregs[REG_EIP] - (using_int3 ? 1 : 0);
+#ifdef REG_EIP
+    eip = REG_EIP;
+#else
+    eip = REG_RIP;
+#endif
+
+#ifdef REG_EBP
+    ebp = REG_EBP;
+#else
+    ebp = REG_RBP;
+#endif
+
+#ifdef REG_ESP
+    esp = REG_ESP;
+#else
+    esp = REG_RSP;
+#endif
+
+    frame.addr = tramp_uc.uc_mcontext.gregs[eip] - (using_int3 ? 1 : 0);
 
     /*
      * This branch is never taken because the variable 'hack1' is never
@@ -337,14 +356,14 @@ intercept_tramp(void)
     }
     tramp_uc.uc_mcontext.fpregs = fpuc.uc_mcontext.fpregs;
     /* Point the EBP register at our own EBP register */
-    tramp_uc.uc_mcontext.gregs[REG_EBP] = fpuc.uc_mcontext.gregs[REG_EBP];
+    tramp_uc.uc_mcontext.gregs[ebp] = fpuc.uc_mcontext.gregs[ebp];
 
 //     printf("tramp: fpregs=0x%08lx\n", (unsigned long)tramp_uc.uc_mcontext.fpregs);
 //     printf("tramp: after=0x%08lx\n", (unsigned long)&&after);
 
     /* Setup the ucontext to look like we just called the
      * function from immediately before the 'after' label */
-    tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.addr + 1;
+    tramp_uc.uc_mcontext.gregs[eip] = frame.addr + 1;
     /*
      * Build a new fake stack frame for calling the original
      * function.
@@ -365,19 +384,19 @@ intercept_tramp(void)
      *
      * "Trust me, I know what I'm doing."
      */
-    frame.saved_ebp = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EBP];
+    frame.saved_ebp = (unsigned long)tramp_uc.uc_mcontext.gregs[ebp];
     frame.return_addr = (unsigned long)&&after;
     /*
      * Copy enough of the original stack frame to make it look like
      * we have the original arguments.
      */
-    parent_size = tramp_uc.uc_mcontext.gregs[REG_EBP] -
-		  (tramp_uc.uc_mcontext.gregs[REG_ESP]+4);
+    parent_size = tramp_uc.uc_mcontext.gregs[ebp] -
+		  (tramp_uc.uc_mcontext.gregs[esp]+4);
     memcpy(frame.args,
-	   (void *)(tramp_uc.uc_mcontext.gregs[REG_ESP]+4),
+	   (void *)(tramp_uc.uc_mcontext.gregs[esp]+4),
 	   MIN(parent_size, sizeof(frame.args)));
     /* setup the ucontext's ESP register to point at the new stack frame */
-    tramp_uc.uc_mcontext.gregs[REG_ESP] = (unsigned long)&frame;
+    tramp_uc.uc_mcontext.gregs[esp] = (unsigned long)&frame;
 
     /*
      * Call the BEFORE method.  This call happens late enough that
@@ -397,10 +416,10 @@ intercept_tramp(void)
     {
 	/* before() requested redirect, so setup the context to call
 	 * that function instead. */
-	tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.call.redirect_;
+	tramp_uc.uc_mcontext.gregs[eip] = frame.call.redirect_;
 	/* The new function won't be intercepted (well, we hope not)
 	 * so we need to undo emulation of 'push %ebp'.  */
-	tramp_uc.uc_mcontext.gregs[REG_ESP] += 4;
+	tramp_uc.uc_mcontext.gregs[esp] += 4;
     }
     /* Save our own %esp for later */
     __asm__ volatile("movl %%esp, %0" : "=m"(frame.our_esp));
@@ -461,7 +480,16 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 // 	    (unsigned long)uc->uc_mcontext.gregs[REG_ESP]);
 
     /* double-check that this is not some spurious signal */
-    unsigned char *eip = (unsigned char *)(uc->uc_mcontext.gregs[REG_EIP]);
+    unsigned char *eip;
+    int reg_eip;
+
+#ifdef REG_EIP
+    reg_eip = REG_EIP;
+#else
+    reg_eip = REG_RIP;
+#endif
+
+    eip = (unsigned char *)(uc->uc_mcontext.gregs[reg_eip]);
     if (using_int3)
     {
 	if (sig != SIGTRAP || si->si_signo != SIGTRAP)
@@ -495,7 +523,7 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
     /* munge the signal ucontext so we return from
      * the signal into the tramp instead of the
      * original function */
-    uc->uc_mcontext.gregs[REG_EIP] = (unsigned long)&intercept_tramp;
+    uc->uc_mcontext.gregs[reg_eip] = (unsigned long)&intercept_tramp;
 //     printf("handle_signal: ending\n");
 
     return;
@@ -621,7 +649,7 @@ vector<np::spiegel::addr_t> get_stacktrace()
     unsigned long bp;
     vector<np::spiegel::addr_t> stack;
 
-    __asm__ volatile("movl %%ebp, %0" : "=r"(bp));
+    __asm__ volatile("movq %%rbp, %0" : "=r"(bp));
     for (;;)
     {
 	stack.push_back(((unsigned long *)bp)[1]-5);
