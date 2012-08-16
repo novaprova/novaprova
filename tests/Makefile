@@ -16,7 +16,7 @@
 CC=		gcc
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-D_GNU_SOURCE
+CDEFINES=	$(shell ../platform.sh --cflags)
 CWARNFLAGS=	-Wall -Wextra -Wno-unused-function -Wno-unused-parameter
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
