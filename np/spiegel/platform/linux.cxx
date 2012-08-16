@@ -273,6 +273,16 @@ private:
 #define INSN_INT3	    0xcc
 #define INSN_HLT	    0xf4
 
+#if _NP_WORDSIZE == 4
+#define	REG_PROG	    REG_EIP
+#define	REG_BASE	    REG_EBP
+#define	REG_STACK	    REG_ESP
+#else
+#define	REG_PROG	    REG_RIP
+#define	REG_BASE	    REG_RBP
+#define	REG_STACK	    REG_RSP
+#endif
+
 static ucontext_t tramp_uc;
 static ucontext_t fpuc;
 static bool hack1 = false;
@@ -302,27 +312,8 @@ intercept_tramp(void)
 	unsigned long our_esp;
     } frame;
     unsigned long parent_size;
-    int eip, ebp, esp;
 
-#ifdef REG_EIP
-    eip = REG_EIP;
-#else
-    eip = REG_RIP;
-#endif
-
-#ifdef REG_EBP
-    ebp = REG_EBP;
-#else
-    ebp = REG_RBP;
-#endif
-
-#ifdef REG_ESP
-    esp = REG_ESP;
-#else
-    esp = REG_RSP;
-#endif
-
-    frame.addr = tramp_uc.uc_mcontext.gregs[eip] - (using_int3 ? 1 : 0);
+    frame.addr = tramp_uc.uc_mcontext.gregs[REG_PROG] - (using_int3 ? 1 : 0);
 
     /*
      * This branch is never taken because the variable 'hack1' is never
@@ -356,14 +347,14 @@ intercept_tramp(void)
     }
     tramp_uc.uc_mcontext.fpregs = fpuc.uc_mcontext.fpregs;
     /* Point the EBP register at our own EBP register */
-    tramp_uc.uc_mcontext.gregs[ebp] = fpuc.uc_mcontext.gregs[ebp];
+    tramp_uc.uc_mcontext.gregs[REG_BASE] = fpuc.uc_mcontext.gregs[REG_BASE];
 
 //     printf("tramp: fpregs=0x%08lx\n", (unsigned long)tramp_uc.uc_mcontext.fpregs);
 //     printf("tramp: after=0x%08lx\n", (unsigned long)&&after);
 
     /* Setup the ucontext to look like we just called the
      * function from immediately before the 'after' label */
-    tramp_uc.uc_mcontext.gregs[eip] = frame.addr + 1;
+    tramp_uc.uc_mcontext.gregs[REG_PROG] = frame.addr + 1;
     /*
      * Build a new fake stack frame for calling the original
      * function.
@@ -384,19 +375,19 @@ intercept_tramp(void)
      *
      * "Trust me, I know what I'm doing."
      */
-    frame.saved_ebp = (unsigned long)tramp_uc.uc_mcontext.gregs[ebp];
+    frame.saved_ebp = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_BASE];
     frame.return_addr = (unsigned long)&&after;
     /*
      * Copy enough of the original stack frame to make it look like
      * we have the original arguments.
      */
-    parent_size = tramp_uc.uc_mcontext.gregs[ebp] -
-		  (tramp_uc.uc_mcontext.gregs[esp]+4);
+    parent_size = tramp_uc.uc_mcontext.gregs[REG_BASE] -
+		  (tramp_uc.uc_mcontext.gregs[REG_STACK]+4);
     memcpy(frame.args,
-	   (void *)(tramp_uc.uc_mcontext.gregs[esp]+4),
+	   (void *)(tramp_uc.uc_mcontext.gregs[REG_STACK]+4),
 	   MIN(parent_size, sizeof(frame.args)));
     /* setup the ucontext's ESP register to point at the new stack frame */
-    tramp_uc.uc_mcontext.gregs[esp] = (unsigned long)&frame;
+    tramp_uc.uc_mcontext.gregs[REG_STACK] = (unsigned long)&frame;
 
     /*
      * Call the BEFORE method.  This call happens late enough that
@@ -416,10 +407,10 @@ intercept_tramp(void)
     {
 	/* before() requested redirect, so setup the context to call
 	 * that function instead. */
-	tramp_uc.uc_mcontext.gregs[eip] = frame.call.redirect_;
+	tramp_uc.uc_mcontext.gregs[REG_PROG] = frame.call.redirect_;
 	/* The new function won't be intercepted (well, we hope not)
 	 * so we need to undo emulation of 'push %ebp'.  */
-	tramp_uc.uc_mcontext.gregs[esp] += 4;
+	tramp_uc.uc_mcontext.gregs[REG_STACK] += 4;
     }
     /* Save our own %esp for later */
     __asm__ volatile("movl %%esp, %0" : "=m"(frame.our_esp));
@@ -481,15 +472,8 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 
     /* double-check that this is not some spurious signal */
     unsigned char *eip;
-    int reg_eip;
 
-#ifdef REG_EIP
-    reg_eip = REG_EIP;
-#else
-    reg_eip = REG_RIP;
-#endif
-
-    eip = (unsigned char *)(uc->uc_mcontext.gregs[reg_eip]);
+    eip = (unsigned char *)(uc->uc_mcontext.gregs[REG_PROG]);
     if (using_int3)
     {
 	if (sig != SIGTRAP || si->si_signo != SIGTRAP)
@@ -523,7 +507,7 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
     /* munge the signal ucontext so we return from
      * the signal into the tramp instead of the
      * original function */
-    uc->uc_mcontext.gregs[reg_eip] = (unsigned long)&intercept_tramp;
+    uc->uc_mcontext.gregs[REG_PROG] = (unsigned long)&intercept_tramp;
 //     printf("handle_signal: ending\n");
 
     return;
