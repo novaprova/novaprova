@@ -28,7 +28,8 @@ CC=		g++
 CXX=		g++
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-D_GNU_SOURCE -I. \
+CDEFINES=	-I. \
+		$(shell ./platform.sh --cflags) \
 		$(shell pkg-config --cflags libxml++-2.6)
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)

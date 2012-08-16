@@ -45,6 +45,7 @@ private:
     testmanager_t();
     ~testmanager_t();
 
+    void print_banner();
     functype_t classify_function(const char *func, char *match_return, size_t maxmatch);
     void add_classifier(const char *re, bool case_sensitive, functype_t type);
     void setup_classifiers();

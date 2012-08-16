@@ -58,6 +58,7 @@ testmanager_t::instance()
     if (!instance_)
     {
 	new testmanager_t();
+	instance_->print_banner();
 	instance_->setup_classifiers();
 	instance_->discover_functions();
 	instance_->setup_builtin_intercepts();
@@ -66,6 +67,13 @@ testmanager_t::instance()
 // 	instance_->root_->dump(0);
     }
     return instance_;
+}
+
+void
+testmanager_t::print_banner()
+{
+    printf("NovaProva Copyright (c) Gregory Banks\n");
+    printf("Built for O/S "_NP_OS" architecture "_NP_ARCH"\n");
 }
 
 functype_t
