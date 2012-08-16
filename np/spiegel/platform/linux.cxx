@@ -670,10 +670,14 @@ vector<np::spiegel::addr_t> get_stacktrace()
     unsigned long bp;
     vector<np::spiegel::addr_t> stack;
 
+#if _NP_ADDRSIZE == 4
+    __asm__ volatile("movl %%ebp, %0" : "=r"(bp));
+#else
     __asm__ volatile("movq %%rbp, %0" : "=r"(bp));
+#endif
     for (;;)
     {
-	stack.push_back(((unsigned long *)bp)[1]-5);
+	stack.push_back(((unsigned long *)bp)[1]-_NP_ADDRSIZE-1);
 	unsigned long nextbp = ((unsigned long *)bp)[0];
 	if (!nextbp)
 	    break;
