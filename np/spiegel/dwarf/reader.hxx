@@ -97,9 +97,9 @@ public:
 
     bool read_addr(np::spiegel::addr_t &v)
     {
-#if SPIEGEL_ADDRSIZE == 4
+#if _NP_ADDRSIZE == 4
 	return read_u32(v);
-#elif SPIEGEL_ADDRSIZE == 8
+#elif _NP_ADDRSIZE == 8
 	return read_u64(v);
 #else
 #error "Unknown address size"

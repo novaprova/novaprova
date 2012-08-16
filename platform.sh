@@ -33,11 +33,13 @@ esac
 case $uname_m in
 i[34567]86)
     arch=x86
-    wordsize=4
+    addrsize=4
+    maxaddr=0xffffffffUL
     ;;
 x86_64)
     arch=x86_64
-    wordsize=8
+    addrsize=8
+    maxaddr=0xffffffffffffffffULL
     ;;
 *)
     echo "$0: unknown architecture $uname_m" 1>&2
@@ -49,8 +51,11 @@ case "$1" in
 --os)
     echo $os
     ;;
---wordsize)
+--addrsize)
     echo $wordsize
+    ;;
+--maxaddr)
+    echo $maxaddr
     ;;
 --arch)
     echo $arch
@@ -59,7 +64,8 @@ case "$1" in
     echo \
 	-D_NP_OS=\"\\\"$os\\\"\" \
 	-D_NP_ARCH=\"\\\"$arch\\\"\" \
-	-D_NP_WORDSIZE=$wordsize \
+	-D_NP_ADDRSIZE=$addrsize \
+	-D_NP_MAXADDR=$maxaddr \
 	-D_NP_$os=1 \
 	-D_NP_$arch=1 \
 	$extradefines

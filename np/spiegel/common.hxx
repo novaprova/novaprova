@@ -18,12 +18,6 @@
 
 #include "np/util/common.hxx"
 
-// These are macros so we can #if on them
-#define SPIEGEL_ADDRSIZE    4
-#define SPIEGEL_MAXADDR	    (0xffffffffUL)
-// #define SPIEGEL_ADDRSIZE    8
-// #define SPIEGEL_MAXADDR	    (0xffffffffffffffffULL)
-
 namespace np {
 /**
  * NovaProva reflection library namespace.
@@ -36,9 +30,9 @@ namespace np {
  */
 namespace spiegel {
 
-#if SPIEGEL_ADDRSIZE == 4
+#if _NP_ADDRSIZE == 4
 typedef uint32_t addr_t;
-#elif SPIEGEL_ADDRSIZE == 8
+#elif _NP_ADDRSIZE == 8
 typedef uint64_t addr_t;
 #else
 #error "Unknown address size"

@@ -633,7 +633,7 @@ state_t::insert_ranges(const walker_t &w, reference_t funcref)
 	    if (!start && !end)
 		break;
 	    /* (~0,base) marks a new base address */
-	    if (start == SPIEGEL_MAXADDR)
+	    if (start == _NP_MAXADDR)
 	    {
 		base = end;
 		continue;
@@ -709,7 +709,7 @@ state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 	    if (!start && !end)
 		break;
 	    /* (~0,base) marks a new base address */
-	    if (start == SPIEGEL_MAXADDR)
+	    if (start == _NP_MAXADDR)
 	    {
 		base = end;
 		continue;

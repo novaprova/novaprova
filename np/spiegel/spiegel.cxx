@@ -190,7 +190,7 @@ type_t::get_sizeof() const
 	return type_t(e->get_reference_attribute(DW_AT_type)).get_sizeof();
     case DW_TAG_pointer_type:
     case DW_TAG_reference_type:
-	return SPIEGEL_ADDRSIZE;
+	return _NP_ADDRSIZE;
     }
     return byte_size;
 }
