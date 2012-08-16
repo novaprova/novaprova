@@ -31,9 +31,46 @@
 #define MIN(x, y)   ((x) < (y) ? (x) : (y))
 #endif
 
+extern char **_dl_argv;
+
 namespace np { namespace spiegel { namespace platform {
 using namespace std;
 using namespace np::util;
+
+#if 0
+/* This trick doesn't seem to work on 64b Linux, which
+ * is confusing, but whatever */
+extern char **environ;
+
+bool
+get_argv(int *argcp, char ***argvp)
+{
+    char **p;
+    int n;
+
+    /* This early, environ[] points at the area
+     * above argv[], so walk down from there */
+    for (p = environ-2, n = 1;
+	 ((int *)p)[-1] != n ;
+	 --p, ++n)
+	;
+    *argcp = n;
+    *argvp = p;
+    return true;
+}
+#else
+bool
+get_argv(int *argcp, char ***argvp)
+{
+    char **p;
+
+    for (p = _dl_argv ; *p ; p++)
+	;
+    *argcp = (p - _dl_argv);
+    *argvp = _dl_argv;
+    return true;
+}
+#endif
 
 char *
 self_exe()

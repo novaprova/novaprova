@@ -21,6 +21,7 @@
 
 namespace np { namespace spiegel { namespace platform {
 
+extern bool get_argv(int *argcp, char ***argvp);
 extern char *self_exe();
 
 struct linkobj_t

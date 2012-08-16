@@ -22,25 +22,6 @@ using namespace std;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-extern char **environ;
-
-static bool
-discover_args(int *argcp, char ***argvp)
-{
-    char **p;
-    int n;
-
-    /* This early, environ[] points at the area
-     * above argv[], so walk down from there */
-    for (p = environ-2, n = 1;
-	 ((int *)p)[-1] != n ;
-	 --p, ++n)
-	;
-    *argcp = n;
-    *argvp = p;
-    return true;
-}
-
 static void
 be_valground(void)
 {
@@ -63,7 +44,7 @@ be_valground(void)
 	return;
     }
 
-    if (!discover_args(&argc, &argv))
+    if (!np::spiegel::platform::get_argv(&argc, &argv))
 	return;
 
     fprintf(stderr, "[%s] np: starting valgrind\n",
