@@ -70,5 +70,8 @@ case "$1" in
 	-D_NP_$arch=1 \
 	$extradefines
     ;;
+--source)
+    echo $os.cxx $os"_"$arch.cxx
+    ;;
 esac
 

@@ -72,7 +72,7 @@ libnovaprova_SOURCE= \
 		np/spiegel/dwarf/walker.cxx \
 		np/spiegel/intercept.cxx \
 		np/spiegel/mapping.cxx \
-		np/spiegel/platform/linux.cxx \
+		$(addprefix np/spiegel/platform/,$(shell ./platform.sh --source)) \
 		np/spiegel/spiegel.cxx \
 		np/testmanager.cxx \
 		np/testnode.cxx \
