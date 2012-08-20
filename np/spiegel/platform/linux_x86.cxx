@@ -102,7 +102,7 @@ intercept_tramp(void)
     if (hack1)
 	goto after;
 
-    printf("intercept_tramp: starting, RA=%p\n", __builtin_return_address(0));
+//     printf("intercept_tramp: starting, RA=%p\n", __builtin_return_address(0));
 
     /*
      * The ucontext we get from the signal handler has no floating point
@@ -122,8 +122,8 @@ intercept_tramp(void)
     /* Point the EBP register at our own EBP register */
     tramp_uc.uc_mcontext.gregs[REG_EBP] = fpuc.uc_mcontext.gregs[REG_EBP];
 
-    printf("tramp: fpregs=%p\n", (void *)tramp_uc.uc_mcontext.fpregs);
-    printf("tramp: after=%p\n", (void *)&&after);
+//     printf("tramp: fpregs=%p\n", (void *)tramp_uc.uc_mcontext.fpregs);
+//     printf("tramp: after=%p\n", (void *)&&after);
 
     /* Setup the ucontext to look like we just called the
      * function from immediately before the 'after' label */
