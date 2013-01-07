@@ -58,8 +58,9 @@ ID="$TEST"
 function normalize
 {
     local f="$1"
+    shift
     if [ -f $TEST-normalize.pl ] ; then
-	perl $TEST-normalize.pl < $f
+	perl $TEST-normalize.pl "$@" < $f
     elif [ -f $TEST-normalize.awk ] ; then
 	awk -f $TEST-normalize.awk < $f
     else
@@ -99,7 +100,7 @@ fi
 
 if [ -f $ID.ee ] ; then
     # compare logged output against expected output
-    normalize $ID.log | diff -u $ID.ee - || fail "differences to golden output"
+    normalize $ID.log $TESTARGS | diff -u $ID.ee - || fail "differences to golden output"
 else
     expstatus=0
     egrep '^(FAIL|EXIT) ' $ID.log > .logx
