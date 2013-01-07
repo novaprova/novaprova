@@ -48,7 +48,12 @@ all clean distclean check install docs:
 
 install check: all
 
-all-local: libnovaprova.a novaprova.pc
+all-local: .config-ok libnovaprova.a novaprova.pc
+
+.config-ok:
+	@./platform.sh --verify
+	@pkg-config --cflags libxml++-2.6 > /dev/null
+	@touch $@
 
 libnovaprova_SOURCE= \
 		np.c \

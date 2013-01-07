@@ -73,5 +73,8 @@ case "$1" in
 --source)
     echo $os.cxx $os"_"$arch.cxx
     ;;
+--verify)
+    echo "Configured for os=$os arch=$arch"
+    ;;
 esac
 
