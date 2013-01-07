@@ -1,2 +1,2 @@
-PASS 1:tnanequalpass.assert_not_equal_pass
+PASS tnanequalpass.assert_not_equal_pass
 EXIT 0

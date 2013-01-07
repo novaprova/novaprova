@@ -1,3 +1,3 @@
 EVENT ASSERT white == black
-FAIL 1:tnassert.assert
+FAIL tnassert.assert
 EXIT 1

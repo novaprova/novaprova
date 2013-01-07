@@ -1,2 +1,2 @@
-PASS 1:tnapnequalpass.assert_ptr_not_equal_pass
+PASS tnapnequalpass.assert_ptr_not_equal_pass
 EXIT 0

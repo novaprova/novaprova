@@ -1,2 +1,2 @@
-PASS 1:tnasequalpass.assert_str_equal_pass
+PASS tnasequalpass.assert_str_equal_pass
 EXIT 0

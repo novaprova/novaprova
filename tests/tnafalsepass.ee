@@ -1,2 +1,2 @@
-PASS 1:tnafalsepass.assert_false_pass
+PASS tnafalsepass.assert_false_pass
 EXIT 0

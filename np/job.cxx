@@ -34,7 +34,7 @@ job_t::~job_t()
 
 string job_t::as_string() const
 {
-    string s = dec(id_) + ":" + node_->get_fullname();
+    string s = node_->get_fullname();
     vector<testnode_t::assignment_t>::const_iterator i;
     for (i = assigns_.begin() ; i != assigns_.end() ; ++i)
 	s += string("[") + i->as_string() + "]";

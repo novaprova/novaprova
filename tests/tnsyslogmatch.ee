@@ -1,21 +1,21 @@
 EVENT SLMATCH /[foo/: Unmatched [ or [^
-FAIL 1:tnsyslogmatch.invalid_regex
+FAIL tnsyslogmatch.invalid_regex
 EVENT SLMATCH Unmatched syslog tag 1
-FAIL 2:tnsyslogmatch.unmatched_tag
-PASS 3:tnsyslogmatch.no_messages
+FAIL tnsyslogmatch.unmatched_tag
+PASS tnsyslogmatch.no_messages
 EVENT SLMATCH err: fnarp
-FAIL 4:tnsyslogmatch.one_message_no_matches
+FAIL tnsyslogmatch.one_message_no_matches
 EVENT SLMATCH err: fnarp
-FAIL 5:tnsyslogmatch.one_message_unmatched
+FAIL tnsyslogmatch.one_message_unmatched
 EVENT SYSLOG err: fnarp
-PASS 6:tnsyslogmatch.one_message_ignored
+PASS tnsyslogmatch.one_message_ignored
 EVENT SYSLOG err: foo bar baz
-PASS 7:tnsyslogmatch.one_message_one_match
+PASS tnsyslogmatch.one_message_one_match
 EVENT SYSLOG err: foo bar baz
 EVENT ASSERT NP_ASSERT_EQUAL(np_syslog_count(m1)=1, 5=5)
-FAIL 8:tnsyslogmatch.one_message_one_match_want_five
+FAIL tnsyslogmatch.one_message_one_match_want_five
 EVENT SYSLOG err: fuu bleah bas
-PASS 9:tnsyslogmatch.one_message_multiple_matches_same_tag
+PASS tnsyslogmatch.one_message_multiple_matches_same_tag
 EVENT SYSLOG err: fuu bleah bas
-PASS 10:tnsyslogmatch.one_message_multiple_matches_different_tags
+PASS tnsyslogmatch.one_message_multiple_matches_different_tags
 EXIT 1
