@@ -35,6 +35,7 @@ public:
     testnode_t *make_path(std::string name);
     void set_function(functype_t, np::spiegel::function_t *);
     void add_mock(np::spiegel::function_t *target, np::spiegel::function_t *mock);
+    void add_mock(np::spiegel::addr_t target, const char *name, np::spiegel::addr_t mock);
     void add_mock(np::spiegel::addr_t target, np::spiegel::addr_t mock);
 
     testnode_t *detach_common();

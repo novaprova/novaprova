@@ -23,28 +23,39 @@ using namespace std;
 
 map<addr_t, vector<intercept_t*> > intercept_t::installed_;
 
-intercept_t::intercept_t(addr_t a)
+intercept_t::intercept_t(addr_t a, const char *name)
 {
     addr_ = np::spiegel::platform::normalise_address(a);
+    name_ = np::util::xstrdup(name);
 }
 
 intercept_t::~intercept_t()
 {
+    xfree(name_);
 }
 
 int
 intercept_t::install()
 {
+    int r = 0;
     vector<intercept_t*> *v = &installed_[addr_];
     v->push_back(this);
     if (v->size() == 1)
-	return np::spiegel::platform::install_intercept(addr_);
-    return 0;
+    {
+	string err;
+	r = np::spiegel::platform::install_intercept(addr_, err);
+	if (r < 0)
+	    fprintf(stderr, "np: failed to install intercepted "
+			    "function %s at 0x%lx: %s\n",
+			    get_name(), (unsigned long)addr_, err.c_str());
+    }
+    return r;
 }
 
 int
 intercept_t::uninstall()
 {
+    int r = 0;
     vector<intercept_t*> *v = &installed_[addr_];
     vector<intercept_t*>::iterator itr;
     for (itr = v->begin() ; itr != v->end() ; ++itr)
@@ -58,9 +69,14 @@ intercept_t::uninstall()
     if (v->size() == 0)
     {
 	installed_.erase(addr_);
-	return np::spiegel::platform::uninstall_intercept(addr_);
+	string err;
+	r = np::spiegel::platform::uninstall_intercept(addr_, err);
+	if (r < 0)
+	    fprintf(stderr, "np: failed to uninstall intercepted "
+			    "function %s at 0x%lx: %s\n",
+			    get_name(), (unsigned long)addr_, err.c_str());
     }
-    return 0;
+    return r;
 }
 
 bool

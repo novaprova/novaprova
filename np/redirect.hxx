@@ -25,9 +25,9 @@ namespace np {
 class redirect_t : public spiegel::intercept_t
 {
 public:
-    redirect_t(spiegel::addr_t from, spiegel::addr_t to)
-     :  intercept_t(from),
-        to_(to)
+    redirect_t(spiegel::addr_t from, const char *fromname, spiegel::addr_t to)
+     :  intercept_t(from, fromname),
+	to_(to)
     {}
     ~redirect_t() {}
 

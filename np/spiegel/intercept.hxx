@@ -74,13 +74,14 @@ public:
 
 struct intercept_t : public np::util::zalloc
 {
-    intercept_t(addr_t a);
+    intercept_t(addr_t a, const char *name = 0);
     virtual ~intercept_t();
 
     virtual void before(call_t &) = 0;
     virtual void after(call_t &) = 0;
 
     addr_t get_address() const { return addr_; }
+    const char *get_name() const { return (name_ ? name_ : "(unknown)"); }
 
     int install();
     int uninstall();
@@ -95,6 +96,7 @@ private:
 
     /* saved parameters */
     addr_t addr_;
+    char *name_;	/* may be NULL */
 };
 
 // close the namespaces

@@ -306,7 +306,7 @@ wtf:
 }
 
 int
-install_intercept(np::spiegel::addr_t addr)
+install_intercept(np::spiegel::addr_t addr, std::string &err)
 {
     int r;
 
@@ -320,13 +320,16 @@ install_intercept(np::spiegel::addr_t addr)
 	/* already intercepted, can handle this too */
 	break;
     default:
-	fprintf(stderr, "np: sorry, cannot intercept leaf functions\n");
+	err = "cannot intercept leaf functions";
 	return -1;
     }
 
     r = text_map_writable(addr, 1);
     if (r)
+    {
+	err = "cannot make text page writable";
 	return -1;
+    }
 
     static bool installed_sigaction = false;
     if (!installed_sigaction)
@@ -338,6 +341,12 @@ install_intercept(np::spiegel::addr_t addr)
 	if (RUNNING_ON_VALGRIND)
 	    using_int3 = true;
 	sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
+	if (r < 0)
+	{
+	    perror("np: sigaction");
+	    err = "cannot install signal handler";
+	    return -1;
+	}
 	installed_sigaction = true;
     }
 
@@ -350,16 +359,19 @@ install_intercept(np::spiegel::addr_t addr)
 }
 
 int
-uninstall_intercept(np::spiegel::addr_t addr)
+uninstall_intercept(np::spiegel::addr_t addr, std::string &err)
 {
     if (*(unsigned char *)addr != (using_int3 ? INSN_INT3 : INSN_HLT))
     {
-	fprintf(stderr, "np: attempting to uninstall an unintercepted function\n");
+	err = "intercept not installed";
 	return -1;
     }
     *(unsigned char *)addr = INSN_PUSH_RBP;
     VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
-    return text_restore(addr, 1);
+    int r = text_restore(addr, 1);
+    if (r < 0)
+	err = "cannot restore text page";
+    return r;
 }
 
 // close namespaces

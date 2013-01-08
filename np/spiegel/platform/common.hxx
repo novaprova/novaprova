@@ -38,8 +38,8 @@ np::spiegel::addr_t normalise_address(np::spiegel::addr_t);
 
 extern int text_map_writable(addr_t addr, size_t len);
 extern int text_restore(addr_t addr, size_t len);
-extern int install_intercept(np::spiegel::addr_t);
-extern int uninstall_intercept(np::spiegel::addr_t);
+extern int install_intercept(np::spiegel::addr_t, /*return*/std::string &err);
+extern int uninstall_intercept(np::spiegel::addr_t, /*return*/std::string &err);
 
 extern std::vector<np::spiegel::addr_t> get_stacktrace();
 
