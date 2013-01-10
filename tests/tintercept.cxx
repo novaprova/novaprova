@@ -99,12 +99,14 @@ public:
 
     void before(np::spiegel::call_t &);
     void after(np::spiegel::call_t &);
+    void reset_counters();
 
     unsigned int after_count;
     unsigned int before_count;
-    int x, y, r;
+    int x, y, r, nr;
     bool test_skip;
     bool test_redirect;
+    bool test_set_retval;
 };
 
 intercept_tester_t::intercept_tester_t()
@@ -127,12 +129,12 @@ intercept_tester_t::before(np::spiegel::call_t &call)
     if (is_verbose()) printf("BEFORE x=%d y=%d\n", x, y);
     if (test_skip)
     {
-	if (is_verbose()) printf("SKIPPING r=%d\n", r);
-	call.skip(r);
+	if (is_verbose()) printf("SKIPPING r=%d\n", nr);
+	call.skip(nr);
     }
     if (test_redirect)
     {
-	if (is_verbose()) printf("REDIRECTING\n");
+	if (is_verbose()) printf("REDIRECTING to another_function\n");
 	call.redirect((np::spiegel::addr_t)&another_function);
     }
 }
@@ -142,7 +144,28 @@ intercept_tester_t::after(np::spiegel::call_t &call)
 {
     r = call.get_retval();
     after_count++;
-    if (is_verbose()) printf("AFTER, returning %d\n", r);
+    if (is_verbose()) printf("AFTER, returned %d\n", r);
+    if (test_set_retval)
+    {
+	if (is_verbose()) printf("SETTING RETVAL to %d\n", nr);
+	call.set_retval((unsigned long)nr);
+    }
+}
+
+void
+intercept_tester_t::reset_counters()
+{
+    x = 0;
+    y = 0;
+    r = 0;
+    nr = 0;
+    before_count = 0;
+    after_count = 0;
+    the_function_count = 0;
+    another_function_count = 0;
+    test_skip = false;
+    test_redirect = false;
+    test_set_retval = false;
 }
 
 int moe(int x, int y)
@@ -199,14 +222,16 @@ public:
     }
 };
 
-class plt_intercept_tester_t : public np::spiegel::intercept_t
+typedef void (*fn_t)(void);
+
+class libc_intercept_tester_t : public np::spiegel::intercept_t
 {
 public:
-    plt_intercept_tester_t()
-     :  intercept_t((np::spiegel::addr_t)&gettext)
+    libc_intercept_tester_t(fn_t addr, const char *name)
+     :  intercept_t((np::spiegel::addr_t)addr, name)
     {
     }
-    ~plt_intercept_tester_t()
+    ~libc_intercept_tester_t()
     {
     }
 
@@ -215,15 +240,13 @@ public:
 
     void before(np::spiegel::call_t &call)
     {
-	if (is_verbose()) printf("BEFORE, arg0 \"%s\"\n", (const char *)call.get_arg(0));
+	if (is_verbose()) printf("BEFORE %s\n", get_name());
 	before_count++;
     }
     void after(np::spiegel::call_t &call)
     {
-	const char *s = (const char *)call.get_retval();
-	if (is_verbose()) printf("AFTER, returning \"%s\"\n", s);
+	if (is_verbose()) printf("AFTER %s\n", get_name());
 	after_count++;
-	call.set_retval((unsigned long)"world");
     }
 };
 
@@ -245,18 +268,13 @@ main(int argc, char **argv __attribute__((unused)))
     intercept_tester_t *it;
     int r;
 
-    BEGIN("basic");
+    BEGIN("install");
     it = new intercept_tester_t();
     it->install();
+    END;
 
-    CHECK(it->x == 0);
-    CHECK(it->y == 0);
-    CHECK(it->r == 0);
-    CHECK(it->before_count == 0);
-    CHECK(it->after_count == 0);
-    CHECK(the_function_count == 0);
-    CHECK(another_function_count == 0);
-
+    BEGIN("basic");
+    it->reset_counters();
     r = larry(0, 39);
 
     CHECK(r == 5216);
@@ -267,54 +285,75 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it->after_count == 1);
     CHECK(the_function_count == 1);
     CHECK(another_function_count == 0);
+    END;
 
+    BEGIN("basic2");
+    it->reset_counters();
     r = larry(4, 24);
 
     CHECK(r == 2089841);
     CHECK(it->x == 7);
     CHECK(it->y == 27);
     CHECK(it->r == 2089844);
-    CHECK(it->before_count == 2);
-    CHECK(it->after_count == 2);
-    CHECK(the_function_count == 2);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
+    CHECK(the_function_count == 1);
     CHECK(another_function_count == 0);
     END;
 
     BEGIN("skip");
+    it->reset_counters();
     it->test_skip = true;
-    it->r = 327;
+    it->nr = 327;
     r = larry(1, 53);
-    it->test_skip = false;
 
     CHECK(r == 324);
     CHECK(it->x == 4);
     CHECK(it->y == 56);
-    CHECK(it->r == 327);
-    CHECK(it->before_count == 3);
-    CHECK(it->after_count == 2);
-    CHECK(the_function_count == 2);
+    CHECK(it->r == 0);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 0);
+    CHECK(the_function_count == 0);
     CHECK(another_function_count == 0);
     END;
 
     BEGIN("redirect");
+    it->reset_counters();
     it->test_redirect = true;
     r = larry(0, 39);
-    it->test_redirect = false;
 
     CHECK(r == 340);
     CHECK(it->x == 3);
     CHECK(it->y == 42);
     CHECK(it->r == 343);
-    CHECK(it->before_count == 4);
-    CHECK(it->after_count == 3);
-    CHECK(the_function_count == 2);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
+    CHECK(the_function_count == 0);
     CHECK(another_function_count == 1);
+    END;
+
+    BEGIN("set retval");
+    it->reset_counters();
+    it->test_set_retval = true;
+    it->nr = 271828;
+    r = larry(0, 39);
+
+    CHECK(r == 271825);
+    CHECK(it->x == 3);
+    CHECK(it->y == 42);
+    CHECK(it->r == 5219);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
+    CHECK(the_function_count == 1);
+    CHECK(another_function_count == 0);
     END;
 
     intercept_tester_t *it2;
     BEGIN("two intercepts");
     it2 = new intercept_tester_t();
     it2->install();
+    it->reset_counters();
+    it2->reset_counters();
 
     r = larry(5, 23);
 
@@ -322,46 +361,44 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it->x == 8);
     CHECK(it->y == 26);
     CHECK(it->r == 10058594);
-    CHECK(it->before_count == 5);
-    CHECK(it->after_count == 4);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
     CHECK(it2->x == 8);
     CHECK(it2->y == 26);
     CHECK(it2->r == 10058594);
     CHECK(it2->before_count == 1);
     CHECK(it2->after_count == 1);
-    CHECK(the_function_count == 3);
-    CHECK(another_function_count == 1);
+    CHECK(the_function_count == 1);
+    CHECK(another_function_count == 0);
     END;
 
-    BEGIN("uninstall");
+    BEGIN("uninstall second");
     it2->uninstall();
     delete it2;
 
+    it->reset_counters();
     r = larry(7, 11);
 
     CHECK(r == 134277341);
     CHECK(it->x == 10);
     CHECK(it->y == 14);
     CHECK(it->r == 134277344);
-    CHECK(it->before_count == 6);
-    CHECK(it->after_count == 5);
-    CHECK(the_function_count == 4);
-    CHECK(another_function_count == 1);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
+    CHECK(the_function_count == 1);
+    CHECK(another_function_count == 0);
     END;
 
-//     fprintf(stderr, "About to SEGV\n");
-//     *(char *)0 = 0;
-//     fprintf(stderr, "Done doing SEGV\n");
-
     BEGIN("uninstall last");
+    it->reset_counters();
     it->uninstall();
     delete it;
 
     r = larry(3, 7);
 
     CHECK(r == 152341);
-    CHECK(the_function_count == 5);
-    CHECK(another_function_count == 1);
+    CHECK(the_function_count == 1);
+    CHECK(another_function_count == 0);
     END;
 
 
@@ -386,16 +423,42 @@ main(int argc, char **argv __attribute__((unused)))
     delete it3;
     END;
 
-    BEGIN("plt");
-    plt_intercept_tester_t *it4 = new plt_intercept_tester_t();
+    /*
+     * Test interception of functions in libc.  There are several issues:
+     *
+     * - the functions are in a shared library and are accessed via the PLT
+     * - the code is heavily optimised which affects function prologues
+     * - function prologues are more predictable on some ABIs
+     *
+     * So we try to cover all of these by testing specific functions
+     * known to exhibit specific properties in one libc or another.
+     */
+    const char *s;
+
+    /* textdomain uses the 0x55 prologue on x86 and x86_64 */
+    BEGIN("libc textdomain");
+    libc_intercept_tester_t *it4 = new libc_intercept_tester_t((fn_t)textdomain, "textdomain");
     it4->install();
     CHECK(it4->before_count == 0);
     CHECK(it4->after_count == 0);
-    const char *s = gettext("hello");
-    CHECK(!strcmp(s, "world"));
+    const char *s = textdomain("locavore");
+    CHECK(!strcmp(s, "locavore"));
     CHECK(it4->before_count == 1);
     CHECK(it4->after_count == 1);
     it4->uninstall();
+    END;
+
+    /* gettext doesn't use the 0x55 prologue on x86_64 */
+    BEGIN("libc gettext");
+    libc_intercept_tester_t *it5 = new libc_intercept_tester_t((fn_t)gettext, "gettext");
+    it5->install();
+    CHECK(it5->before_count == 0);
+    CHECK(it5->after_count == 0);
+    s = gettext("hello");
+    CHECK(!strcmp(s, "hello"));
+    CHECK(it5->before_count == 1);
+    CHECK(it5->after_count == 1);
+    it5->uninstall();
     END;
 
     return 0;
