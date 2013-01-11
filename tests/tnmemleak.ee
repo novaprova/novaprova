@@ -1,3 +1,4 @@
 EVENT VALGRIND 32 bytes of memory leaked
+EVENT VALGRIND 1 unsuppressed errors found by valgrind
 FAIL tnmemleak.memleak
 EXIT 1
