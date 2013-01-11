@@ -21,7 +21,25 @@ namespace np {
 namespace spiegel {
 using namespace std;
 
-map<addr_t, vector<intercept_t*> > intercept_t::installed_;
+map<addr_t, intercept_t::addrstate_t> intercept_t::installed_;
+
+intercept_t::addrstate_t *
+intercept_t::get_addrstate(addr_t addr, bool create)
+{
+    map<addr_t, addrstate_t>::iterator aitr = installed_.find(addr);
+    addrstate_t *as = NULL;
+    if (aitr != installed_.end())
+	as = &aitr->second;
+    else if (create)
+	as = &installed_[addr];
+    return as;
+}
+
+void
+intercept_t::remove_addrstate(addr_t addr)
+{
+    installed_.erase(addr);
+}
 
 intercept_t::intercept_t(addr_t a, const char *name)
 {
@@ -38,12 +56,12 @@ int
 intercept_t::install()
 {
     int r = 0;
-    vector<intercept_t*> *v = &installed_[addr_];
-    v->push_back(this);
-    if (v->size() == 1)
+    addrstate_t *as = get_addrstate(addr_, /*create*/true);
+    as->intercepts_.push_back(this);
+    if (as->intercepts_.size() == 1)
     {
 	string err;
-	r = np::spiegel::platform::install_intercept(addr_, err);
+	r = np::spiegel::platform::install_intercept(addr_, as->state_, err);
 	if (r < 0)
 	    fprintf(stderr, "np: failed to install intercepted "
 			    "function %s at 0x%lx: %s\n",
@@ -56,25 +74,25 @@ int
 intercept_t::uninstall()
 {
     int r = 0;
-    vector<intercept_t*> *v = &installed_[addr_];
+    addrstate_t *as = get_addrstate(addr_, /*create*/true);
     vector<intercept_t*>::iterator itr;
-    for (itr = v->begin() ; itr != v->end() ; ++itr)
+    for (itr = as->intercepts_.begin() ; itr != as->intercepts_.end() ; ++itr)
     {
 	if (*itr == this)
 	{
-	    v->erase(itr);
+	    as->intercepts_.erase(itr);
 	    break;
 	}
     }
-    if (v->size() == 0)
+    if (as->intercepts_.size() == 0)
     {
-	installed_.erase(addr_);
 	string err;
-	r = np::spiegel::platform::uninstall_intercept(addr_, err);
+	r = np::spiegel::platform::uninstall_intercept(addr_, as->state_, err);
 	if (r < 0)
 	    fprintf(stderr, "np: failed to uninstall intercepted "
 			    "function %s at 0x%lx: %s\n",
 			    get_name(), (unsigned long)addr_, err.c_str());
+	remove_addrstate(addr_);
     }
     return r;
 }
@@ -82,18 +100,24 @@ intercept_t::uninstall()
 bool
 intercept_t::is_intercepted(addr_t addr)
 {
-    map<addr_t, vector<intercept_t*> >::iterator aitr = installed_.find(addr);
-    return (aitr != installed_.end());
+    return (get_addrstate(addr, /*create*/false) != NULL);
+}
+
+np::spiegel::platform::intstate_t *
+intercept_t::get_intstate(addr_t addr)
+{
+    addrstate_t *as = get_addrstate(addr, /*create*/false);
+    return (as ? &as->state_ : NULL);
 }
 
 void
 intercept_t::dispatch_before(addr_t addr, call_t &call)
 {
-    map<addr_t, vector<intercept_t*> >::iterator aitr = installed_.find(addr);
-    if (aitr != installed_.end())
+    addrstate_t *as = get_addrstate(addr, /*create*/false);
+    if (as)
     {
 	vector<intercept_t*>::iterator vitr;
-	for (vitr = aitr->second.begin() ; vitr != aitr->second.end() ; ++vitr)
+	for (vitr = as->intercepts_.begin() ; vitr != as->intercepts_.end() ; ++vitr)
 	    (*vitr)->before(call);
     }
 }
@@ -101,11 +125,11 @@ intercept_t::dispatch_before(addr_t addr, call_t &call)
 void
 intercept_t::dispatch_after(addr_t addr, call_t &call)
 {
-    map<addr_t, vector<intercept_t*> >::iterator aitr = installed_.find(addr);
-    if (aitr != installed_.end())
+    addrstate_t *as = get_addrstate(addr, /*create*/false);
+    if (as)
     {
 	vector<intercept_t*>::iterator vitr;
-	for (vitr = aitr->second.begin() ; vitr != aitr->second.end() ; ++vitr)
+	for (vitr = as->intercepts_.begin() ; vitr != as->intercepts_.end() ; ++vitr)
 	    (*vitr)->after(call);
     }
 }

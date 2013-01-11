@@ -293,7 +293,9 @@ wtf:
 }
 
 int
-install_intercept(np::spiegel::addr_t addr, std::string &err)
+install_intercept(np::spiegel::addr_t addr,
+		  intstate_t &state __attribute__((unused)),
+		  std::string &err)
 {
     int r;
 
@@ -346,7 +348,9 @@ install_intercept(np::spiegel::addr_t addr, std::string &err)
 }
 
 int
-uninstall_intercept(np::spiegel::addr_t addr, std::string &err)
+uninstall_intercept(np::spiegel::addr_t addr,
+		    intstate_t &state __attribute__((unused)),
+		    std::string &err)
 {
     if (*(unsigned char *)addr != (using_int3 ? INSN_INT3 : INSN_HLT))
     {

@@ -38,8 +38,23 @@ np::spiegel::addr_t normalise_address(np::spiegel::addr_t);
 
 extern int text_map_writable(addr_t addr, size_t len);
 extern int text_restore(addr_t addr, size_t len);
-extern int install_intercept(np::spiegel::addr_t, /*return*/std::string &err);
-extern int uninstall_intercept(np::spiegel::addr_t, /*return*/std::string &err);
+
+struct intstate_t
+{
+#if defined(_NP_x86) || defined(_NP_x86_64)
+    enum { UNKNOWN, PUSHBP, OTHER } type_;
+    unsigned char orig_;	    /* first byte of original insn */
+
+    intstate_t()
+     : type_(UNKNOWN), orig_(0)  {}
+#endif
+};
+extern int install_intercept(np::spiegel::addr_t,
+			     intstate_t &state,
+			     /*return*/std::string &err);
+extern int uninstall_intercept(np::spiegel::addr_t,
+			     intstate_t &state,
+			     /*return*/std::string &err);
 
 extern std::vector<np::spiegel::addr_t> get_stacktrace();
 

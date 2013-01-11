@@ -17,6 +17,7 @@
 #define __np_spiegel_intercept_hxx__ 1
 
 #include "np/spiegel/common.hxx"
+#include "np/spiegel/platform/common.hxx"
 
 namespace np {
 namespace spiegel {
@@ -88,11 +89,20 @@ struct intercept_t : public np::util::zalloc
 
     // functions for the platform-specific intercept code
     static bool is_intercepted(addr_t);
+    static np::spiegel::platform::intstate_t *get_intstate(addr_t);
     static void dispatch_before(addr_t, call_t &);
     static void dispatch_after(addr_t, call_t &);
 
 private:
-    static std::map<addr_t, std::vector<intercept_t*> > installed_;
+    struct addrstate_t
+    {
+	np::spiegel::platform::intstate_t state_;
+	std::vector<intercept_t*> intercepts_;
+    };
+
+    static std::map<addr_t, addrstate_t> installed_;
+    static addrstate_t *get_addrstate(addr_t addr, bool create);
+    static void remove_addrstate(addr_t addr);
 
     /* saved parameters */
     addr_t addr_;
