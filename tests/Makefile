@@ -114,7 +114,9 @@ TESTS= \
 # to run the tests named in $TESTS.
 TEST_EXES= $(sort $(foreach t,$(TESTS),$(firstword $(subst %,$(nul) $(nul),$t))))
 
-tests: $(TEST_EXES) $(COMPOUND_DATA)
+BUILT_SCRIPTS=	$(addsuffix -normalize.pl,$(DUMPERS))
+
+tests: $(TEST_EXES) $(BUILT_SCRIPTS) $(COMPOUND_DATA)
 
 # Default to un-verbose
 V=0
@@ -152,6 +154,9 @@ fw.a: fw.o fw-stubs.o
 	ranlib $@
 
 $(DUMPERS): tdump
+	ln -f $< $@
+
+$(addsuffix -normalize.pl,$(DUMPERS)): cat.pl
 	ln -f $< $@
 
 $(SIMPLE_TESTS) $(BASIC_TESTS) $(PARALLEL_TESTS): % : %.c main.o $(DEPS)
