@@ -1,0 +1,90 @@
+
+ * Convert to C++/STL
+   DONE
+
+ * Need a way to turn off Valgrind so tests can be run in gdb.
+
+ * Test Spy and Test Stub...need a way to intercept specific
+   library calls, and do any of of a) log the args b) change
+   the return value c) divert to a test-defined function which
+   can do assertions.  Need to add the intercepts at runtime
+   from the test code, and undo them automatically at test
+   conclusion.  Both calls to 3rd party DSOs and to statically
+   linked app code, dammit.  Hmm, can we find these at build
+   time and construct a LD_PRELOAD??  Or build stubs which do
+   the work then use RTLD_NEXT
+   DONE - intercepts rock mostly
+
+ * BDD style assertions too?
+
+ * need to be able to handle a test forking, and *BOTH* children
+ * can do U4C_ASSERT()
+
+ * capture stdout stderr and valgrind logs for each test child
+   separately
+
+ * need to redirect test child stdin from /dev/null
+
+ * need some way of expressing dependencies between tests or
+   resource requirements to allow the test plan to choose the
+   next test intelligently.
+
+ * __u4c_fail() et al need __attribute__((noreturn));
+
+ * turn an uncaught C++ exception into an event which causes FAIL
+   and not just via the uncaught exception handler exit()ing
+
+ * discover test functions written in C++.  Use a classifier to
+   find mangled C++ functions of the form CLASS::test_foo() where
+   CLASS has some u4c provided base class in its hierarchy, and
+   we have a ctor function for it and can work out the size.  Two
+   of those need to come from DWARF.
+
+ * Reaping an unexpected pid is actually a failure in CUT.
+
+ * Timing out waiting for an event on the event pipe is a
+   failure in CUT (but need to make it a cumulative timeout
+   which counts across multiple EVENTs)
+
+ * jUnit XML output format
+   DONE
+
+ * measure elapsed times for tests.  The jUnit format needs this
+   DONE
+
+ * figure out a way to do test parameterisation
+
+   - variable based like my cyrus hacks to CUnit, i.e. some way
+     to declare that a char* file scope variable is a test parameter
+     and have it be varied across a set of values defined by splitting
+     it's initial value.
+     DONE
+
+   - but for consistency need to hold those variables at any level
+     of the testnode hierarchy, applying to any tests at that level
+     or below
+     DONE
+
+   - should probably schedule a (testnode, set of param=value) tuple
+     rather than just a testnode.  Something like an iterator.
+     DONE
+
+   - fullname string should include a description of parameters
+     DONE
+
+   - need a declarative way to weed out bad parameter combos, rather
+     than have CuT return NA which is much slower due to need to
+     fork a Valground process.
+
+ * add basic test assert macros
+
+ * add syslog-capturing assert macros
+
+ * add CUnit compatibility test assert macros - both FATAL and
+   non-FATAL versions but both with FATAL semantics
+
+ * add a test-callable function to make a new temporary
+   base directory and populate it with some expected skeleton,
+   which is automatically cleaned up if the test passed and
+   we're not running verbose.
+

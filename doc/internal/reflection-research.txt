@@ -1,0 +1,28 @@
+
+Reflection Libraries for C/C++
+==============================
+
+* Qt
+
+Provides a limited form of reflection, if you a) use C++ and b) inherit
+from QObject FAIL
+
+Boost.Mirror
+https://svn.boost.org/trac/boost/wiki/LibrariesUnderConstruction#Boost.Mirror
+
+Provides what sounds like wide reflection capabilities, but requires
+registering types using macros - i.e. requires the types' co-operation.
+FAIL
+
+The cpgf library
+http://www.kbasm.com/cpgf-index.html
+Version 1.2.4 released yesterday - sounds nice and stable, and maintained
+Not strong on English.
+He claims his doco is poor
+Portable to several platforms including Windows
+Aha - all metadata is done using C++ templates, i.e. useless in C
+    and requires the reflected code's co-operation.
+
+So, they all suck arse.
+
+
