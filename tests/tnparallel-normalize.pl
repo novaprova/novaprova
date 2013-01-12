@@ -102,12 +102,14 @@ else
 my $avg_conc = $tott/($lastt - $startt);
 # printf "Average concurrency: %.2f\n", $avg_conc;
 
-if ($avg_conc < (1-$epsilon)*$expected_concurrency ||
-    $avg_conc > (1+$epsilon)*$expected_concurrency)
+my $min_expected = (1-$epsilon)*($expected_concurrency-1);
+$min_expected = 0.0 if ($min_expected < 0.0);
+my $max_expected = (1+$epsilon)*$expected_concurrency;
+if ($avg_conc < $min_expected || $avg_conc > $max_expected)
 {
     printf "FAIL expected average concurrency between %.2f and %.2f got %.2f\n",
-	(1-$epsilon)*$expected_concurrency,
-	(1+$epsilon)*$expected_concurrency,
+	$min_expected,
+	$max_expected,
 	$avg_conc;
 }
 else
