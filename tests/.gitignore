@@ -15,6 +15,9 @@
 #
 *.log
 .logx
+d-globfunc
+d-membfunc
+d-namespace
 reports
 taddr2line
 tdump

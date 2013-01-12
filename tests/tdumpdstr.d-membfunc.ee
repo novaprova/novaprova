@@ -5,3 +5,4 @@ class coffee {
     /*function*/ int keffiyeh(class coffee * , int )
 } class
 } compile_unit
+EXIT 0

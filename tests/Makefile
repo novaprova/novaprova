@@ -100,7 +100,7 @@ COMPOUND_SUBTESTS= \
     membfunc \
     namespace \
 
-COMPOUND_DATA= $(patsubst %,d-%.o,$(COMPOUND_SUBTESTS))
+COMPOUND_DATA= $(addprefix d-,$(COMPOUND_SUBTESTS))
 
 TESTS= \
     $(SIMPLE_TESTS) \
@@ -143,8 +143,8 @@ run: .announce-run $(addprefix .run%,$(TESTS))
 %: %.cxx fw.a fw.h $(DEPS)
 	$(LINK.C) -o $@ $< fw.a $(LIBS)
 
-d-%.o: d-%.cxx
-	$(CXX) $(CDEBUGFLAGS) -o $@ -c $<
+d-%: d-%.cxx
+	$(LINK.C) $(CDEBUGFLAGS) -o $@ $<
 
 %.c: %-genc.pl
 	perl $< > $@

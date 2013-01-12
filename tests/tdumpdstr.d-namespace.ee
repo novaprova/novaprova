@@ -2,3 +2,4 @@ compile_unit {
 class cosby::sweater::vegan {
 } class
 } compile_unit
+EXIT 0

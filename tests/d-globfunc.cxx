@@ -34,3 +34,7 @@ int dreamcatcher(struct quinoa *q)
     return q->cosby + sartorial;
 }
 
+int main(int argc, char **argv)
+{
+    return 0;
+}

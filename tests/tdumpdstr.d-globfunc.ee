@@ -8,3 +8,4 @@ struct quinoa {
     /*member*/ struct coffee *  milkshk;
 } struct
 } compile_unit
+EXIT 0
