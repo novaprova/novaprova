@@ -39,6 +39,7 @@ state_t::~state_t()
     vector<linkobj_t*>::iterator i;
     for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
 	delete *i;
+    address_index_.clear();
 
     assert(instance_ == this);
     instance_ = 0;

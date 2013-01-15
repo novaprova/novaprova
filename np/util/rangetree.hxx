@@ -57,6 +57,7 @@ public:
     // no c'tor
 
     unsigned size() const { return map_.size(); }
+    void clear() { map_.clear(); }
 
     void insert(K x, const V &val) { map_[range<K>(x)] = val; }
     void insert(K lo, K hi, const V &val) { map_[range<K>(lo, hi)] = val; }
