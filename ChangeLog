@@ -1,0 +1,11 @@
+
+Wed Jan 16 01:26:36 2013  Greg Banks <gnb@fmeh.org>
+	* Release 1.1
+
+	* Linux x86_64 port.
+	* All the meta-tests pass now.
+	* Minor cleanups.
+
+Wed Aug 15 10:41:52 2012  Greg Banks <gnb@fmeh.org>
+	* Release 1.0
+
