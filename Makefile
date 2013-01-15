@@ -162,7 +162,7 @@ DOC_DELIVERABLES= \
 	    api-ref \
 	    man \
 
-docs-local:
+docs-local: Doxyfile
 	$(RM) -r doc/api-ref doc/man
 	doxygen
 	ln -s doc doc-$(VERSION)
