@@ -30,8 +30,8 @@ typically in a package named something like _valgrind-dev_ .
 
 ~~~~.sh
 # download the release tarball from http://sourceforge.net/projects/novaprova/files/
-tar -xvf novaprova-0.1.tar.bz2
-cd novaprova-0.1
+tar -xvf novaprova-1.1.tar.bz2
+cd novaprova-1.1
 make
 make install
 ~~~~
@@ -159,8 +159,8 @@ If we build run this test we get output something like this.
 ./testrunner
 np: starting valgrind
 np: running
-np: running: "1:simple"
-PASS 1:simple
+np: running: "simple"
+PASS simple
 np: 1 run 0 failed
 ~~~~
 
@@ -186,9 +186,9 @@ Running the tests we see:
 ./testrunner
 np: starting valgrind
 np: running
-np: running: "1:mytest.simple"
-PASS 1:mytest.simple
-np: running: "2:mytest.initial"
+np: running: "mytest.simple"
+PASS mytest.simple
+np: running: "mytest.initial"
 EVENT ASSERT NP_ASSERT_EQUAL(r=532, 4=4)
 at 0x80529F2: np::spiegel::describe_stacktrace (np/spiegel/spiegel.cxx)
 by 0x804C0FC: np::event_t::with_stack (np/event.cxx)
@@ -202,7 +202,7 @@ by 0x804E0D4: np::runner_t::run_tests (np/runner.cxx)
 by 0x804E22C: np_run_tests (np/runner.cxx)
 by 0x804AB12: main (testrunner.c)
 
-FAIL 2:mytest.initial
+FAIL mytest.initial
 np: 2 run 1 failed
 make: *** [check] Error 1
 ~~~~
