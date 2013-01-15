@@ -101,6 +101,7 @@ compile_unit_t::dump_abbrevs() const
     for (itr = abbrevs_.begin() ; itr != abbrevs_.end() ; ++itr)
     {
 	abbrev_t *a = *itr;
+	if (!a) continue;
 	printf("Code %u\n", a->code);
 	printf("    tag 0x%x (%s)\n", a->tag, tagnames.to_name(a->tag));
 	printf("    children %u (%s)\n",
