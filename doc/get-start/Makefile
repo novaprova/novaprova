@@ -48,3 +48,4 @@ clean:
 distclean:
 	$(RM) $(GEN_DELIVERABLES)
 
+check:
