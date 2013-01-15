@@ -65,3 +65,14 @@ in the following ways.
 More documentation is in the source, or you can
 [read it online](http://www.novaprova.org/docs.html).
 
+To build the documention you will need the following tools
+
+Markdown
+I built from source http://pypi.python.org/packages/source/M/Markdown/Markdown-2.1.1.tar.gz
+
+Pygmentize
+I used the Ubuntu package 'python-pygments' version 0.1
+
+Doxygen
+I used the Ubuntu package 'doxygen' version 1.5.8
+
