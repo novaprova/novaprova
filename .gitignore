@@ -23,3 +23,4 @@ doc-*.tar.bz2
 novaprova-*.tar.bz2
 novaprova.pc
 .config-ok
+Doxyfile
