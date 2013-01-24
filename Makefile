@@ -153,20 +153,18 @@ libnovaprova.a: $(libnovaprova_OBJS)
 DOC_DELIVERABLES= \
 	    get-start/index.html \
 	    get-start/pygmentize.css \
-	    get-start/example1 \
 	    get-start/example1/mytest.c \
 	    get-start/example1/mycode.h \
 	    get-start/example1/mycode.c \
 	    get-start/example1/Makefile \
 	    get-start/example1/testrunner.c \
-	    api-ref \
-	    man \
+	    api-ref
 
 docs-local: Doxyfile
 	$(RM) -r doc/api-ref doc/man
 	doxygen
 	ln -s doc doc-$(VERSION)
-	tar -chjvf doc-$(VERSION).tar.bz2 $(addprefix doc-$(VERSION)/,$(DOC_DELIVERABLES))
+	tar -chjvf doc-$(VERSION).tar.bz2 $(addprefix doc-$(VERSION)/,$(DOC_DELIVERABLES) man)
 	$(RM) doc-$(VERSION)
 
 install: docs
@@ -181,8 +179,15 @@ install-local:
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
 	$(INSTALL) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
-	$(INSTALL) -d $(DESTDIR)$(pkgdocdir)/api-ref
-	$(INSTALL) doc/api-ref/* $(DESTDIR)$(pkgdocdir)/api-ref
+	for doc in $(DOC_DELIVERABLES) ; do \
+	    if [ -d doc/$$doc ] ; then \
+		$(INSTALL) -d $(DESTDIR)$(pkgdocdir)/$$doc ;\
+		$(INSTALL) -m 644 doc/$$doc/* $(DESTDIR)$(pkgdocdir)/$$doc ;\
+	    else \
+		$(INSTALL) -d `dirname $(DESTDIR)$(pkgdocdir)/$$doc` ;\
+		$(INSTALL) -m 644 doc/$$doc $(DESTDIR)$(pkgdocdir)/$$doc ;\
+	    fi ;\
+	done
 	$(INSTALL) -d $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL) novaprova.pc $(DESTDIR)$(pkgconfigdir)
 
