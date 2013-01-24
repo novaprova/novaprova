@@ -144,15 +144,12 @@ libnovaprova_DFILES= \
 -include $(libnovaprova_DFILES)
 
 %.o: %.cxx
-	$(COMPILE.C) -o $@ $<
+	@mkdir -p $(dir $(depdir)/$(patsubst %.cxx,%.d,$<))
+	$(COMPILE.C) -MD -MM -MF $(depdir)/$(patsubst %.cxx,%.d,$<) -MT $(patsubst %.cxx,%.o,$<) -o $@ $<
 
-$(depdir)/%.d: %.cxx
-	@[ -d $(@D) ] || mkdir -p $(@D)
-	$(COMPILE.C) -MM -MF $@ -MT $(patsubst %.cxx,%.o,$<) $<
-
-$(depdir)/%.d: %.c
-	@[ -d $(@D) ] || mkdir -p $(@D)
-	$(COMPILE.c) -MM -MF $@ -MT $(patsubst %.c,%.o,$<) $<
+%.o: %.c
+	@mkdir -p $(dir $(depdir)/$(patsubst %.c,%.d,$<))
+	$(COMPILE.c) -MD -MM -MF $(depdir)/$(patsubst %.c,%.d,$<) -MT $(patsubst %.c,%.o,$<) -o $@ $<
 
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
