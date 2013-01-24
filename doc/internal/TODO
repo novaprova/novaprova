@@ -88,3 +88,7 @@
    which is automatically cleaned up if the test passed and
    we're not running verbose.
 
+ * drive the SUSE Open Build Service via version-controlled files
+
+ * detect file descriptor leaks after a test by comparing the
+   directory listing for /proc/self/fd/ before and after.
