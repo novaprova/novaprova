@@ -6,6 +6,6 @@ includedir=@includedir@/novaprova
 Name: NovaProva
 Description: New generation unit test framework for C
 Version: @VERSION@
-Requires: libxml++-2.6
+Requires: @libxml@
 Libs: -L${libdir} -lnovaprova -lstdc++ -lbfd -ldl -lrt
 Cflags: -I${includedir}

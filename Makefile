@@ -28,9 +28,7 @@ CC=		g++
 CXX=		g++
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-I. \
-		$(shell ./platform.sh --cflags) \
-		$(shell pkg-config --cflags libxml++-2.6)
+CDEFINES=	-I. $(platform_CFLAGS) $(libxml_CFLAGS)
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 CXXFLAGS=	$(CFLAGS)
@@ -48,12 +46,21 @@ all clean distclean check install docs:
 
 install check: all
 
-all-local: .config-ok libnovaprova.a novaprova.pc
+all-local: libnovaprova.a novaprova.pc
 
-.config-ok:
+include .config
+
+.config:
 	@./platform.sh --verify
-	@pkg-config --cflags libxml++-2.6 > /dev/null
-	@touch $@
+	@echo "platform_CFLAGS="`./platform.sh --cflags` >> $@
+	@got_libxml=no ; for p in libxml++-2.6 libxml++ ; do \
+	    if pkg-config --exists $$p ; then \
+		echo "libxml=$$p" >> $@ ;\
+		echo "libxml_CFLAGS="`pkg-config --cflags $$p` >> $@ ;\
+		got_libxml=yes ;\
+	    fi ;\
+	done && [ $$got_libxml = yes ]
+	@echo ==== ; cat $@ ; echo ====
 
 libnovaprova_SOURCE= \
 		np.c \
@@ -198,7 +205,7 @@ distclean-local: clean-local
 	$(RM) -r doc/api-ref doc/man
 	$(RM) -r $(depdir)
 	$(RM) novaproca.pc
-	$(RM) .config-ok
+	$(RM) .config
 
 check-local:
 
@@ -214,6 +221,7 @@ check-local:
 	    -e 's|@pkgdocdir@|$(pkgdocdir)|' \
 	    -e 's|@pkgconfigdir@|$(pkgconfigdir)|' \
 	    -e 's|@mandir@|$(mandir)|' \
+	    -e 's|@libxml@|$(libxml)|' \
 	    < $< > $@
 
 DIST_TARBALL=	$(PACKAGE)-$(VERSION).tar.bz2
