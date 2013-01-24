@@ -22,5 +22,5 @@ doc/api-ref-*.tar.bz2
 doc-*.tar.bz2
 novaprova-*.tar.bz2
 novaprova.pc
-.config-ok
+.config
 Doxyfile
