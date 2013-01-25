@@ -36,8 +36,8 @@ INSTALL=	/usr/bin/install -c
 RANLIB=		ranlib
 depdir=		.deps
 
-SUBDIRS_PRE=
-SUBDIRS_POST=	tests doc/get-start
+SUBDIRS_PRE=	doc/get-start
+SUBDIRS_POST=	tests
 
 all clean distclean check install docs:
 	@for dir in $(SUBDIRS_PRE) ; do $(MAKE) -C $$dir $@ ; done
@@ -167,11 +167,12 @@ DOC_DELIVERABLES= \
 docs-local: Doxyfile
 	$(RM) -r doc/api-ref doc/man
 	doxygen
+	$(RM) doc-$(VERSION)
 	ln -s doc doc-$(VERSION)
 	tar -chjvf doc-$(VERSION).tar.bz2 $(addprefix doc-$(VERSION)/,$(DOC_DELIVERABLES) man)
 	$(RM) doc-$(VERSION)
 
-install: docs
+install:
 
 install-local:
 	$(INSTALL) -d $(DESTDIR)$(includedir)/novaprova/np
