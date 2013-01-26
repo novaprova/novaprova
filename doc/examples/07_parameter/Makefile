@@ -14,7 +14,7 @@
 #  limitations under the License.
 #
 
-MYCODE_SOURCE=	mycode.c
+MYCODE_SOURCE=
 MYCODE_OBJS=	$(MYCODE_SOURCE:.c=.o)
 
 all: $(MYCODE_OBJS)
