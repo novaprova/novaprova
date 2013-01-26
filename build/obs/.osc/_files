@@ -1,0 +1,16 @@
+<directory name="novaprova" rev="44" srcmd5="a537fe8e6a80bf196ca57ce26cdf64af" vrev="44">
+  <serviceinfo code="succeeded" xsrcmd5="8dcd421d21dc98ba3b4bb70f2394c73f" />
+  <entry md5="aae2da83469457a2579c49f7959b2cd6" mtime="1358944808" name="_service" size="236" />
+  <entry md5="f0d570c96b81628f3ca4e8ef00511b02" mtime="1358945683" name="debian.changelog" size="123" />
+  <entry md5="05d61e1f2e1e1cb1b38bad0b6b7c4304" mtime="1358952437" name="debian.control" size="650" />
+  <entry md5="602a09fed5d8a172db99c01ee4f81ef9" mtime="1358954406" name="debian.rules" size="1734" />
+  <entry md5="feabf4040858302c48b2c4e853b43c77" mtime="1359109942" name="debian.series" size="29" />
+  <entry md5="7227b7f83806991b4ba7e832c42f89a8" mtime="1359011517" name="novaprova-build-deps.patch" size="1278" />
+  <entry md5="3fca13b88293910e266baae5bbc8f6ba" mtime="1359069395" name="novaprova-build-install-pc-correctly.patch" size="1174" />
+  <entry md5="b420a32048870a80ffec6092ae68cdc6" mtime="1359107474" name="novaprova-build-no-doxygen.patch" size="1089" />
+  <entry md5="3cc93f89c7f23398d408e7d00c083a72" mtime="1359109944" name="novaprova-combined.patch" size="4051" />
+  <entry md5="ac57dc99abd4d717e274def8dd4663f1" mtime="1359069420" name="novaprova-fedora-build-libxml.patch" size="2143" />
+  <entry md5="9c5335c0680c00f3408f2d59de669a64" mtime="1358990567" name="novaprova.changes" size="138" />
+  <entry md5="1f16a27ac62f3b389ad77def462f460f" mtime="1358952466" name="novaprova.dsc" size="360" />
+  <entry md5="312cb18692294207b213dc8ff03a4ef5" mtime="1359106980" name="novaprova.spec" size="1563" />
+</directory>

@@ -1,0 +1,38 @@
+commit b58a272e6904a31afb5d2ebcff4cd0cad23726da
+Author: Greg Banks <gnb@fmeh.org>
+Date:   Thu Jan 24 10:53:28 2013 +1100
+
+    Install the .pc file correctly
+
+diff --git a/Makefile b/Makefile
+index f817c71..628f326 100644
+--- a/Makefile
++++ b/Makefile
+@@ -22,7 +22,7 @@ includedir=	$(prefix)/include
+ libdir=		$(exec_prefix)/lib
+ mandir=		$(prefix)/share/man
+ pkgdocdir=	$(prefix)/share/doc/$(PACKAGE)
+-configdir=	$(libdir)/pkgconfig
++pkgconfigdir=	$(libdir)/pkgconfig
+ 
+ CC=		g++
+ CXX=		g++
+@@ -183,7 +183,8 @@ install-local:
+ 	$(INSTALL) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
+ 	$(INSTALL) -d $(DESTDIR)$(pkgdocdir)/api-ref
+ 	$(INSTALL) doc/api-ref/* $(DESTDIR)$(pkgdocdir)/api-ref
+-	$(INSTALL) novaprova.pc $(DESTDIR)$(configdir)
++	$(INSTALL) -d $(DESTDIR)$(pkgconfigdir)
++	$(INSTALL) novaprova.pc $(DESTDIR)$(pkgconfigdir)
+ 
+ clean-local:
+ 	$(RM) libnovaprova.a $(libnovaprova_OBJS)
+@@ -205,7 +206,7 @@ check-local:
+ 	    -e 's|@libdir@|$(libdir)|' \
+ 	    -e 's|@mandir@|$(mandir)|' \
+ 	    -e 's|@pkgdocdir@|$(pkgdocdir)|' \
+-	    -e 's|@configdir@|$(configdir)|' \
++	    -e 's|@pkgconfigdir@|$(pkgconfigdir)|' \
+ 	    -e 's|@mandir@|$(mandir)|' \
+ 	    < $< > $@
+ 

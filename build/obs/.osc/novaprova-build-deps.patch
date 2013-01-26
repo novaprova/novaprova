@@ -1,0 +1,38 @@
+commit de2efc2a06e15bb2724317bb787218b730da2d8c
+Author: Greg Banks <gnb@fmeh.org>
+Date:   Thu Jan 24 18:06:57 2013 +1100
+
+    Use -MD when generating deps
+    
+    and don't have a rule for generating them.  This wins two ways:
+    
+     * we only need a single gcc pass for each source file, not two
+    
+     * avoids a failure bootstrapping in a fully clean directory,
+       where .deps and .config effectively needed each other
+
+diff --git a/Makefile b/Makefile
+index 0a9ab18..ccce497 100644
+--- a/Makefile
++++ b/Makefile
+@@ -144,15 +144,12 @@ libnovaprova_DFILES= \
+ -include $(libnovaprova_DFILES)
+ 
+ %.o: %.cxx
+-	$(COMPILE.C) -o $@ $<
++	@mkdir -p $(dir $(depdir)/$(patsubst %.cxx,%.d,$<))
++	$(COMPILE.C) -MD -MM -MF $(depdir)/$(patsubst %.cxx,%.d,$<) -MT $(patsubst %.cxx,%.o,$<) -o $@ $<
+ 
+-$(depdir)/%.d: %.cxx
+-	@[ -d $(@D) ] || mkdir -p $(@D)
+-	$(COMPILE.C) -MM -MF $@ -MT $(patsubst %.cxx,%.o,$<) $<
+-
+-$(depdir)/%.d: %.c
+-	@[ -d $(@D) ] || mkdir -p $(@D)
+-	$(COMPILE.c) -MM -MF $@ -MT $(patsubst %.c,%.o,$<) $<
++%.o: %.c
++	@mkdir -p $(dir $(depdir)/$(patsubst %.c,%.d,$<))
++	$(COMPILE.c) -MD -MM -MF $(depdir)/$(patsubst %.c,%.d,$<) -MT $(patsubst %.c,%.o,$<) -o $@ $<
+ 
+ libnovaprova.a: $(libnovaprova_OBJS)
+ 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
