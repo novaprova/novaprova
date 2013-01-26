@@ -202,7 +202,7 @@ clean-local:
 distclean-local: clean-local
 	$(RM) -r doc/api-ref doc/man
 	$(RM) -r $(depdir)
-	$(RM) novaproca.pc
+	$(RM) novaprova.pc
 	$(RM) .config
 
 check-local:
