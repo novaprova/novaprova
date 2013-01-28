@@ -94,3 +94,5 @@
    directory listing for /proc/self/fd/ before and after.
 
  * actually implement the jUnit system-out and system-err properties
+
+ * test setup/teardown automatically

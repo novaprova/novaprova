@@ -435,7 +435,7 @@ runner_t::run_function(functype_t ft, np::spiegel::function_t *f)
     }
     else
     {
-	assert(ret.which == np::spiegel::type_t::TC_SIGNED_INT);
+	assert(ret.which == np::spiegel::type_t::TC_SIGNED_LONG_LONG);
 	int r = ret.val.vsint;
 
 	if (r)
