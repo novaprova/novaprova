@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "np/util/common.hxx"
+#include <sys/stat.h>
 #include <libxml++/document.h>
 #include "np/junit_listener.hxx"
 #include "np/job.hxx"
@@ -43,6 +44,16 @@ junit_listener_t::end()
 {
     string hostname = get_hostname();
     string timestamp = abs_format_iso8601(abs_now());
+
+    // TODO: mkdir_p
+    string directory = "reports";
+    int r = mkdir(directory.c_str(), 0777);
+    if (r < 0 && errno != EEXIST)
+    {
+	fprintf(stderr, "np: cannot make directory %s: %s\n",
+		directory.c_str(), strerror(errno));
+	return;
+    }
 
     map<string, suite_t>::iterator sitr;
     for (sitr = suites_.begin() ; sitr != suites_.end() ; ++sitr)
@@ -98,9 +109,8 @@ junit_listener_t::end()
 	xsuite->add_child("system-out");
 	xsuite->add_child("system-err");
 
-	string filename = string("reports/TEST-") + suitename + ".xml";
+	string filename = directory + string("/TEST-") + suitename + ".xml";
 
-	// TODO: mkdir 
 	try
 	{
 	    xdoc->write_to_file(filename, "UTF-8");
