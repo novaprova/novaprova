@@ -92,3 +92,5 @@
 
  * detect file descriptor leaks after a test by comparing the
    directory listing for /proc/self/fd/ before and after.
+
+ * actually implement the jUnit system-out and system-err properties
