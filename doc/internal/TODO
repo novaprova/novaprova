@@ -88,6 +88,10 @@
    which is automatically cleaned up if the test passed and
    we're not running verbose.
 
+ * add intercepts for open/creat/mkdir/unlink/rmdir/symlink/
+   bind(AF_UNIX)/connect(AF_UNIX) system calls to fail the test
+   if it tries to affect state outside the base directory
+
  * drive the SUSE Open Build Service via version-controlled files
 
  * detect file descriptor leaks after a test by comparing the
@@ -96,3 +100,12 @@
  * actually implement the jUnit system-out and system-err properties
 
  * test setup/teardown automatically
+
+ * enable declarative mocking of libc functions - only works with
+   add_mock() now
+
+ * subunit output format, apparently there's an EBNF in a README
+
+ * provide a default main() which includes --list and --load-list
+   for testr integration
+
