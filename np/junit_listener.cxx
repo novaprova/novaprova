@@ -99,8 +99,17 @@ junit_listener_t::end()
 	xsuite->add_child("system-err");
 
 	string filename = string("reports/TEST-") + suitename + ".xml";
+
 	// TODO: mkdir 
-	xdoc->write_to_file(filename, "UTF-8");
+	try
+	{
+	    xdoc->write_to_file(filename, "UTF-8");
+	}
+	catch (const xmlpp::exception& ex)
+	{
+	    fprintf(stderr, "np: caught xmlpp exception writing file %s: %s\n",
+		    filename.c_str(), ex.what());
+	}
 	delete xdoc;
     }
 }
