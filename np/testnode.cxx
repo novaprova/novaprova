@@ -248,13 +248,27 @@ testnode_t::preorder_iterator &
 testnode_t::preorder_iterator::operator++()
 {
     if (node_->children_)
-	node_ = node_->children_;
+	node_ = node_->children_;	    // down
     else if (node_ != base_ && node_->next_)
-	node_ = node_->next_;
-    else if (node_->parent_ != base_ && node_->parent_)
-	node_ = node_->parent_->next_;
+	node_ = node_->next_;		    // across
     else
-	node_ = 0;
+    {
+	// up and across
+	for (;;)
+	{
+	    if (node_ == base_)
+	    {
+		node_ = 0;
+		break;
+	    }
+	    if (node_->next_)
+	    {
+		node_ = node_->next_;
+		break;
+	    }
+	    node_ = node_->parent_;
+	}
+    }
     return *this;
 }
 
