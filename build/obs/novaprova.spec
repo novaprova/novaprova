@@ -1,6 +1,6 @@
 Summary: novaprova, the new generation unit test framework for C
 Name: novaprova
-Version: 1.1
+Version: 1.2
 Release: 1
 License: GPL
 Group: Development/C
@@ -10,10 +10,6 @@ BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
 BuildRequires: valgrind-devel, binutils-devel, libxml++-devel, libxml2-devel, pkgconfig
 Vendor: Greg Banks <gnb@fmeh.org>
-Patch1: novaprova-build-install-pc-correctly.patch
-Patch2: novaprova-fedora-build-libxml.patch
-Patch3: novaprova-build-deps.patch
-Patch4: novaprova-build-no-doxygen.patch
 
 %description
 Novaprova is the newest way to organise and run unit tests for libraries
@@ -27,10 +23,6 @@ test frameworks for languages such as Java or Perl.
 
 %prep
 %setup -q
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
 
 %build
 make all %{overrides}

@@ -1,3 +1,11 @@
+novaprova (1.2-1) stable; urgency=low
+
+  * Support for building with SUSE OBS
+  * Added example for LCA2013 talk
+  * Bug fixes exposed by examples
+
+ -- Greg Banks <gnb@fmeh.org>  Tue, 29 Jan 2013 15:50:28 +1100
+
 novaprova (1.1-1) stable; urgency=low
 
   * Initial Release

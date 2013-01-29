@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Jan 29 15:51:57 EST 2013 - gnb@fmeh.org
+
+- Support for building with SUSE OBS
+- Added example for LCA2013 talk
+- Bug fixes exposed by examples
+
+-------------------------------------------------------------------
 Thu Jan 24 12:22:06 EST 2013 - gnb@fmeh.org
 
 - Initial package builds
+
