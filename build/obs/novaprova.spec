@@ -41,6 +41,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libnovaprova.a
 %{_libdir}/pkgconfig/novaprova.pc
 %{_docdir}/novaprova/api-ref/*
+%{_docdir}/novaprova/get-start/*
 %docdir %{_mandir}
 %{_mandir}/man3/np.h.3*
 %doc README.md LICENSE ChangeLog

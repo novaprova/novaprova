@@ -1,10 +1,11 @@
-<directory name="novaprova" rev="45" srcmd5="5d7b1edc10aba7fba13b20bdad5652c0" vrev="1">
-  <serviceinfo code="succeeded" xsrcmd5="01935d638456cdf28c6bc5e3501748f3" />
-  <entry md5="aae2da83469457a2579c49f7959b2cd6" mtime="1358944808" name="_service" size="236" />
+<directory name="novaprova" rev="48" srcmd5="97246f3b90aac3df06e6f182235ab6ce" vrev="4">
+  <serviceinfo code="succeeded" xsrcmd5="d55496776aa1c52b6b56cec4c512e7a9" />
+  <entry md5="ad5394f834f8835851912662c8e2592d" mtime="1359436029" name="_service" size="237" />
   <entry md5="ac4fefefb86efe293b50c2a45e877f6e" mtime="1359435405" name="debian.changelog" size="335" />
   <entry md5="54731fd86d2c2bce19e585bfe0c2bcfa" mtime="1359435406" name="debian.control" size="668" />
   <entry md5="602a09fed5d8a172db99c01ee4f81ef9" mtime="1358954406" name="debian.rules" size="1734" />
+  <entry md5="3d46053615c2604ee487f881c5a77439" mtime="1359435669" name="novaprova-1.2.tar.bz2" size="133135" />
   <entry md5="29c05d11c881754fc750138616b91c18" mtime="1359435408" name="novaprova.changes" size="355" />
   <entry md5="6ebd38a11c88a9c80cbeae39f194d64d" mtime="1359435410" name="novaprova.dsc" size="360" />
-  <entry md5="672c30b7d0997f06dd38535a8e287524" mtime="1359435411" name="novaprova.spec" size="1344" />
+  <entry md5="b37c5be6bd464090c5b2f21225f8764e" mtime="1359436373" name="novaprova.spec" size="1377" />
 </directory>
