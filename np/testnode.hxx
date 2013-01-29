@@ -95,6 +95,8 @@ public:
 	preorder_iterator & operator++();
 	int operator== (const preorder_iterator &o) const
 	    { return o.node_ == node_; }
+	int operator!= (const preorder_iterator &o) const
+	    { return o.node_ != node_; }
 	preorder_iterator & operator=(testnode_t *n)
 	    { base_ = node_ = n; return *this; }
     private:
