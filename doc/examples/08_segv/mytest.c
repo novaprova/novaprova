@@ -18,7 +18,7 @@
 
 static void test_segv(void)
 {
-    fprintf(stderr, "About to do follow a NULL pointer\n");
+    fprintf(stderr, "About to follow a NULL pointer\n");
     *(char *)0 = 0;
 }
 
