@@ -637,14 +637,24 @@ np_list_tests(np_runner_t *runner, np_plan_t *plan)
  * Note that the function is a misnomer, it actually @b adds an output
  * format. Also note that if the C++ API were documented, you could
  * write your own output formats by deriving from @c np::listener_t.
+ *
+ * Returns true if @c fmt is a valid format, or false on error.
  */
-extern "C" void
+extern "C" bool
 np_set_output_format(np_runner_t *runner, const char *fmt)
 {
     if (!strcmp(fmt, "junit"))
+    {
 	runner->add_listener(new junit_listener_t);
+	return true;
+    }
     else if (!strcmp(fmt, "text"))
+    {
 	runner->add_listener(new text_listener_t);
+	return true;
+    }
+    else
+	return false;
 }
 
 /**

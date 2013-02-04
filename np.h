@@ -40,7 +40,7 @@ typedef struct np_plan np_plan_t;
 extern np_runner_t *np_init(void);
 extern void np_list_tests(np_runner_t *, np_plan_t *);
 extern void np_set_concurrency(np_runner_t *, int);
-extern void np_set_output_format(np_runner_t *, const char *);
+extern bool np_set_output_format(np_runner_t *, const char *);
 extern int np_run_tests(np_runner_t *, np_plan_t *);
 extern int np_get_timeout(void);   /* in seconds, or zero */
 extern void np_done(np_runner_t *);
