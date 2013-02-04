@@ -65,6 +65,7 @@ include .config
 libnovaprova_SOURCE= \
 		np.c \
 		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
+		main.c \
 		np/child.cxx \
 		np/classifier.cxx \
 		np/event.cxx \

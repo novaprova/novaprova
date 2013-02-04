@@ -159,8 +159,8 @@ $(DUMPERS): tdump
 $(addsuffix -normalize.pl,$(DUMPERS)): cat.pl
 	ln -f $< $@
 
-$(SIMPLE_TESTS) $(BASIC_TESTS) $(PARALLEL_TESTS): % : %.c main.o $(DEPS)
-	$(LINK.c) -o $@ $< main.o $(LIBS)
+$(SIMPLE_TESTS) $(BASIC_TESTS) $(PARALLEL_TESTS): % : %.c $(DEPS)
+	$(LINK.c) -o $@ $< $(LIBS)
 
 clean:
 	$(RM) $(TEST_EXES) $(COMPOUND_DATA)
