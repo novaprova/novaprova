@@ -86,7 +86,7 @@ runner_t::list_tests(plan_t *plan) const
     if (!plan)
     {
 	/* build a default plan with all the tests */
-	plan_t *plan = new plan_t();
+	plan = new plan_t();
 	plan->add_node(testmanager_t::instance()->get_root());
 	ourplan = true;
     }
