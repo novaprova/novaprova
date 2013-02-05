@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sys/stat.h>
+#include <sys/fcntl.h>
 #include "np/job.hxx"
 
 namespace np {
@@ -30,6 +32,10 @@ job_t::job_t(const plan_t::iterator &i)
 
 job_t::~job_t()
 {
+    if (stdout_path_ != "")
+	unlink(stdout_path_.c_str());
+    if (stderr_path_ != "")
+	unlink(stderr_path_.c_str());
 }
 
 string job_t::as_string() const
@@ -80,6 +86,55 @@ job_t::get_elapsed() const
     if (!end)
 	end = rel_now();
     return end - start_;
+}
+
+static string
+get_file_contents(const string &path)
+{
+    struct stat sb;
+    int r;
+    int fd;
+    int remain;
+    char *b;
+    string buf;
+
+    fd = open(path.c_str(), O_RDONLY, 0);
+    if (fd < 0)
+    {
+	perror(path.c_str());
+	return string("");
+    }
+
+    r = fstat(fd, &sb);
+    if (r < 0)
+    {
+	perror(path.c_str());
+	return string("");
+    }
+    buf.resize(sb.st_size);
+
+    remain = sb.st_size;
+    b = (char *)buf.c_str();
+    while (remain > 0 && (r = read(fd, b, remain)) > 0)
+    {
+	remain -= r;
+	b += r;
+    }
+
+    close(fd);
+    return buf;
+}
+
+string
+job_t::get_stdout() const
+{
+    return get_file_contents(stdout_path_);
+}
+
+string
+job_t::get_stderr() const
+{
+    return get_file_contents(stderr_path_);
 }
 
 // close the namespace

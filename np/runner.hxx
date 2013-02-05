@@ -71,6 +71,7 @@ private:
     unsigned int maxchildren_;
     std::vector<struct pollfd> pfd_;
     int timeout_;	/* in seconds, 0 to disable */
+    bool needs_stdout_;
 };
 
 #define np_raise(ev) \

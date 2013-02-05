@@ -26,6 +26,12 @@ using namespace np::util;
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
+bool
+junit_listener_t::needs_stdout() const
+{
+    return true;
+}
+
 void
 junit_listener_t::begin()
 {
@@ -77,6 +83,8 @@ junit_listener_t::end()
 	unsigned int nerrs = 0;
 	int64_t sns = 0;
 	map<string, case_t>::iterator citr;
+	string all_stdout;
+	string all_stderr;
 	for (citr = s->cases_.begin() ; citr != s->cases_.end() ; ++citr)
 	{
 	    const string &casename = citr->first;
@@ -102,12 +110,23 @@ junit_listener_t::end()
 	    }
 	    if (c->result_ == R_FAIL)
 		nerrs++;
+
+	    if (c->stdout_ != "")
+	    {
+		all_stdout += string("===") + casename + string("===\n");
+		all_stdout += c->stdout_;
+	    }
+	    if (c->stderr_ != "")
+	    {
+		all_stderr += string("===") + casename + string("===\n");
+		all_stderr += c->stderr_;
+	    }
 	}
 	xsuite->set_attribute("errors", dec(nerrs));
 	xsuite->set_attribute("time", rel_format(sns));
 
-	xsuite->add_child("system-out");
-	xsuite->add_child("system-err");
+	xsuite->add_child("system-out")->add_child_text(all_stdout);
+	xsuite->add_child("system-err")->add_child_text(all_stderr);
 
 	string filename = directory + string("/TEST-") + suitename + ".xml";
 
@@ -147,6 +166,8 @@ junit_listener_t::end_job(const job_t *j, result_t res)
     case_t *c = find_case(j);
     c->result_ = res;
     c->elapsed_ = j->get_elapsed();
+    c->stdout_ = j->get_stdout();
+    c->stderr_ = j->get_stderr();
 }
 
 void
@@ -155,6 +176,11 @@ junit_listener_t::add_event(const job_t *j, const event_t *ev)
     case_t *c = find_case(j);
     if (ev->get_result() == R_FAIL && !c->event_)
 	c->event_ = ev->clone();
+}
+
+junit_listener_t::case_t::~case_t()
+{
+    delete event_;
 }
 
 // close the namespace

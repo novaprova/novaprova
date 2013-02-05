@@ -36,6 +36,11 @@ public:
     int64_t get_start() const { return start_; }
     int64_t get_elapsed() const;
 
+    void set_stdout_path(const char *path) { stdout_path_ = std::string(path); }
+    void set_stderr_path(const char *path) { stderr_path_ = std::string(path); }
+    std::string get_stdout() const;
+    std::string get_stderr() const;
+
 private:
     static unsigned int next_id_;
 
@@ -44,6 +49,8 @@ private:
     std::vector<testnode_t::assignment_t> assigns_;
     int64_t start_;
     int64_t end_;
+    std::string stdout_path_;
+    std::string stderr_path_;
 };
 
 // close the namespace

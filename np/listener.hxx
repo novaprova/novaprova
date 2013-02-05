@@ -29,8 +29,9 @@ class listener_t
 {
 public:
     listener_t() {}
-    ~listener_t() {}
+    virtual ~listener_t() {}
 
+    virtual bool needs_stdout() const { return false; }
     virtual void begin() = 0;
     virtual void end() = 0;
     virtual void begin_job(const job_t *) = 0;

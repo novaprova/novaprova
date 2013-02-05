@@ -153,6 +153,7 @@ runner_t::destroy_listeners()
     for (i = listeners_.begin() ; i != listeners_.end() ; ++i)
 	delete *i;
     listeners_.clear();
+    needs_stdout_ = false;
 }
 
 void
@@ -161,6 +162,7 @@ runner_t::add_listener(listener_t *l)
     /* append to the list.  The order of adding is preserved for
      * dispatching */
     listeners_.push_back(l);
+    needs_stdout_ |= l->needs_stdout();
 }
 
 void
@@ -208,6 +210,9 @@ runner_t::raise_event(job_t *j, const event_t *ev)
     return ev->get_result();
 }
 
+static const char tmpfile_template[] = "/tmp/novaprova.out.XXXXXX";
+#define TMPFILE_MAX (sizeof(tmpfile_template))
+
 child_t *
 runner_t::fork_child(job_t *j)
 {
@@ -215,6 +220,10 @@ runner_t::fork_child(job_t *j)
 #define PIPE_READ 0
 #define PIPE_WRITE 1
     int pipefd[2];
+    int outfd = -1;
+    int errfd = -1;
+    char outpath[TMPFILE_MAX];
+    char errpath[TMPFILE_MAX];
     child_t *child;
     int delay_ms = 10;
     int max_sleeps = 20;
@@ -225,6 +234,25 @@ runner_t::fork_child(job_t *j)
     {
 	perror("np: pipe");
 	exit(1);
+    }
+
+    if (needs_stdout_)
+    {
+	strcpy(outpath, tmpfile_template);
+	outfd = mkstemp(outpath);
+	if (outfd < 0)
+	{
+	    perror(outpath);
+	    exit(1);
+	}
+
+	strcpy(errpath, tmpfile_template);
+	errfd = mkstemp(errpath);
+	if (errfd < 0)
+	{
+	    perror(errpath);
+	    exit(1);
+	}
     }
 
     for (;;)
@@ -252,6 +280,13 @@ runner_t::fork_child(job_t *j)
 	/* child process: return, will run the test */
 	close(pipefd[PIPE_READ]);
 	event_pipe_ = pipefd[PIPE_WRITE];
+	if (needs_stdout_)
+	{
+	    dup2(outfd, STDOUT_FILENO);
+	    close(outfd);
+	    dup2(errfd, STDERR_FILENO);
+	    close(errfd);
+	}
 	return NULL;
     }
 
@@ -263,6 +298,13 @@ runner_t::fork_child(job_t *j)
     child = new child_t(pid, pipefd[PIPE_READ], j);
     if (timeout_)
 	child->set_deadline(j->get_start() + timeout_ * NANOSEC_PER_SEC);
+    if (needs_stdout_)
+    {
+	close(outfd);
+	close(errfd);
+	j->set_stdout_path(outpath);
+	j->set_stderr_path(errpath);
+    }
     children_.push_back(child);
 
     return child;

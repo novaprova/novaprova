@@ -27,8 +27,8 @@ public:
     ~junit_listener_t() {}
 
     // TODO: methods to allow changing the base directory
-    // TODO: capture job stdout/stderr
 
+    bool needs_stdout() const;
     void begin();
     void end();
     void begin_job(const job_t *);
@@ -38,10 +38,19 @@ public:
 private:
     struct case_t
     {
+	case_t()
+	 :  result_(R_UNKNOWN),
+	    event_(0),
+	    elapsed_(0)
+	{ }
+	~case_t();
+
 	std::string name_;
 	result_t result_;
 	event_t *event_;
 	int64_t elapsed_;
+	std::string stdout_;
+	std::string stderr_;
     };
 
     struct suite_t
