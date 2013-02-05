@@ -25,14 +25,13 @@ NOVAPROVA_LIBS= $(shell pkg-config --libs novaprova)
 CFLAGS= -g $(NOVAPROVA_CFLAGS)
 
 check: testrunner
-	mkdir -p reports
 	./testrunner -f junit
 
 TEST_SOURCE= mytest.c
 TEST_OBJS=  $(TEST_SOURCE:.c=.o)
 
-testrunner:  testrunner.o $(TEST_OBJS) $(MYCODE_OBJS)
-	$(LINK.c) -o $@ testrunner.o $(TEST_OBJS) $(MYCODE_OBJS) $(NOVAPROVA_LIBS)
+testrunner:  $(TEST_OBJS) $(MYCODE_OBJS)
+	$(LINK.c) -o $@ $(TEST_OBJS) $(MYCODE_OBJS) $(NOVAPROVA_LIBS)
 
 clean:
-	$(RM) testrunner testrunner.o $(MYCODE_OBJS) $(TEST_OBJS)
+	$(RM) testrunner $(MYCODE_OBJS) $(TEST_OBJS)
