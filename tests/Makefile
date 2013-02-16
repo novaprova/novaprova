@@ -71,6 +71,7 @@ SIMPLE_TESTS= \
     tnparameter \
     tnsyslogmatch \
     tntimeout \
+    tnfdleak \
 
 PARALLEL_TESTS= \
     tnparallel \

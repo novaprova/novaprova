@@ -36,6 +36,7 @@ enum events_t
     EV_VALGRIND,	/* Valgrind spotted a memleak or error */
     EV_SLMATCH,		/* syslog matching */
     EV_TIMEOUT,		/* child took too long */
+    EV_FDLEAK,		/* file descriptor leak */
 };
 
 class event_t

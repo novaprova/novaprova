@@ -499,11 +499,10 @@ runner_t::run_fixtures(testnode_t *tn, functype_t type)
 }
 
 result_t
-runner_t::valgrind_errors(job_t *j)
+runner_t::valgrind_errors(job_t *j, result_t res)
 {
     unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
     unsigned long nerrors;
-    result_t res = R_UNKNOWN;
     char msg[1024];
 
     VALGRIND_DO_LEAK_CHECK;
@@ -529,6 +528,42 @@ runner_t::valgrind_errors(job_t *j)
 }
 
 result_t
+runner_t::descriptor_leaks(job_t *j, const vector<string> &prefds, result_t res)
+{
+    vector<string> postfds = np::spiegel::platform::get_file_descriptors();
+    unsigned int fd = 0;
+    string none;
+    char msg[1024];
+
+    unsigned maxfd = max(prefds.size(), postfds.size());
+    for (fd = 0 ; fd < maxfd ; fd++)
+    {
+	const string &pre = (fd < prefds.size() ? prefds[fd] : none);
+	const string &post = (fd < postfds.size() ? postfds[fd] : none);
+
+	if (pre == post)
+	    continue;
+
+	if (post == "")
+	    snprintf(msg, sizeof(msg),
+		     "test closed file descriptor %d -> %s\n",
+		    fd, pre.c_str());
+	else if (pre == "")
+	    snprintf(msg, sizeof(msg),
+		     "test leaked file descriptor %d -> %s\n",
+		     fd, post.c_str());
+	else
+	    snprintf(msg, sizeof(msg),
+		     "test reopened file descriptor %d -> %s as %s\n",
+		     fd, pre.c_str(), post.c_str());
+	event_t ev(EV_FDLEAK, msg);
+	res = merge(res, raise_event(j, &ev));
+    }
+
+    return res;
+}
+
+result_t
 runner_t::run_test_code(job_t *j)
 {
     testnode_t *tn = j->get_node();
@@ -536,6 +571,8 @@ runner_t::run_test_code(job_t *j)
     event_t *ev;
 
     j->pre_run(false);
+
+    vector<string> prefds = np::spiegel::platform::get_file_descriptors();
 
     np_try
     {
@@ -575,7 +612,12 @@ runner_t::run_test_code(job_t *j)
     }
 
     j->post_run(false);
-    res = merge(res, valgrind_errors(j));
+
+    res = descriptor_leaks(j, prefds, res);
+    prefds.clear();
+
+    res = valgrind_errors(j, res);
+
     return res;
 }
 

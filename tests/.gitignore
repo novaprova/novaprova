@@ -14,6 +14,8 @@
 #  limitations under the License.
 #
 *.log
+.leaky_fixture.dat
+.leaky_test.dat
 .logx
 d-globfunc
 d-membfunc
@@ -62,6 +64,7 @@ tnassert
 tnatruefail
 tnexit
 tnfail
+tnfdleak
 tnmemleak
 tnmocking
 tnna

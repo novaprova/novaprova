@@ -67,6 +67,7 @@ function normalize
 	# Default normalization
 	egrep '^(EVENT|MSG|PASS|FAIL|N/A|EXIT|\?\?\?) ' < $f |\
 	    sed -r \
+		-e 's|'$PWD'|%PWD%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \
 		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g'
     fi

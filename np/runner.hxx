@@ -55,7 +55,8 @@ private:
     void reap_children();
     void run_function(functype_t ft, spiegel::function_t *f);
     void run_fixtures(testnode_t *tn, functype_t type);
-    result_t valgrind_errors(job_t *);
+    result_t valgrind_errors(job_t *, result_t);
+    result_t descriptor_leaks(job_t *j, const std::vector<std::string> &prefds, result_t res);
     result_t run_test_code(job_t *);
     void begin_job(job_t *);
     void wait();

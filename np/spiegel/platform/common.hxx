@@ -60,6 +60,8 @@ extern std::vector<np::spiegel::addr_t> get_stacktrace();
 
 extern bool is_running_under_debugger();
 
+extern std::vector<std::string> get_file_descriptors();
+
 // close namespaces
 }; }; };
 

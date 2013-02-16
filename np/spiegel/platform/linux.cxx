@@ -26,6 +26,8 @@
 #include <ucontext.h>
 #include <sys/mman.h>
 #include <valgrind/valgrind.h>
+#include <dirent.h>
+#include <ctype.h>
 
 #ifndef MIN
 #define MIN(x, y)   ((x) < (y) ? (x) : (y))
@@ -454,6 +456,49 @@ bool is_running_under_debugger()
 
     free(command);
     return false;
+}
+
+vector<string> get_file_descriptors()
+{
+    struct dirent *de;
+    DIR *dir;
+    int r;
+    int fd;
+    vector<string> fds;
+    string dirpath = string("/proc/self/fd");
+    string filepath;
+    char buf[PATH_MAX];
+
+    dir = opendir(dirpath.c_str());
+    if (dir)
+    {
+	while ((de = readdir(dir)))
+	{
+	    if (!isdigit(de->d_name[0]))
+		continue;
+
+	    fd = atoi(de->d_name);
+	    if (fd == dirfd(dir))
+		continue;
+
+	    filepath = dirpath + string("/") + string(de->d_name);
+	    r = readlink(filepath.c_str(), buf, sizeof(buf)-1);
+	    if (r < 0)
+	    {
+		perror(filepath.c_str());
+		continue;
+	    }
+	    buf[r] = '\0';
+
+	    // STL is just so screwed
+	    if (fd >= (int)fds.size())
+		fds.resize(fd+1);
+	    fds[fd] = string(buf);
+	}
+	closedir(dir);
+    }
+
+    return fds;
 }
 
 // close namespaces
