@@ -3,6 +3,7 @@
    DONE
 
  * Need a way to turn off Valgrind so tests can be run in gdb.
+   DONE
 
  * Test Spy and Test Stub...need a way to intercept specific
    library calls, and do any of of a) log the args b) change
@@ -22,6 +23,7 @@
 
  * capture stdout stderr and valgrind logs for each test child
    separately
+   DONE
 
  * need to redirect test child stdin from /dev/null
 
@@ -98,6 +100,7 @@
    directory listing for /proc/self/fd/ before and after.
 
  * actually implement the jUnit system-out and system-err properties
+   DONE
 
  * test setup/teardown automatically
 
@@ -106,6 +109,8 @@
 
  * subunit output format, apparently there's an EBNF in a README
 
- * provide a default main() which includes --list and --load-list
-   for testr integration
+ * provide a default main() which includes --list
+   DONE
+
+ * the default main() should implement --load-list for testr integration
 
