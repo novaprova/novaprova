@@ -276,7 +276,7 @@ state_t::linkobj_t *
 state_t::get_linkobj(const char *filename)
 {
     if (!filename)
-	return false;
+	return 0;
 
     vector<linkobj_t*>::iterator i;
     for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
