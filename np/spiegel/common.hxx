@@ -16,6 +16,7 @@
 #ifndef __spiegel_common_hxx__
 #define __spiegel_common_hxx__ 1
 
+#include "np/util/config.h"
 #include "np/util/common.hxx"
 
 namespace np {

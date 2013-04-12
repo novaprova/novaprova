@@ -20,9 +20,6 @@ AC_CANONICAL_TARGET
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
-AC_MSG_CHECKING([Platform is supported])
-$CONFIG_SHELL platform.sh --verify || AC_MSG_ERROR([Unsupported platform])
-
 libxml=
 for p in libxml++-2.6 libxml++ ; do
     PKG_CHECK_MODULES(libxml, $p, [libxml=$p;break])
@@ -32,18 +29,52 @@ if test x"$libxml" = x ; then
 fi
 AC_SUBST(libxml)
 
+platform_CFLAGS=
+
+AC_MSG_CHECKING([Platform O/S])
+case "$target_os" in
+linux-gnu)
+    os=linux
+    platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
+    ;;
+*) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
+esac
+AC_DEFINE_UNQUOTED(_NP_OS, "$os", [Name of the Operating System])
+dnl defining a macro whose name is not known until configure
+dnl runs, doesn't work with AC_DEFINE or AC_DEFINE_UNQUOTED
+platform_CFLAGS="$platform_CFLAGS -D_NP_$os"
+AC_MSG_RESULT($os)
+
+AC_MSG_CHECKING([Platform architecture])
+case "$target_cpu" in
+i[34567]86)
+    arch=x86
+    addrsize=4
+    maxaddr=0xffffffffUL
+    ;;
+x86_64)
+    arch=x86_64
+    addrsize=8
+    maxaddr=0xffffffffffffffffULL
+    ;;
+*) AC_MSG_ERROR([Unsupported architecture $target_cpu]) ;;
+esac
+AC_DEFINE_UNQUOTED(_NP_ARCH, "$arch", [Name of the Architecture])
+platform_CFLAGS="$platform_CFLAGS -D_NP_$arch"
+AC_DEFINE_UNQUOTED(_NP_ADDRSIZE, $addrsize, [Size in bytes of an address])
+AC_DEFINE_UNQUOTED(_NP_MAXADDR, $maxaddr, [Largest possible address])
+AC_MSG_RESULT($arch)
 
 AC_MSG_CHECKING([Platform specific CFLAGS])
-platform_CFLAGS="`$CONFIG_SHELL platform.sh --cflags`"
 AC_MSG_RESULT($platform_CFLAGS)
 AC_SUBST(platform_CFLAGS)
 
 AC_MSG_CHECKING([Platform specific source])
-platform_SOURCE="`$CONFIG_SHELL platform.sh --source`"
+platform_SOURCE="$os.cxx $os"_"$arch.cxx"
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
 
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
     Makefile
     Doxyfile

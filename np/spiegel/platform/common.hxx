@@ -16,6 +16,7 @@
 #ifndef __np_spiegel_platform_common_hxx__
 #define __np_spiegel_platform_common_hxx__ 1
 
+#include "np/util/config.h"
 #include "np/spiegel/mapping.hxx"
 #include <vector>
 
