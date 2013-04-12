@@ -13,18 +13,25 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-*.o
 *.a
-build/deb
+*.o
 .config
-debian
-DEBIAN
-debian.old
 .deps
+DEBIAN
+Doxyfile
+aclocal.m4
+autom4te.cache/
+build/deb
+config.h
+config.h.in
+config.log
+config.status
+configure
+debian
+debian.old
+doc-*.tar.bz2
 doc/api-ref
 doc/api-ref-*.tar.bz2
 doc/man
-doc-*.tar.bz2
-Doxyfile
-novaprova.pc
 novaprova-*.tar.bz2
+novaprova.pc

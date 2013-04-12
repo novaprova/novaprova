@@ -13,16 +13,22 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-PACKAGE=	novaprova
-VERSION=	1.2
+PACKAGE_NAME=	@PACKAGE_NAME@
+PACKAGE_TARNAME=@PACKAGE_TARNAME@
+PACKAGE_VERSION=@PACKAGE_VERSION@
 
-prefix=		/usr/local
-exec_prefix=	$(prefix)
-includedir=	$(prefix)/include
-libdir=		$(exec_prefix)/lib
-mandir=		$(prefix)/share/man
-pkgdocdir=	$(prefix)/share/doc/$(PACKAGE)
-pkgconfigdir=	$(libdir)/pkgconfig
+prefix=		@prefix@
+exec_prefix=	@exec_prefix@
+includedir=	@includedir@
+libdir=		@libdir@
+datarootdir=	@datarootdir@
+mandir=		@mandir@
+docdir=		@docdir@
+pkgconfigdir=	$(datarootdir)/pkgconfig
+
+libxml_CFLAGS=	@libxml_CFLAGS@
+platform_CFLAGS=@platform_CFLAGS@
+platform_SOURCE=@platform_SOURCE@
 
 CC=		g++
 CXX=		g++
@@ -32,8 +38,9 @@ CDEFINES=	-I. $(platform_CFLAGS) $(libxml_CFLAGS)
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 CXXFLAGS=	$(CFLAGS)
-INSTALL=	/usr/bin/install -c
-RANLIB=		ranlib
+INSTALL=	@INSTALL@
+INSTALL_DATA=	@INSTALL_DATA@
+RANLIB=		@RANLIB@
 depdir=		.deps
 
 SUBDIRS_PRE=	doc/get-start
@@ -46,21 +53,7 @@ all clean distclean check install docs:
 
 install check: all
 
-all-local: libnovaprova.a novaprova.pc
-
-include .config
-
-.config:
-	@./platform.sh --verify
-	@echo "platform_CFLAGS="`./platform.sh --cflags` >> $@
-	@got_libxml=no ; for p in libxml++-2.6 libxml++ ; do \
-	    if pkg-config --exists $$p ; then \
-		echo "libxml=$$p" >> $@ ;\
-		echo "libxml_CFLAGS="`pkg-config --cflags $$p` >> $@ ;\
-		got_libxml=yes ;\
-	    fi ;\
-	done && [ $$got_libxml = yes ]
-	@echo ==== ; cat $@ ; echo ====
+all-local: libnovaprova.a
 
 libnovaprova_SOURCE= \
 		np.c \
@@ -85,7 +78,7 @@ libnovaprova_SOURCE= \
 		np/spiegel/dwarf/walker.cxx \
 		np/spiegel/intercept.cxx \
 		np/spiegel/mapping.cxx \
-		$(addprefix np/spiegel/platform/,$(shell ./platform.sh --source)) \
+		$(addprefix np/spiegel/platform/,$(platform_SOURCE)) \
 		np/spiegel/spiegel.cxx \
 		np/testmanager.cxx \
 		np/testnode.cxx \
@@ -168,34 +161,34 @@ DOC_DELIVERABLES= \
 docs-local: Doxyfile
 	$(RM) -r doc/api-ref doc/man
 	doxygen
-	$(RM) doc-$(VERSION)
-	ln -s doc doc-$(VERSION)
-	tar -chjvf doc-$(VERSION).tar.bz2 $(addprefix doc-$(VERSION)/,$(DOC_DELIVERABLES) man)
-	$(RM) doc-$(VERSION)
+	$(RM) doc-$(PACKAGE_VERSION)
+	ln -s doc doc-$(PACKAGE_VERSION)
+	tar -chjvf doc-$(PACKAGE_VERSION).tar.bz2 $(addprefix doc-$(PACKAGE_VERSION)/,$(DOC_DELIVERABLES) man)
+	$(RM) doc-$(PACKAGE_VERSION)
 
 install:
 
 install-local:
-	$(INSTALL) -d $(DESTDIR)$(includedir)/novaprova/np
+	$(INSTALL_DATA) -d $(DESTDIR)$(includedir)/novaprova/np
 	for hdr in $(libnovaprova_HEADERS) ; do \
-	    $(INSTALL) -m 644 $$hdr $(DESTDIR)$(includedir)/novaprova/$$hdr ;\
+	    $(INSTALL_DATA) $$hdr $(DESTDIR)$(includedir)/novaprova/$$hdr ;\
 	done
 	$(INSTALL) -d $(DESTDIR)$(libdir)
-	$(INSTALL) -m 644 libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
+	$(INSTALL_DATA) libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
-	$(INSTALL) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
+	$(INSTALL_DATA) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
 	for doc in $(DOC_DELIVERABLES) ; do \
 	    if [ -d doc/$$doc ] ; then \
-		$(INSTALL) -d $(DESTDIR)$(pkgdocdir)/$$doc ;\
-		$(INSTALL) -m 644 doc/$$doc/* $(DESTDIR)$(pkgdocdir)/$$doc ;\
+		$(INSTALL) -d $(DESTDIR)$(docdir)/$$doc ;\
+		$(INSTALL_DATA) doc/$$doc/* $(DESTDIR)$(docdir)/$$doc ;\
 	    else \
-		$(INSTALL) -d `dirname $(DESTDIR)$(pkgdocdir)/$$doc` ;\
-		$(INSTALL) -m 644 doc/$$doc $(DESTDIR)$(pkgdocdir)/$$doc ;\
+		$(INSTALL) -d `dirname $(DESTDIR)$(docdir)/$$doc` ;\
+		$(INSTALL_DATA) doc/$$doc $(DESTDIR)$(docdir)/$$doc ;\
 	    fi ;\
 	done
 	$(INSTALL) -d $(DESTDIR)$(pkgconfigdir)
-	$(INSTALL) novaprova.pc $(DESTDIR)$(pkgconfigdir)
+	$(INSTALL_DATA) novaprova.pc $(DESTDIR)$(pkgconfigdir)
 
 clean-local:
 	$(RM) libnovaprova.a $(libnovaprova_OBJS)
@@ -204,26 +197,12 @@ distclean-local: clean-local
 	$(RM) -r doc/api-ref doc/man
 	$(RM) -r $(depdir)
 	$(RM) novaprova.pc
-	$(RM) .config
+	$(RM) config.status configure Makefile Doxyfile
 
 check-local:
 
-%: %.in
-	sed \
-	    -e 's|@PACKAGE@|$(PACKAGE)|' \
-	    -e 's|@VERSION@|$(VERSION)|' \
-	    -e 's|@prefix@|$(prefix)|' \
-	    -e 's|@exec_prefix@|$(exec_prefix)|' \
-	    -e 's|@includedir@|$(includedir)|' \
-	    -e 's|@libdir@|$(libdir)|' \
-	    -e 's|@mandir@|$(mandir)|' \
-	    -e 's|@pkgdocdir@|$(pkgdocdir)|' \
-	    -e 's|@pkgconfigdir@|$(pkgconfigdir)|' \
-	    -e 's|@mandir@|$(mandir)|' \
-	    -e 's|@libxml@|$(libxml)|' \
-	    < $< > $@
-
-DIST_TARBALL=	$(PACKAGE)-$(VERSION).tar.bz2
+DIST_TARBALL=	$(PACKAGE_TARNAME)-$(PACKAGE_VERSION).tar.bz2
+DISTDIR=	$(PACKAGE_NAME)-$(PACKAGE_VERSION)
 
 DIST_FILES= $(shell git ls-files) \
 	doc/get-start/index.html \
@@ -234,11 +213,11 @@ DIST_DIRS= \
 	doc/man \
 
 dist: docs
-	$(RM) -r $(PACKAGE)-$(VERSION)
-	mkdir $(PACKAGE)-$(VERSION)
+	$(RM) -r $(DISTDIR)
+	mkdir $(DISTDIR)
 	for file in $(DIST_FILES) `find $(DIST_DIRS) -type f` ; do \
-	    mkdir -p `dirname $(PACKAGE)-$(VERSION)/$$file` ;\
-	    ln $$file $(PACKAGE)-$(VERSION)/$$file ;\
+	    mkdir -p `dirname $(DISTDIR)/$$file` ;\
+	    ln $$file $(DISTDIR)/$$file ;\
 	done
-	tar -chjvf $(DIST_TARBALL) $(PACKAGE)-$(VERSION)
-	$(RM) -r $(PACKAGE)-$(VERSION)
+	tar -chjvf $(DIST_TARBALL) $(DISTDIR)
+	$(RM) -r $(DISTDIR)

@@ -1,11 +1,9 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@/novaprova
 
 Name: NovaProva
 Description: New generation unit test framework for C
-Version: @VERSION@
+Version: @PACKAGE_VERSION@
 Requires: @libxml@
-Libs: -L${libdir} -lnovaprova -lstdc++ -lbfd -ldl -lrt
-Cflags: -I${includedir}
+Libs: -L@libdir@ -lnovaprova -lstdc++ -lbfd -ldl -lrt
+Cflags: -I@includedir@/novaprova
