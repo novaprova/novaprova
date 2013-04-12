@@ -233,6 +233,13 @@ enum attribute_names
 
     DW_AT_lo_user = 0x2000,
     DW_AT_gnu_mangled_name = 0x2007,	    // observed in the wild
+
+    // These have been seen in the wild recently
+    // but we don't seem to need them at all.
+    //
+    // DW_AT_gnu_all_tail_call_sites = 0x2116,
+    // DW_AT_gnu_all_call_sites = 0x2117,
+
     DW_AT_max_user,
     DW_AT_hi_user = 0x3fff
 

@@ -47,8 +47,10 @@ entry_t::dump() const
     {
 	printf("    %s = ", attrnames.to_name(i->name));
 	const value_t *v = get_attribute(i->name);
-	assert(v);
-	v->dump();
+	if (v)
+	    v->dump();
+	else
+	    printf("<missing>");
 	printf("\n");
     }
     printf("}\n");

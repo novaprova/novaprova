@@ -64,7 +64,7 @@ public:
 	else if (name >= DW_AT_lo_user && name < DW_AT_max_user)
 	    byattr_user_[name-DW_AT_lo_user] = nvalues_;
 	else
-	    assert(0);
+	    return;	// silently ignore this
 	nvalues_++;
     }
 
