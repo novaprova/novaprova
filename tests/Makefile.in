@@ -16,7 +16,7 @@
 CC=		gcc
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	$(shell ../platform.sh --cflags)
+CDEFINES=	@platform_CFLAGS@
 CWARNFLAGS=	-Wall -Wextra -Wno-unused-function -Wno-unused-parameter
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
@@ -26,7 +26,7 @@ CXXFLAGS=	$(CFLAGS)
 
 INCLUDES=	-I..
 LIBS=		../libnovaprova.a -lstdc++ -lbfd -ldl -lrt \
-		$(shell pkg-config --libs libxml++-2.6)
+		@libxml_LIBS@
 DEPS=		../np.h ../libnovaprova.a
 
 all install docs:

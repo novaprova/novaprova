@@ -77,6 +77,7 @@ AC_SUBST(platform_SOURCE)
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
     Makefile
+    tests/Makefile
     Doxyfile
     novaprova.pc
 ])
