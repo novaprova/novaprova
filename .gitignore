@@ -19,6 +19,7 @@
 .deps
 DEBIAN
 Doxyfile
+Makefile
 aclocal.m4
 autom4te.cache/
 build/deb
