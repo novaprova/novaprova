@@ -285,20 +285,6 @@ after:
     /* return value is in RAX, save it directly into the call_t */
     __asm__ volatile("movq %%rax, %0" : "=m"(frame.call.retval_));
 
-    switch (tramp_intstate->type_)
-    {
-    case intstate_t::PUSHBP:
-	/* we're cool */
-	break;
-    case intstate_t::OTHER:
-	/* Re-insert the breakpoint */
-	*(unsigned char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
-	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
-	break;
-    case intstate_t::UNKNOWN:
-	break;
-    };
-
     /*
      * The compiler will emit (at least when unoptimised) instructions
      * in our epilogue that save %eax onto a temporary location on stack
@@ -313,6 +299,20 @@ after:
      * had before calling the original function.
      */
     __asm__ volatile("movq %0, %%rsp" : : "m"(frame.our_rsp));
+
+    switch (tramp_intstate->type_)
+    {
+    case intstate_t::PUSHBP:
+	/* we're cool */
+	break;
+    case intstate_t::OTHER:
+	/* Re-insert the breakpoint */
+	*(unsigned char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
+	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+	break;
+    case intstate_t::UNKNOWN:
+	break;
+    };
 
     /*
      * Call the AFTER method.  The method can examine and modify the
