@@ -490,6 +490,12 @@ vector<string> get_file_descriptors()
 	    }
 	    buf[r] = '\0';
 
+	    // Silently ignore named pipes to and from
+	    // Valgrind's built-in gdbserver.
+	    char *tail = strrchr(buf, '/');
+	    if (tail && !strncmp(tail, "/vgdb-pipe", 10))
+		continue;
+
 	    // STL is just so screwed
 	    if (fd >= (int)fds.size())
 		fds.resize(fd+1);
