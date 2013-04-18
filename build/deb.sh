@@ -67,6 +67,11 @@ if [ -f debian/rules ] ; then
     vdo chmod +x debian/rules
     echo "adjusting debian/rules to install into a writable location"
     vdo perl -p -i -e 's|--destdir=\S+|--destdir=\$(CURDIR)/debian/'$package'|g' debian/rules
+
+    if grep '^export DH_COMPAT=' debian/rules > /dev/null ; then
+	echo "extracting debian/compat"
+	awk -n -e 's/^export DH_COMPAT=([0-9]*)/\1/p' < debian/rules > debian/compat
+    fi
 fi
 
 # It turns out that dpkg-buildpackage *HARDCODES* the location
