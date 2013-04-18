@@ -66,7 +66,7 @@ fi
 if [ -f debian/rules ] ; then
     vdo chmod +x debian/rules
     echo "adjusting debian/rules to install into a writable location"
-    vdo perl -p -i -e 's|DESTDIR=\S+|DESTDIR=\$(CURDIR)/debian/'$package'|g' debian/rules
+    vdo perl -p -i -e 's|--destdir=\S+|--destdir=\$(CURDIR)/debian/'$package'|g' debian/rules
 fi
 
 # It turns out that dpkg-buildpackage *HARDCODES* the location
