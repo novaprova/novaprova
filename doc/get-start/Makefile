@@ -14,10 +14,12 @@
 #  limitations under the License.
 #
 
-MARKDOWN= \
-    PYTHONPATH=$(shell cd ../../.. ; pwd)/markdown-2.1.1/Markdown-2.1.1 \
-    python -m markdown.__main__
+# MARKDOWN= \
+#     PYTHONPATH=$(shell cd ../../.. ; pwd)/markdown-2.1.1/Markdown-2.1.1 \
+#     python -m markdown.__main__
 # MARKDOWN=   python -m markdown
+# Packaged properly in Ubuntu 12.10 at least
+MARKDOWN=   markdown_py
 MDFLAGS=    -x codehilite -x headerid -x fenced_code
 PYGMENTIZE= pygmentize
 
