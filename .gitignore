@@ -36,3 +36,4 @@ doc/api-ref-*.tar.bz2
 doc/man
 novaprova-*.tar.bz2
 novaprova.pc
+build-stamp
