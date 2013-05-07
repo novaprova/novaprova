@@ -165,12 +165,20 @@ If we build run this test we get output something like this.
 ./testrunner
 np: starting valgrind
 np: running
-np: running: "simple"
-PASS simple
+np: running: "mytest.simple"
+PASS mytest.simple
 np: 1 run 0 failed
 ~~~~
 
-As expected, the test passed.  Now let's add another test.  The _myatoi_
+As expected, the test passed.
+
+NovaProva organises tests into a tree whose
+node names are derived from the test source directory, test source filename,
+and test function name.  This tree is pruned down to the smallest possible
+size at which the root of the tree is unique.  So the name _mytest.simple_
+derives from the name of the function _test_simple_ in source file _mytest.c_.
+
+Now let's add another test.  The _myatoi_
 function is supposed to convert the initial numeric part of the argument
 string, i.e. to stop when it sees a non-numeric character.  Let's feed
 it a string which will exercise this behaviour and see what happens.
@@ -206,20 +214,12 @@ by 0x804D5C4: np::runner_t::run_test_code (np/runner.cxx)
 by 0x804D831: np::runner_t::begin_job (np/runner.cxx)
 by 0x804E0D4: np::runner_t::run_tests (np/runner.cxx)
 by 0x804E22C: np_run_tests (np/runner.cxx)
-by 0x804AB12: main (testrunner.c)
+by 0x804AB12: main (main.c)
 
 FAIL mytest.initial
 np: 2 run 1 failed
 make: *** [check] Error 1
 ~~~~
-
-The first thing we see is that the name of the old test has changed from
-_simple_ to _mytest.simple_.  NovaProva organises tests into a tree whose
-node names are derived from the test source directory, test source filename,
-and test function name.  This tree is pruned down to the smallest possible
-size at which the root of the tree is unique.  So when we added a second test
-in the same source file, the full name of both tests now includes a component
-_mytest_ derived from the name of the source file _mytest.c_.
 
 Note also that the new test failed.  Immediately after the "np: running:"
 message we see that the _NP_ASSERT_EQUAL_ macro has failed, and printed both
