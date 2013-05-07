@@ -50,8 +50,8 @@ See [here](http://en.opensuse.org/openSUSE:Build_Service_Enduser_Info) for RedHa
 First, download a release tarball.
 
 Novaprova is intended to be built in the usual way that any open source
-C software is built.  However at the moment it doesn't even use
-autotools, so there's no configure script.
+C software is built.  It has a configure script generated from autoconf,
+which you run before building.
 To build you need to have g++ and gcc installed.  You will also need to
 have the _valgrind.h_ header file installed, which is
 typically in a package named something like _valgrind-dev_ .
@@ -60,6 +60,7 @@ typically in a package named something like _valgrind-dev_ .
 # download the release tarball from http://sourceforge.net/projects/novaprova/files/
 tar -xvf novaprova-1.1.tar.bz2
 cd novaprova-1.1
+./configure
 make
 make install
 ~~~~
@@ -78,6 +79,8 @@ respectively.
 ~~~~.sh
 git clone git://github.com/gnb/novaprova.git
 cd novaprova
+autoreconf -iv
+./configure
 make
 make install
 ~~~~
