@@ -155,7 +155,6 @@ DOC_DELIVERABLES= \
 	    get-start/example1/mycode.h \
 	    get-start/example1/mycode.c \
 	    get-start/example1/Makefile \
-	    get-start/example1/testrunner.c \
 	    api-ref
 
 docs-local: Doxyfile
