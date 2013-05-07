@@ -17,6 +17,34 @@
 
 ## Installation ##
 
+### From The Open Build Service ###
+
+Novaprova is available in installable repositories for many recent Linux
+distributions at
+[the OpenSUSE Build Service](http://download.opensuse.org/repositories/home:/gnb:/novaprova/).
+
+For Debian/Ubuntu systems, copy and paste the following commands.
+
+~~~~.sh
+# Choose a distro
+distro=xUbuntu_12.04
+
+# This is the base URL for the NovaProva repo
+repo=http://download.opensuse.org/repositories/home:/gnb:/novaprova/$distro
+
+# Download and install the repository GPG key
+wget -O - $repo/Release.key | sudo apt-key add -
+
+# Add an APT source
+sudo bash -c "echo 'deb $repo ./' > /etc/apt/sources.list.d/novaprova.list"
+sudo apt-get update
+
+# Install NovaProva
+sudo apt-get install novaprova
+~~~~
+
+See [here](http://en.opensuse.org/openSUSE:Build_Service_Enduser_Info) for RedHat and SUSE instructions.
+
 ### From A Release Tarball ###
 
 First, download a release tarball.
