@@ -88,8 +88,8 @@ make install
 ## Building a Test Executable ##
 
 Because you're testing C code, the first step is to build a test runner
-executable.  This executable will contain all your tests, the Code Under Test
-and a small _main_ routine, and will be linked against the NovaProva
+executable.  This executable will contain all your tests and the Code Under Test
+and will be linked against the NovaProva
 library and whatever other libraries your Code Under Test needs.  Typically, this
 is done using the _check:_ make target to both build and run the tests.
 
@@ -102,8 +102,8 @@ check: testrunner
 TEST_SOURCE= mytest.c
 TEST_OBJS=  $(TEST_SOURCE:.c=.o)
 
-testrunner:  testrunner.o $(TEST_OBJS) libmycode.a
-	$(LINK.c) -o $@ testrunner.o $(TEST_OBJS) libmycode.a $(NOVAPROVA_LIBS)
+testrunner:  $(TEST_OBJS) libmycode.a
+	$(LINK.c) -o $@ $(TEST_OBJS) libmycode.a $(NOVAPROVA_LIBS)
 ~~~~
 
 NovaProva uses the GNOME _pkgconfig_ system to make it easy to find the
@@ -116,42 +116,17 @@ NOVAPROVA_LIBS= $(shell pkg-config --libs novaprova)
 CFLAGS= ... -g $(NOVAPROVA_CFLAGS) ...
 ~~~~
 
-Note that you only need to compile the test code _mytest.c_ and the test
-runner code _testrunner.c_ with _NOVAPROVA_CFLAGS_.  NovaProva does *not*
+Note that you only need to compile the test code _mytest.c_
+with _NOVAPROVA_CFLAGS_.  NovaProva does *not*
 use any magical compile options or do any pre-processing of test code.
 
 However, you should make sure that at least the test code is built with
 the _-g_ option to include debugging information.  NovaProva uses that
 information to discover tests at runtime.
 
-Your _main_ routine in _testrunner.c_ will initialise the NovaProva
-library by calling _np_init_ and then call _np_run_tests_ to do all the
-heavy lifting.  Here's a minimal _main_.
-
-~~~~.c
-/* testrunner.c */
-#include <stdlib.h>
-#include <unistd.h>
-#include <np.h>	    /* NovaProva library */
-
-int
-main(int argc, char **argv)
-{
-    int ec = 0;
-    np_runner_t *runner;
-
-    /* Initialise the NovaProva library */
-    runner = np_init();
-
-    /* Run all the discovered tests */
-    ec = np_run_tests(runner, NULL);
-
-    /* Shut down the NovaProva library */
-    np_done(runner);
-
-    exit(ec);
-}
-~~~~
+You do not need to provide a _main_ routine.  NovaProva provides a
+default _main_ routine which implements a number of useful command-line
+options.  You can write your own later, but you probably won't need to.
 
 The last piece of the puzzle is writing some tests.  Each test is a
 single C function which takes no parameters and returns _void_.  Unlike
