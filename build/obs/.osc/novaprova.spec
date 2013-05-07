@@ -1,6 +1,6 @@
 Summary: novaprova, the new generation unit test framework for C
 Name: novaprova
-Version: 1.2
+Version: 1.3
 Release: 1
 License: GPL
 Group: Development/C
@@ -19,17 +19,16 @@ paradigm into the 21st century.
 Novaprova has many advanced features previously only available in unit
 test frameworks for languages such as Java or Perl.
 
-%define overrides prefix=%{_prefix} exec_prefix=%{_exec_prefix} includedir=%{_includedir} libdir=%{_libdir} mandir=%{_mandir} pkgdocdir=%{_docdir}/%{name}
-
 %prep
 %setup -q
 
 %build
-make all %{overrides}
+%configure
+make all
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install %{overrides} DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT

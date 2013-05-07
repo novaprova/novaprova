@@ -1,4 +1,18 @@
 -------------------------------------------------------------------
+Tue May  7 22:06:04 EST 2013 - gnb@fmeh.org
+
+- Add a default main() routine.
+- Check for leaked file descriptors
+- Add an autoconf configure script
+- JUnit output captures stdout & stderr
+- Silently ignore out-of-range DWARF attributes
+- Silently ignore pipes to/from Valgrind's gdbserver
+- Avoid Valgrind warning in intercept_tramp() on 64b
+- Fix bug which broke test listing
+- Added example 13_twoparams
+- Various minor fixes
+
+-------------------------------------------------------------------
 Tue Jan 29 15:51:57 EST 2013 - gnb@fmeh.org
 
 - Support for building with SUSE OBS

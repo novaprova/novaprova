@@ -1,11 +1,14 @@
-<directory name="novaprova" rev="48" srcmd5="97246f3b90aac3df06e6f182235ab6ce" vrev="4">
-  <serviceinfo code="succeeded" xsrcmd5="d55496776aa1c52b6b56cec4c512e7a9" />
-  <entry md5="ad5394f834f8835851912662c8e2592d" mtime="1359436029" name="_service" size="237" />
-  <entry md5="ac4fefefb86efe293b50c2a45e877f6e" mtime="1359435405" name="debian.changelog" size="335" />
+<directory name="novaprova" rev="49" srcmd5="e7523b555be9be555cb12ba9ac1f9fef" vrev="1">
+  <serviceinfo code="failed">
+    <error>service download_url failed:
+Running /usr/lib/obs/service/download_url --host downloads.sourceforge.net --protocol http --path /project/novaprova/novaprova-1.3.tar.bz2 --outdir /lxc.tmp.12592/out</error>
+  </serviceinfo>
+  <entry md5="45327fd576d3b6ad07ad89159d91fb38" mtime="1367930078" name="_service" size="237" />
+  <entry md5="5d47c5f713990eeb4077814825606211" mtime="1367930080" name="debian.changelog" size="842" />
   <entry md5="54731fd86d2c2bce19e585bfe0c2bcfa" mtime="1359435406" name="debian.control" size="668" />
-  <entry md5="602a09fed5d8a172db99c01ee4f81ef9" mtime="1358954406" name="debian.rules" size="1734" />
+  <entry md5="ef78ce35e79fc419f1f203236affe3ab" mtime="1367930081" name="debian.rules" size="1340" />
   <entry md5="3d46053615c2604ee487f881c5a77439" mtime="1359435669" name="novaprova-1.2.tar.bz2" size="133135" />
-  <entry md5="29c05d11c881754fc750138616b91c18" mtime="1359435408" name="novaprova.changes" size="355" />
-  <entry md5="6ebd38a11c88a9c80cbeae39f194d64d" mtime="1359435410" name="novaprova.dsc" size="360" />
-  <entry md5="b37c5be6bd464090c5b2f21225f8764e" mtime="1359436373" name="novaprova.spec" size="1377" />
+  <entry md5="161cbe6a6b71697a958fcb907ea88a3e" mtime="1367930083" name="novaprova.changes" size="852" />
+  <entry md5="c97f62d544c29e056b07ff081a2c7053" mtime="1367930084" name="novaprova.dsc" size="360" />
+  <entry md5="667871d8b16054f49ce0388c01c75846" mtime="1367930086" name="novaprova.spec" size="1206" />
 </directory>
