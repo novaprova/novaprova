@@ -2,6 +2,6 @@
   <service name="download_url">
     <param name="host">downloads.sourceforge.net</param>
     <param name="protocol">http</param>
-    <param name="path">/project/novaprova/novaprova-1.2.tar.bz2</param>
+    <param name="path">/project/novaprova/novaprova-1.3.tar.bz2</param>
   </service>
 </services>
