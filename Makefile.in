@@ -40,6 +40,7 @@ CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 CXXFLAGS=	$(CFLAGS)
 INSTALL=	@INSTALL@
 INSTALL_DATA=	@INSTALL_DATA@
+MKDIRP=		$(INSTALL) -m 0755 -d
 RANLIB=		@RANLIB@
 depdir=		.deps
 
@@ -168,25 +169,25 @@ docs-local: Doxyfile
 install:
 
 install-local:
-	$(INSTALL_DATA) -d $(DESTDIR)$(includedir)/novaprova/np
+	$(MKDIRP) $(DESTDIR)$(includedir)/novaprova/np
 	for hdr in $(libnovaprova_HEADERS) ; do \
 	    $(INSTALL_DATA) $$hdr $(DESTDIR)$(includedir)/novaprova/$$hdr ;\
 	done
-	$(INSTALL) -d $(DESTDIR)$(libdir)
+	$(MKDIRP) $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
-	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
+	$(MKDIRP) $(DESTDIR)$(mandir)/man3
 	$(INSTALL_DATA) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
 	for doc in $(DOC_DELIVERABLES) ; do \
 	    if [ -d doc/$$doc ] ; then \
-		$(INSTALL) -d $(DESTDIR)$(docdir)/$$doc ;\
+		$(MKDIRP) $(DESTDIR)$(docdir)/$$doc ;\
 		$(INSTALL_DATA) doc/$$doc/* $(DESTDIR)$(docdir)/$$doc ;\
 	    else \
-		$(INSTALL) -d `dirname $(DESTDIR)$(docdir)/$$doc` ;\
+		$(MKDIRP) `dirname $(DESTDIR)$(docdir)/$$doc` ;\
 		$(INSTALL_DATA) doc/$$doc $(DESTDIR)$(docdir)/$$doc ;\
 	    fi ;\
 	done
-	$(INSTALL) -d $(DESTDIR)$(pkgconfigdir)
+	$(MKDIRP) $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) novaprova.pc $(DESTDIR)$(pkgconfigdir)
 
 clean-local:
