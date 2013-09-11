@@ -30,8 +30,8 @@ public:
 
     reader_t(const void *base, size_t len)
      :  p_((unsigned char *)base),
-        end_(((unsigned char *)base) + len),
-        base_((unsigned char *)base)
+	end_(((unsigned char *)base) + len),
+	base_((unsigned char *)base)
     {}
 
     reader_t initial_subset(size_t len) const
