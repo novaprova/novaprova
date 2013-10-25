@@ -37,3 +37,4 @@ doc/man
 novaprova-*.tar.bz2
 novaprova.pc
 build-stamp
+cscope.out
