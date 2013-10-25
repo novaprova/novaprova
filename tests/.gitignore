@@ -62,6 +62,9 @@ tnasnequalfail
 tnasnequalpass
 tnassert
 tnatruefail
+tndynmock
+tndynmock2
+tndynmock3
 tnexit
 tnfail
 tnfdleak

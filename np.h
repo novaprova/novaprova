@@ -276,6 +276,36 @@ struct __np_param_dec
 	return &d; \
     }
 
+/**
+ * Install a dynamic mock.
+ *
+ * @param fn the function to mock
+ * @param to the function to call instead
+ *
+ * Installs a temporary dynamic function mock.  The mock can
+ * be removed with @c np_unmock() or it can be left in place
+ * to be automatically uninstalled when the test finishes.
+ *
+ * Note that if @c np_mock() may be called in a fixture setup
+ * routine to install the mock for every test in a test source
+ * file.
+ */
+#define np_mock(fn, to) __np_mock((void (*)(void))(fn), #fn, (void (*)(void))to)
+extern void __np_mock(void (*from)(void), const char *name, void (*to)(void));
+
+/**
+ * Uninstall a dynamic mock.
+ *
+ * @param fn the address of the function to mock
+ *
+ * Uninstall any dynamic mocks installed earlier by @c np_mock for
+ * function @a fn. Note that dynamic mocks will be automatically
+ * uninstalled at the end of the test, so calling @c np_unmock()
+ * might not even be necessary in your tests.
+ */
+#define np_unmock(fn) __np_unmock((void (*)(void))(fn))
+extern void __np_unmock(void (*from)(void));
+
 #ifdef __cplusplus
 };
 #endif

@@ -68,6 +68,9 @@ SIMPLE_TESTS= \
     tnasnequalpass \
     tnatruefail \
     tnmocking \
+    tndynmock \
+    tndynmock2 \
+    tndynmock3 \
     tnparameter \
     tnsyslogmatch \
     tntimeout \

@@ -17,6 +17,8 @@
 #include "np/redirect.hxx"
 #include "np/util/tok.hxx"
 
+static std::vector<np::spiegel::intercept_t*> dynamic_intercepts;
+
 namespace np {
 using namespace std;
 using namespace np::util;
@@ -242,6 +244,16 @@ testnode_t::post_run() const
 	for (itr = a->intercepts_.begin() ; itr != a->intercepts_.end() ; ++itr)
 	    (*itr)->uninstall();
     }
+
+    /* uninstall all dynamic intercepts installed by this test */
+    vector<np::spiegel::intercept_t*>::const_iterator itr;
+    for (itr = dynamic_intercepts.begin() ; itr != dynamic_intercepts.end() ; ++itr)
+    {
+	np::spiegel::intercept_t *ii = *itr;
+	ii->uninstall();
+	delete ii;
+    }
+    dynamic_intercepts.clear();
 }
 
 testnode_t::preorder_iterator &
@@ -365,3 +377,34 @@ testnode_t::create_assignments() const
 
 // close the namespace
 };
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+extern "C" void __np_mock(void (*from)(void), const char *name, void (*to)(void))
+{
+    np::redirect_t *mock = new np::redirect_t((np::spiegel::addr_t)from,
+					      name,
+					      (np::spiegel::addr_t)to);
+    // TODO: should we search the dynamic_intercepts list here
+    // to be entirely sure the caller doesn't double-mock
+    dynamic_intercepts.push_back(mock);
+    mock->install();
+}
+
+extern "C" void __np_unmock(void (*from)(void))
+{
+    std::vector<np::spiegel::intercept_t*>::iterator itr;
+    for (itr = dynamic_intercepts.begin() ; itr != dynamic_intercepts.end() ; ++itr)
+    {
+	np::spiegel::intercept_t *ii = *itr;
+	if (ii->get_address() == (np::spiegel::addr_t)from)
+	{
+	    dynamic_intercepts.erase(itr);
+	    ii->uninstall();
+	    delete ii;
+	    return;
+	}
+    }
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
