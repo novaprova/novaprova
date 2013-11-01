@@ -47,7 +47,7 @@ AC_MSG_RESULT($os)
 
 AC_MSG_CHECKING([Platform architecture])
 case "$target_cpu" in
-i[34567]86)
+i386|i486|i586|i686)
     arch=x86
     addrsize=4
     maxaddr=0xffffffffUL
