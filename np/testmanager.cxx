@@ -269,3 +269,18 @@ testmanager_t::setup_builtin_intercepts()
 
 // close the namespace
 };
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+extern "C" void __np_mock_by_name(const char *fname, void (*to)(void))
+{
+    np::spiegel::function_t *f = np::testmanager_t::instance()->find_mock_target(fname);
+    __np_mock((void(*)(void))f->get_address(), f->get_full_name().c_str(), to);
+}
+
+extern "C" void np_unmock_by_name(const char *fname)
+{
+    np::spiegel::function_t *f = np::testmanager_t::instance()->find_mock_target(fname);
+    __np_unmock((void(*)(void))f->get_address());
+}
+

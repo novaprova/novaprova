@@ -43,24 +43,50 @@ static void test_dynamic_mocking(void)
     int x;
 
     fprintf(stderr, "before\n");
+    called = 0;
     x = bird_tequila(42);
     fprintf(stderr, "after, returned %d\n", x);
+    NP_ASSERT_EQUAL(x, 21);
     NP_ASSERT_EQUAL(called, 1);
 
     fprintf(stderr, "installing mock\n");
     np_mock(bird_tequila, not_bird_tequila);
 
     fprintf(stderr, "before\n");
+    called = 0;
     x = bird_tequila(42);
     fprintf(stderr, "after, returned %d\n", x);
+    NP_ASSERT_EQUAL(x, 84);
     NP_ASSERT_EQUAL(called, 2);
 
     fprintf(stderr, "removing mock\n");
     np_unmock(bird_tequila);
 
     fprintf(stderr, "before\n");
+    called = 0;
     x = bird_tequila(42);
     fprintf(stderr, "after, returned %d\n", x);
+    NP_ASSERT_EQUAL(x, 21);
+    NP_ASSERT_EQUAL(called, 1);
+
+    fprintf(stderr, "installing mock by name\n");
+    np_mock_by_name("bird_tequila", not_bird_tequila);
+
+    fprintf(stderr, "before\n");
+    called = 0;
+    x = bird_tequila(42);
+    fprintf(stderr, "after, returned %d\n", x);
+    NP_ASSERT_EQUAL(x, 84);
+    NP_ASSERT_EQUAL(called, 2);
+
+    fprintf(stderr, "removing mock by name\n");
+    np_unmock_by_name("bird_tequila");
+
+    fprintf(stderr, "before\n");
+    called = 0;
+    x = bird_tequila(42);
+    fprintf(stderr, "after, returned %d\n", x);
+    NP_ASSERT_EQUAL(x, 21);
     NP_ASSERT_EQUAL(called, 1);
 }
 

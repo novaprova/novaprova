@@ -277,7 +277,7 @@ struct __np_param_dec
     }
 
 /**
- * Install a dynamic mock.
+ * Install a dynamic mock by function pointer.
  *
  * @param fn the function to mock
  * @param to the function to call instead
@@ -294,7 +294,7 @@ struct __np_param_dec
 extern void __np_mock(void (*from)(void), const char *name, void (*to)(void));
 
 /**
- * Uninstall a dynamic mock.
+ * Uninstall a dynamic mock by function pointer.
  *
  * @param fn the address of the function to mock
  *
@@ -305,6 +305,35 @@ extern void __np_mock(void (*from)(void), const char *name, void (*to)(void));
  */
 #define np_unmock(fn) __np_unmock((void (*)(void))(fn))
 extern void __np_unmock(void (*from)(void));
+
+/**
+ * Install a dynamic mock by function name.
+ *
+ * @param fname the name of the function to mock
+ * @param to the function to call instead
+ *
+ * Installs a temporary dynamic function mock.  The mock can
+ * be removed with @c np_unmock_by_name() or it can be left in place
+ * to be automatically uninstalled when the test finishes.
+ *
+ * Note that if @c np_mock_by_name() may be called in a fixture setup
+ * routine to install the mock for every test in a test source
+ * file.
+ */
+#define np_mock_by_name(fname, to) __np_mock_by_name(fname, (void (*)(void))to)
+extern void __np_mock_by_name(const char *fname, void (*to)(void));
+
+/**
+ * Uninstall a dynamic mock by function name.
+ *
+ * @param fname the name of the function to mock
+ *
+ * Uninstall any dynamic mocks installed earlier by @c np_mock_by_name
+ * for function @a fname. Note that dynamic mocks will be automatically
+ * uninstalled at the end of the test, so calling @c np_unmock_by_name()
+ * might not even be necessary in your tests.
+ */
+extern void np_unmock_by_name(const char *fname);
 
 #ifdef __cplusplus
 };

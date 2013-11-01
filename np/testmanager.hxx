@@ -41,6 +41,9 @@ public:
     testnode_t *get_root() { return root_; }
 
     static void done() { delete instance_; }
+
+    spiegel::function_t *find_mock_target(std::string name);
+
 private:
     testmanager_t();
     ~testmanager_t();
@@ -49,7 +52,6 @@ private:
     functype_t classify_function(const char *func, char *match_return, size_t maxmatch);
     void add_classifier(const char *re, bool case_sensitive, functype_t type);
     void setup_classifiers();
-    spiegel::function_t *find_mock_target(std::string name);
     void discover_functions();
     void setup_builtin_intercepts();
 
