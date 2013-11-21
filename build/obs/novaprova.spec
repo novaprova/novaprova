@@ -9,6 +9,7 @@ Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
 BuildRequires: valgrind-devel, binutils-devel, libxml++-devel, libxml2-devel, pkgconfig
+BuildRequires: doxygen
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description
@@ -23,8 +24,10 @@ test frameworks for languages such as Java or Perl.
 %setup -q
 
 %build
+autoreconf -iv
 %configure
 make all
+make docs
 
 %install
 rm -rf $RPM_BUILD_ROOT
