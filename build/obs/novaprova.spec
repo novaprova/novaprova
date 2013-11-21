@@ -4,7 +4,7 @@ Version: 1.3
 Release: 1
 License: GPL
 Group: Development/C
-Source: http://sourceforge.net/projects/novaprova/files/novaprova-%{version}.tar.bz2
+Source: http://sourceforge.net/projects/novaprova/files/novaprova-%{version}.tar.gz
 Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
