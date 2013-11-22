@@ -2,8 +2,7 @@ Source: novaprova
 Section: novaprova
 Priority: optional
 Maintainer: Greg Banks <gnb@fmeh.org>
-Build-Depends: debhelper (>= 4.1.16), libxml++2.6-dev, libxml2-dev, pkg-config, valgrind, binutils-dev
-Build-Depends: doxygen, python-pygments, python-markdown
+Build-Depends: debhelper (>= 4.1.16), libxml++2.6-dev, libxml2-dev, pkg-config, valgrind, binutils-dev, doxygen, python-pygments, python-markdown
 
 Package: novaprova
 Architecture: any
