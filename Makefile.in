@@ -24,7 +24,7 @@ libdir=		@libdir@
 datarootdir=	@datarootdir@
 mandir=		@mandir@
 docdir=		@docdir@
-pkgconfigdir=	$(datarootdir)/pkgconfig
+pkgconfigdir=	$(libdir)/pkgconfig
 
 libxml_CFLAGS=	@libxml_CFLAGS@
 platform_CFLAGS=@platform_CFLAGS@
