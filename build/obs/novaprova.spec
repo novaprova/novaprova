@@ -9,7 +9,7 @@ Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
 BuildRequires: valgrind-devel, binutils-devel, libxml++-devel, libxml2-devel, pkgconfig
-BuildRequires: doxygen, python-pygments
+BuildRequires: doxygen, python-pygments, python-markdown
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description
