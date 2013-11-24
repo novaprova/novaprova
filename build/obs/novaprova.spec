@@ -8,7 +8,7 @@ Source: http://sourceforge.net/projects/novaprova/files/novaprova-%{version}.tar
 Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
-BuildRequires: autoconf, valgrind-devel, binutils-devel, libxml++-devel, libxml2-devel, pkgconfig
+BuildRequires: autoconf, automake, valgrind-devel, binutils-devel, libxml++-devel, libxml2-devel, pkgconfig
 BuildRequires: doxygen, python-pygments, python-markdown
 Vendor: Greg Banks <gnb@fmeh.org>
 
