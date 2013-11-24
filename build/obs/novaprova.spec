@@ -38,7 +38,7 @@ test frameworks for languages such as Java or Perl.
 
 %build
 autoreconf -iv
-%configure
+%configure %{configure_args}
 make all
 make docs
 
