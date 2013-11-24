@@ -1,9 +1,3 @@
-%if %{_vendor} == "suse"
-%define configure_args	--docdir=%{_docdir}/novaprova
-%else
-%define configure_args
-%endif
-
 Summary: novaprova, the new generation unit test framework for C
 Name: novaprova
 Version: 1.3
@@ -38,7 +32,12 @@ test frameworks for languages such as Java or Perl.
 
 %build
 autoreconf -iv
-%configure %{configure_args}
+%if %{_vendor} == "suse"
+%configure --docdir=%{_docdir}/novaprova
+%else
+%configure
+%endif
+
 make all
 make docs
 
