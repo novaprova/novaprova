@@ -45,7 +45,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_docdir}/novaprova/api-ref/*
 %{_docdir}/novaprova/get-start/*
 %docdir %{_mandir}
-%{_mandir}/man3/np.h.3*
+%{_mandir}/man3/np*.3*
+%{_mandir}/man3/NP*.3*
 %doc README.md LICENSE ChangeLog
 
 %changelog

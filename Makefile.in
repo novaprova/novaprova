@@ -177,7 +177,7 @@ install-local:
 	$(INSTALL_DATA) libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
 	$(MKDIRP) $(DESTDIR)$(mandir)/man3
-	$(INSTALL_DATA) doc/man/man3/*.3 $(DESTDIR)$(mandir)/man3
+	$(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3
 	for doc in $(DOC_DELIVERABLES) ; do \
 	    if [ -d doc/$$doc ] ; then \
 		$(MKDIRP) $(DESTDIR)$(docdir)/$$doc ;\
