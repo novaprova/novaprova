@@ -8,7 +8,10 @@ Source: http://sourceforge.net/projects/novaprova/files/novaprova-%{version}.tar
 Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
-BuildRequires: autoconf, automake, valgrind-devel, binutils-devel, libxml++-devel, libxml2-devel, pkgconfig
+%if %{_vendor} == "suse"
+BuildRequires: autoconf, automake, gcc-c++
+%endif
+BuildRequires: valgrind-devel, binutils-devel, libxml++-devel, libxml2-devel, pkgconfig
 BuildRequires: doxygen, python-pygments, python-markdown
 Vendor: Greg Banks <gnb@fmeh.org>
 
@@ -20,6 +23,10 @@ paradigm into the 21st century.
 Novaprova has many advanced features previously only available in unit
 test frameworks for languages such as Java or Perl.
 
+%if %{_vendor} == "suse"
+%debug_package
+%endif
+%
 %prep
 %setup -q
 
