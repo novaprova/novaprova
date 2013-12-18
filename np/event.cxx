@@ -212,6 +212,26 @@ string event_t::get_long_location() const
     return get_short_location() + "\n";
 }
 
+string event_t::get_make_location() const
+{
+    string s;
+
+    if ((locflags & (LT_FILENAME|LT_LINENO)) == (LT_FILENAME|LT_LINENO))
+    {
+	s += filename;
+	s += ":";
+	s += dec(lineno);
+
+	if (locflags & LT_FUNCNAME)
+	{
+	    s += ": ";
+	    s += function;
+	}
+    }
+
+    return s;
+}
+
 
 // close the namespace
 };

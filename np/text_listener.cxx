@@ -68,14 +68,19 @@ text_listener_t::end_job(const job_t *j, result_t res)
 }
 
 void
-text_listener_t::add_event(const job_t *j __attribute__((unused)),
-			   const event_t *ev)
+text_listener_t::add_event(const job_t *j, const event_t *ev)
 {
-    string s = string("EVENT ") +
-		ev->as_string() +
-	       "\n" +
-	       ev->get_long_location() +
-	       "\n";
+    string s;
+
+    // generate a message useful for programs which scrape make
+    // output for compiler messages, like vi's "make" command.
+    string loc = ev->get_make_location();
+    if (loc != "")
+	s += loc + ": " + ev->as_string() + " (" + j->as_string() + ")\n";
+
+    // append the long location information including stack trace
+    s += ev->get_long_location() + "\n";
+
     fputs(s.c_str(), stderr);
 }
 

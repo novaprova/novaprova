@@ -140,6 +140,7 @@ public:
     std::string as_string() const;
     std::string get_short_location() const;
     std::string get_long_location() const;
+    std::string get_make_location() const;
 
 // private:
 // This needs to be public for {de,}serialise_event
