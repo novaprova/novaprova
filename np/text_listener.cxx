@@ -77,6 +77,8 @@ text_listener_t::add_event(const job_t *j, const event_t *ev)
     string loc = ev->get_make_location();
     if (loc != "")
 	s += loc + ": " + ev->as_string() + " (" + j->as_string() + ")\n";
+    else
+	s += string("EVENT ") + ev->as_string() + "\n";
 
     // append the long location information including stack trace
     s += ev->get_long_location() + "\n";
