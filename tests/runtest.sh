@@ -72,12 +72,7 @@ function normalize
     elif [ -f $TEST-normalize.awk ] ; then
 	awk -f $TEST-normalize.awk < $f
     else
-	# Default normalization
-	egrep '^(EVENT|MSG|PASS|FAIL|N/A|EXIT|np: WARNING:|\?\?\?) ' < $f |\
-	    sed -r \
-		-e 's|'$PWD'|%PWD%|g' \
-		-e 's/process [0-9]+/process %PID%/g' \
-		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g'
+	bash default-normalize.sh < $f
     fi
 }
 
