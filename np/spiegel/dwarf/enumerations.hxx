@@ -37,6 +37,12 @@ enum section_names
      * where it is for setting intercepts */
     DW_sec_plt,
 
+    /* This is not a DWARF section either but it hold some
+     * magical information which is put there when our
+     * NP_TAG() macro is used in a test.
+     */
+    DW_sec_annots,
+
     DW_sec_num
 };
 

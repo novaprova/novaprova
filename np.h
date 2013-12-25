@@ -335,6 +335,31 @@ extern void __np_mock_by_name(const char *fname, void (*to)(void));
  */
 extern void np_unmock_by_name(const char *fname);
 
+/*
+ * A mechanism for adding annotations to functions.
+ * Annotations are text key-value pairs.
+ */
+
+#include "np/util/config.h"
+#if _NP_ADDRSIZE == 4
+#define _NP_ASMPTR  ".word"
+#elif _NP_ADDRSIZE == 8
+#define _NP_ASMPTR  ".quad"
+#else
+#error "Unknown address size"
+#endif
+
+#define _np_annotation(k, v) \
+    __asm__(\
+    ".section \".text\"\n"\
+    ".L0:\n"\
+    ".section \".rodata\"\n"\
+    ".L1: .asciz \"" k ":" v "\"\n"\
+    ".section \".np.annotations\",\"a\"\n"\
+    _NP_ASMPTR " .L1\n"\
+    _NP_ASMPTR " .L0\n"\
+    ".section \".text\"\n");
+
 #ifdef __cplusplus
 };
 #endif

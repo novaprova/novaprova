@@ -874,6 +874,70 @@ state_t::get_full_name(reference_t ref)
     return full;
 }
 
+void
+state_t::get_annotations(np::spiegel::addr_t addr,
+			 const char *name,
+			 std::vector<const char*> &values)
+{
+    const struct annot *annots;
+    int nannots;
+
+    /* first find the linkobj whose range of annotations
+     * includes the given address */
+    vector<linkobj_t*>::iterator i;
+    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+    {
+	annots = (*i)->get_annots();
+	nannots = (*i)->get_num_annots();
+	if (nannots &&
+	    addr >= (np::spiegel::addr_t)annots[0].func &&
+	    addr <= (np::spiegel::addr_t)annots[nannots-1].func)
+	    goto found1;
+    }
+    return;
+found1:
+
+    /* now do a binary search on the linkobj's annotations section */
+    int lo = -1;
+    int hi = nannots;
+    int mid = -1;
+    for (;;)
+    {
+	mid = (hi + lo) / 2;
+	if (addr < (np::spiegel::addr_t)annots[mid].func)
+	    hi = mid;
+	else if (addr > (np::spiegel::addr_t)annots[mid].func)
+	    lo = mid;
+	else
+	    break;
+	if (hi - lo == 1)
+	    return;
+    }
+
+    /* `mid' now points to an annotation record which matches the
+     * address.  There may be more so we probe backwards */
+    for ( ;
+	 mid > 0 && addr == (np::spiegel::addr_t)annots[mid-1].func ;
+	 mid--)
+	;
+
+    /* `mid' now points to the first of possibly several annotation
+     * records which match the address.  Search them for key-value
+     * pairs which match the given name (or all pairs if name is
+     * NULL or "") */
+    int namelen = (name ? strlen(name) : 0);
+    for ( ;
+	mid < nannots && addr == (np::spiegel::addr_t)annots[mid].func ;
+	mid++)
+    {
+	const char *kv = annots[mid].kv;
+	if (!namelen)
+	    values.push_back(kv);
+	else if (!strncmp(kv, name, namelen) && kv[namelen] == ':')
+	    values.push_back(annots[mid].kv+namelen+1);
+    }
+}
+
 static const char *
 get_partial_name(reference_t ref)
 {

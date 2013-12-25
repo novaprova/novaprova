@@ -61,7 +61,17 @@ public:
 	return compile_units_[ref.cu];
     }
 
+    void get_annotations(np::spiegel::addr_t addr,
+			 const char *name,
+			 std::vector<const char*> &values);
+
 private:
+    struct annot
+    {
+	char const *kv;		/* "key:value" string */
+	void (*func)(void);	/* function to which it applies */
+    };
+
     struct linkobj_t
     {
 	linkobj_t(const char *n, uint32_t idx)
@@ -84,6 +94,15 @@ private:
 
 	bool map_sections();
 	void unmap_sections();
+
+	const struct annot *get_annots() const
+	{
+	    return (const struct annot *)sections_[DW_sec_annots].get_map();
+	}
+	int get_num_annots() const
+	{
+	    return sections_[DW_sec_annots].get_size() / sizeof(struct annot);
+	}
     };
 
     linkobj_t *get_linkobj(const char *filename);
