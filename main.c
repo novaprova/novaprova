@@ -66,15 +66,16 @@ main(int argc, char **argv)
 	    usage(argv[0]);
 	}
     }
+
+    /* Initialise the NovaProva library */
+    runner = np_init();
+
     if (optind < argc)
     {
 	/* Some tests were specified on the commandline */
 	plan = np_plan_new();
 	np_plan_add_specs(plan, argc-optind, (const char **)argv+optind);
     }
-
-    /* Initialise the NovaProva library */
-    runner = np_init();
 
     switch (mode)
     {
