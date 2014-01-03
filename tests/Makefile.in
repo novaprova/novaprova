@@ -86,6 +86,7 @@ SIMPLE_TESTS= \
     tnsyslogmatch \
     tntimeout \
     tnfdleak \
+    tntag \
 
 SIMPLE_TESTS_CXX= \
     tnexcept \
@@ -123,11 +124,17 @@ COMPOUND_SUBTESTS= \
 
 COMPOUND_DATA= $(addprefix d-,$(COMPOUND_SUBTESTS))
 
+hash:=$(shell printf '\043')
+
+TAG_TESTS= \
+    $(foreach t,uno duo tre trois nope,tntag%$(hash)$t)
+
 TESTS= \
     $(SIMPLE_TESTS) \
     $(foreach t,$(BASIC_TESTS),$t $(foreach s,$(OUTPUT_FORMATS),$t%-f$s)) \
     $(MAINFUL_TESTS) \
-    $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
+    $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s)) \
+    $(TAG_TESTS)
 
 UNRELIABLE_TESTS= \
     $(foreach t,$(PARALLEL_TESTS),$t $(foreach j,$(PARALLELISM),$t%-j$j)) \

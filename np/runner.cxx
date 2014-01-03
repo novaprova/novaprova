@@ -113,7 +113,15 @@ runner_t::list_tests(plan_t *plan) const
 	if (pitr.get_node() != tn)
 	{
 	    tn = pitr.get_node();
-	    printf("%s\n", tn->get_fullname().c_str());
+	    printf("%s", tn->get_fullname().c_str());
+
+	    const std::vector<const char*> &tags = tn->get_tags();
+	    for (std::vector<const char*>::const_iterator i = tags.begin() ;
+		 i != tags.end() ;
+		 ++i)
+		printf(" #%s", *i);
+
+	    printf("\n");
 	}
 	++pitr;
     }

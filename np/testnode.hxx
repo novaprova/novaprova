@@ -38,6 +38,10 @@ public:
     void add_mock(np::spiegel::addr_t target, const char *name, np::spiegel::addr_t mock);
     void add_mock(np::spiegel::addr_t target, np::spiegel::addr_t mock);
 
+    void set_tags(const std::vector<const char *> &tt);
+    const std::vector<const char*> &get_tags() const { return tags_; }
+    bool has_tag(const char *) const;
+
     testnode_t *detach_common();
     np::spiegel::function_t *get_function(functype_t type) const
     {
@@ -118,8 +122,11 @@ private:
     np::spiegel::function_t *funcs_[FT_NUM_SINGULAR];
     std::vector<np::spiegel::intercept_t*> intercepts_;
     std::vector<parameter_t*> parameters_;
+    std::vector<const char *> tags_;
 
     friend class preorder_iterator;
+
+    static const char *canonicalise_tag(const char *);
 };
 
 bool bump(std::vector<testnode_t::assignment_t> &a);

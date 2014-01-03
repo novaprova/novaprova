@@ -360,6 +360,9 @@ extern void np_unmock_by_name(const char *fname);
     _NP_ASMPTR " 1b\n"\
     ".section \".text\"\n");
 
+#define NP_TAG(tag) _np_annotation("T", #tag)
+
+
 #ifdef __cplusplus
 };
 #endif

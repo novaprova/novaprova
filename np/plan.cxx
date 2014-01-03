@@ -39,15 +39,35 @@ plan_t::add_node(testnode_t *tn)
 bool
 plan_t::add_specs(int nspec, const char **specs)
 {
-    testnode_t *tn;
     int i;
 
     for (i = 0 ; i < nspec ; i++)
     {
-	tn = testmanager_t::instance()->find_node(specs[i]);
-	if (!tn)
-	    return false;
-	add_node(tn);
+	const char *s = specs[i];
+
+	if (*s == '#')
+	{
+	    s++;
+	    testnode_t *root = testmanager_t::instance()->get_root();
+	    if (!root)
+		return false;
+	    for (testnode_t::preorder_iterator itr = root->preorder_begin() ;
+		 itr != root->preorder_end() ;
+		 ++itr)
+	    {
+		testnode_t *tn = *itr;
+		if (tn->get_function(FT_TEST) && tn->has_tag(s))
+		    add_node(tn);
+	    }
+	    // note: a tag which matches zero tests is not an error
+	}
+	else
+	{
+	    testnode_t *tn = testmanager_t::instance()->find_node(s);
+	    if (!tn)
+		return false;
+	    add_node(tn);
+	}
     }
     return true;
 }
@@ -141,9 +161,16 @@ np_plan_delete(np_plan_t *plan)
  * @return	    false if any of the test specifications could not be found, true on success.
  *
  * Add a sequence of test specifications to the plan object.  Each test
- * specification is a string which matches a testnode in the discovered
+ * specification is either of:
+ *
+ * - a string which matches a testnode in the discovered
  * testnode hierarchy, and will cause that node plus all of its
- * descendants to be added to the plan.  The interface is designed to
+ * descendants to be added to the plan, or
+ *
+ * - a '#' (hash) character followed by a tag, which will cause
+ * all the test nodes which have that tag to be added to the plan.
+ *
+ * The interface is designed to
  * take command-line arguments from your test runner program after
  * options have been parsed with @c getopt.
  */

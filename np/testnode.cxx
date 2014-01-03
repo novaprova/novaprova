@@ -19,6 +19,23 @@
 
 static std::vector<np::spiegel::intercept_t*> dynamic_intercepts;
 
+// STL really sucks.  What we want here is a hashtable which takes char*
+// keys and manages them itself.  Instead STL gives us a binary tree
+// which takes std::string keys.  In C++11 we get unordered_map, which
+// is at least a hash table, but we have to pull some shenanigans to key
+// off char* rather than std::string.  Worse, support for C++11 is not
+// widespread.  So we end up doing the following shenanigans to organise
+// a binary tree which manages its own char* keys, which is halfway to
+// where we want to be.  Stupid STL.
+
+struct my_string_compare_t
+{
+    bool operator() (char* const &s1, char * const &s2) { return strcmp(s1, s2) < 0; }
+};
+typedef std::map</*Key*/char *, /*T*/int, my_string_compare_t> all_tags_t;
+static all_tags_t all_tags;
+
+
 namespace np {
 using namespace std;
 using namespace np::util;
@@ -393,6 +410,44 @@ testnode_t::create_assignments() const
 	    assigns.push_back(assignment_t(*i));
     }
     return assigns;
+}
+
+/*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+/* Return the canonical pointer for the tag, which is a pointer
+ * to the string saved in all_tags.  This allows us to just do
+ * a pointer comparison on tags later */
+const char *
+testnode_t::canonicalise_tag(const char *tag)
+{
+    char *x;
+    all_tags_t::iterator i = all_tags.find((char *)tag);
+    if (i == all_tags.end())
+	all_tags[x = xstrdup(tag)] = 1;
+    else
+	x = i->first;
+    return x;
+}
+
+void
+testnode_t::set_tags(const std::vector<const char *> &tt)
+{
+    tags_.clear();
+    tags_.reserve(tt.size());
+    for (vector<const char *>::const_iterator i = tt.begin() ; i != tt.end() ; ++i)
+	tags_.push_back(canonicalise_tag(*i));
+}
+
+bool
+testnode_t::has_tag(const char *tag) const
+{
+    tag = canonicalise_tag(tag);
+    for (vector<const char*>::const_iterator i = tags_.begin() ; i != tags_.end() ; ++i)
+    {
+	if (*i == tag)
+	    return true;
+    }
+    return false;
 }
 
 // close the namespace

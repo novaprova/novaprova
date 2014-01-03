@@ -237,8 +237,16 @@ testmanager_t::discover_functions()
 		// Test functions take no arguments
 		if (fn->get_parameter_types().size() != 0)
 		    continue;
-		root_->make_path(test_name(fn, submatch))->set_function(type, fn);
-		ntests++;
+		{
+		    testnode_t *tn = root_->make_path(test_name(fn, submatch));
+		    tn->set_function(type, fn);
+		    ntests++;
+
+		    std::vector<const char*> tags;
+		    spiegel_->get_annotations(fn->get_address(), "T", tags);
+		    if (tags.size())
+			tn->set_tags(tags);
+		}
 		break;
 	    case FT_BEFORE:
 	    case FT_AFTER:
