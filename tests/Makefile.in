@@ -160,7 +160,7 @@ run-unreliable: .announce-run $(addprefix .run%,$(UNRELIABLE_TESTS))
 	@echo "PARALLELISM=$(PARALLELISM)"
 
 .run%:
-	@[ "$V" -gt 0 ] && export VERBOSE=yes ; env bash runtest.sh $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
+	@[ "$V" -gt 0 ] && export VERBOSE=yes ; env bash runtest.sh $(wordlist 2,10,$(subst %,$(nul)' '$(nul),$@))'
 
 %: %.c fw.a fw.h $(DEPS)
 	$(LINK.c) -o $@ $< fw.a $(LIBS)
