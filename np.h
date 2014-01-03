@@ -352,12 +352,12 @@ extern void np_unmock_by_name(const char *fname);
 #define _np_annotation(k, v) \
     __asm__(\
     ".section \".text\"\n"\
-    ".L0:\n"\
+    "1:\n"\
     ".section \".rodata\"\n"\
-    ".L1: .asciz \"" k ":" v "\"\n"\
+    "2: .asciz \"" k ":" v "\"\n"\
     ".section \".np.annotations\",\"a\"\n"\
-    _NP_ASMPTR " .L1\n"\
-    _NP_ASMPTR " .L0\n"\
+    _NP_ASMPTR " 2b\n"\
+    _NP_ASMPTR " 1b\n"\
     ".section \".text\"\n");
 
 #ifdef __cplusplus
