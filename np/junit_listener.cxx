@@ -15,7 +15,7 @@
  */
 #include "np/util/common.hxx"
 #include <sys/stat.h>
-#include <libxml++/document.h>
+#include <libxml/tree.h>
 #include "np/junit_listener.hxx"
 #include "np/job.hxx"
 #include "except.h"
@@ -45,6 +45,17 @@ junit_listener_t::get_hostname() const
     return (r < 0 ? string("localhost") : string(hostname));
 }
 
+// We're using the C libxml2 library because the C++ wrapper for
+// it is not available on some platforms we want to support,
+// such as RHEL6.
+//
+// For some insane reason of its own, the libxml2 library takes
+// all constant string arguments as const xmlChar *, which is
+// not, repeat not, the same as const char *.  So we have to
+// cast EVERY SINGLE STRING ARGUMENT to libxml library calls.
+#define s(x) ((const xmlChar *)(const char *)(x))
+#define ss(x) ((const xmlChar *)(x).c_str())
+
 void
 junit_listener_t::end()
 {
@@ -65,48 +76,50 @@ junit_listener_t::end()
     for (sitr = suites_.begin() ; sitr != suites_.end() ; ++sitr)
     {
 	const string &suitename = sitr->first;
-	suite_t *s = &sitr->second;
+	suite_t *suite = &sitr->second;
 
-	xmlpp::Document *xdoc = new xmlpp::Document();
+	xmlDoc *xdoc = xmlNewDoc(s("1.0"));
 	// If only there were a standard DTD URL...
 	// instead we have a Schema from
 	// http://windyroad.org/dl/OpenSource/JUnit.xsd
-	xmlpp::Element *xsuite = xdoc->create_root_node("testsuite");
-	xsuite->set_attribute("name", suitename);
-	xsuite->set_attribute("failures", "0");
-	xsuite->set_attribute("tests", dec(s->cases_.size()));
-	xsuite->set_attribute("hostname", hostname);
-	xsuite->set_attribute("timestamp", timestamp);
 
-	xsuite->add_child("properties");
+	xmlNode *xsuite = xmlNewNode(NULL, s("testsuite"));
+	xmlDocSetRootElement(xdoc, xsuite);
+	xmlNewProp(xsuite, s("name"), ss(suitename));
+	xmlNewProp(xsuite, s("failures"), s("0"));
+	xmlNewProp(xsuite, s("tests"), ss(dec(suite->cases_.size())));
+	xmlNewProp(xsuite, s("hostname"), ss(hostname));
+	xmlNewProp(xsuite, s("timestamp"), ss(timestamp));
+
+	xmlAddChild(xsuite, xmlNewNode(NULL, s("properties")));
 
 	unsigned int nerrs = 0;
 	int64_t sns = 0;
 	map<string, case_t>::iterator citr;
 	string all_stdout;
 	string all_stderr;
-	for (citr = s->cases_.begin() ; citr != s->cases_.end() ; ++citr)
+	for (citr = suite->cases_.begin() ; citr != suite->cases_.end() ; ++citr)
 	{
 	    const string &casename = citr->first;
 	    case_t *c = &citr->second;
 
-	    xmlpp::Element *xcase = xsuite->add_child("testcase");
-	    xcase->set_attribute("name", casename);
+	    xmlNode *xcase = xmlAddChild(xsuite, xmlNewNode(NULL, s("testcase")));
+	    xmlNewProp(xcase, s("name"), ss(casename));
 	    // TODO: this is wrong
-	    xcase->set_attribute("classname", casename);
+	    xmlNewProp(xcase, s("classname"), ss(casename));
 
 	    sns += c->elapsed_;
-	    xcase->set_attribute("time", rel_format(c->elapsed_));
+	    xmlNewProp(xcase, s("time"), ss(rel_format(c->elapsed_)));
 
 	    if (c->event_)
 	    {
 		event_t *e = c->event_;
-		xmlpp::Element *xerror = xcase->add_child("error");
-		xerror->set_attribute("type", e->which_as_string());
-		xerror->set_attribute("message", e->description);
-		xerror->add_child_text(e->as_string() +
+		xmlNode *xerror = xmlAddChild(xcase, xmlNewNode(NULL, s("error")));
+		xmlNewProp(xerror, s("type"), ss(e->which_as_string()));
+		xmlNewProp(xerror, s("message"), s(e->description));
+		xmlAddChild(xerror, xmlNewText(ss(e->as_string() +
 				       "\n" +
-				       e->get_long_location());
+				       e->get_long_location())));
 	    }
 	    if (c->result_ == R_FAIL)
 		nerrs++;
@@ -122,24 +135,21 @@ junit_listener_t::end()
 		all_stderr += c->stderr_;
 	    }
 	}
-	xsuite->set_attribute("errors", dec(nerrs));
-	xsuite->set_attribute("time", rel_format(sns));
+	xmlNewProp(xsuite, s("errors"), ss(dec(nerrs)));
+	xmlNewProp(xsuite, s("time"), ss(rel_format(sns)));
 
-	xsuite->add_child("system-out")->add_child_text(all_stdout);
-	xsuite->add_child("system-err")->add_child_text(all_stderr);
+	xmlAddChild(xmlAddChild(xsuite, xmlNewNode(NULL, s("system-out"))), xmlNewText(ss(all_stdout)));
+	xmlAddChild(xmlAddChild(xsuite, xmlNewNode(NULL, s("system-err"))), xmlNewText(ss(all_stderr)));
 
 	string filename = directory + string("/TEST-") + suitename + ".xml";
 
-	try
+	int r = xmlSaveFileEnc(filename.c_str(), xdoc, "UTF-8");
+	if (r < 0)
 	{
-	    xdoc->write_to_file(filename, "UTF-8");
+	    fprintf(stderr, "np: failed to write JUnit XML file %s: %s\n",
+		    filename.c_str(), strerror(errno));
 	}
-	catch (const xmlpp::exception& ex)
-	{
-	    fprintf(stderr, "np: caught xmlpp exception writing file %s: %s\n",
-		    filename.c_str(), ex.what());
-	}
-	delete xdoc;
+	xmlFreeDoc(xdoc);
     }
 }
 

@@ -2,11 +2,11 @@ Source: novaprova
 Section: novaprova
 Priority: optional
 Maintainer: Greg Banks <gnb@fmeh.org>
-Build-Depends: debhelper (>= 4.1.16), libxml++2.6-dev, libxml2-dev, pkg-config, valgrind, binutils-dev, doxygen, python-pygments, python-markdown
+Build-Depends: debhelper (>= 4.1.16), libxml2-dev, pkg-config, valgrind, binutils-dev, doxygen, python-pygments, python-markdown
 
 Package: novaprova
 Architecture: any
-Depends: ${shlibs:Depends}, libxml++2.6-dev, binutils-dev, libxml2, valgrind
+Depends: ${shlibs:Depends}, binutils-dev, libxml2, valgrind
 Description: New generation unit test framework for C
  Novaprova is the newest way to organise and run unit tests for
  libraries and programs written in the C language. Novaprova takes

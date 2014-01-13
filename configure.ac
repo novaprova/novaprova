@@ -21,7 +21,7 @@ AC_PROG_INSTALL
 AC_PROG_RANLIB
 
 libxml=
-for p in libxml++-2.6 libxml++ ; do
+for p in libxml-2.0 ; do
     PKG_CHECK_MODULES(libxml, $p, [libxml=$p;break])
 done
 if test x"$libxml" = x ; then
