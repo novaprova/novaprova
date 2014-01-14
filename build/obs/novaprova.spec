@@ -49,7 +49,6 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %{_includedir}/novaprova/
-%{_includedir}/novaprova/np/
 %{_libdir}/libnovaprova.a
 %{_libdir}/pkgconfig/novaprova.pc
 %{_docdir}/novaprova/api-ref/*
