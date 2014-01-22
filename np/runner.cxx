@@ -501,7 +501,10 @@ runner_t::run_fixtures(testnode_t *tn, functype_t type)
 result_t
 runner_t::valgrind_errors(job_t *j, result_t res)
 {
-    unsigned long leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
+    unsigned long leaked = 0;
+    unsigned long dubious __attribute__((unused)) = 0;
+    unsigned long reachable __attribute__((unused)) = 0;
+    unsigned long suppressed __attribute__((unused)) = 0;
     unsigned long nerrors;
     char msg[1024];
 
