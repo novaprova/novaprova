@@ -58,6 +58,12 @@ public:
 	level_ = lev;
 	abbrev_ = 0;
     }
+    void partial_setup(uint32_t off, uint32_t lev, const abbrev_t *a)
+    {
+	offset_ = off;
+	level_ = lev;
+	abbrev_ = a;
+    }
 
     void add_attribute(uint32_t name, const value_t &val)
     {

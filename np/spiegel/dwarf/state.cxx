@@ -659,18 +659,15 @@ state_t::prepare_address_index()
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
 	walker_t w(*i);
+	w.set_filter_tag(DW_TAG_subprogram);
 	while (const entry_t *e = w.move_preorder())
 	{
-	    switch (e->get_tag())
-	    {
-	    case DW_TAG_subprogram:
-		if (e->get_attribute(DW_AT_specification))
-		    funcref = e->get_reference_attribute(DW_AT_specification);
-		else
-		    funcref = w.get_reference();
-		insert_ranges(w, funcref);
-		break;
-	    }
+	    assert(e->get_tag() == DW_TAG_subprogram);
+	    if (e->get_attribute(DW_AT_specification))
+		funcref = e->get_reference_attribute(DW_AT_specification);
+	    else
+		funcref = w.get_reference();
+	    insert_ranges(w, funcref);
 	}
     }
 }

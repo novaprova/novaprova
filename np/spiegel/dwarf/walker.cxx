@@ -51,19 +51,19 @@ walker_t::read_entry()
 
     if (!reader_.read_uleb128(acode))
     {
-	return EOF;    // end of section
+	return RE_EOF;    // end of section
     }
 
     if (!acode)
     {
 	if (!level_)
-	    return EOF;   // end of subtree in scope
+	    return RE_EOF;   // end of subtree in scope
 	level_--;
 #if DEBUG_WALK
 	printf("\n# XXX [%u] %s:%d level=%u return 0\n",
 	       id_, __FUNCTION__, __LINE__, level_);
 #endif
-	return 0;
+	return RE_EOL;
     }
 
     const abbrev_t *a = compile_unit_->get_abbrev(acode);
@@ -73,8 +73,40 @@ walker_t::read_entry()
 	fatal("XXX wtf - no abbrev for code 0x%x\n", acode);
     }
 
-    entry_.setup(offset, level_, a);
+    int r = RE_OK;
 
+    if (filter_tag_ && a->tag != filter_tag_)
+    {
+	entry_.partial_setup(offset, level_, a);
+	r = skip_attributes();
+	if (r == RE_OK)
+	    r = RE_FILTERED;
+    }
+    else
+    {
+	entry_.setup(offset, level_, a);
+	r = read_attributes();
+    }
+
+    if (a->children)
+	level_++;
+
+#if DEBUG_WALK
+    printf("\n# XXX [%u]%s:%d level=%u entry={tag=%s level=%u offset=0x%x} return 1\n",
+	   id_, __FUNCTION__, __LINE__,
+	   level_,
+	   tagnames.to_name(entry_->get_tag()),
+	   entry_.get_level(),
+	   entry_.get_offset());
+#endif
+
+    return r;
+}
+
+int
+walker_t::read_attributes()
+{
+    const abbrev_t *a = entry_.get_abbrev();
     vector<abbrev_t::attr_spec_t>::const_iterator i;
     for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
     {
@@ -84,7 +116,7 @@ walker_t::read_entry()
 	    {
 		uint8_t v;
 		if (!reader_.read_u8(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_uint32(v));
 		break;
 	    }
@@ -92,7 +124,7 @@ walker_t::read_entry()
 	    {
 		uint16_t v;
 		if (!reader_.read_u16(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_uint32(v));
 		break;
 	    }
@@ -100,7 +132,7 @@ walker_t::read_entry()
 	    {
 		uint32_t v;
 		if (!reader_.read_u32(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_uint32(v));
 		break;
 	    }
@@ -108,7 +140,7 @@ walker_t::read_entry()
 	    {
 		uint64_t v;
 		if (!reader_.read_u64(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_uint64(v));
 		break;
 	    }
@@ -116,7 +148,7 @@ walker_t::read_entry()
 	    {
 		uint32_t v;
 		if (!reader_.read_uleb128(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_uint32(v));
 		break;
 	    }
@@ -124,7 +156,7 @@ walker_t::read_entry()
 	    {
 		int32_t v;
 		if (!reader_.read_sleb128(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_sint32(v));
 		break;
 	    }
@@ -134,14 +166,14 @@ walker_t::read_entry()
 		{
 		    uint32_t v;
 		    if (!reader_.read_u32(v))
-			return EOF;
+			return RE_EOF;
 		    entry_.add_attribute(i->name, value_t::make_uint32(v));
 		}
 		else if (sizeof(unsigned long) == 8)
 		{
 		    uint64_t v;
 		    if (!reader_.read_u64(v))
-			return EOF;
+			return RE_EOF;
 		    entry_.add_attribute(i->name, value_t::make_uint64(v));
 		}
 		else
@@ -154,7 +186,7 @@ walker_t::read_entry()
 	    {
 		uint8_t v;
 		if (!reader_.read_u8(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_uint32(v));
 		break;
 	    }
@@ -162,7 +194,7 @@ walker_t::read_entry()
 	    {
 		uint8_t off;
 		if (!reader_.read_u8(off))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name,
 			value_t::make_ref(compile_unit_->make_reference(off)));
 		break;
@@ -171,7 +203,7 @@ walker_t::read_entry()
 	    {
 		uint16_t off;
 		if (!reader_.read_u16(off))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name,
 			value_t::make_ref(compile_unit_->make_reference(off)));
 		break;
@@ -180,7 +212,7 @@ walker_t::read_entry()
 	    {
 		uint32_t off;
 		if (!reader_.read_u32(off))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name,
 			value_t::make_ref(compile_unit_->make_reference(off)));
 		break;
@@ -189,7 +221,7 @@ walker_t::read_entry()
 	    {
 		uint64_t off;
 		if (!reader_.read_u64(off))
-		    return EOF;
+		    return RE_EOF;
 		// TODO: detect truncation
 		entry_.add_attribute(i->name,
 			value_t::make_ref(compile_unit_->make_reference(off)));
@@ -199,7 +231,7 @@ walker_t::read_entry()
 	    {
 		const char *v;
 		if (!reader_.read_string(v))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_string(v));
 		break;
 	    }
@@ -207,10 +239,10 @@ walker_t::read_entry()
 	    {
 		uint32_t off;
 		if (!reader_.read_u32(off))
-		    return EOF;
+		    return RE_EOF;
 		const char *v = compile_unit_->get_section(DW_sec_str)->offset_as_string(off);
 		if (!v)
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_string(v));
 		break;
 	    }
@@ -220,7 +252,7 @@ walker_t::read_entry()
 		const unsigned char *v;
 		if (!reader_.read_u8(len) ||
 		    !reader_.read_bytes(v, len))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_bytes(v, len));
 		break;
 	    }
@@ -230,7 +262,7 @@ walker_t::read_entry()
 		const unsigned char *v;
 		if (!reader_.read_u16(len) ||
 		    !reader_.read_bytes(v, len))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_bytes(v, len));
 		break;
 	    }
@@ -240,7 +272,7 @@ walker_t::read_entry()
 		const unsigned char *v;
 		if (!reader_.read_u32(len) ||
 		    !reader_.read_bytes(v, len))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_bytes(v, len));
 		break;
 	    }
@@ -250,7 +282,7 @@ walker_t::read_entry()
 		const unsigned char *v;
 		if (!reader_.read_uleb128(len) ||
 		    !reader_.read_bytes(v, len))
-		    return EOF;
+		    return RE_EOF;
 		entry_.add_attribute(i->name, value_t::make_bytes(v, len));
 		break;
 	    }
@@ -260,21 +292,127 @@ walker_t::read_entry()
 		  formvals.to_name(i->form));
 	}
     }
-
-    if (a->children)
-	level_++;
-
-#if DEBUG_WALK
-    printf("\n# XXX [%u]%s:%d level=%u entry={tag=%s level=%u offset=0x%x} return 1\n",
-	   id_, __FUNCTION__, __LINE__,
-	   level_,
-	   tagnames.to_name(entry_.get_tag()),
-	   entry_.get_level(),
-	   entry_.get_offset());
-#endif
-
-    return 1;
+    return RE_OK;
 }
+
+int
+walker_t::skip_attributes()
+{
+    const abbrev_t *a = entry_.get_abbrev();
+    vector<abbrev_t::attr_spec_t>::const_iterator i;
+    for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
+    {
+	switch (i->form)
+	{
+	case DW_FORM_data1:
+	    if (!reader_.skip_u8())
+		return EOF;
+		break;
+	case DW_FORM_data2:
+	    if (!reader_.skip_u16())
+		return EOF;
+		break;
+	case DW_FORM_data4:
+	    if (!reader_.skip_u32())
+		return EOF;
+	    break;
+	case DW_FORM_data8:
+	    if (!reader_.skip_u64())
+		return EOF;
+	    break;
+	case DW_FORM_udata:
+	    if (!reader_.skip_uleb128())
+		return EOF;
+	    break;
+	case DW_FORM_sdata:
+	    if (!reader_.skip_sleb128())
+		return EOF;
+	    break;
+	case DW_FORM_addr:
+	    if (sizeof(unsigned long) == 4)
+	    {
+		if (!reader_.skip_u32())
+		    return EOF;
+	    }
+	    else if (sizeof(unsigned long) == 8)
+	    {
+		if (!reader_.skip_u64())
+		    return EOF;
+	    }
+	    else
+	    {
+		fatal("Strange addrsize %u", (unsigned)sizeof(unsigned long));
+	    }
+	    break;
+	case DW_FORM_flag:
+	    if (!reader_.skip_u8())
+		return EOF;
+	    break;
+	case DW_FORM_ref1:
+	    if (!reader_.skip_u8())
+		return EOF;
+	    break;
+	case DW_FORM_ref2:
+	    if (!reader_.skip_u16())
+		return EOF;
+	    break;
+	case DW_FORM_ref4:
+	    if (!reader_.skip_u32())
+		return EOF;
+	    break;
+	case DW_FORM_ref8:
+	    if (!reader_.skip_u64())
+		return EOF;
+	    break;
+	case DW_FORM_string:
+	    if (!reader_.skip_string())
+		return EOF;
+	    break;
+	case DW_FORM_strp:
+	    if (!reader_.skip_u32())
+		return EOF;
+	    break;
+	case DW_FORM_block1:
+	    {
+		uint8_t len;
+		if (!reader_.read_u8(len) ||
+		    !reader_.skip_bytes(len))
+		    return EOF;
+		break;
+	    }
+	case DW_FORM_block2:
+	    {
+		uint16_t len;
+		if (!reader_.read_u16(len) ||
+		    !reader_.skip_bytes(len))
+		    return EOF;
+		break;
+	    }
+	case DW_FORM_block4:
+	    {
+		uint32_t len;
+		if (!reader_.read_u32(len) ||
+		    !reader_.skip_bytes(len))
+		    return EOF;
+		break;
+	    }
+	case DW_FORM_block:
+	    {
+		uint32_t len;
+		if (!reader_.read_uleb128(len) ||
+		    !reader_.skip_bytes(len))
+		    return EOF;
+	    }
+	    break;
+	default:
+	    // TODO: bad DWARF info - throw an exception
+	    fatal("XXX can't handle %s\n",
+		  formvals.to_name(i->form));
+	}
+    }
+    return RE_OK;
+}
+
 
 vector<reference_t>
 walker_t::get_path() const
@@ -285,13 +423,14 @@ walker_t::get_path() const
     for (;;)
     {
 	int r = w2.read_entry();
-	if (r == EOF)
+	if (r == RE_EOF)
 	    break;
-	if (!r)
+	if (r == RE_EOL)
 	{
 	    path.pop_back();
 	    continue;
 	}
+	// treat RE_FILTERED like RE_OK
 	path.push_back(w2.get_reference());
 	if (get_reference() == w2.get_reference())
 	    break;
@@ -328,9 +467,9 @@ walker_t::move_preorder()
     int r;
     do
     {
-	if ((r = read_entry()) == EOF)
+	if ((r = read_entry()) == RE_EOF)
 	    RETURN(0);
-    } while (!r);
+    } while (r != RE_OK);
     RETURN(&entry_);
 }
 
@@ -353,9 +492,9 @@ walker_t::move_next()
 	    RETURN(0);
 	}
 	r = read_entry();
-	if (r == EOF)
+	if (r == RE_EOF)
 	    RETURN(0);
-	if (r && entry_.get_level() == target_level)
+	if (r == RE_OK && entry_.get_level() == target_level)
 	    RETURN(&entry_);
     }
 }
@@ -367,7 +506,7 @@ walker_t::move_down()
     if (!entry_.has_children())
 	RETURN(0);
     r = read_entry();
-    RETURN(r == 1 ? &entry_ : 0);
+    RETURN(r == RE_OK ? &entry_ : 0);
 }
 
 const entry_t *
@@ -375,7 +514,7 @@ walker_t::move_to(reference_t ref)
 {
     seek(ref);
     int r = read_entry();
-    RETURN(r == 1 ? &entry_ : 0);
+    RETURN(r == RE_OK ? &entry_ : 0);
 }
 
 const entry_t *

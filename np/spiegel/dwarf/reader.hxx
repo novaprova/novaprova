@@ -78,6 +78,10 @@ public:
 	p_ += 4;
 	return true;
     }
+    bool skip_u32()
+    {
+	return skip(4);
+    }
 
     bool read_u64(uint64_t &v)
     {
@@ -94,6 +98,10 @@ public:
 	p_ += 8;
 	return true;
     }
+    bool skip_u64()
+    {
+	return skip(8);
+    }
 
     bool read_addr(np::spiegel::addr_t &v)
     {
@@ -101,6 +109,16 @@ public:
 	return read_u32(v);
 #elif _NP_ADDRSIZE == 8
 	return read_u64(v);
+#else
+#error "Unknown address size"
+#endif
+    }
+    bool skip_addr()
+    {
+#if _NP_ADDRSIZE == 4
+	return skip_u32();
+#elif _NP_ADDRSIZE == 8
+	return skip_u64();
 #else
 #error "Unknown address size"
 #endif
@@ -120,6 +138,17 @@ public:
 	} while ((*pp++) & 0x80);
 	p_ = pp;
 	v = vv;
+	return true;
+    }
+    bool skip_uleb128()
+    {
+	const unsigned char *pp = p_;
+	do
+	{
+	    if (pp == end_)
+		return false;
+	} while ((*pp++) & 0x80);
+	p_ = pp;
 	return true;
     }
 
@@ -145,6 +174,17 @@ public:
 	p_ = pp;
 	return true;
     }
+    bool skip_sleb128()
+    {
+	const unsigned char *pp = p_;
+	do
+	{
+	    if (pp == end_)
+		return false;
+	} while ((*pp++) & 0x80);
+	p_ = pp;
+	return true;
+    }
 
     bool read_u16(uint16_t &v)
     {
@@ -155,6 +195,10 @@ public:
 	p_ += 2;
 	return true;
     }
+    bool skip_u16()
+    {
+	return skip(2);
+    }
 
     bool read_u8(uint8_t &v)
     {
@@ -162,6 +206,10 @@ public:
 	    return false;
 	v = *p_++;
 	return true;
+    }
+    bool skip_u8()
+    {
+	return skip(1);
     }
 
     bool read_string(const char *&v)
@@ -174,6 +222,15 @@ public:
 	p_ = e + 1;
 	return true;
     }
+    bool skip_string()
+    {
+	const unsigned char *e =
+	    (const unsigned char *)memchr(p_, '\0', (end_ - p_));
+	if (!e)
+	    return false;
+	p_ = e + 1;
+	return true;
+    }
 
     bool read_bytes(const unsigned char *&v, size_t len)
     {
@@ -183,6 +240,10 @@ public:
 	v = (const unsigned char *)p_;
 	p_ = e;
 	return true;
+    }
+    bool skip_bytes(size_t len)
+    {
+	return skip(len);
     }
 
 private:

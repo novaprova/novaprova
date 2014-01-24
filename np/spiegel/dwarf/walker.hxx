@@ -32,7 +32,8 @@ public:
      :  id_(next_id_++),
 	compile_unit_(cu),
 	reader_(cu->get_contents()),
-	level_(0)
+	level_(0),
+	filter_tag_(0)
     {
     }
 
@@ -42,7 +43,8 @@ public:
 	reader_(o.reader_),
 	// Note: we don't clone the entry, on the assumption
 	// that it's about to be clobbered anyway
-	level_(o.level_)
+	level_(o.level_),
+	filter_tag_(o.filter_tag_)
     {
 	// but we need the entry's level for the move
 	// operations to work correctly
@@ -50,7 +52,8 @@ public:
     }
 
     walker_t(reference_t ref)
-     :  id_(next_id_++)
+     :  id_(next_id_++),
+	filter_tag_(0)
     {
 	seek(ref);
     }
@@ -76,9 +79,21 @@ public:
     const entry_t *move_to(reference_t);
     const entry_t *move_up();
 
+    void set_filter_tag(unsigned tag) { filter_tag_ = tag; }
+
 private:
+    enum read_entry_results_t
+    {
+	RE_EOF = -1,
+	RE_EOL = 0,
+	RE_OK = 1,
+	RE_FILTERED = 2,
+    };
+
     void seek(reference_t ref);
     int read_entry();
+    int read_attributes();
+    int skip_attributes();
 
     // for debugging only
     static uint32_t next_id_;
@@ -88,6 +103,7 @@ private:
     reader_t reader_;
     entry_t entry_;
     unsigned level_;
+    unsigned filter_tag_;
 };
 
 
