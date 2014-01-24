@@ -184,8 +184,8 @@ rel_format(int64_t rel)
     return string(buf);
 }
 
-const char *
-rel_timestamp()
+int64_t
+rel_time()
 {
     static int64_t first;
     int64_t now = rel_now();
@@ -205,8 +205,14 @@ rel_timestamp()
 	    putenv(buf);
 	}
     }
+    return now-first;
+}
+
+const char *
+rel_timestamp()
+{
     static char buf[32];
-    rel_format_buf(now-first, buf, sizeof(buf));
+    rel_format_buf(rel_time(), buf, sizeof(buf));
     return buf;
 }
 

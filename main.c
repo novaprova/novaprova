@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <getopt.h>
+#include "np/util/profile.hxx"
 
 static void
 usage(const char *argv0)

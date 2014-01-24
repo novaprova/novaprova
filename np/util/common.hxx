@@ -55,6 +55,8 @@
 #include <vector>
 #include <exception>
 
+#include "np/util/profile.hxx"
+
 // Provide an empty definition of __attribute__ so
 // we can just use it even on non-gcc compilers
 #if !defined(__GNUC__) && !defined(__attribute__)
@@ -101,6 +103,7 @@ extern int64_t rel_now();
 extern int64_t abs_now();
 extern std::string abs_format_iso8601(int64_t);
 extern std::string rel_format(int64_t);
+extern int64_t rel_time();
 extern const char *rel_timestamp();
 
 extern unsigned long page_size(void);
