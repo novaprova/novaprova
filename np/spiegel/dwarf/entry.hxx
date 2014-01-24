@@ -34,14 +34,18 @@ public:
      :  offset_(0),
 	level_(0),
 	abbrev_(0),
-	nvalues_(0)
+	latest_(0)
     {
-	// invalidate the by-attribute indexes
-	memset(byattr_basic_, 0xff, sizeof(byattr_basic_));
-	memset(byattr_user_, 0xff, sizeof(byattr_user_));
+	memset(generation_, 0x0, sizeof(generation_));
     }
 
-    void setup(size_t offset, unsigned level, const abbrev_t *a);
+    void setup(size_t offset, unsigned level, const abbrev_t *a)
+    {
+	offset_ = offset;
+	level_ = level;
+	abbrev_ = a;
+	latest_++;
+    }
     void partial_setup(const entry_t &o)
     {
 	offset_ = o.offset_;
@@ -55,17 +59,13 @@ public:
 	abbrev_ = 0;
     }
 
-    void add_attribute(uint32_t name, value_t val)
+    void add_attribute(uint32_t name, const value_t &val)
     {
-	assert(nvalues_ < MAX_VALUES);
-	values_[nvalues_] = val;
-	if (name < DW_AT_max_basic)
-	    byattr_basic_[name] = nvalues_;
-	else if (name >= DW_AT_lo_user && name < DW_AT_max_user)
-	    byattr_user_[name-DW_AT_lo_user] = nvalues_;
-	else
+	int i = name_to_index(name);
+	if (i < 0)
 	    return;	// silently ignore this
-	nvalues_++;
+	values_[i] = val;
+	generation_[i] = latest_;
     }
 
     unsigned get_offset() const { return offset_; }
@@ -77,12 +77,8 @@ public:
 
     const value_t *get_attribute(uint32_t name) const
     {
-	int8_t n = -1;
-	if (name < DW_AT_max_basic)
-	    n = byattr_basic_[name];
-	else if (name >= DW_AT_lo_user && name < DW_AT_max_user)
-	    n = byattr_user_[name-DW_AT_lo_user];
-	return (n < 0 ? 0 : &values_[n]);
+	int i = name_to_index(name);
+	return (i >= 0 && generation_[i] == latest_ ? &values_[i] : 0);
     }
     const char *get_string_attribute(uint32_t name) const
     {
@@ -132,17 +128,27 @@ public:
 private:
     enum
     {
-	MAX_VALUES = 32,	// the most defined attributes for any tag
-				// in DWARF2 is 23 for DW_TAG_subprogram
+	// we oversupply space, because entry_t is never
+	// allocated and stored but handling a sparse mapping
+	// was taking up too many cycles.
+	MAX_VALUES = DW_AT_max_basic + (DW_AT_max_user - DW_AT_lo_user)
     };
+    static int name_to_index(int name)
+    {
+	if (name < DW_AT_max_basic)
+	    return name;
+	else if (name >= DW_AT_lo_user && name < DW_AT_max_user)
+	    return DW_AT_max_basic+name-DW_AT_lo_user;
+	else
+	    return -1;
+    }
+
     unsigned offset_;
     unsigned level_;
     const abbrev_t *abbrev_;
-    uint8_t nvalues_;
+    uint32_t latest_;
+    uint32_t generation_[MAX_VALUES];
     value_t values_[MAX_VALUES];
-    // by-attribute indexes into values_[], -1=invalid
-    int8_t byattr_basic_[DW_AT_max_basic];
-    int8_t byattr_user_[DW_AT_max_user-DW_AT_lo_user];
 };
 
 

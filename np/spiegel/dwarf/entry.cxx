@@ -20,18 +20,6 @@ namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
 void
-entry_t::setup(size_t offset, unsigned level, const abbrev_t *a)
-{
-    offset_ = offset;
-    level_ = level;
-    abbrev_ = a;
-    nvalues_ = 0;
-    // invalidate the by-attribute indexes
-    memset(byattr_basic_, 0xff, sizeof(byattr_basic_));
-    memset(byattr_user_, 0xff, sizeof(byattr_user_));
-}
-
-void
 entry_t::dump() const
 {
     if (!abbrev_)
