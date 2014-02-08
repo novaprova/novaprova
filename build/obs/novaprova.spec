@@ -33,11 +33,7 @@ test frameworks for languages such as Java or Perl.
 
 %build
 autoreconf -iv
-%if %{_vendor} == "suse"
-%configure --docdir=%{_docdir}/novaprova
-%else
 %configure
-%endif
 
 make all
 make docs

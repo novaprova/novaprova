@@ -23,7 +23,6 @@ includedir=	@includedir@
 libdir=		@libdir@
 datarootdir=	@datarootdir@
 mandir=		@mandir@
-docdir=		@docdir@
 pkgconfigdir=	$(libdir)/pkgconfig
 
 libxml_CFLAGS=	@libxml_CFLAGS@
