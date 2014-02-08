@@ -11,9 +11,6 @@ Requires: valgrind, binutils-devel
 BuildRequires: autoconf, automake, gcc-c++
 BuildRequires: valgrind-devel, binutils-devel, libxml2-devel, pkgconfig
 BuildRequires: doxygen, python-pygments, python-markdown
-%if %{_vendor} == "suse"
-BuildRequires: python-setuptools
-%endif
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description
