@@ -160,6 +160,9 @@ DOC_DELIVERABLES= \
 	    get-start/example1/Makefile \
 	    api-ref
 
+# Builds a) doc tarball for upload to the website
+# and b) doc/inst directory for copying into the
+# package with a %doc directive
 docs-local: Doxyfile
 	$(RM) -r doc/api-ref doc/man
 	doxygen
@@ -167,6 +170,16 @@ docs-local: Doxyfile
 	ln -s doc doc-$(PACKAGE_VERSION)
 	tar -chjvf doc-$(PACKAGE_VERSION).tar.bz2 $(addprefix doc-$(PACKAGE_VERSION)/,$(DOC_DELIVERABLES) man)
 	$(RM) doc-$(PACKAGE_VERSION)
+	$(RM) -r doc/inst
+	for doc in $(DOC_DELIVERABLES) ; do \
+	    if [ -d doc/$$doc ] ; then \
+		$(MKDIRP) doc/inst/$$doc ;\
+		ln doc/$$doc/* doc/inst/$$doc ;\
+	    else \
+		$(MKDIRP) `dirname doc/inst/$$doc` ;\
+		ln doc/$$doc doc/inst/$$doc ;\
+	    fi ;\
+	done
 
 install:
 
@@ -180,15 +193,6 @@ install-local:
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
 	$(MKDIRP) $(DESTDIR)$(mandir)/man3
 	$(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3
-	for doc in $(DOC_DELIVERABLES) ; do \
-	    if [ -d doc/$$doc ] ; then \
-		$(MKDIRP) $(DESTDIR)$(docdir)/$$doc ;\
-		$(INSTALL_DATA) doc/$$doc/* $(DESTDIR)$(docdir)/$$doc ;\
-	    else \
-		$(MKDIRP) `dirname $(DESTDIR)$(docdir)/$$doc` ;\
-		$(INSTALL_DATA) doc/$$doc $(DESTDIR)$(docdir)/$$doc ;\
-	    fi ;\
-	done
 	$(MKDIRP) $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) novaprova.pc $(DESTDIR)$(pkgconfigdir)
 
@@ -196,7 +200,7 @@ clean-local:
 	$(RM) libnovaprova.a $(libnovaprova_OBJS)
 
 distclean-local: clean-local
-	$(RM) -r doc/api-ref doc/man
+	$(RM) -r doc/api-ref doc/man doc/inst
 	$(RM) -r $(depdir)
 	$(RM) novaprova.pc
 	$(RM) config.status configure Makefile Doxyfile
