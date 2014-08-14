@@ -37,6 +37,10 @@ linux-gnu)
     os=linux
     platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
     ;;
+darwin*)
+    os=darwin
+    platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
+    ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
 AC_DEFINE_UNQUOTED(_NP_OS, "$os", [Name of the Operating System])
@@ -73,6 +77,11 @@ AC_MSG_CHECKING([Platform specific source])
 platform_SOURCE="$os.cxx $os"_"$arch.cxx"
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
+
+AC_CHECK_HEADERS([\
+    malloc.h \
+    signal.h \
+])
 
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
