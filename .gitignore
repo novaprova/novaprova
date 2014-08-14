@@ -41,5 +41,6 @@ doc/inst
 doc/man
 doc/manual/_build
 doc/xml
+install-sh
 novaprova-*.tar.bz2
 novaprova.pc
