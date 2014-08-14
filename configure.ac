@@ -39,6 +39,10 @@ linux-gnu)
     os=linux
     platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
     ;;
+darwin*)
+    os=darwin
+    platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
+    ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
 AC_DEFINE_UNQUOTED(_NP_OS, "$os", [Name of the Operating System])
@@ -248,6 +252,11 @@ esac
 if test "$with_valgrind_suppression" = yes ; then
     AC_DEFINE_UNQUOTED(_NP_VALGRIND_SUPPRESSION_FILE, "$SUPPRESSION_FILE", [The Valgrind suppression file path])
 fi
+
+AC_CHECK_HEADERS([\
+    malloc.h \
+    signal.h \
+])
 
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
