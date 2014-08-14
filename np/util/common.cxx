@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "np/util/common.hxx"
+#include "np/spiegel/platform/common.hxx"
 
 namespace np {
 namespace util {
