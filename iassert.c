@@ -44,9 +44,9 @@ __assert_perror_fail(int errnum,
 #endif
 
 void
-__assert(const char *condition,
-	 const char *filename,
-	 int lineno)
+__assert_rtn(const char *condition,
+             const char *filename,
+             int lineno)
 {
     np_throw(np::event_t(np::EV_ASSERT, condition).at_line(
 	      filename, lineno).with_stack());
