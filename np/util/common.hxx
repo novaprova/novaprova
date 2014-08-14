@@ -17,8 +17,7 @@
 #define __NP_COMMON_HXX__ 1
 
 /* Include autoconf defines */
-// #include <config.h>
-#define HAVE_STDINT_H 1
+#include "np/util/config.h"
 
 #if HAVE_STDINT_H
 /*
@@ -26,13 +25,13 @@
  * The ISO C 9X standard specifies that in C++ implementations these
  * macros [UINT64_MAX et al] should only be defined if explicitly requested.
  */
-#define __STDC_LIMIT_MACROS 1
+# define __STDC_LIMIT_MACROS 1
 #endif
 
 #include <stdio.h>
 #include <limits.h>
 #if HAVE_STDINT_H
-#include <stdint.h>
+# include <stdint.h>
 #endif
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,12 +39,17 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <memory.h>
-#include <malloc.h>
+#if HAVE_MALLOC_H
+# include <malloc.h>
+#endif
 #include <stdarg.h>
 #include <errno.h>
 #include <assert.h>
 #include <sys/wait.h>
 #include <sys/signal.h>
+#if HAVE_SIGNAL_H
+# include <signal.h>
+#endif
 #include <sys/poll.h>
 #include <valgrind/memcheck.h>
 #include <string>
