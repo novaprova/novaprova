@@ -18,6 +18,8 @@
 #include "np/util/tok.hxx"
 #include "common.hxx"
 #include <mach-o/dyld.h>
+#include <mach/mach_time.h>
+#include <sys/time.h>
 
 #include <string>
 #include <vector>
@@ -169,10 +171,40 @@ int uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string
     return -1;
 }
 
+/*
+ * Darwin doesn't have the POSIX clock_getttime().  This is from
+ * http://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x
+ * and https://developer.apple.com/library/mac/qa/qa1398/_index.html
+ */
 int clock_gettime(int clk_id, struct timespec *res)
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    errno = ENOSYS;
+    switch (clk_id)
+    {
+    case NP_CLOCK_MONOTONIC:
+	{
+	    // TODO: be more careful in a multithreaded environement
+	    static mach_timebase_info_data_t tb;
+	    static uint64_t epoch;
+	    if (!epoch)
+	    {
+		mach_timebase_info(&tb);
+		epoch = mach_absolute_time();
+	    }
+	    uint64_t elapsed_ns = (mach_absolute_time() - epoch) * tb.numer / tb.denom;
+	    res->tv_sec = elapsed_ns / NANOSEC_PER_SEC;
+	    res->tv_nsec = elapsed_ns - (res->tv_sec * NANOSEC_PER_SEC);
+	}
+	return 0;
+    case NP_CLOCK_REALTIME:
+	{
+	    struct timeval tv;
+	    gettimeofday(&tv, NULL);
+	    res->tv_sec = tv.tv_sec;
+	    res->tv_nsec = tv.tv_usec * 1000;
+	}
+	return 0;
+    }
+    errno = EINVAL;
     return -1;
 }
 
