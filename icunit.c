@@ -16,7 +16,6 @@
  */
 #include "np_priv.h"
 #include "except.h"
-#include <valgrind/valgrind.h>
 
 bool CU_assertImplementation(bool bValue,
 			     unsigned int uiLine,

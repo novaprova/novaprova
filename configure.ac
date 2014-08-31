@@ -83,6 +83,14 @@ AC_CHECK_HEADERS([\
     signal.h \
 ])
 
+valgrind=yes
+AC_ARG_ENABLE(valgrind,
+	      [Enable the Valgrind runtime memory checker (recommended)],
+	      [ valgrind=$enableval ])
+if test "$valgrind" = yes ; then
+    AC_DEFINE(HAVE_VALGRIND, 1,[whether the runtime memory checker Valgrind is enabled])
+fi
+
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
     Makefile
