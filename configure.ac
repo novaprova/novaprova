@@ -30,6 +30,8 @@ fi
 AC_SUBST(libxml)
 
 platform_CFLAGS=
+libbfd_CFLAGS=
+libbfd_LIBS="-lbfd"
 
 AC_MSG_CHECKING([Platform O/S])
 case "$target_os" in
@@ -39,6 +41,8 @@ linux-gnu)
     ;;
 darwin*)
     os=darwin
+    libbfd_CFLAGS="-I/usr/local/include"
+    libbfd_LIBS="-L/usr/local/lib -lbfd"
     ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
@@ -89,6 +93,10 @@ AC_ARG_ENABLE(valgrind,
 if test "$valgrind" = yes ; then
     AC_DEFINE(HAVE_VALGRIND, 1,[whether the runtime memory checker Valgrind is enabled])
 fi
+
+dnl TODO: add a --with-bfd option?
+AC_SUBST(libbfd_CFLAGS)
+AC_SUBST(libbfd_LIBS)
 
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([

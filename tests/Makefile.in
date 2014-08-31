@@ -16,6 +16,7 @@
 
 platform_CFLAGS=    @platform_CFLAGS@
 libxml_LIBS=	    @libxml_LIBS@
+libbfd_LIBS=	    @libbfd_LIBS@
 
 CC=		gcc
 CDEBUGFLAGS=	-g
@@ -29,8 +30,8 @@ CXX=		g++
 CXXFLAGS=	$(CFLAGS)
 
 INCLUDES=	-I..
-LIBS=		../libnovaprova.a -lstdc++ -lbfd -ldl -lrt \
-		$(libxml_LIBS)
+LIBS=		../libnovaprova.a -lstdc++ -ldl -lrt \
+		$(libbfd_LIBS) $(libxml_LIBS)
 DEPS=		../np.h ../libnovaprova.a
 
 all install docs:
