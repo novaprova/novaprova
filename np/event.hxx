@@ -59,22 +59,22 @@ public:
     // default c'tor
     event_t()
      :  which((enum events_t)0),
-        description(0),
+	description(0),
 	locflags(0),
-        filename(0),
-        lineno(0),
-        function(0),
+	filename(0),
+	lineno(0),
+	function(0),
 	functype(FT_UNKNOWN),
 	freeme_(0)
     {}
     event_t(enum events_t w,
 	    const char *d)
      :  which(w),
-        description(d),
+	description(d),
 	locflags(0),
-        filename(0),
-        lineno(0),
-        function(0),
+	filename(0),
+	lineno(0),
+	function(0),
 	functype(FT_UNKNOWN),
 	freeme_(0)
     {}
@@ -122,13 +122,13 @@ public:
     {
 	locflags &= ~LT__function;
 	locflags |= LT_SPIEGELFUNC;
-        function = (const char *)fn;
+	function = (const char *)fn;
 	return *this;
     }
     event_t &in_functype(functype_t ft)
     {
 	locflags |= LT_FUNCTYPE;
-        functype = ft;
+	functype = ft;
 	return *this;
     }
     event_t &with_stack();
