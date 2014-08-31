@@ -35,14 +35,14 @@ struct abbrev_t
     // default c'tor
     abbrev_t()
      :  code(0),
-        tag(0),
-        children(0)
+	tag(0),
+	children(0)
     {}
 
     // c'tor with code
     abbrev_t(uint32_t c)
      :  code(c),
-        tag(0),
+	tag(0),
 	children(0)
     {}
 
