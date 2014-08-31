@@ -184,7 +184,7 @@ vlogmsg(int prio, const char *fmt, va_list args)
     char *p;
     static char buf[1024];
 
-    strncpy(buf, syslog_priority_name(prio), sizeof(buf-3));
+    strncpy(buf, syslog_priority_name(prio), sizeof(buf)-3);
     buf[sizeof(buf)-3] = '\0';
     strcat(buf, ": ");
     vsnprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
