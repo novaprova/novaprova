@@ -13,10 +13,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+platform_CFLAGS=    @platform_CFLAGS@
+libxml_LIBS=	    @libxml_LIBS@
+
 CC=		gcc
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	@platform_CFLAGS@
+CDEFINES=	$(platform_CFLAGS)
 CWARNFLAGS=	-Wall -Wextra -Wno-unused-function -Wno-unused-parameter
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
 		$(CDEFINES) $(INCLUDES)
@@ -26,7 +30,7 @@ CXXFLAGS=	$(CFLAGS)
 
 INCLUDES=	-I..
 LIBS=		../libnovaprova.a -lstdc++ -lbfd -ldl -lrt \
-		@libxml_LIBS@
+		$(libxml_LIBS)
 DEPS=		../np.h ../libnovaprova.a
 
 all install docs:
