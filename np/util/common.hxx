@@ -47,9 +47,9 @@
 #include <sys/wait.h>
 #include <sys/signal.h>
 #include <sys/poll.h>
+#if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
-#include <string>
-
+#endif
 #include <string>
 #include <map>
 #include <vector>

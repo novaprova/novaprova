@@ -16,7 +16,9 @@
 #include "np_priv.h"
 #include "except.h"
 #include <sys/time.h>
+#if HAVE_VALGRIND
 #include <valgrind/valgrind.h>
+#endif
 
 using namespace std;
 
@@ -25,6 +27,7 @@ using namespace std;
 static void
 be_valground(void)
 {
+#if HAVE_VALGRIND
     const char *env;
     int argc;
     char **argv;
@@ -60,6 +63,7 @@ be_valground(void)
 	*p++ = *argv++;
 
     execv(newargv[0], (char * const *)newargv);
+#endif
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

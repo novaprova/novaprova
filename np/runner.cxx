@@ -24,7 +24,9 @@
 #include "np/spiegel/spiegel.hxx"
 #include "np_priv.h"
 #include "except.h"
+#if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
+#endif
 
 __np_exceptstate_t __np_exceptstate;
 
@@ -59,8 +61,10 @@ choose_timeout()
 	return 0;
     }
     int64_t timeout = 30;
+#if HAVE_VALGRIND
     if (RUNNING_ON_VALGRIND)
 	timeout *= 3;
+#endif
     return timeout;
 }
 
@@ -551,6 +555,7 @@ runner_t::run_fixtures(testnode_t *tn, functype_t type)
 result_t
 runner_t::valgrind_errors(job_t *j, result_t res)
 {
+#if HAVE_VALGRIND
     unsigned long leaked = 0;
     unsigned long dubious __attribute__((unused)) = 0;
     unsigned long reachable __attribute__((unused)) = 0;
@@ -576,6 +581,7 @@ runner_t::valgrind_errors(job_t *j, result_t res)
 	event_t ev(EV_VALGRIND, msg);
 	res = merge(res, raise_event(j, &ev));
     }
+#endif
 
     return res;
 }
