@@ -30,6 +30,7 @@ fi
 AC_SUBST(libxml)
 
 platform_CFLAGS=
+platform_LIBS=
 libbfd_CFLAGS=
 libbfd_LIBS=
 
@@ -38,6 +39,7 @@ case "$target_os" in
 linux-gnu)
     os=linux
     platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
+    platform_LIBS="-ldl -lrt"
     ;;
 darwin*)
     os=darwin
@@ -75,6 +77,10 @@ AC_MSG_RESULT($arch)
 AC_MSG_CHECKING([Platform specific CFLAGS])
 AC_MSG_RESULT($platform_CFLAGS)
 AC_SUBST(platform_CFLAGS)
+
+AC_MSG_CHECKING([Platform specific LIBS])
+AC_MSG_RESULT($platform_LIBS)
+AC_SUBST(platform_LIBS)
 
 AC_MSG_CHECKING([Platform specific source])
 platform_SOURCE="$os.cxx $os"_"$arch.cxx"
