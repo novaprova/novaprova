@@ -24,7 +24,7 @@ namespace np { namespace spiegel { class function_t; }; };
 
 namespace np {
 
-struct event_t;
+class event_t;
 class listener_t;
 class plan_t;
 class child_t;
