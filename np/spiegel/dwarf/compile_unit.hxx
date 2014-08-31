@@ -24,9 +24,9 @@ namespace np {
 namespace spiegel {
 namespace dwarf {
 
-class abbrev_t;
+struct abbrev_t;
 class walker_t;
-class section_t;
+struct section_t;
 
 class compile_unit_t
 {
