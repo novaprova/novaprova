@@ -41,8 +41,6 @@ __assert_perror_fail(int errnum,
 	      filename, lineno).in_function(function).with_stack());
 }
 
-#endif
-
 void
 __assert(const char *condition,
 	 const char *filename,
@@ -52,3 +50,32 @@ __assert(const char *condition,
 	      filename, lineno).with_stack());
 }
 
+#endif
+
+#if defined(__GNUC__) && defined(__APPLE__)
+
+void
+__assert_rtn(const char *function,
+	     const char *filename,
+	     int lineno,
+	     const char *condition)
+{
+    if (function == (const char *)-1)
+	np_throw(np::event_t(np::EV_ASSERT, condition).at_line(
+		  filename, lineno).with_stack());
+    else
+	np_throw(np::event_t(np::EV_ASSERT, condition).at_line(
+		  filename, lineno).in_function(function).with_stack());
+}
+
+void
+__eprintf(const char *format __attribute__((unused)),
+	  const char *filename,
+	  unsigned lineno,
+	  const char *condition)
+{
+    np_throw(np::event_t(np::EV_ASSERT, condition).at_line(
+	      filename, lineno).with_stack());
+}
+
+#endif
