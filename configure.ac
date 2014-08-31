@@ -41,6 +41,8 @@ linux-gnu)
     ;;
 darwin*)
     os=darwin
+    libbfd_CFLAGS="-I/usr/local/include"
+    libbfd_LIBS="-L/usr/local/lib -lbfd"
     ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
