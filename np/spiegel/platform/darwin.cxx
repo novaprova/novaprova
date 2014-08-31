@@ -52,9 +52,64 @@ char *self_exe()
 
 vector<linkobj_t> get_linkobjs()
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    vector<linkobj_t>* res = new vector<linkobj_t>();
-    return *res;
+    vector<linkobj_t> vec;
+
+    uint32_t count = _dyld_image_count();
+    for (uint32_t i = 0 ; i < count ; i++)
+    {
+	const struct mach_header *hdr = _dyld_get_image_header(i);
+	if (!hdr)
+	    continue;
+	if (hdr->filetype != MH_EXECUTE && hdr->filetype != MH_DYLIB)
+	    continue;
+
+	linkobj_t lo;
+	lo.name = _dyld_get_image_name(i);
+
+	const struct load_command *cmds =
+		(hdr->magic == MH_MAGIC_64 || hdr->magic == MH_CIGAM_64 ?
+		    (const struct load_command *)(((struct mach_header_64 *)hdr)+1) :
+		    (const struct load_command *)(hdr+1));
+	uint32_t j = 0;
+	const struct load_command *cmd = cmds;
+	while (j < hdr->ncmds &&
+	       ((unsigned long)cmd - (unsigned long)cmds) < hdr->sizeofcmds)
+	{
+	    switch (cmd->cmd)
+	    {
+#if _NP_ADDRSIZE == 4
+	    case LC_SEGMENT:
+		{
+		    const struct segment_command *seg = (const struct segment_command *)cmd;
+		    if (!seg->vmsize)
+			continue;
+		    lo.mappings.push_back(mapping_t(
+			    (unsigned long)seg->fileoff,
+			    (unsigned long)seg->vmsize,
+			    (void *)seg->vmaddr));
+		}
+		break;
+#endif
+#if _NP_ADDRSIZE == 8
+	    case LC_SEGMENT_64:
+		{
+		    const struct segment_command_64 *seg = (const struct segment_command_64 *)cmd;
+		    if (!seg->vmsize)
+			continue;
+		    lo.mappings.push_back(mapping_t(
+			    (unsigned long)seg->fileoff,
+			    (unsigned long)seg->vmsize,
+			    (void *)seg->vmaddr));
+		}
+		break;
+#endif
+	    }
+	    j++;
+	    cmd = (const struct load_command *)((unsigned long)cmd + cmd->cmdsize);
+	}
+	vec.push_back(lo);
+    }
+    return vec;
 }
 
 np::spiegel::addr_t normalise_address(np::spiegel::addr_t addr)
