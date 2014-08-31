@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 David Arnold
+ * Copyright 2014 David Arnold, Greg Banks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include "np/spiegel/intercept.hxx"
 #include "np/util/tok.hxx"
 #include "common.hxx"
+#include <mach-o/dyld.h>
 
 #include <string>
 #include <vector>
@@ -27,6 +28,7 @@ namespace np {
         namespace platform {
 
 using namespace std;
+using namespace np::util;
 
 
 bool get_argv(int *argcp, char ***argvp)
@@ -37,8 +39,15 @@ bool get_argv(int *argcp, char ***argvp)
 
 char *self_exe()
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    return NULL;
+    // This convenient function does exactly what we want.
+    // See the dyld(3) manpage.
+    char buf[PATH_MAX];
+    uint32_t len = sizeof(buf);
+    int r = _NSGetExecutablePath(buf, &len);
+    if (r != 0)
+	return NULL;	// buffer too small is the only documented
+			// error case, and can't happen here
+    return xstrdup(buf);
 }
 
 vector<linkobj_t> get_linkobjs()
