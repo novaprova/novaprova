@@ -43,8 +43,8 @@ linux-gnu)
     ;;
 darwin*)
     os=darwin
-    libbfd_CFLAGS="-I/usr/local/include"
-    libbfd_LIBS="-L/usr/local/lib -lbfd"
+    libbfd_CFLAGS="-I/usr/local/include -I/usr/local/include/libiberty"
+    libbfd_LIBS="-L/usr/local/lib -lbfd -liberty -lintl -liconv -lz"
     ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
