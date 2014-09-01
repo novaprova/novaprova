@@ -21,9 +21,27 @@
 #include <vector>
 
 namespace np { namespace spiegel { namespace platform {
+#if 0
+    }}}
+#endif
 
 extern bool get_argv(int *argcp, char ***argvp);
 extern char *self_exe();
+
+
+/// Portable clock identifier type for clock_gettime().
+typedef int clockid_t;
+
+/// Standard real-time clock (vs. NP_CLOCK_MONOTONIC).
+#define NP_CLOCK_REALTIME (0)
+
+/// Monotonically-increasing clock.  Never goes backwards; cannot be
+/// set (vs. NP_CLOCK_REALTIME).
+#define NP_CLOCK_MONOTONIC (0)
+
+/// Return the time from the specified clock.
+extern int clock_gettime(clockid_t clk_id, struct timespec *res);
+
 
 struct linkobj_t
 {
@@ -65,11 +83,5 @@ extern std::vector<std::string> get_file_descriptors();
 
 // close namespaces
 }; }; };
-
-#include <time.h>
-typedef int clockid_t;
-#define CLOCK_REALTIME (0)
-#define CLOCK_MONOTONIC (0)
-int clock_gettime(clockid_t clk_id, struct timespec *res);
 
 #endif // __np_spiegel_platform_common_hxx__

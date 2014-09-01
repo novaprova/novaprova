@@ -36,6 +36,10 @@
 extern char **_dl_argv;
 
 namespace np { namespace spiegel { namespace platform {
+#if 0
+    }}}
+#endif
+
 using namespace std;
 using namespace np::util;
 
@@ -506,6 +510,12 @@ vector<string> get_file_descriptors()
 
     return fds;
 }
+
+
+int clock_gettime(np::spiegel::platform::clockid_t clk_id, struct timespec *res) {
+    return clock_gettime(clk_id, res);
+}
+
 
 // close namespaces
 }; }; };
