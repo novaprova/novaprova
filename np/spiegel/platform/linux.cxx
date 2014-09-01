@@ -507,6 +507,13 @@ vector<string> get_file_descriptors()
     return fds;
 }
 
+
+int clock_gettime(int clk_id, struct timespec *res)
+{
+    return clock_gettime(clk_id, res);
+}
+
+
 // close namespaces
 }; }; };
 

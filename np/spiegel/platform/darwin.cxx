@@ -169,7 +169,7 @@ int uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string
     return -1;
 }
 
-int clock_gettime(clockid_t clk_id, struct timespec *res)
+int clock_gettime(int clk_id, struct timespec *res)
 {
     fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
     errno = ENOSYS;
