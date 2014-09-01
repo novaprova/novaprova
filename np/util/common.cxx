@@ -137,18 +137,18 @@ static int64_t posix_now(int clock)
 {
     struct timespec ts;
     memset(&ts, 0, sizeof(ts));
-    clock_gettime(clock, &ts);
+    np::spiegel::platform::clock_gettime(clock, &ts);
     return ts.tv_sec * NANOSEC_PER_SEC + ts.tv_nsec;
 }
 
 int64_t abs_now()
 {
-    return posix_now(CLOCK_REALTIME);
+    return posix_now(NP_CLOCK_REALTIME);
 }
 
 int64_t rel_now()
 {
-    return posix_now(CLOCK_MONOTONIC);
+    return posix_now(NP_CLOCK_MONOTONIC);
 }
 
 string abs_format_iso8601(int64_t abs)
