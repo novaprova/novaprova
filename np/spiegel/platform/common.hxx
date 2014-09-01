@@ -25,6 +25,18 @@ namespace np { namespace spiegel { namespace platform {
 extern bool get_argv(int *argcp, char ***argvp);
 extern char *self_exe();
 
+
+/// Standard real-time clock (vs. NP_CLOCK_MONOTONIC).
+#define NP_CLOCK_REALTIME (0)
+
+/// Monotonically-increasing clock.  Never goes backwards; cannot be
+/// set (vs. NP_CLOCK_REALTIME).
+#define NP_CLOCK_MONOTONIC (1)
+
+/// Return the time from the specified clock.
+extern int clock_gettime(int clk_id, struct timespec *res);
+
+
 struct linkobj_t
 {
     const char *name;
@@ -68,11 +80,5 @@ extern void cleanup_current_exception();
 
 // close namespaces
 }; }; };
-
-#include <time.h>
-typedef int clockid_t;
-#define CLOCK_REALTIME (0)
-#define CLOCK_MONOTONIC (0)
-int clock_gettime(clockid_t clk_id, struct timespec *res);
 
 #endif // __np_spiegel_platform_common_hxx__

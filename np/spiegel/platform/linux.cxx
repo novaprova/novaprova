@@ -574,6 +574,11 @@ void cleanup_current_exception()
 #endif
 }
 
+int clock_gettime(int clk_id, struct timespec *res)
+{
+    return ::clock_gettime(clk_id, res);
+}
+
 // close namespaces
 }; }; };
 
