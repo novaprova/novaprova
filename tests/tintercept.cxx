@@ -15,7 +15,9 @@
  */
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
+#if defined(__GLIBC__)
 #include <libintl.h>
+#endif
 #include "fw.h"
 
 using namespace std;
@@ -433,6 +435,7 @@ main(int argc, char **argv __attribute__((unused)))
      * So we try to cover all of these by testing specific functions
      * known to exhibit specific properties in one libc or another.
      */
+#if defined(__GLIBC__)
     const char *s;
 
     /* textdomain uses the 0x55 prologue on x86 and x86_64 */
@@ -460,6 +463,9 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it5->after_count == 1);
     it5->uninstall();
     END;
+#else
+#warning TODO implement this test for this platform
+#endif
 
     return 0;
 }
