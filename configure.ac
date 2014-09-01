@@ -41,7 +41,6 @@ linux-gnu)
     ;;
 darwin*)
     os=darwin
-    platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
     ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
