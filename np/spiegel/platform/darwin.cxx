@@ -16,6 +16,7 @@
 #include "np/spiegel/common.hxx"
 #include "np/spiegel/intercept.hxx"
 #include "np/util/tok.hxx"
+#include "np/util/filename.hxx"
 #include "common.hxx"
 #include <mach-o/dyld.h>
 
@@ -164,7 +165,15 @@ int clock_gettime(int clk_id, struct timespec *res)
     return -1;
 }
 
-
+std::string symbol_filename(const char *filename)
+{
+    filename_t path = filename;
+    filename_t base = path.basename();
+    path += ".dSYM";
+    path.push_back("Contents/Resources/DWARF");
+    path.push_back(base);
+    return path;
+}
 
 // Close namespaces
 }; }; };
