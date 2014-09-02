@@ -1,0 +1,4 @@
+call-dlsym
+mprotect
+osx-get-linkobjs
+osx-self-exe
