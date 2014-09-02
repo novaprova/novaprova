@@ -16,7 +16,9 @@
 #include <np.h>
 #include <unistd.h>
 #include <stdlib.h>
+#if HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 
 static void test_memleak(void)
 {
