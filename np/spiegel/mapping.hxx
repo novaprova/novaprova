@@ -45,6 +45,7 @@ struct mapping_t : public np::util::zalloc
 
     bool is_mapped() const { return !!map_; }
     void set_map(void *m) { map_ = m; }
+    void *get_map() const { return map_; }
 
     unsigned long get_end() const { return offset_ + size_; }
     void set_end(unsigned long e) { size_ = e - offset_; }
