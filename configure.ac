@@ -34,6 +34,7 @@ platform_CFLAGS=
 platform_LIBS=
 libbfd_CFLAGS=
 libbfd_LIBS=
+sed_extended_opt=
 
 AC_MSG_CHECKING([Platform O/S])
 case "$target_os" in
@@ -42,12 +43,14 @@ linux-gnu)
     platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
     platform_LIBS="-ldl -lrt"
     platform_SOURCE="mprotect.cxx"
+    sed_extended_opt="-r"
     ;;
 darwin*)
     os=darwin
     libbfd_CFLAGS="-I/usr/local/include -I/usr/local/include/libiberty"
     libbfd_LIBS="-L/usr/local/lib -lbfd -liberty -lintl -liconv -lz"
     platform_SOURCE="mprotect.cxx"
+    sed_extended_opt="-E"
     ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
@@ -267,6 +270,7 @@ AC_CHECK_HEADERS([\
     malloc.h \
     signal.h \
 ])
+AC_SUBST(sed_extended_opt)
 
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
@@ -276,5 +280,6 @@ AC_CONFIG_FILES([
     novaprova.pc
     doc/manual/Makefile
     doc/manual/conf.py
+    plat.sh
 ])
 AC_OUTPUT

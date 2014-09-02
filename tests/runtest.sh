@@ -15,6 +15,8 @@
 #  limitations under the License.
 #
 
+source ../plat.sh
+
 function fatal()
 {
     echo "$0: $*" 1>&2
@@ -74,7 +76,7 @@ function normalize
     else
 	# Default normalization
 	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: WARNING:|\?\?\? |==[0-9]+== [A-Z])' < $f |\
-	    sed -r \
+	    sed $sed_extended_opt \
 		-e 's|'$PWD'|%PWD%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \
 		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g' \
