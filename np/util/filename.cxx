@@ -171,5 +171,19 @@ filename_t::pop_back()
 	resize(p ? p : 1);
 }
 
+void
+filename_t::push_back(const char *s)
+{
+    if (at(length()-1) != '/')
+	*this += "/";
+    *this += s;
+}
+
+void
+filename_t::push_back(const std::string &o)
+{
+    push_back(o.c_str());
+}
+
 // close the namespaces
 }; };

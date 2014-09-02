@@ -41,6 +41,8 @@ public:
     static filename_t current_dir();
 
     void pop_back();
+    void push_back(const char *);
+    void push_back(const std::string &o);
 
 private:
     filename_t make_absolute_to(filename_t absfile, bool isdir) const;

@@ -166,6 +166,32 @@ main(int argc, char **argv __attribute__((unused)))
 	END;
     }
 
+    {
+	BEGIN("push_back(char*)");
+	filename_t f = "/";
+	CHECK(!strcmp(f.c_str(), "/"));
+	f.push_back("foo");
+	CHECK(!strcmp(f.c_str(), "/foo"));
+	f.push_back("bar");
+	CHECK(!strcmp(f.c_str(), "/foo/bar"));
+	f.push_back("baz");
+	CHECK(!strcmp(f.c_str(), "/foo/bar/baz"));
+	END;
+    }
+
+    {
+	BEGIN("push_back(string)");
+	filename_t f = "/";
+	CHECK(!strcmp(f.c_str(), "/"));
+	f.push_back(string("foo"));
+	CHECK(!strcmp(f.c_str(), "/foo"));
+	f.push_back(string("bar"));
+	CHECK(!strcmp(f.c_str(), "/foo/bar"));
+	f.push_back(string("baz"));
+	CHECK(!strcmp(f.c_str(), "/foo/bar/baz"));
+	END;
+    }
+
     return 0;
 }
 
