@@ -21,7 +21,12 @@
 using namespace std;
 using namespace np::util;
 
+#if defined(__APPLE__)
+/* BASEDIR needs not to be a symlink, and /tmp is a symlink on Darwin */
+#define BASEDIR	"/private/tmp"
+#else
 #define BASEDIR	"/tmp"
+#endif
 #define TESTDIR	BASEDIR"/ggcov.filename.test"
 
 static char oldcwd[PATH_MAX];
