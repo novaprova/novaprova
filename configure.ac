@@ -29,6 +29,7 @@ if test x"$libxml" = x ; then
 fi
 AC_SUBST(libxml)
 
+platform_SOURCE=
 platform_CFLAGS=
 platform_LIBS=
 libbfd_CFLAGS=
@@ -40,11 +41,13 @@ linux-gnu)
     os=linux
     platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
     platform_LIBS="-ldl -lrt"
+    platform_SOURCE="mprotect.cxx"
     ;;
 darwin*)
     os=darwin
     libbfd_CFLAGS="-I/usr/local/include -I/usr/local/include/libiberty"
     libbfd_LIBS="-L/usr/local/lib -lbfd -liberty -lintl -liconv -lz"
+    platform_SOURCE="mprotect.cxx"
     ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
 esac
@@ -83,7 +86,7 @@ AC_MSG_RESULT($platform_LIBS)
 AC_SUBST(platform_LIBS)
 
 AC_MSG_CHECKING([Platform specific source])
-platform_SOURCE="$os.cxx $os"_"$arch.cxx"
+platform_SOURCE="$os.cxx $os"_"$arch.cxx $platform_SOURCE"
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
 
