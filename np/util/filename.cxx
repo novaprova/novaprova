@@ -167,8 +167,8 @@ void
 filename_t::pop_back()
 {
     size_t p = find_last_of('/');
-    if (p != string::npos && p)
-	resize(p-1);
+    if (p != string::npos)
+	resize(p ? p : 1);
 }
 
 // close the namespaces
