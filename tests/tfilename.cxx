@@ -154,6 +154,21 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(!strcmp(_in.c_str(), ""));
     END;
 
+    {
+	BEGIN("pop_back");
+	filename_t f = "/foo/bar/baz";
+	CHECK(!strcmp(f.c_str(), "/foo/bar/baz"));
+	f.pop_back();
+	CHECK(!strcmp(f.c_str(), "/foo/bar"));
+	f.pop_back();
+	CHECK(!strcmp(f.c_str(), "/foo"));
+	f.pop_back();
+	CHECK(!strcmp(f.c_str(), "/"));
+	f.pop_back();
+	CHECK(!strcmp(f.c_str(), "/"));
+	END;
+    }
+
     return 0;
 }
 
