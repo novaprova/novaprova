@@ -500,6 +500,11 @@ int clock_gettime(int clk_id, struct timespec *res)
     return ::clock_gettime(clk_id, res);
 }
 
+std::string symbol_filename(const char *filename)
+{
+    return string(filename);
+}
+
 // close namespaces
 }; }; };
 

@@ -62,15 +62,16 @@ state_t::linkobj_t::map_sections()
     fprintf(stderr, "np: state_t::linkobj_t::map_sections: opening bfd %s\n", filename_);
 #endif
     /* Open a BFD */
-    bfd *b = bfd_openr(filename_, NULL);
+    filename_t path = np::spiegel::platform::symbol_filename(filename_);
+    bfd *b = bfd_openr(path.c_str(), NULL);
     if (!b)
     {
-	bfd_perror(filename_);
+	bfd_perror(path.c_str());
 	return false;
     }
     if (!bfd_check_format(b, bfd_object))
     {
-	fprintf(stderr, "np: %s: not an object\n", filename_);
+	fprintf(stderr, "np: %s: not an object\n", path.c_str());
 	goto error;
     }
 
