@@ -75,7 +75,7 @@ extern bool is_running_under_debugger();
 
 extern std::vector<std::string> get_file_descriptors();
 
-extern std::string symbol_filename(const char *);
+extern bool symbol_filename(const char *, std::string &);
 
 // close namespaces
 }; }; };

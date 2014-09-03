@@ -434,9 +434,10 @@ int clock_gettime(int clk_id, struct timespec *res)
     return clock_gettime(clk_id, res);
 }
 
-std::string symbol_filename(const char *filename)
+bool symbol_filename(const char *filename __attribute__((unused)),
+		     std::string &symfile __attribute__((unused)))
 {
-    return string(filename);
+    return false;
 }
 
 // close namespaces
