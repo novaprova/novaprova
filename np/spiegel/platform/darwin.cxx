@@ -165,14 +165,15 @@ int clock_gettime(int clk_id, struct timespec *res)
     return -1;
 }
 
-std::string symbol_filename(const char *filename)
+bool symbol_filename(const char *filename, std::string &symfile)
 {
     filename_t path = filename;
     filename_t base = path.basename();
     path += ".dSYM";
     path.push_back("Contents/Resources/DWARF");
     path.push_back(base);
-    return path;
+    symfile = path;
+    return true;
 }
 
 // Close namespaces
