@@ -62,7 +62,11 @@ state_t::linkobj_t::map_sections()
     fprintf(stderr, "np: state_t::linkobj_t::map_sections: opening bfd %s\n", filename_);
 #endif
     /* Open a BFD */
-    filename_t path = np::spiegel::platform::symbol_filename(filename_);
+    std::string path;
+    bool is_separate = np::spiegel::platform::symbol_filename(filename_, path);
+    if (!is_separate)
+	path = filename_;
+
     bfd *b = bfd_openr(path.c_str(), NULL);
     if (!b)
     {
@@ -94,19 +98,22 @@ state_t::linkobj_t::map_sections()
 	sections_[idx].set_range((unsigned long)sec->filepos,
 				 (unsigned long)sec->size);
 
-	/* See if the section can be satisfied out of
-	 * existing system mappings */
-	vector<mapping_t>::iterator sm;
-	for (sm = system_mappings_.begin() ; sm != system_mappings_.end() ; ++sm)
+	if (!is_separate)
 	{
-	    if (sm->contains(sections_[idx]))
+	    /* See if the section can be satisfied out of
+	     * existing system mappings */
+	    vector<mapping_t>::iterator sm;
+	    for (sm = system_mappings_.begin() ; sm != system_mappings_.end() ; ++sm)
 	    {
+		if (sm->contains(sections_[idx]))
+		{
 #if _NP_DEBUG
-		fprintf(stderr, "np: found system mapping for section %s at %p\n",
-			secnames.to_name(idx), sm->get_map());
+		    fprintf(stderr, "np: found system mapping for section %s at %p\n",
+			    secnames.to_name(idx), sm->get_map());
 #endif
-		sections_[idx].map_from(*sm);
-		break;
+		    sections_[idx].map_from(*sm);
+		    break;
+		}
 	    }
 	}
     }
@@ -158,10 +165,10 @@ state_t::linkobj_t::map_sections()
 #endif
 
 	/* mmap() the mappings */
-	fd = open(filename_, O_RDONLY, 0);
+	fd = open(path.c_str(), O_RDONLY, 0);
 	if (fd < 0)
 	{
-	    perror(filename_);
+	    perror(path.c_str());
 	    goto error;
 	}
 

@@ -78,7 +78,7 @@ extern std::vector<std::string> get_file_descriptors();
 extern char *current_exception_type();
 extern void cleanup_current_exception();
 
-extern std::string symbol_filename(const char *);
+extern bool symbol_filename(const char *, std::string &);
 
 // close namespaces
 }; }; };
