@@ -1,5 +1,8 @@
 compile_unit {
 class cosby::sweater::vegan {
+    /*member*/ int  dreamcatcher;
+    /*member*/ int  locavore;
+    /*function*/ int mcsweeneys(class vegan * , int )
 } class
 } compile_unit
 EXIT 0
