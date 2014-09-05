@@ -19,6 +19,7 @@
 #include "np/util/filename.hxx"
 #include "common.hxx"
 #include <mach-o/dyld.h>
+#include <sys/stat.h>
 
 #include <string>
 #include <vector>
@@ -172,6 +173,17 @@ bool symbol_filename(const char *filename, std::string &symfile)
     path += ".dSYM";
     path.push_back("Contents/Resources/DWARF");
     path.push_back(base);
+
+    /* The debug symbol file might not exist due to there being no
+     * symbols, or possibly due to the symbols being in the original
+     * file.  Our caller can handle missing DWARF sections in the
+     * original file, so in either case we just return false and let the
+     * caller look in the origin file.
+     */
+    struct stat sb;
+    if (stat(path.c_str(), &sb) < 0 && errno == ENOENT)
+	return false;
+
     symfile = path;
     return true;
 }
