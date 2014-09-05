@@ -227,3 +227,6 @@ dist: docs
 	done
 	tar -chjvf $(DIST_TARBALL) $(DISTDIR)
 	$(RM) -r $(DISTDIR)
+
+tags:
+	cscope -b -k $(libnovaprova_SOURCE) $(libnovaprova_PRIVHEADERS) $(libnovaprova_HEADERS)
