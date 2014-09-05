@@ -249,3 +249,6 @@ build/obs/rel/%: build/obs/% build/obs/ifdef.py
 	@mkdir -p $(@D)
 	build/obs/ifdef.py -Drel -Drelease < $< > $@
 
+# Build CScope database
+tags:
+	cscope -b -k $(libnovaprova_SOURCE) $(libnovaprova_PRIVHEADERS) $(libnovaprova_HEADERS)
