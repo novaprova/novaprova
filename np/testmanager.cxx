@@ -179,7 +179,6 @@ testmanager_t::discover_functions()
     {
 	spiegel_ = new np::spiegel::dwarf::state_t();
 	spiegel_->add_self();
-	spiegel_->prepare_address_index();
 	root_ = new testnode_t(0);
     }
     // else: splice common_ and root_ back together
