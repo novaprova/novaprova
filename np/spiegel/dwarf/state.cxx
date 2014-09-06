@@ -259,6 +259,8 @@ state_t::add_self()
     }
 
     r = read_linkobjs();
+    if (r)
+	prepare_address_index();
     free(exe);
     return r;
 }
@@ -269,7 +271,10 @@ state_t::add_executable(const char *filename)
     linkobj_t *lo = get_linkobj(filename);
     if (!lo)
 	return false;
-    return read_linkobjs();
+    bool r = read_linkobjs();
+    if (r)
+	prepare_address_index();
+    return r;
 }
 
 state_t::linkobj_t *
