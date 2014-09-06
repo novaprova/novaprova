@@ -377,7 +377,8 @@ compile_unit_t::populate()
     high_pc_ = e->get_uint64_attribute(DW_AT_high_pc);
     language_ = e->get_uint32_attribute(DW_AT_language);
 
-#if 0
+#if _NP_DEBUG
+    printf("Populated compile unit\n");
     printf("    name %s\n", name_);
     printf("    comp_dir %s\n", comp_dir_);
     printf("    low_pc 0x%llx\n", (unsigned long long)low_pc_);

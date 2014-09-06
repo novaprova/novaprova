@@ -106,6 +106,15 @@ if test "$valgrind" = yes ; then
     AC_DEFINE(HAVE_VALGRIND, 1,[whether the runtime memory checker Valgrind is enabled])
 fi
 
+debug=no
+AC_ARG_ENABLE(debug,
+	      [Enable debugging output at compile time],
+	      [ debug=$enableval ])
+if test "$debug" = yes ; then
+    AC_DEFINE(_NP_DEBUG, 1, [Enable debugging output])
+fi
+
+
 dnl TODO: add a --with-bfd option?
 AC_SUBST(libbfd_CFLAGS)
 AC_SUBST(libbfd_LIBS)

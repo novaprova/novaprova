@@ -78,7 +78,7 @@ state_t::linkobj_t::map_sections()
     for (sec = b->sections ; sec ; sec = sec->next)
     {
 	int idx = secnames.to_index(sec->name);
-#if 0
+#if _NP_DEBUG
 	printf("Section name=%s size=%lx filepos=%lx => %d\n",
 	    sec->name, (unsigned long)sec->size,
 	    (unsigned long)sec->filepos, idx);
@@ -126,7 +126,7 @@ state_t::linkobj_t::map_sections()
 	}
     }
 
-#if 0
+#if _NP_DEBUG
     printf("Mappings:\n");
     for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
@@ -166,7 +166,7 @@ state_t::linkobj_t::map_sections()
 	assert(tsec[idx]->is_mapped());
     }
 
-#if 0
+#if _NP_DEBUG
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
 	printf("[%d] name=%s map=0x%lx size=0x%lx\n",
@@ -206,6 +206,9 @@ state_t::read_compile_units(linkobj_t *lo)
     reader_t infor = lo->sections_[DW_sec_info].get_contents();
     reader_t abbrevr = lo->sections_[DW_sec_abbrev].get_contents();
 
+#if _NP_DEBUG
+    infor.dump();
+#endif
     compile_unit_t *cu = 0;
     for (;;)
     {
