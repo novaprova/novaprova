@@ -623,6 +623,8 @@ bool describe_address(addr_t addr, class location_t &loc)
 				 funcref, loc.offset_))
 	return false;
 
+    if (curef == np::spiegel::dwarf::reference_t::null)
+	curef = state->get_compile_unit(funcref)->make_root_reference();
     loc.compile_unit_ = _cacher_t::make_compile_unit(curef);
     loc.function_ = _cacher_t::make_function(funcref);
     return true;
