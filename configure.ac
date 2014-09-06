@@ -184,6 +184,14 @@ dnl TODO: add a --with-bfd option?
 AC_SUBST(libbfd_CFLAGS)
 AC_SUBST(libbfd_LIBS)
 
+debug=no
+AC_ARG_ENABLE(debug,
+	      [Enable debugging output at compile time],
+	      [ debug=$enableval ])
+if test "$debug" = yes ; then
+    AC_DEFINE(_NP_DEBUG, 1, [Enable debugging output])
+fi
+
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
     Makefile

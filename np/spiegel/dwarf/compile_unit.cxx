@@ -65,8 +65,8 @@ compile_unit_t::read_header(reader_t &r)
     if (addrsize != _NP_ADDRSIZE) fatal("Bad DWARF addrsize %u, expecting %u",
 	      addrsize, _NP_ADDRSIZE);
 
-#if 0
-    printf("compilation unit\n");
+#if _NP_DEBUG
+    printf("DWARF compilation unit header\n");
     printf("    length %u\n", (unsigned)length);
     printf("    version %u\n", (unsigned)version);
     printf("    is64 %s\n", is64 ? "true" : "false");
