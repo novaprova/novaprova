@@ -45,6 +45,13 @@ public:
     void dump_info(bool preorder, bool paths);
     void dump_abbrevs();
 
+    /* Input is any address generated from inside the program, e.g. by
+     * taking the address of a function (which might actually be the
+     * address of a function descriptor or a PLT slot.  Returns the
+     * address of the actual code, i.e. the first byte of the function
+     * prolog, which can actually be usefully instrumented. */
+    np::spiegel::addr_t instrumentable_address(np::spiegel::addr_t) const;
+
     bool describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
 			  unsigned int &lineno,
@@ -81,7 +88,10 @@ private:
 	section_t sections_[DW_sec_num];
 	std::vector<section_t> mappings_;
 	std::vector<np::spiegel::mapping_t> system_mappings_;
+	std::vector<np::spiegel::mapping_t> plts_;
 
+	bool is_in_plt(np::spiegel::addr_t addr) const;
+	bool map_from_system(mapping_t &m) const;
 	bool map_sections();
 	void unmap_sections();
     };

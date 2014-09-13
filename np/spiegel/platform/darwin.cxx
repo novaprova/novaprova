@@ -20,6 +20,7 @@
 #include "common.hxx"
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
+#include <dlfcn.h>
 
 #include <string>
 #include <vector>
@@ -114,15 +115,22 @@ vector<linkobj_t> get_linkobjs()
     return vec;
 }
 
-np::spiegel::addr_t normalise_address(np::spiegel::addr_t addr)
+bool is_plt_section(const char *secname)
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    return addr;
+    return (!strcmp(secname, "__DATA.__nl_symbol_ptr") ||
+	    !strcmp(secname, "__DATA.__la_symbol_ptr"));
 }
 
-void add_plt(const np::spiegel::mapping_t &m)
+np::spiegel::addr_t follow_plt(np::spiegel::addr_t addr)
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
+    /* Note: this is identical to the Linux implementation,
+     * should share the code somehow */
+    Dl_info info;
+    memset(&info, 0, sizeof(info));
+    int r = dladdr((void *)addr, &info);
+    if (r)
+	return (np::spiegel::addr_t)dlsym(RTLD_NEXT, info.dli_sname);
+    return addr;
 }
 
 vector<np::spiegel::addr_t> get_stacktrace()

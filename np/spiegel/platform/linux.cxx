@@ -201,34 +201,18 @@ vector<linkobj_t> get_linkobjs()
     return vec;
 }
 
-static vector<np::spiegel::mapping_t> plts;
-
-void add_plt(const np::spiegel::mapping_t &m)
+bool is_plt_section(const char *secname)
 {
-    plts.push_back(m);
+    return !strcmp(secname, ".plt");
 }
 
-static bool is_in_plt(np::spiegel::addr_t addr)
+np::spiegel::addr_t follow_plt(np::spiegel::addr_t addr)
 {
-    vector<np::spiegel::mapping_t>::const_iterator i;
-    for (i = plts.begin() ; i != plts.end() ; ++i)
-    {
-	if (i->contains((void *)addr))
-	    return true;
-    }
-    return false;
-}
-
-np::spiegel::addr_t normalise_address(np::spiegel::addr_t addr)
-{
-    if (is_in_plt(addr))
-    {
-	Dl_info info;
-	memset(&info, 0, sizeof(info));
-	int r = dladdr((void *)addr, &info);
-	if (r)
-	    return (np::spiegel::addr_t)dlsym(RTLD_NEXT, info.dli_sname);
-    }
+    Dl_info info;
+    memset(&info, 0, sizeof(info));
+    int r = dladdr((void *)addr, &info);
+    if (r)
+	return (np::spiegel::addr_t)dlsym(RTLD_NEXT, info.dli_sname);
     return addr;
 }
 

@@ -44,8 +44,8 @@ struct linkobj_t
 };
 extern std::vector<linkobj_t> get_linkobjs();
 
-void add_plt(const np::spiegel::mapping_t &);
-np::spiegel::addr_t normalise_address(np::spiegel::addr_t);
+bool is_plt_section(const char *secname);
+np::spiegel::addr_t follow_plt(np::spiegel::addr_t);
 
 // extern np::spiegel::value_t invoke(void *fnaddr, vector<np::spiegel::value_t> args);
 

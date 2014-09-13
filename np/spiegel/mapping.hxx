@@ -26,6 +26,9 @@ struct mapping_t : public np::util::zalloc
     mapping_t()
      :  offset_(0), size_(0), map_(0)
     {}
+    mapping_t(unsigned long off, unsigned long sz)
+     :  offset_(off), size_(sz), map_(0)
+    {}
     mapping_t(unsigned long off, unsigned long sz, void *m)
      :  offset_(off), size_(sz), map_(m)
     {}
