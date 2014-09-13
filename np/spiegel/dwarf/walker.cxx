@@ -162,24 +162,10 @@ walker_t::read_attributes()
 	    }
 	case DW_FORM_addr:
 	    {
-		if (sizeof(unsigned long) == 4)
-		{
-		    uint32_t v;
-		    if (!reader_.read_u32(v))
-			return RE_EOF;
-		    entry_.add_attribute(i->name, value_t::make_uint32(v));
-		}
-		else if (sizeof(unsigned long) == 8)
-		{
-		    uint64_t v;
-		    if (!reader_.read_u64(v))
-			return RE_EOF;
-		    entry_.add_attribute(i->name, value_t::make_uint64(v));
-		}
-		else
-		{
-		    fatal("Strange addrsize %u", (unsigned)sizeof(unsigned long));
-		}
+		np::spiegel::addr_t v;
+		if (!reader_.read_addr(v))
+		    return RE_EOF;
+		entry_.add_attribute(i->name, value_t::make_addr(v));
 		break;
 	    }
 	case DW_FORM_flag:

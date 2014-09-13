@@ -124,6 +124,27 @@ public:
 #endif
     }
 
+    bool read_offset(np::spiegel::offset_t &v)
+    {
+#if _NP_ADDRSIZE == 4
+	return read_u32(v);
+#elif _NP_ADDRSIZE == 8
+	return read_u64(v);
+#else
+#error "Unknown offset size"
+#endif
+    }
+    bool skip_offset()
+    {
+#if _NP_ADDRSIZE == 4
+	return skip_u32();
+#elif _NP_ADDRSIZE == 8
+	return skip_u64();
+#else
+#error "Unknown offset size"
+#endif
+    }
+
     bool read_uleb128(uint32_t &v)
     {
 	const unsigned char *pp = p_;

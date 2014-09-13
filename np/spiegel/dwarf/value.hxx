@@ -87,6 +87,26 @@ struct value_t
 	val.val.sint64 = v;
 	return val;
     }
+    static value_t make_addr(np::spiegel::addr_t v)
+    {
+#if _NP_ADDRSIZE == 4
+    	return make_uint32(v);
+#elif _NP_ADDRSIZE == 8
+    	return make_uint64(v);
+#else
+#error Unknown address size _NP_ADDRSIZE
+#endif
+    }
+    static value_t make_offset(np::spiegel::offset_t v)
+    {
+#if _NP_ADDRSIZE == 4
+    	return make_uint32(v);
+#elif _NP_ADDRSIZE == 8
+    	return make_uint64(v);
+#else
+#error Unknown address size _NP_ADDRSIZE
+#endif
+    }
     static value_t make_bytes(const unsigned char *b, size_t l)
     {
 	value_t val;

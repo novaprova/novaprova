@@ -32,9 +32,11 @@ namespace np {
 namespace spiegel {
 
 #if _NP_ADDRSIZE == 4
-typedef uint32_t addr_t;
+typedef uint32_t addr_t;		/* holds a machine address */
+typedef uint32_t offset_t;		/* holds an ELF file offset */
 #elif _NP_ADDRSIZE == 8
-typedef uint64_t addr_t;
+typedef uint64_t addr_t;		/* holds a machine address */
+typedef uint64_t offset_t;		/* holds an ELF file offset */
 #else
 #error "Unknown address size"
 #endif
