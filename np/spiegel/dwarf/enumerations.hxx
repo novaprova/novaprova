@@ -68,7 +68,12 @@ enum form_values
     DW_FORM_ref4 = 0x13,
     DW_FORM_ref8 = 0x14,
     DW_FORM_ref_udata = 0x15,
-    DW_FORM_indirect = 0x16
+    DW_FORM_indirect = 0x16,
+    /* DWARF-4 Values, from the standard */
+    DW_FORM_sec_offset = 0x17,
+    DW_FORM_exprloc = 0x18,
+    DW_FORM_flag_present = 0x19,
+    DW_FORM_ref_sig8 = 0x20
 };
 
 enum tag_names
@@ -131,6 +136,10 @@ enum tag_names
     DW_TAG_imported_unit = 0x3d,
     DW_TAG_condition = 0x3f,
     DW_TAG_shared_type = 0x40,
+    /* DWARF-4 Values, from the standard */
+    DW_TAG_type_unit = 0x41,
+    DW_TAG_rvalue_reference_type = 0x42,
+    DW_TAG_template_alias = 0x43,
 
 // DW_TAG_lo_user = 0x4080,
 // DW_TAG_hi_user = 0xffff
@@ -229,6 +238,14 @@ enum attribute_names
     DW_AT_pure = 0x67,
     DW_AT_recursive = 0x68,
 
+    /* DWARF-4 Values, from the standard */
+    DW_AT_signature = 0x69,
+    DW_AT_main_subprogram = 0x6a,
+    DW_AT_data_bit_offset = 0x6b,
+    DW_AT_const_expr = 0x6c,
+    DW_AT_enum_class = 0x6d,
+    DW_AT_linkage_name = 0x6e,
+
     DW_AT_max_basic,
 
     DW_AT_lo_user = 0x2000,
@@ -255,6 +272,8 @@ enum encoding_values
     DW_ATE_signed_char = 0x6,
     DW_ATE_unsigned = 0x7,
     DW_ATE_unsigned_char = 0x8,
+    /* DWARF-4 Values, from the standard */
+    DW_ATE_UTF = 0x10,
 //     DW_ATE_lo_user = 0x80,
 //     DW_ATE_hi_user = 0xff,
 };

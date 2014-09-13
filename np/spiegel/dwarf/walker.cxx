@@ -137,6 +137,7 @@ walker_t::read_attributes()
 		break;
 	    }
 	case DW_FORM_data8:
+	case DW_FORM_ref_sig8:
 	    {
 		uint64_t v;
 		if (!reader_.read_u64(v))
@@ -263,6 +264,7 @@ walker_t::read_attributes()
 		break;
 	    }
 	case DW_FORM_block:
+	case DW_FORM_exprloc:
 	    {
 		uint32_t len;
 		const unsigned char *v;
@@ -272,6 +274,21 @@ walker_t::read_attributes()
 		entry_.add_attribute(i->name, value_t::make_bytes(v, len));
 		break;
 	    }
+	case DW_FORM_sec_offset:
+	    {
+		np::spiegel::offset_t v;
+		if (!reader_.read_offset(v))
+		    return RE_EOF;
+		entry_.add_attribute(i->name, value_t::make_offset(v));
+		break;
+	    }
+	case DW_FORM_flag_present:
+	    /* This form has no representation in the attribute
+	     * stream, it's always true.  Presumably this is
+	     * useful in combination with a careful choice of
+	     * abbrevs. */
+	    entry_.add_attribute(i->name, value_t::make_uint32(true));
+	    break;
 	default:
 	    // TODO: bad DWARF info - throw an exception
 	    fatal("Can't handle %s at %s:%d\n",
@@ -383,12 +400,22 @@ walker_t::skip_attributes()
 		break;
 	    }
 	case DW_FORM_block:
+	case DW_FORM_exprloc:
 	    {
 		uint32_t len;
 		if (!reader_.read_uleb128(len) ||
 		    !reader_.skip_bytes(len))
 		    return EOF;
 	    }
+	    break;
+	case DW_FORM_sec_offset:
+	    reader_.skip_offset();
+	    break;
+	case DW_FORM_flag_present:
+	    /* Nothing to skip */
+	    break;
+	case DW_FORM_ref_sig8:
+	    reader_.skip_u64();
 	    break;
 	default:
 	    // TODO: bad DWARF info - throw an exception

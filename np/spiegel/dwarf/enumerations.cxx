@@ -54,6 +54,16 @@ static const char * const _formvals[] = {
     "ref8", /* 0x14, */
     "ref_udata", /* 0x15, */
     "indirect", /* 0x16 */
+    "sec_offset", /* 0x17 */
+    "exprloc",	/* 0x18 */
+    "flag_present", /* 0x19 */
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "ref_sig8",	/* 0x20 */
     0
 };
 string_table_t formvals("DW_FORM_", _formvals);
@@ -124,6 +134,9 @@ static const char * const _tagnames[] = {
     "",
     "condition",	    /* 0x3f */
     "shared_type",	    /* 0x40 */
+    "type_unit",	    /* 0x41 */
+    "rvalue_reference_type",/* 0x42 */
+    "template_alias",	    /* 0x43 */
     0
 };
 string_table_t tagnames("DW_TAG_", _tagnames);
@@ -234,6 +247,12 @@ static const char * const _attrnames[] = {
     "elemental",	/* 0x66, */
     "pure",		/* 0x67, */
     "recursive",	/* 0x68, */
+    "signature",	/* 0x69, */
+    "main_subprogram",	/* 0x6a, */
+    "data_bit_offset",	/* 0x6b, */
+    "const_expr",	/* 0x6c, */
+    "enum_class",	/* 0x6d, */
+    "linkage_name",	/* 0x6e, */
     0,
 };
 string_table_t attrnames("DW_AT_", _attrnames);
@@ -248,6 +267,14 @@ static const char * const _encvals[] = {
     "signed_char",	/* 0x6 */
     "unsigned",		/* 0x7 */
     "unsigned_char",	/* 0x8 */
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "utf-8",		/* 0x10 */
     0,
 };
 string_table_t encvals("DW_ATE_", _encvals);
