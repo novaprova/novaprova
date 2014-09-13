@@ -43,7 +43,7 @@ intercept_t::remove_addrstate(addr_t addr)
 
 intercept_t::intercept_t(addr_t a, const char *name)
 {
-    addr_ = np::spiegel::platform::normalise_address(a);
+    addr_ = np::spiegel::dwarf::state_t::instance()->instrumentable_address(a);
     name_ = np::util::xstrdup(name);
 }
 

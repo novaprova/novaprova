@@ -46,6 +46,35 @@ state_t::~state_t()
 }
 
 bool
+state_t::linkobj_t::is_in_plt(np::spiegel::addr_t addr) const
+{
+    vector<np::spiegel::mapping_t>::const_iterator i;
+    for (i = plts_.begin() ; i != plts_.end() ; ++i)
+    {
+	if (i->contains((void *)addr))
+	    return true;
+    }
+    return false;
+}
+
+/* See if the section can be satisfied out of
+ * existing system mappings */
+bool
+state_t::linkobj_t::map_from_system(mapping_t &m) const
+{
+    vector<mapping_t>::const_iterator sm;
+    for (sm = system_mappings_.begin() ; sm != system_mappings_.end() ; ++sm)
+    {
+	if (sm->contains(m))
+	{
+	    m.map_from(*sm);
+	    return true;
+	}
+    }
+    return false;
+}
+
+bool
 state_t::linkobj_t::map_sections()
 {
     int fd = -1;
@@ -77,6 +106,15 @@ state_t::linkobj_t::map_sections()
     asection *sec;
     for (sec = b->sections ; sec ; sec = sec->next)
     {
+	if (np::spiegel::platform::is_plt_section(sec->name))
+	{
+	    mapping_t m((unsigned long)sec->filepos,
+			(unsigned long)sec->size);
+	    if (map_from_system(m))
+		plts_.push_back(m);
+	    continue;
+	}
+
 	int idx = secnames.to_index(sec->name);
 #if _NP_DEBUG
 	printf("Section name=%s size=%lx filepos=%lx => %d\n",
@@ -89,19 +127,7 @@ state_t::linkobj_t::map_sections()
 				 (unsigned long)sec->size);
 
 	if (!is_separate)
-	{
-	    /* See if the section can be satisfied out of
-	     * existing system mappings */
-	    vector<mapping_t>::iterator sm;
-	    for (sm = system_mappings_.begin() ; sm != system_mappings_.end() ; ++sm)
-	    {
-		if (sm->contains(sections_[idx]))
-		{
-		    sections_[idx].map_from(*sm);
-		    break;
-		}
-	    }
-	}
+	    map_from_system(sections_[idx]);
     }
 
     /* Coalesce unmapped sections into a minimal number of mappings */
@@ -176,10 +202,8 @@ state_t::linkobj_t::map_sections()
     }
 #endif
 
-    if (sections_[DW_sec_plt].is_mapped())
-	np::spiegel::platform::add_plt(sections_[DW_sec_plt]);
-
     goto out;
+
 error:
     unmap_sections();
     r = false;
@@ -747,6 +771,16 @@ state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
 	return false;
     }
     return false;
+}
+
+np::spiegel::addr_t
+state_t::instrumentable_address(np::spiegel::addr_t addr) const
+{
+    vector<linkobj_t*>::const_iterator i;
+    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+	if ((*i)->is_in_plt(addr))
+	    return np::spiegel::platform::follow_plt(addr);
+    return addr;
 }
 
 bool
