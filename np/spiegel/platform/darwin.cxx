@@ -138,9 +138,44 @@ np::spiegel::addr_t follow_plt(np::spiegel::addr_t addr)
 
 vector<np::spiegel::addr_t> get_stacktrace()
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    vector<np::spiegel::addr_t>* res = new vector<np::spiegel::addr_t>();
-    return *res;
+    /* Note: this is identical to the linux-x86 and
+     * linux-x86_64 implementation, because it depends
+     * only on the processor ABI which both those platforms obey.
+     * Should merge the two.
+     */
+
+    /* This only works if a frame pointer is used, i.e. it breaks
+     * with -fomit-frame-pointer.
+     *
+     * TODO: use DWARF2 unwind info and handle -fomit-frame-pointer
+     *
+     * TODO: terminating the unwind loop is tricky to do properly,
+     *       we need to estimate the stack boundaries.  Instead
+     *       we approximate
+     *
+     * TODO: should return a vector of {ip=%eip,fp=%ebp,sp=%esp}
+     */
+    unsigned long bp;
+    vector<np::spiegel::addr_t> stack;
+
+#if _NP_ADDRSIZE == 4
+    __asm__ volatile("movl %%ebp, %0" : "=r"(bp));
+#else
+    __asm__ volatile("movq %%rbp, %0" : "=r"(bp));
+#endif
+    for (;;)
+    {
+	stack.push_back(((unsigned long *)bp)[1]-_NP_ADDRSIZE-1);
+	unsigned long nextbp = ((unsigned long *)bp)[0];
+	if (!nextbp)
+	    break;
+	if (nextbp < bp)
+	    break;	// moving in the wrong direction
+	if ((nextbp - bp) > 16384)
+	    break;	// moving a heuristic "too far"
+	bp = nextbp;
+    };
+    return stack;
 }
 
 bool is_running_under_debugger()
