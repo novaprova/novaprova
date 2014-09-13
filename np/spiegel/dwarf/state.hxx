@@ -52,6 +52,12 @@ public:
      * prolog, which can actually be usefully instrumented. */
     np::spiegel::addr_t instrumentable_address(np::spiegel::addr_t) const;
 
+    /* Input is any address seen at runtime in the program, e.g. from
+     * a stack trace or a signal context.  Returns an address which
+     * can be used to look up recorded debug information.  Note that the
+     * two may differ due to Address Space Layout Randomisation. */
+    np::spiegel::addr_t recorded_address(np::spiegel::addr_t) const;
+
     bool describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
 			  unsigned int &lineno,
@@ -85,6 +91,7 @@ private:
 
 	char *filename_;
 	uint32_t index_;
+	unsigned long slide_;
 	section_t sections_[DW_sec_num];
 	std::vector<section_t> mappings_;
 	std::vector<np::spiegel::mapping_t> system_mappings_;
@@ -111,6 +118,8 @@ private:
     std::vector<linkobj_t*> linkobjs_;
     std::vector<compile_unit_t*> compile_units_;
     np::util::rangetree<addr_t, reference_t> address_index_;
+    /* Index from real address ranges to linkobj_t */
+    np::util::rangetree<addr_t, linkobj_t*> linkobj_index_;
 
     friend class walker_t;
     friend class compile_unit_t;

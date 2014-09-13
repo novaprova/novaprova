@@ -619,6 +619,8 @@ bool describe_address(addr_t addr, class location_t &loc)
 {
     np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
 
+    addr = state->recorded_address(addr);
+
     np::spiegel::dwarf::reference_t curef;
     np::spiegel::dwarf::reference_t funcref;
     if (!state->describe_address(addr, curef, loc.line_,

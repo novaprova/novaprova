@@ -70,6 +70,7 @@ vector<linkobj_t> get_linkobjs()
 
 	linkobj_t lo;
 	lo.name = _dyld_get_image_name(i);
+	lo.slide = (unsigned long) _dyld_get_image_vmaddr_slide(i);
 
 	const struct load_command *cmds =
 		(hdr->magic == MH_MAGIC_64 || hdr->magic == MH_CIGAM_64 ?
@@ -91,7 +92,7 @@ vector<linkobj_t> get_linkobjs()
 		    lo.mappings.push_back(mapping_t(
 			    (unsigned long)seg->fileoff,
 			    (unsigned long)seg->vmsize,
-			    (void *)seg->vmaddr));
+			    (void *)(seg->vmaddr + lo.slide)));
 		}
 		break;
 #endif
@@ -104,7 +105,7 @@ vector<linkobj_t> get_linkobjs()
 		    lo.mappings.push_back(mapping_t(
 			    (unsigned long)seg->fileoff,
 			    (unsigned long)seg->vmsize,
-			    (void *)seg->vmaddr));
+			    (void *)(seg->vmaddr + lo.slide)));
 		}
 		break;
 #endif
