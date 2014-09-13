@@ -37,8 +37,9 @@ compile_unit_t::read_header(reader_t &r)
 
     if (!r.read_u16(version))
 	return false;
-    if (version != 2)
-	fatal("Bad DWARF version %u, expecting 2", version);
+    if (version < MIN_DWARF_VERSION || version > MAX_DWARF_VERSION)
+	fatal("Bad DWARF version %u, expecting %u-%u",
+	      version, MIN_DWARF_VERSION, MAX_DWARF_VERSION);
     if (length < header_length-6/*read so far*/)
 	fatal("Bad DWARF compilation unit length %u", length);
 
@@ -57,6 +58,8 @@ compile_unit_t::read_header(reader_t &r)
     printf("    abbrevs %u\n", (unsigned)abbrevs_offset_);
     printf("    addrsize %u\n", (unsigned)addrsize);
 #endif
+
+    version_ = version;
 
     length += 4;	// account for the `length' field of the header
 

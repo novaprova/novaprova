@@ -31,7 +31,12 @@ class section_t;
 class compile_unit_t
 {
 private:
-    enum { header_length = 11 };	    // this might depend on version
+    enum {
+	header_length = 11,	// this might depend on version
+
+	MIN_DWARF_VERSION = 2,
+	MAX_DWARF_VERSION = 4
+    };
 public:
     compile_unit_t(uint32_t idx, uint32_t loidx)
      :  index_(idx),
@@ -50,6 +55,7 @@ public:
     uint32_t get_link_object_index() const { return loindex_; }
     const char *get_executable() const;
     const section_t *get_section(uint32_t) const;
+    uint16_t get_version() const { return version_; }
 
     reference_t make_reference(uint32_t off) const
     {
@@ -81,6 +87,7 @@ public:
 private:
     uint32_t index_;
     uint32_t loindex_;
+    uint16_t version_;
     reader_t reader_;	    // for whole including header
     uint32_t abbrevs_offset_;
     std::vector<abbrev_t*> abbrevs_;
