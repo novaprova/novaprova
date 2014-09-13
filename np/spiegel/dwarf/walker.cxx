@@ -274,8 +274,8 @@ walker_t::read_attributes()
 	    }
 	default:
 	    // TODO: bad DWARF info - throw an exception
-	    fatal("XXX can't handle %s\n",
-		  formvals.to_name(i->form));
+	    fatal("Can't handle %s at %s:%d\n",
+		  formvals.to_name(i->form), __FILE__, __LINE__);
 	}
     }
     return RE_OK;
@@ -392,8 +392,8 @@ walker_t::skip_attributes()
 	    break;
 	default:
 	    // TODO: bad DWARF info - throw an exception
-	    fatal("XXX can't handle %s\n",
-		  formvals.to_name(i->form));
+	    fatal("Can't handle %s at %s:%d\n",
+		  formvals.to_name(i->form), __FILE__, __LINE__);
 	}
     }
     return RE_OK;
