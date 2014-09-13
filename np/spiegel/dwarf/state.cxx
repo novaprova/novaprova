@@ -42,6 +42,7 @@ state_t::~state_t()
     for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
 	delete *i;
     address_index_.clear();
+    linkobj_index_.clear();
 
     assert(instance_ == this);
     instance_ = 0;
@@ -351,6 +352,12 @@ state_t::add_self()
 	    fprintf(stderr, "np: have spiegel linkobj\n");
 #endif
 	    lo->system_mappings_ = i->mappings;
+	    lo->slide_ = i->slide;
+	    vector<mapping_t>::iterator sm;
+	    for (sm = lo->system_mappings_.begin() ; sm != lo->system_mappings_.end() ; ++sm)
+		linkobj_index_.insert((np::spiegel::addr_t)sm->get_map(),
+				      (np::spiegel::addr_t)sm->get_map() + sm->get_size(),
+				      lo);
 	}
     }
 
@@ -851,6 +858,15 @@ state_t::instrumentable_address(np::spiegel::addr_t addr) const
     for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
 	if ((*i)->is_in_plt(addr))
 	    return np::spiegel::platform::follow_plt(addr);
+    return addr;
+}
+
+np::spiegel::addr_t
+state_t::recorded_address(np::spiegel::addr_t addr) const
+{
+    np::util::rangetree<addr_t, linkobj_t*>::const_iterator i = linkobj_index_.find(addr);
+    if (i != linkobj_index_.end())
+	addr -= i->second->slide_;
     return addr;
 }
 

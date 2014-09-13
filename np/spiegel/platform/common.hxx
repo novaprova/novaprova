@@ -40,6 +40,7 @@ extern int clock_gettime(int clk_id, struct timespec *res);
 struct linkobj_t
 {
     const char *name;
+    unsigned long slide;
     std::vector<np::spiegel::mapping_t> mappings;
 };
 extern std::vector<linkobj_t> get_linkobjs();
