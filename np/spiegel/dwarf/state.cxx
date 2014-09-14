@@ -623,6 +623,11 @@ state_t::insert_ranges(const walker_t &w, reference_t funcref)
 
     if (has_lo && has_hi)
     {
+	/* In DWARF-4, DW_AT_high_pc can be absolute or relative
+	 * depending on the form it was encoded in. */
+	if (w.get_dwarf_version() == 4 &&
+	    e->get_attribute_form(DW_AT_high_pc) != DW_FORM_addr)
+	    hi += lo;
 	address_index_.insert(lo, hi, funcref);
     }
     else if (ranges)

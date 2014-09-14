@@ -79,6 +79,8 @@ public:
     const entry_t *move_to(reference_t);
     const entry_t *move_up();
 
+    uint16_t get_dwarf_version() const { return compile_unit_->get_version(); }
+
     void set_filter_tag(unsigned tag) { filter_tag_ = tag; }
 
 private:

@@ -130,6 +130,7 @@ public:
 	const value_t *v = get_attribute(name);
 	return (v && v->type == value_t::T_REF ? v->val.ref : reference_t::null);
     }
+    enum form_values get_attribute_form(uint32_t name) const;
 
 private:
     enum
