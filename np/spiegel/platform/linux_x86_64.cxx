@@ -89,7 +89,7 @@ intercept_tramp(void)
     {
 	/* fake stack frame for the original function
 	 *
-	 *  - saved RBP (for intercept type PUSHRBP only, the result of
+	 *  - saved RBP (for intercept type PUSHBP only, the result of
 	 *		 the simulated push %rbp instruction).
 	 *  - return address
 	 *  <arg0..arg5 passed in registers>
@@ -263,7 +263,7 @@ intercept_tramp(void)
 	    break;
 	case intstate_t::UNKNOWN:
 	    break;
-	};
+	}
     }
     /* Save our own %rsp for later */
     __asm__ volatile("movq %%rsp, %0" : "=m"(frame.our_rsp));
@@ -312,7 +312,7 @@ after:
 	break;
     case intstate_t::UNKNOWN:
 	break;
-    };
+    }
 
     /*
      * Call the AFTER method.  The method can examine and modify the

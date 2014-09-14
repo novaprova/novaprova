@@ -58,6 +58,7 @@ private:
 
 static ucontext_t tramp_uc;
 static ucontext_t fpuc;
+static np::spiegel::platform::intstate_t *tramp_intstate;
 static bool hack1 = false;
 static bool using_int3 = false;
 
@@ -68,16 +69,22 @@ intercept_tramp(void)
      * We put all the local variables for the tramp into a struct so
      * that we can predict their relative locations on the stack.  This
      * is important because we are going to be calling the original
-     * function with %esp pointing at the saved_ebp field, and anything
+     * function with %esp pointing at the stack[] field, and anything
      * which the compiler might decide to put below that on the stack is
      * going to be clobbered.
      */
     struct
     {
-	/* fake stack frame for the original function */
-	unsigned long saved_ebp;
-	unsigned long return_addr;
-	unsigned long args[32];
+	/* fake stack frame for the original function
+	 *
+	 *  - saved EBP (for intercept type PUSHBP only, the result of
+	 *		 the simulated push %rbp instruction).
+	 *  - return address
+	 *  - arg0
+	 *  - arg1
+	 *  - arg2 ...
+	 */
+	unsigned long stack[36];
 	/* any data that we need to keep safe past the call to the
 	 * original function, goes here */
 	x86_linux_call_t call;
@@ -85,7 +92,9 @@ intercept_tramp(void)
 	unsigned long our_esp;
     } frame;
     unsigned long parent_size;
+    int nstack = 0;
 
+    /* address of the breakpoint insn */
     frame.addr = tramp_uc.uc_mcontext.gregs[REG_EIP] - (using_int3 ? 1 : 0);
 
     /*
@@ -128,6 +137,7 @@ intercept_tramp(void)
     /* Setup the ucontext to look like we just called the
      * function from immediately before the 'after' label */
     tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.addr + 1;
+
     /*
      * Build a new fake stack frame for calling the original
      * function.
@@ -146,19 +156,62 @@ intercept_tramp(void)
      * constructed stack frame.  Another good reason to avoid single-
      * stepping is that Valgrind doesn't simulate it.
      *
+     * So we take one of two approaches:
+     *
+     *  - Many functions have a first instruction that is only one
+     *    byte long, the same size as the breakpoint instruction.
+     *    For x86 this applies to almost all non-leaf functions
+     *    and the insn is 0x55 push %ebp.  For x86_64 the situation
+     *    is more complex, but that insn (called push %rbp) is common.
+     *    Functions like this are trivial to detect and the effect
+     *    of the first insn can be trivially simulated here in the
+     *    tramp by adjusting the newly constructed stack frame before
+     *    calling the function.
+     *
+     *  - In the more complex case, we take advantage of the fact that
+     *    our intercepts are function based not insn based like GDB's
+     *    breakpoints.  So we can replace the original insn, call the
+     *    function and wait for it to return, then re-insert the
+     *    breakpoint.  This is efficient, but is not thread safe,
+     *    and doesn't do the right thing if the function is recursive
+     *    or if it longjmps out.
+     *
      * "Trust me, I know what I'm doing."
      */
-    frame.saved_ebp = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EBP];
-    frame.return_addr = (unsigned long)&&after;
+    switch (tramp_intstate->type_)
+    {
+    case intstate_t::PUSHBP:
+	/* simulate the push %ebp insn which the breakpoint replaced */
+	frame.stack[nstack++] = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_EBP];
+	/* setup to start executing the insn after the breakpoint */
+	tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.addr + 1;
+	break;
+
+    case intstate_t::OTHER:
+	/* replace the breakpoint with the original insn */
+	*(unsigned char *)frame.addr = tramp_intstate->orig_;
+	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+	/* setup to start executing it again */
+	tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.addr;
+	break;
+
+    case intstate_t::UNKNOWN:
+	break;
+    }
+
+    /* Setup the ucontext to look like we just called the
+     * function from immediately before the 'after' label */
+    frame.stack[nstack++] = (unsigned long)&&after; /* return address */
+
     /*
      * Copy enough of the original stack frame to make it look like
      * we have the original arguments.
      */
     parent_size = tramp_uc.uc_mcontext.gregs[REG_EBP] -
 		  (tramp_uc.uc_mcontext.gregs[REG_ESP]+4);
-    memcpy(frame.args,
+    memcpy(&frame.stack[nstack],
 	   (void *)(tramp_uc.uc_mcontext.gregs[REG_ESP]+4),
-	   MIN(parent_size, sizeof(frame.args)));
+	   MIN(parent_size, sizeof(frame.stack)-nstack*sizeof(unsigned long)));
     /* setup the ucontext's ESP register to point at the new stack frame */
     tramp_uc.uc_mcontext.gregs[REG_ESP] = (unsigned long)&frame;
 
@@ -172,7 +225,7 @@ intercept_tramp(void)
      * Finally it should also be able to longjmp() out without
      * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
-    frame.call.args_ = frame.args;
+    frame.call.args_ = frame.stack+nstack;
     intercept_t::dispatch_before(frame.addr, frame.call);
     if (frame.call.skip_)
 	return frame.call.retval_;	/* before() requested skip() */
@@ -181,9 +234,21 @@ intercept_tramp(void)
 	/* before() requested redirect, so setup the context to call
 	 * that function instead. */
 	tramp_uc.uc_mcontext.gregs[REG_EIP] = frame.call.redirect_;
-	/* The new function won't be intercepted (well, we hope not)
-	 * so we need to undo emulation of 'push %ebp'.  */
-	tramp_uc.uc_mcontext.gregs[REG_ESP] += 4;
+	switch (tramp_intstate->type_)
+	{
+	case intstate_t::PUSHBP:
+	    /* The new function won't be intercepted (well, we hope not)
+	     * so we need to undo emulation of 'push %ebp'.  */
+	    tramp_uc.uc_mcontext.gregs[REG_ESP] += 4;
+	    break;
+	case intstate_t::OTHER:
+	    /* Re-insert the breakpoint */
+	    *(unsigned char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
+	    VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+	    break;
+	case intstate_t::UNKNOWN:
+	    break;
+	}
     }
     /* Save our own %esp for later */
     __asm__ volatile("movl %%esp, %0" : "=m"(frame.our_esp));
@@ -219,6 +284,20 @@ after:
      * had before calling the original function.
      */
     __asm__ volatile("movl %0, %%esp" : : "m"(frame.our_esp));
+
+    switch (tramp_intstate->type_)
+    {
+    case intstate_t::PUSHBP:
+	/* we're cool */
+	break;
+    case intstate_t::OTHER:
+	/* Re-insert the breakpoint */
+	*(unsigned char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
+	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+	break;
+    case intstate_t::UNKNOWN:
+	break;
+    }
 
     /*
      * Call the AFTER method.  The method can examine and modify the
@@ -269,7 +348,8 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
     }
     if (si->si_pid != 0)
 	return;	    /* some process sent us SIGSEGV, wtf? */
-    if (!intercept_t::is_intercepted((np::spiegel::addr_t)eip))
+    tramp_intstate = intercept_t::get_intstate((np::spiegel::addr_t)eip);
+    if (!tramp_intstate)
 	goto wtf;   /* not an installed intercept */
 
 //     printf("handle_signal: trap from intercept breakpoint\n");
@@ -293,9 +373,7 @@ wtf:
 }
 
 int
-install_intercept(np::spiegel::addr_t addr,
-		  intstate_t &state __attribute__((unused)),
-		  std::string &err)
+install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
 {
     int r;
 
@@ -303,15 +381,17 @@ install_intercept(np::spiegel::addr_t addr,
     {
     case INSN_PUSH_EBP:
 	/* non-leaf function, all is good */
+	state.type_ = intstate_t::PUSHBP;
 	break;
     case INSN_HLT:
     case INSN_INT3:
 	/* already intercepted, can handle this too */
 	break;
     default:
-	err = "cannot intercept leaf functions";
-	return -1;
+	state.type_ = intstate_t::OTHER;
+	break;
     }
+    state.orig_ = *(unsigned char *)addr;
 
     r = text_map_writable(addr, 1);
     if (r)
@@ -348,16 +428,14 @@ install_intercept(np::spiegel::addr_t addr,
 }
 
 int
-uninstall_intercept(np::spiegel::addr_t addr,
-		    intstate_t &state __attribute__((unused)),
-		    std::string &err)
+uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
 {
     if (*(unsigned char *)addr != (using_int3 ? INSN_INT3 : INSN_HLT))
     {
 	err = "intercept not installed";
 	return -1;
     }
-    *(unsigned char *)addr = INSN_PUSH_EBP;
+    *(unsigned char *)addr = state.orig_;
     VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
     int r = text_restore(addr, 1);
     if (r < 0)
