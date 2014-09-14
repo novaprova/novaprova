@@ -224,9 +224,19 @@ walker_t::read_attributes()
 	    }
 	case DW_FORM_strp:
 	    {
-		uint32_t off;
-		if (!reader_.read_u32(off))
-		    return RE_EOF;
+		np::spiegel::offset_t off;
+		if (compile_unit_->get_version() == 2)
+		{
+		    uint32_t o32;
+		    if (!reader_.read_offset(o32))
+			return RE_EOF;
+		    off = o32;
+		}
+		else
+		{
+		    if (!reader_.read_offset(off))
+			return RE_EOF;
+		}
 		const char *v = compile_unit_->get_section(DW_sec_str)->offset_as_string(off);
 		if (!v)
 		    return RE_EOF;
@@ -372,8 +382,16 @@ walker_t::skip_attributes()
 		return EOF;
 	    break;
 	case DW_FORM_strp:
-	    if (!reader_.skip_u32())
-		return EOF;
+	    if (compile_unit_->get_version() == 2)
+	    {
+		if (!reader_.skip_u32())
+		    return EOF;
+	    }
+	    else
+	    {
+		if (!reader_.skip_offset())
+		    return EOF;
+	    }
 	    break;
 	case DW_FORM_block1:
 	    {
