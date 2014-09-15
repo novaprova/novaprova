@@ -228,7 +228,7 @@ walker_t::read_attributes()
 		if (compile_unit_->get_version() == 2)
 		{
 		    uint32_t o32;
-		    if (!reader_.read_offset(o32))
+		    if (!reader_.read_u32(o32))
 			return RE_EOF;
 		    off = o32;
 		}
