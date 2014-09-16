@@ -2,3 +2,5 @@ call-dlsym
 mprotect
 osx-get-linkobjs
 osx-self-exe
+osx-main
+osx-ctor
