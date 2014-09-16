@@ -33,11 +33,24 @@ namespace np {
 using namespace std;
 using namespace np::util;
 
+/*
+ * In OSX, the argc and argv are not stashed anywhere convenient, but
+ * constructors are called before main() with the same arguments as
+ * main(), which gives us a chance to sample them for later.
+ */
+static int _argc;
+static char **_argv;
+static void __attribute__((constructor)) stash_argv(int argc, char **argv)
+{
+    _argc = argc;
+    _argv = argv;
+}
 
 bool get_argv(int *argcp, char ***argvp)
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    return false;
+    *argcp = _argc;
+    *argvp = _argv;
+    return true;
 }
 
 char *self_exe()
