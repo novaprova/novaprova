@@ -172,19 +172,25 @@ intercept_tester_t::reset_counters()
 
 int moe(int x, int y)
 {
+    if (is_verbose()) printf("Start of moe, x=%d y=%d\n", x, y);
     int r = the_function(x+1, y+1);
+    if (is_verbose()) printf("End of moe, r=%d\n", r);
     return r-1;
 }
 
 int curly(int x, int y)
 {
+    if (is_verbose()) printf("Start of curly, x=%d y=%d\n", x, y);
     int r = moe(x+1, y+1);
+    if (is_verbose()) printf("End of curly, r=%d\n", r);
     return r-1;
 }
 
 int larry(int x, int y)
 {
+    if (is_verbose()) printf("Start of larry, x=%d y=%d\n", x, y);
     int r = curly(x+1, y+1);
+    if (is_verbose()) printf("End of larry, r=%d\n", r);
     return r-1;
 }
 
@@ -262,6 +268,7 @@ main(int argc, char **argv __attribute__((unused)))
     {
 	fatal("Usage: testrunner intercept\n");
     }
+    if (is_verbose()) printf("Address of the_function is %p\n", the_function);
 
     np::spiegel::dwarf::state_t state;
     if (!state.add_self())
@@ -269,6 +276,10 @@ main(int argc, char **argv __attribute__((unused)))
 
     intercept_tester_t *it;
     int r;
+
+    BEGIN("self-check");
+    CHECK(the_function(3, 42) == 5219);
+    END;
 
     BEGIN("install");
     it = new intercept_tester_t();
