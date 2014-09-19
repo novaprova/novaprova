@@ -202,20 +202,6 @@ vector<string> get_file_descriptors()
     return *res;
 }
 
-int install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
-{
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    err = "Not yet implemented";
-    return -1;
-}
-
-int uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
-{
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    err = "Not yet implemented";
-    return -1;
-}
-
 int clock_gettime(int clk_id, struct timespec *res)
 {
     fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
