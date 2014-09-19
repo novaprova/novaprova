@@ -14,7 +14,6 @@
 #  limitations under the License.
 #
 *.log
-*.dSYM
 .leaky_fixture.dat
 .leaky_test.dat
 .logx
