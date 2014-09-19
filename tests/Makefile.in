@@ -201,5 +201,7 @@ $(SIMPLE_TESTS_CXX): % : %.cxx $(DEPS)
 clean:
 	$(RM) $(TEST_EXES) $(COMPOUND_DATA)
 	$(RM) fw.a fw.o fw-stubs.o
+	$(RM) *.log
+	$(RM) -r *.dSYM/
 
 distclean: clean
