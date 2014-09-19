@@ -131,7 +131,8 @@ libnovaprova_HEADERS= \
 
 libnovaprova_OBJS= \
 	$(patsubst %.c,%.o,$(filter %.c,$(libnovaprova_SOURCE))) \
-	$(patsubst %.cxx,%.o,$(filter %.cxx,$(libnovaprova_SOURCE)))
+	$(patsubst %.cxx,%.o,$(filter %.cxx,$(libnovaprova_SOURCE))) \
+	$(patsubst %.S,%.o,$(filter %.S,$(libnovaprova_SOURCE)))
 #
 # Automatic dependency tracking
 libnovaprova_DFILES= \
