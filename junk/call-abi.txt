@@ -1,0 +1,18 @@
+
+Darwin x86-64
+
+  +^
++----------+
+|    RA    |
++----------+
+|saved %rbp| <-- %rbp
++----------+
+|  locals  |
++----------+
+|  locals  |
++----------+
+|  locals  | <-- %rsp
++----------+
+  -v
+
+Actually this is just the SysV ABI for x86-64, no surprises
