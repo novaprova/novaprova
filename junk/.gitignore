@@ -1,6 +1,11 @@
+call-abi.s
 call-dlsym
+hello
+hello.map
 mprotect
-osx-get-linkobjs
-osx-self-exe
-osx-main
 osx-ctor
+osx-get-linkobjs
+osx-main
+osx-self-exe
+osx-setcontext
+osx-siginfo
