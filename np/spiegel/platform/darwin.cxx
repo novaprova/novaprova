@@ -204,20 +204,6 @@ vector<string> get_file_descriptors()
     return *res;
 }
 
-int install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
-{
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    err = "Not yet implemented";
-    return -1;
-}
-
-int uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
-{
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    err = "Not yet implemented";
-    return -1;
-}
-
 /*
  * Darwin doesn't have the POSIX clock_getttime().  This is from
  * http://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x

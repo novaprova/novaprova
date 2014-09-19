@@ -47,9 +47,11 @@ linux-gnu)
     ;;
 darwin*)
     os=darwin
+    # we need _XOPEN_SOURCE for setcontext() et al
+    platform_CFLAGS="$platform_CFLAGS -D_XOPEN_SOURCE"
     libbfd_CFLAGS="-I/usr/local/include -I/usr/local/include/libiberty"
     libbfd_LIBS="-L/usr/local/lib -lbfd -liberty -lintl -liconv -lz"
-    platform_SOURCE="mprotect.cxx"
+    platform_SOURCE="mprotect.cxx darwin_setcontext.S"
     sed_extended_opt="-E"
     ;;
 *) AC_MSG_ERROR([Unsupported operating system $target_os]) ;;
