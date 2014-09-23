@@ -56,6 +56,7 @@ public:
     const char *get_executable() const;
     const section_t *get_section(uint32_t) const;
     uint16_t get_version() const { return version_; }
+    np::spiegel::addr_t live_address(np::spiegel::addr_t addr) const;
 
     reference_t make_reference(uint32_t off) const
     {
