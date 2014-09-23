@@ -253,7 +253,13 @@ testmanager_t::discover_functions()
 	}
     }
 
+
     // Calculate the effective root_ and common_
+    if (!root_->has_children())
+    {
+	fprintf(stderr, "np: WARNING: no tests discovered\n");
+	return;
+    }
     common_ = root_;
     root_ = root_->detach_common();
 }

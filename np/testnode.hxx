@@ -32,6 +32,7 @@ public:
     std::string get_fullname() const;
     testnode_t *get_parent() { return parent_; }
     testnode_t *find(const char *name);
+    bool has_children() const { return children_ != 0; }
     testnode_t *make_path(std::string name);
     void set_function(functype_t, np::spiegel::function_t *);
     void add_mock(np::spiegel::function_t *target, np::spiegel::function_t *mock);
