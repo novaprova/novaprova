@@ -50,6 +50,7 @@ public:
     uint32_t get_link_object_index() const { return loindex_; }
     const char *get_executable() const;
     const section_t *get_section(uint32_t) const;
+    np::spiegel::addr_t live_address(np::spiegel::addr_t addr) const;
 
     reference_t make_reference(uint32_t off) const
     {

@@ -293,6 +293,7 @@ public:
     std::vector<const char *> get_parameter_names() const;
     bool has_unspecified_parameters() const;
     addr_t get_address() const;
+    addr_t get_live_address() const;
 
 //     std::vector<type_t*> get_exception_types() const;
 
