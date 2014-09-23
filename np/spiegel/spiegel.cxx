@@ -575,9 +575,10 @@ function_t::to_string() const
     return return_type.to_string(inner);
 }
 
-// Return the address of the function, or 0 if the function is not
+// Return the recorded address of the function, or 0 if the function is not
 // defined in this compile unit (in which case, good luck finding it in
-// some other compile unit).
+// some other compile unit).  Note this needs to be turned into an
+// instrumentable address to instrument or invoke it.
 addr_t
 function_t::get_address() const
 {
@@ -586,13 +587,26 @@ function_t::get_address() const
     return e->get_address_attribute(DW_AT_low_pc);
 }
 
+// Return the live address of the function, or 0 if the function is not
+// defined in this compile unit (in which case, good luck finding it in
+// some other compile unit).  Note this needs to be turned into an
+// instrumentable address to instrument or invoke it.
+addr_t
+function_t::get_live_address() const
+{
+    np::spiegel::dwarf::walker_t w(ref_);
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
+    return w.live_address(e->get_address_attribute(DW_AT_low_pc));
+}
+
+
 #if SPIEGEL_DYNAMIC
 value_t
 function_t::invoke(vector<value_t> args __attribute__((unused))) const
 {
     // TODO: check that DW_AT_calling_convention == DW_CC_normal
     // TODO: check that we're talking to self
-    addr_t addr = get_address();
+    addr_t addr = get_live_address();
     if (!addr)
 	return value_t::make_invalid();
 

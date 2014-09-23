@@ -165,5 +165,12 @@ compile_unit_t::get_section(uint32_t i) const
     return &lo->sections_[i];
 }
 
+np::spiegel::addr_t
+compile_unit_t::live_address(np::spiegel::addr_t addr) const
+{
+    const state_t::linkobj_t *lo = state_t::instance()->linkobjs_[loindex_];
+    return addr ? addr + lo->slide_ : addr;
+}
+
 // close namespaces
 }; }; };

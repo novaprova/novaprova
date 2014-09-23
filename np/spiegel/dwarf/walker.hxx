@@ -83,6 +83,11 @@ public:
 
     void set_filter_tag(unsigned tag) { filter_tag_ = tag; }
 
+    np::spiegel::addr_t live_address(np::spiegel::addr_t addr) const
+    {
+	return compile_unit_->live_address(addr);
+    }
+
 private:
     enum read_entry_results_t
     {
