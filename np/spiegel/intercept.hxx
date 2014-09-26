@@ -84,6 +84,8 @@ struct intercept_t : public np::util::zalloc
     addr_t get_address() const { return addr_; }
     const char *get_name() const { return (name_ ? name_ : "(unknown)"); }
 
+    virtual std::string as_string() const;
+
     int install();
     int uninstall();
 

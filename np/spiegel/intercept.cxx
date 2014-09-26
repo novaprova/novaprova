@@ -20,6 +20,7 @@
 namespace np {
 namespace spiegel {
 using namespace std;
+using namespace np::util;
 
 map<addr_t, intercept_t::addrstate_t> intercept_t::installed_;
 
@@ -50,6 +51,16 @@ intercept_t::intercept_t(addr_t a, const char *name)
 intercept_t::~intercept_t()
 {
     xfree(name_);
+}
+
+string
+intercept_t::as_string() const
+{
+    string s;
+    s += get_name();
+    s += " at ";
+    s += HEX((unsigned long)addr_);
+    return s;
 }
 
 int

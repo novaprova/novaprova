@@ -55,6 +55,8 @@ public:
 	parameter_t(const char *, char **, const char *);
 	~parameter_t();
 
+	std::string as_string() const;
+
 	// I tried using std::string for name_ and values_ but the
 	// string memory management is sufficiently obscure that it
 	// results in valgrind in the forked child reporting leaks.
