@@ -127,7 +127,7 @@ testnode_t::dump(int level) const
     indent(level);
     if (name_)
     {
-	fprintf(stderr, "%s (full %s)\n",
+	fprintf(stderr, "testnode %s (full %s)\n",
 		name_, get_fullname().c_str());
     }
 
@@ -136,11 +136,25 @@ testnode_t::dump(int level) const
 	if (funcs_[type])
 	{
 	    indent(level);
-	    fprintf(stderr, "  %s=%s:%s\n",
+	    fprintf(stderr, "  %s %s:%s\n",
 			    as_string((functype_t)type),
 			    funcs_[type]->get_compile_unit()->get_absolute_path().c_str(),
 			    funcs_[type]->get_name().c_str());
 	}
+    }
+
+    vector<parameter_t*>::const_iterator ip;
+    for (ip = parameters_.begin() ; ip != parameters_.end() ; ip++)
+    {
+	indent(level);
+	fprintf(stderr, "  parameter %s\n", (*ip)->as_string().c_str());
+    }
+
+    vector<np::spiegel::intercept_t*>::const_iterator ii;
+    for (ii = intercepts_.begin(); ii != intercepts_.end() ; ii++)
+    {
+	indent(level);
+	fprintf(stderr, "  intercept %s\n", (*ii)->as_string().c_str());
     }
 
     for (testnode_t *child = children_ ; child ; child = child->next_)
@@ -329,6 +343,21 @@ testnode_t::parameter_t::~parameter_t()
     vector<char*>::iterator i;
     for (i = values_.begin() ; i != values_.end() ; ++i)
 	free(*i);
+}
+
+string
+testnode_t::parameter_t::as_string() const
+{
+    string s = name_;
+    char sep = '=';
+    vector<char*>::const_iterator i;
+    for (i = values_.begin() ; i != values_.end() ; ++i)
+    {
+	s += sep;
+	sep = ',';
+	s += *i;
+    }
+    return s;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
