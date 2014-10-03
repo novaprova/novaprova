@@ -4,6 +4,7 @@ hello
 hello.map
 mprotect
 osx-ctor
+osx-file-descriptors
 osx-get-linkobjs
 osx-main
 osx-self-exe
