@@ -21,8 +21,15 @@
 #include <mach-o/dyld.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 
 #include <string>
+#include <iostream>
+#include <sstream>
 #include <vector>
 
 
@@ -195,11 +202,175 @@ bool is_running_under_debugger()
     return false;
 }
 
+static void describe_sockaddr(const struct sockaddr *sa, ostream &o)
+{
+    switch (sa->sa_family)
+    {
+    case AF_INET:
+	{
+	    struct sockaddr_in *sin = (struct sockaddr_in *)sa;
+	    char addrbuf[INET_ADDRSTRLEN];
+	    o << "inet "
+	      << inet_ntop(sin->sin_family,
+			   &sin->sin_addr.s_addr,
+			   addrbuf, sizeof(addrbuf))
+	      << ":"
+	      << ntohs(sin->sin_port);
+	}
+	break;
+    case AF_INET6:
+	{
+	    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)sa;
+	    char addrbuf[INET6_ADDRSTRLEN];
+	    o << "inet6 "
+	      << inet_ntop(sin6->sin6_family,
+			   &sin6->sin6_addr,
+			   addrbuf, sizeof(addrbuf))
+	      << "."
+	      << ntohs(sin6->sin6_port);
+	}
+	break;
+    case AF_UNIX:
+	{
+	    struct sockaddr_un *sun = (struct sockaddr_un *)sa;
+	    o << "unix " << sun->sun_path;
+	}
+	break;
+    default:
+	fprintf(stderr, "unexpected socket family %d\n", sa->sa_family);
+	break;
+    }
+}
+
+static bool describe_fd(int fd, ostream &o)
+{
+    struct stat sb;
+    int r;
+    bool need_path = false;
+    bool need_dev = false;
+    bool need_sockname = false;
+
+    r = fstat(fd, &sb);
+    if (r < 0)
+    {
+	if (errno == EBADF)
+	{
+	    /* not a file descriptor */
+	    return false;
+	}
+	if (errno == EACCES || errno == EPERM)
+	{
+	    /* permission denied */
+	    return false;
+	}
+	perror("fstat");
+	return false;
+    }
+    switch (sb.st_mode & S_IFMT)
+    {
+    case S_IFIFO:   /* named pipe (fifo) or actual pipe */
+	/* Experiment indicates named pipes have non-zero st_dev
+	 * field but anonymous pipes don't */
+	if (sb.st_dev == 0)
+	{
+	    o << "pipe:0x" << std::hex << sb.st_ino;
+	}
+	else
+	{
+	    need_path = true;
+	}
+	break;
+    case S_IFCHR:   /* character special */
+	need_dev = true;
+	o << "char device ";
+	break;
+    case S_IFDIR:   /* directory */
+	need_path = true;
+	break;
+    case S_IFBLK:   /* block special */
+	need_dev = true;
+	o << "block device ";
+	break;
+    case S_IFREG:   /* regular file */
+	need_path = true;
+	break;
+    /* We won't get S_IFLNK from fstat(), any symlink
+     * has already been followed at open time */
+    case S_IFSOCK:  /* socket */
+	need_sockname = true;
+	o << "socket ";
+	break;
+    /* S_IFWHT is used as argument to mknod() to white-out
+     * a name in a UnionFS directory, and doesn't appear
+     * as the type of any actual inodes */
+    default:
+	fprintf(stderr, "fd %d: unexpected stat mode %d\n",
+		fd, sb.st_mode & S_IFMT);
+	return false;
+    }
+
+    if (need_dev)
+    {
+	o << major(sb.st_rdev) << ":" << minor(sb.st_rdev);
+    }
+    if (need_path)
+    {
+	char path[PATH_MAX];
+	r = fcntl(fd, F_GETPATH, path);
+	if (r < 0)
+	{
+	    fprintf(stderr, "fcntl(%d, F_GETPATH): %s\n", fd, strerror(errno));
+	    return false;
+	}
+	o << path;
+    }
+    if (need_sockname)
+    {
+	struct sockaddr_storage addr;
+	socklen_t socklen = sizeof(addr);
+	r = getsockname(fd, (struct sockaddr *)&addr, &socklen);
+	if (r < 0)
+	{
+	    perror("getsockname");
+	    return false;
+	}
+	o << "local ";
+	describe_sockaddr((struct sockaddr *)&addr, o);
+	if (addr.ss_family != AF_UNIX)
+	{
+	    socklen = sizeof(addr);
+	    r = getpeername(fd, (struct sockaddr *)&addr, &socklen);
+	    if (r < 0)
+	    {
+		perror("getpeername");
+		return false;
+	    }
+	    o << " remote ";
+	    describe_sockaddr((struct sockaddr *)&addr, o);
+	}
+    }
+    return true;
+}
+
 vector<string> get_file_descriptors()
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    vector<string>* res = new vector<string>();
-    return *res;
+    vector<string> fds;
+    int fd;
+    int numfds = getdtablesize();
+
+    for (fd = 0 ; fd < numfds ; fd++)
+    {
+	ostringstream o;
+	if (describe_fd(fd, o))
+	{
+	    // STL is just so screwed
+	    if (fd >= (int)fds.size())
+		fds.resize(fd+1);
+	    fds[fd] = o.str();
+	}
+    }
+
+    return fds;
 }
 
 int clock_gettime(int clk_id, struct timespec *res)

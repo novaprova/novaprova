@@ -1,7 +1,8 @@
 
 CFLAGS=	-g
 
-all:	hello osx-setcontext osx-siginfo call-abi.s
+all:	hello osx-setcontext osx-siginfo call-abi.s \
+	osx-file-descriptors
 
 call-abi.s: call-abi.c
 	$(CC) -S -o $@ $<
