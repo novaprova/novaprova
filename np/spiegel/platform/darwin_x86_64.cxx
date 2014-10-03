@@ -99,7 +99,6 @@ private:
 #define INSN_HLT	    0xf4
 
 static ucontext_t tramp_uc;
-static ucontext_t fpuc;
 static np::spiegel::platform::intstate_t *tramp_intstate;
 static bool hack1 = false;
 static bool using_int3 = false;
