@@ -259,7 +259,7 @@ intercept_tramp(void)
      * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
     frame.call.stack_ = frame.stack+nstack;
-    frame.call.mcontext_ = tramp_uc.uc_mcontext;
+    frame.call.mcontext_ = &tramp_uc.__mcontext_data;
     intercept_t::dispatch_before(frame.addr, frame.call);
     if (frame.call.skip_)
 	return frame.call.retval_;	/* before() requested skip() */
@@ -277,7 +277,7 @@ intercept_tramp(void)
 	    break;
 	case intstate_t::OTHER:
 	    /* Re-insert the breakpoint */
-	    *(unsigned char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
+	    *( char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
 	    VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
 	    break;
 	case intstate_t::UNKNOWN:
@@ -357,28 +357,27 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 //	    (unsigned long)uc->uc_mcontext->__ss.__rsp);
 
     /* double-check that this is not some spurious signal */
-    unsigned char *eip;
+    unsigned char *rip = (unsigned char *)uc->uc_mcontext->__ss.__rip;
 
-    eip = (unsigned char *)(uc->uc_mcontext->__ss.__rip);
     if (using_int3)
     {
 	if (sig != SIGTRAP || si->si_signo != SIGTRAP)
 	    return;	    /* we got a bogus signal, wtf? */
 	/* Darwin seems to set neither si_code nor si_pid to anything useful?? */
-	eip--;
-	if (*eip != INSN_INT3)
+	rip--;
+	if (*rip != INSN_INT3)
 	    goto wtf;	    /* not an INT3 */
     }
     else
     {
 	if (sig != SIGSEGV || si->si_signo != SIGSEGV)
 	    return;	    /* we got a bogus signal, wtf? */
-	if (*eip != INSN_HLT)
+	if (*rip != INSN_HLT)
 	    goto wtf;	    /* not an HLT */
     }
     if (si->si_pid != 0)
 	return;	    /* some process sent us SIGSEGV, wtf? */
-    tramp_intstate = intercept_t::get_intstate((np::spiegel::addr_t)eip);
+    tramp_intstate = intercept_t::get_intstate((np::spiegel::addr_t)rip);
     if (!tramp_intstate)
 	goto wtf;   /* not an installed intercept */
 
