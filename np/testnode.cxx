@@ -97,9 +97,9 @@ testnode_t::add_mock(np::spiegel::function_t *target, np::spiegel::function_t *m
 	    target->get_full_name().c_str(),
 	    (void*)mock->get_address());
 #endif
-    add_mock(target->get_address(),
+    add_mock(target->get_live_address(),
 	     target->get_full_name().c_str(),
-	     mock->get_address());
+	     mock->get_live_address());
 }
 
 void
