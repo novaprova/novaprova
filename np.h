@@ -269,7 +269,7 @@ struct __np_param_dec
  */
 #define NP_PARAMETER(nm, vals) \
     static char * nm ;\
-    static const struct __np_param_dec *__np_parameter_##nm(void) __attribute__((unused)); \
+    static const struct __np_param_dec *__np_parameter_##nm(void) __attribute__((used)); \
     static const struct __np_param_dec *__np_parameter_##nm(void) \
     { \
 	static const struct __np_param_dec d = { & nm , vals }; \
