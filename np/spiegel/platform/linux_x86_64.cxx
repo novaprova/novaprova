@@ -338,9 +338,7 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 // 	    (unsigned long)uc->uc_mcontext.gregs[REG_RSP]);
 
     /* double-check that this is not some spurious signal */
-    unsigned char *eip;
-
-    eip = (unsigned char *)(uc->uc_mcontext.gregs[REG_RIP]);
+    unsigned char *rip = (unsigned char *)uc->uc_mcontext.gregs[REG_RIP];
     if (using_int3)
     {
 	if (sig != SIGTRAP || si->si_signo != SIGTRAP)
@@ -348,8 +346,8 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 	if (si->si_code != SI_KERNEL /* natural */ &&
 	    si->si_code != TRAP_BRKPT /* via Valgrind */)
 	    goto wtf;	    /* this is the code we expect from HLT traps */
-	eip--;
-	if (*eip != INSN_INT3)
+	rip--;
+	if (*rip != INSN_INT3)
 	    goto wtf;	    /* not an INT3 */
     }
     else
@@ -358,12 +356,12 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 	    return;	    /* we got a bogus signal, wtf? */
 	if (si->si_code != SI_KERNEL)
 	    goto wtf;	    /* this is the code we expect from HLT traps */
-	if (*eip != INSN_HLT)
+	if (*rip != INSN_HLT)
 	    goto wtf;	    /* not an HLT */
     }
     if (si->si_pid != 0)
 	return;	    /* some process sent us SIGSEGV, wtf? */
-    tramp_intstate = intercept_t::get_intstate((np::spiegel::addr_t)eip);
+    tramp_intstate = intercept_t::get_intstate((np::spiegel::addr_t)rip);
     if (!tramp_intstate)
 	goto wtf;   /* not an installed intercept */
 
