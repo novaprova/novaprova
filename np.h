@@ -159,7 +159,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	const void *_a = (a); \
 	if (!(_a == NULL)) \
 	    __np_assert_failed(__FILE__, __LINE__, \
-	    "NP_ASSERT_NULL(" #a "=%p)", _a); \
+	    "NP_ASSERT_NULL(" #a "=0x%lx)", (unsigned long)_a); \
     } while(0)
 /** Test that a pointer is not NULL, otherwise FAIL the test.
  *
@@ -169,7 +169,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	const void *_a = (a); \
 	if (!(_a != NULL)) \
 	    __np_assert_failed(__FILE__, __LINE__, \
-	    "NP_ASSERT_NOT_NULL(" #a "=%p)", _a); \
+	    "NP_ASSERT_NOT_NULL(" #a "=0x%lx)", (unsigned long)_a); \
     } while(0)
 /** Test that two strings are equal, otherwise FAIL the test.
  *
