@@ -56,6 +56,9 @@ setcontext(ucontext_t *uc)
 }
 
 static unsigned long intercept_tramp(void);
+extern "C" unsigned long __np_intercept_after(unsigned long, struct frame &);
+extern "C" void __np_intercept_tramp0(void);
+extern "C" void __np_intercept_tramp1(void);
 
 #define offsetofp(ptype, fld)	    ((size_t)&(((ptype)0)->fld))
 
@@ -72,8 +75,9 @@ static int abi_arg_offsets[6] = {
 
 class x86_64_darwin_call_t : public np::spiegel::call_t
 {
-private:
+public:
     x86_64_darwin_call_t() {}
+private:
 
     mcontext_t mcontext_;
     unsigned long *stack_;
@@ -93,6 +97,7 @@ private:
     }
 
     friend unsigned long intercept_tramp(void);
+    friend unsigned long __np_intercept_after(unsigned long, struct frame &);
 };
 
 #define INSN_PUSH_RBP	    0x55
@@ -101,57 +106,45 @@ private:
 
 static ucontext_t tramp_uc;
 static np::spiegel::platform::intstate_t *tramp_intstate;
-static bool hack1 = false;
 static bool using_int3 = false;
 
-static unsigned long
-intercept_tramp(void)
+/*
+ * We put all the local variables for the tramp into a struct so
+ * that we can predict their relative locations on the stack.  This
+ * is important because we are going to be calling the original
+ * function with %rsp pointing at the stack[] field, and anything
+ * which the compiler might decide to put below that on the stack is
+ * going to be clobbered.  Also, for Darwin/clang we need to access
+ * this stack frame from a separate function, __np_intercept_after().
+ */
+struct frame
 {
-    /*
-     * We put all the local variables for the tramp into a struct so
-     * that we can predict their relative locations on the stack.  This
-     * is important because we are going to be calling the original
-     * function with %rsp pointing at the stack[] field, and anything
-     * which the compiler might decide to put below that on the stack is
-     * going to be clobbered.
+    /* fake stack frame for the original function
+     *
+     *  - saved RBP (for intercept type PUSHRBP only, the result of
+     *		 the simulated push %rbp instruction).
+     *  - return address
+     *  <arg0..arg5 passed in registers>
+     *  - arg6
+     *  - arg7...
      */
-    struct
-    {
-	/* fake stack frame for the original function
-	 *
-	 *  - saved RBP (for intercept type PUSHRBP only, the result of
-	 *		 the simulated push %rbp instruction).
-	 *  - return address
-	 *  <arg0..arg5 passed in registers>
-	 *  - arg6
-	 *  - arg7...
-	 */
-	unsigned long stack[28];
-	/* any data that we need to keep safe past the call to the
-	 * original function, goes here */
-	x86_64_darwin_call_t call;
-	addr_t addr;
-	unsigned long our_rsp;
-    } frame;
+    unsigned long stack[28];
+    /* any data that we need to keep safe past the call to the
+     * original function, goes here */
+    x86_64_darwin_call_t call;
+    addr_t addr;
+    unsigned long our_rsp;
+};
+
+
+static unsigned long intercept_tramp(void)
+{
+    struct frame frame;
     unsigned long parent_size;
     int nstack = 0;
 
     /* address of the breakpoint insn */
     frame.addr = tramp_uc.__mcontext_data.__ss.__rip - (using_int3 ? 1 : 0);
-
-    /*
-     * This branch is never taken because the variable 'hack1' is never
-     * set.  However having 'goto after' here prevents gcc from eliding
-     * the code following the after: label.  Presumably this happens
-     * because the single path reaching that code ends in a call to
-     * exit() which is declared __attribute__((noreturn)).  I'm
-     * surprised that taking the address of the after: label using the
-     * '&&after' syntax does not force the code to be emitted but
-     * instead generates a bogus address in the middle of the function!
-     * This was needlessly confusing.
-     */
-    if (hack1)
-	goto after;
 
 #if _NP_ENABLE_TRACE
     {
@@ -243,9 +236,19 @@ intercept_tramp(void)
 	break;
     }
 
-    /* Setup the ucontext to look like we just called the
-     * function from immediately before the 'after' label */
-    frame.stack[nstack++] = (unsigned long)&&after; /* return address */
+    /*
+     * Setup the ucontext so the called function will return to the
+     * start of the __np_intercept_after() function.  On Linux/gcc we
+     * can get away with having that code at the end of this function
+     * with a label, but on Darwin/clang the compiler seems to insist on
+     * inserting instructions which trash %rax between the label and the
+     * first __asm__ statement following it, which trashes the return
+     * value from the original function.
+     */
+    if (nstack)
+	frame.stack[nstack++] = (unsigned long)__np_intercept_tramp1; /* return address */
+    else
+	frame.stack[nstack++] = (unsigned long)__np_intercept_tramp0; /* return address */
 
     /*
      * Copy enough of the original stack frame to make it look like
@@ -300,25 +303,94 @@ intercept_tramp(void)
 	    break;
 	};
     }
-    /* Save our own %rsp for later */
+    /* Save our own %rsp and %rbp for later */
     __asm__ volatile("movq %%rsp, %0" : "=m"(frame.our_rsp));
 
     /* switch to the ucontext */
-//    printf("tramp: about to setcontext(RIP=0x%016lx RSP=0x%016lx RBP=0x%016lx)\n",
-//	   (unsigned long)tramp_uc.__mcontext_data.__ss.__rip,
-//	   (unsigned long)tramp_uc.__mcontext_data.__ss.__rsp,
-//	   (unsigned long)tramp_uc.__mcontext_data.__ss.__rbp);
+    trace("intercept_tramp: about to setcontext rip=");
+    trace_hex(tramp_uc.__mcontext_data.__ss.__rip);
+    trace(" rsp=");
+    trace_hex(tramp_uc.__mcontext_data.__ss.__rsp);
+    trace(" rbp=");
+    trace_hex(tramp_uc.__mcontext_data.__ss.__rbp);
+    trace("\n");
+
     setcontext(&tramp_uc);
     /* notreached - setcontext() should not return under any
      * circumstances on Darwin */
     perror("setcontext");
     exit(1);
+    /* not reached */
+    return 0;
+}
 
-after:
-    /* the original function returns here */
+/*
+ * The original function returns here with this state:
+ *
+ *   %rax   return value from original function
+ *   %rsp   points to frame.stackp[2] in intercept_tramp()
+ *	    above us on the stack
+ *   %rbp   same as intercept_tramp()'s %rbp
+ *
+ * We do the least possible work to set up a call to the
+ * __np_intercept_after() routine with
+ *
+ *   %rdi   arg0, the return value from the original function
+ *   %rsi   arg1, a reference to intercept_tramp()s struct frame
+ *
+ * and then return to intercept_tramp()'s caller.
+ */
+__asm__ (
+"___np_intercept_tramp1:\n"
+"movq %rax,%rdi;\n"
+"movq %rsp,%rsi;\n"
+"subq $16,%rsi;\n"
+"subq $32,%rsp;\n"
+"callq ___np_intercept_after;\n"
+"movq %rbp,%rsp;\n"
+"popq %rbp;\n"
+"retq;\n"
+);
+
+/* This is the same as __np_intercept_tramp1 but handles the case where
+ * %rsp points at frame.stack[1] instead because we didn't simulate a
+ * pushbp instruction in intercept_tramp()
+ */
+__asm__ (
+"___np_intercept_tramp0:\n"
+"movq %rax,%rdi;\n"
+"movq %rsp,%rsi;\n"
+"subq $8,%rsi;\n"
+"subq $24,%rsp;\n"
+"callq ___np_intercept_after;\n"
+"movq %rbp,%rsp;\n"
+"popq %rbp;\n"
+"retq;\n"
+);
+
+
+extern "C" unsigned long __np_intercept_after(unsigned long rax, struct frame &frame)
+{
+#if _NP_ENABLE_TRACE
+    {
+	unsigned long rsp;
+	unsigned long rbp;
+	__asm__ volatile("movq %%rsp, %0" : "=r"(rsp));
+	__asm__ volatile("movq %%rbp, %0" : "=r"(rbp));
+	trace("__np_intercept_after: started rax=");
+	trace_hex(rax);
+	trace(" frame=");
+	trace_hex((unsigned long)&frame.stack[0]);
+	trace(" %rsp=");
+	trace_hex(rsp);
+	trace(" %rbp=");
+	trace_hex(rbp);
+	trace("\n");
+    }
+#endif
 
     /* return value is in RAX, save it directly into the call_t */
-    __asm__ volatile("movq %%rax, %0" : "=m"(frame.call.retval_));
+    frame.call.retval_ = rax;
 
     /*
      * The compiler will emit (at least when unoptimised) instructions
@@ -333,7 +405,8 @@ after:
      * them.  To avoid those two warnings we first restore the %rsp we
      * had before calling the original function.
      */
-    __asm__ volatile("movq %0, %%rsp" : : "m"(frame.our_rsp));
+//    __asm__ volatile("movq %0, %%rsp" : : "m"(frame.our_rsp));
+
 
     switch (tramp_intstate->type_)
     {
