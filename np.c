@@ -19,6 +19,7 @@
 #if HAVE_VALGRIND
 #include <valgrind/valgrind.h>
 #endif
+#include "np/util/trace.hxx"
 
 using namespace std;
 
@@ -100,6 +101,7 @@ np_init(void)
     be_valground();
     std::set_terminate(__np_terminate_handler);
     np::util::rel_timestamp();
+    np::trace::init();
     np::testmanager_t::instance();
     return new np::runner_t;
 }
