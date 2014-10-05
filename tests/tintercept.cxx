@@ -502,6 +502,24 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it5->after_count == 1);
     it5->uninstall();
     END;
+#elif defined(__APPLE__)
+    /*
+     * strncpy() starts with "mov %rdi,$r8" on 64b and with "push %edi"
+     * on 32b.  The Darwin libc contains very few functions with oddball
+     * prologs...maybe they don't optimise their libc?
+     */
+    BEGIN("libc strncpy");
+    libc_intercept_tester_t *it6 = new libc_intercept_tester_t((fn_t)strncpy, "strncpy");
+    it6->install();
+    CHECK(it6->before_count == 0);
+    CHECK(it6->after_count == 0);
+    static char buf1[32] = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    strncpy(buf1, "abc", sizeof(buf1));
+    CHECK(!strcmp(buf1, "abc"));
+    CHECK(it6->before_count == 1);
+    CHECK(it6->after_count == 1);
+    it6->uninstall();
+    END;
 #else
 #warning TODO implement this test for this platform
 #endif

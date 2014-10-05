@@ -1,0 +1,26 @@
+
+
+
+Mac OS X 10.9.5, x86_64
+
+The libc binary is /usr/lib/system/libsystem_c.dylib
+
+count	first insn		comment
+-----	----------		------
+1651	push %rbp		usual non-leaf prolog
+713	jmpq *IMM(%rip)		stub, presumably PLT
+1733	push %ebp		32b usual non-leaf prolog
+720	jmp *IMM		stub, presumably 32b PLT
+
+and a handful of oddballs
+
+<_strncpy>:     1780:	49 89 f8             	mov    %rdi,%r8
+<_strnlen>:     1870:	48 85 f6             	test   %rsi,%rsi
+<_bcopy>:     a2b4:	48 89 f8             	mov    %rdi,%rax
+
+and some 32b oddballs
+<_strcpy>:     1490:	57                   	push   %edi
+<_strlcat>:     1550:	57                   	push   %edi
+<_strlcpy>:     1670:	57                   	push   %edi
+<_strlen>:     1700:	8b 54 24 04          	mov    0x4(%esp),%edx
+<_strncpy>:     1750:	57                   	push   %edi
