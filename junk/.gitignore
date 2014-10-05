@@ -3,6 +3,7 @@ call-dlsym
 hello
 hello.map
 mprotect
+osx-coredump
 osx-ctor
 osx-file-descriptors
 osx-get-linkobjs

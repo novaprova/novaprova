@@ -2,7 +2,7 @@
 CFLAGS=	-g
 
 all:	hello osx-setcontext osx-siginfo call-abi.s \
-	osx-file-descriptors
+	osx-file-descriptors osx-coredump
 
 call-abi.s: call-abi.c
 	$(CC) -S -o $@ $<
