@@ -20,7 +20,7 @@
 #include <malloc.h>
 #endif
 
-static void test_memleak(void)
+static NP_USED void test_memleak(void)
 {
     malloc(32);
 }

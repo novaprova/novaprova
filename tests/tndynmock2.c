@@ -33,7 +33,7 @@ int find_answer(void)
     return get_value() + 42;
 }
 
-static void test_one(void)
+static NP_USED void test_one(void)
 {
     int answer;
     /* unmocked */
@@ -46,7 +46,7 @@ static int return_100(void)
     return 100;
 }
 
-static void test_two(void)
+static NP_USED void test_two(void)
 {
     int answer;
     np_mock(get_value, return_100);
@@ -59,7 +59,7 @@ static int return_200(void)
     return 200;
 }
 
-static void test_three(void)
+static NP_USED void test_three(void)
 {
     int answer;
     np_mock(get_value, return_200);

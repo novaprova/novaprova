@@ -33,8 +33,7 @@ foreach my $i (1..$N)
     my $d = int(1000000.0 * (0.25 + rand(0.75)));
 
     print <<EOF;
-static void
-test_$i(void)
+static void NP_USED test_$i(void)
 {
     fprintf(stderr, "%s test_$i begins\\n", np_rel_timestamp()); fflush(stderr);
     usleep($d);

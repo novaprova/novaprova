@@ -343,6 +343,20 @@ extern void np_unmock_by_name(const char *fname);
  * \defgroup misc Miscellany
  */
 
+/**
+ * Ensure a static test function is actually compiled
+ *
+ * Some compilers will not emit code for functions which have 'static'
+ * linkage but are not called from within the compile unit.  If you find
+ * it convenient to declare test functions that way, you should use this
+ * macro when defining the function.  It provides a compiler-specific
+ * hint which makes the compiler emit the function anyway.  For example
+ *
+ * static NP_USED void test_me_sometime(void)
+ * { ... }
+ */
+#define NP_USED	    __attribute__((used))
+
 #ifdef __cplusplus
 };
 #endif

@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-static void test_notimeout(void)
+static NP_USED void test_notimeout(void)
 {
     int timeout = np_get_timeout();
     if (!timeout) return;
@@ -27,7 +27,7 @@ static void test_notimeout(void)
     fprintf(stderr, "MSG Awoke!\n");
 }
 
-static void test_timeout(void)
+static NP_USED void test_timeout(void)
 {
     int timeout = np_get_timeout();
     if (!timeout) return;

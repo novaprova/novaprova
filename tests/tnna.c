@@ -17,7 +17,7 @@
 #include <syslog.h>
 #include <stdio.h>
 
-static void test_notapplicable(void)
+static NP_USED void test_notapplicable(void)
 {
     NP_NOTAPPLICABLE;
     fprintf(stderr, "Should never be seen\n");
