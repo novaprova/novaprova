@@ -15,6 +15,7 @@
  */
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
+#include "np/util/trace.hxx"
 #if defined(__GLIBC__)
 #include <libintl.h>
 #endif
@@ -22,6 +23,25 @@
 
 using namespace std;
 using namespace np::util;
+
+#if _NP_ENABLE_TRACE
+#define STACKME(ff) \
+    { \
+	unsigned long rsp; \
+	unsigned long rbp; \
+	__asm__ volatile("movq %%rsp, %0" : "=r"(rsp)); \
+	__asm__ volatile("movq %%rbp, %0" : "=r"(rbp)); \
+	trace(ff ": started %rsp="); \
+	trace_hex(rsp); \
+	trace(" %rbp="); \
+	trace_hex(rbp); \
+	trace(" ra="); \
+	trace_hex((unsigned long)__builtin_return_address(0)); \
+	trace("\n"); \
+    }
+#else
+#define STACKME(ff)
+#endif
 
 #if 0
 static unsigned long top_of_stack;
@@ -64,6 +84,7 @@ the_function(int x, int y)
 {
     int i;
 
+    STACKME("the_function");
     if (is_verbose()) printf("Start of the_function, x=%d y=%d\n", x, y);
     the_function_count++;
     for (i = 0 ; i < x ; i++)
@@ -172,6 +193,7 @@ intercept_tester_t::reset_counters()
 
 int moe(int x, int y)
 {
+    STACKME("moe");
     if (is_verbose()) printf("Start of moe, x=%d y=%d\n", x, y);
     int r = the_function(x+1, y+1);
     if (is_verbose()) printf("End of moe, r=%d\n", r);
@@ -180,6 +202,7 @@ int moe(int x, int y)
 
 int curly(int x, int y)
 {
+    STACKME("curly");
     if (is_verbose()) printf("Start of curly, x=%d y=%d\n", x, y);
     int r = moe(x+1, y+1);
     if (is_verbose()) printf("End of curly, r=%d\n", r);
@@ -188,6 +211,7 @@ int curly(int x, int y)
 
 int larry(int x, int y)
 {
+    STACKME("larry");
     if (is_verbose()) printf("Start of larry, x=%d y=%d\n", x, y);
     int r = curly(x+1, y+1);
     if (is_verbose()) printf("End of larry, r=%d\n", r);
@@ -268,6 +292,8 @@ main(int argc, char **argv __attribute__((unused)))
     {
 	fatal("Usage: testrunner intercept\n");
     }
+    if (is_verbose()) np::trace::init();
+    STACKME("main");
     if (is_verbose()) printf("Address of the_function is %p\n", the_function);
 
     if (is_verbose()) printf("main, about to create state_t\n");
