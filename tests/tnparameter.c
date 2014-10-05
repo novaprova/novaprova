@@ -20,7 +20,7 @@
 
 NP_PARAMETER(pastry, "donut,bearclaw,danish");
 
-static void test_param(void)
+static NP_USED void test_param(void)
 {
     fprintf(stderr, "MSG pastry=\"%s\"\n", pastry);
 }

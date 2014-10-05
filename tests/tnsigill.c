@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-static void test_sigill(void)
+static NP_USED void test_sigill(void)
 {
     kill(getpid(), SIGILL);
 }

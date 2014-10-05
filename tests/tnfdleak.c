@@ -37,19 +37,19 @@ static int opento(const char *filename, int flags, int mode, int tofd)
     return retfd;
 }
 
-static void test_leaky_test(void)
+static NP_USED void test_leaky_test(void)
 {
     fprintf(stderr, "MSG leaking fd for .leaky_test.dat\n");
     opento(".leaky_test.dat", O_WRONLY|O_CREAT, 0666, 20);
 }
 
-static int set_up(void)
+static NP_USED int set_up(void)
 {
     the_fd = opento(".leaky_fixture.dat", O_WRONLY|O_CREAT, 0666, 21);
     return 0;
 }
 
-static int tear_down(void)
+static NP_USED int tear_down(void)
 {
     if (the_fd >= 0)
     {
@@ -59,7 +59,7 @@ static int tear_down(void)
     return 0;
 }
 
-static void test_leaky_fixture(void)
+static NP_USED void test_leaky_fixture(void)
 {
     fprintf(stderr, "MSG leaking fd for .leaky_fixture.dat\n");
     the_fd = -1;

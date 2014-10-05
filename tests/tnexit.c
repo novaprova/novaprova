@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-static void test_exit(void)
+static NP_USED void test_exit(void)
 {
     exit(1);
 }
