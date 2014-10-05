@@ -149,6 +149,12 @@ libnovaprova_DFILES= \
 	@mkdir -p $(dir $(depdir)/$(patsubst %.c,%.d,$<))
 	$(COMPILE.c) -MMD -MF $(depdir)/$(patsubst %.c,%.d,$<) -MT $@ -o $@ $<
 
+%.s: %.cxx
+	$(CXX) $(CXXFLAGS) -S -o $@ $<
+
+%.s: %.c
+	$(CC) $(CFLAGS) -S -o $@ $<
+
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
