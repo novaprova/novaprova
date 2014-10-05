@@ -26,12 +26,18 @@ extern bool get_argv(int *argcp, char ***argvp);
 extern char *self_exe();
 
 
+#ifdef CLOCK_REALTIME
+#define NP_CLOCK_REALTIME   CLOCK_REALTIME
+#define NP_CLOCK_MONOTONIC  CLOCK_MONOTONIC
+#else
+
 /// Standard real-time clock (vs. NP_CLOCK_MONOTONIC).
 #define NP_CLOCK_REALTIME (0)
 
 /// Monotonically-increasing clock.  Never goes backwards; cannot be
 /// set (vs. NP_CLOCK_REALTIME).
 #define NP_CLOCK_MONOTONIC (1)
+#endif
 
 /// Return the time from the specified clock.
 extern int clock_gettime(int clk_id, struct timespec *res);
