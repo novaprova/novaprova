@@ -39,27 +39,27 @@ static int return_100(void)
     return 100;
 }
 
-static int setup(void)
+static NP_USED int setup(void)
 {
     np_mock(get_value, return_100);
     return 0;
 }
 
-static void test_one(void)
+static NP_USED void test_one(void)
 {
     int answer;
     answer = find_answer();
     NP_ASSERT_EQUAL(142, answer);
 }
 
-static void test_two(void)
+static NP_USED void test_two(void)
 {
     int answer;
     answer = find_answer();
     NP_ASSERT_EQUAL(142, answer);
 }
 
-static void test_three(void)
+static NP_USED void test_three(void)
 {
     int answer;
     answer = find_answer();

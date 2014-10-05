@@ -26,7 +26,7 @@ int bird_tequila(int x)
     return x/2;
 }
 
-static void test_mocking(void)
+static NP_USED void test_mocking(void)
 {
     int x;
     fprintf(stderr, "before\n");

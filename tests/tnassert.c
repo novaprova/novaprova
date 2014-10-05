@@ -16,7 +16,7 @@
 #include <np.h>
 #include <assert.h>
 
-static void test_assert(void)
+static NP_USED void test_assert(void)
 {
     int white = 1;
     int black = 0;

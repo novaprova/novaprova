@@ -21,20 +21,20 @@
 #define m1	1
 #define m2	2
 
-static void test_invalid_regex(void)
+static NP_USED void test_invalid_regex(void)
 {
     np_syslog_match("[foo", m1);	    /* fail */
     syslog(LOG_ERR, "fnarp");
     NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
 }
 
-static void test_unmatched_tag(void)
+static NP_USED void test_unmatched_tag(void)
 {
     int x = np_syslog_count(m1);	/* fail */
     NP_ASSERT_EQUAL(x, 0);
 }
 
-static void test_no_messages(void)
+static NP_USED void test_no_messages(void)
 {
     /* no syslog messages => count is 0 */
     np_syslog_match("foo.*baz", m1);
@@ -42,14 +42,14 @@ static void test_no_messages(void)
     /* pass */
 }
 
-static void test_one_message_no_matches(void)
+static NP_USED void test_one_message_no_matches(void)
 {
     /* one syslog message which doesn't match => unmatched
      * messages FAIL the test */
     syslog(LOG_ERR, "fnarp");	    /* fail */
 }
 
-static void test_one_message_unmatched(void)
+static NP_USED void test_one_message_unmatched(void)
 {
     /* one syslog message which doesn't match => unmatched
      * messages FAIL the test */
@@ -58,7 +58,7 @@ static void test_one_message_unmatched(void)
     NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
 }
 
-static void test_one_message_ignored(void)
+static NP_USED void test_one_message_ignored(void)
 {
     /* one syslog message which matches an SL_IGNORE */
     np_syslog_ignore("fna*");
@@ -66,7 +66,7 @@ static void test_one_message_ignored(void)
     /* pass */
 }
 
-static void test_one_message_one_match(void)
+static NP_USED void test_one_message_one_match(void)
 {
     /* one syslog message which does match => count is 1,
      * both macros succeed */
@@ -76,7 +76,7 @@ static void test_one_message_one_match(void)
     /* pass */
 }
 
-static void test_one_message_one_match_want_five(void)
+static NP_USED void test_one_message_one_match_want_five(void)
 {
     /* one syslog message which does match => count is 1,
      * we check for 5 */
@@ -85,7 +85,7 @@ static void test_one_message_one_match_want_five(void)
     NP_ASSERT_EQUAL(np_syslog_count(m1), 5);	/* fail */
 }
 
-static void test_one_message_multiple_matches_same_tag(void)
+static NP_USED void test_one_message_multiple_matches_same_tag(void)
 {
     /* one syslog message with multiple matches => count is 1 */
     np_syslog_match("fuu.*bas", m1);
@@ -95,7 +95,7 @@ static void test_one_message_multiple_matches_same_tag(void)
     /* pass */
 }
 
-static void test_one_message_multiple_matches_different_tags(void)
+static NP_USED void test_one_message_multiple_matches_different_tags(void)
 {
     /* one syslog message with multiple matches which are tracked
      * separately => count is 1 */

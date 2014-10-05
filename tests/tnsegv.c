@@ -15,7 +15,7 @@
  */
 #include <np.h>
 
-static void test_segv(void)
+static NP_USED void test_segv(void)
 {
     *(volatile char *)0 = 0;
 }

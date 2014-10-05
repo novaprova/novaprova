@@ -38,7 +38,7 @@ int not_bird_tequila(int x)
     return x*2;
 }
 
-static void test_dynamic_mocking(void)
+static NP_USED void test_dynamic_mocking(void)
 {
     int x;
 
