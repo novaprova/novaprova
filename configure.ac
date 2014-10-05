@@ -82,6 +82,14 @@ AC_DEFINE_UNQUOTED(_NP_ADDRSIZE, $addrsize, [Size in bytes of an address])
 AC_DEFINE_UNQUOTED(_NP_MAXADDR, $maxaddr, [Largest possible address])
 AC_MSG_RESULT($arch)
 
+trace=no
+AC_ARG_ENABLE(trace,
+	      [Enable runtime execution traces],
+	      [ trace=$enableval ])
+if test "$trace" = yes ; then
+    platform_CFLAGS="$platform_CFLAGS -D_NP_ENABLE_TRACE"
+fi
+
 AC_MSG_CHECKING([Platform specific CFLAGS])
 AC_MSG_RESULT($platform_CFLAGS)
 AC_SUBST(platform_CFLAGS)
