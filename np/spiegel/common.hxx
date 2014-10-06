@@ -31,6 +31,19 @@ namespace np {
  */
 namespace spiegel {
 
+/*
+ * Offsets into an ELF file can be 32-bit or 64-bit depending on the file
+ * format, a concept introduced in the DWARF-3 standard.  The file format has
+ * absolutely nothing to do with the address size and is determined by a
+ * special encoding of the compile unit header.  This means that a 64-bit
+ * format DWARF section on a 32bit address size is legal DWARF, albeit pretty
+ * damn silly.  Note that as NovaProva mmap()s the executable to read the DWARF
+ * information, a compile unit actually large enough to need the 64-bit format
+ * cannot be mmap()ed and thus cannot be read on a 32-bit architecture.  So on
+ * a 32-bit architecture we define np::spiegel::offset_t as a 32-bit quantity
+ * and reject the 64-bit DWARF format as soon as we see it; on a 64-bit
+ * architecture we handle both file formats at runtime.
+ */
 #if _NP_ADDRSIZE == 4
 typedef uint32_t addr_t;		/* holds a machine address */
 typedef uint32_t offset_t;		/* holds an ELF file offset */

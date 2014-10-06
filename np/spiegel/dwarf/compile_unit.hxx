@@ -88,6 +88,7 @@ private:
     uint32_t index_;
     uint32_t loindex_;
     uint16_t version_;
+    bool is64_;		    // new 64b format introduced in DWARF3
     reader_t reader_;	    // for whole including header
     uint32_t abbrevs_offset_;
     std::vector<abbrev_t*> abbrevs_;

@@ -26,12 +26,13 @@ class reader_t
 {
 public:
     reader_t()
-     :  p_(0), end_(0), base_(0) {}
+     :  p_(0), end_(0), base_(0), is64_(false) {}
 
-    reader_t(const void *base, size_t len)
+    reader_t(const void *base, size_t len, bool is64 = false)
      :  p_((unsigned char *)base),
 	end_(((unsigned char *)base) + len),
-	base_((unsigned char *)base)
+	base_((unsigned char *)base),
+	is64_(is64)
     {}
 
     reader_t initial_subset(size_t len) const
@@ -39,7 +40,11 @@ public:
 	size_t remain = (end_ - p_);
 	if (len > remain)
 	    len = remain;
-	return reader_t((void *)p_, len);
+	return reader_t((void *)p_, len, is64_);
+    }
+    void set_is64(bool b)
+    {
+	is64_ = b;
     }
 
     unsigned long get_offset() const
@@ -76,6 +81,14 @@ public:
 	    ((uint32_t)p_[2] << 16) |
 	    ((uint32_t)p_[3] << 24);
 	p_ += 4;
+	return true;
+    }
+    bool read_u32(uint64_t &v)
+    {
+	uint32_t v32;
+	if (!read_u32(v32))
+	    return false;
+	v = v32;	    /* zero extend */
 	return true;
     }
     bool skip_u32()
@@ -129,7 +142,7 @@ public:
 #if _NP_ADDRSIZE == 4
 	return read_u32(v);
 #elif _NP_ADDRSIZE == 8
-	return read_u64(v);
+	return is64_ ? read_u64(v) : read_u32(v);
 #else
 #error "Unknown offset size"
 #endif
@@ -139,7 +152,7 @@ public:
 #if _NP_ADDRSIZE == 4
 	return skip_u32();
 #elif _NP_ADDRSIZE == 8
-	return skip_u64();
+	return is64_ ? skip_u64() : skip_u32();
 #else
 #error "Unknown offset size"
 #endif
@@ -271,6 +284,7 @@ private:
     const unsigned char *p_;
     const unsigned char *end_;
     const unsigned char *base_;
+    bool is64_;			// new 64-bit format introduced in DWARF3
 };
 
 // close namespaces
