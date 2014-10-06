@@ -79,6 +79,9 @@ SIMPLE_TESTS= \
 PARALLEL_TESTS= \
     tnparallel \
 
+PARALLELISM= \
+    $(shell ./parallelism.sh)
+
 MAINFUL_TESTS= \
     tfilename \
     tintercept \
@@ -108,7 +111,7 @@ COMPOUND_DATA= $(addprefix d-,$(COMPOUND_SUBTESTS))
 
 TESTS= \
     $(SIMPLE_TESTS) \
-    $(foreach t,$(PARALLEL_TESTS),$t $(foreach j,1 2 4,$t%-j$j)) \
+    $(foreach t,$(PARALLEL_TESTS),$t $(foreach j,$(PARALLELISM),$t%-j$j)) \
     $(foreach t,$(BASIC_TESTS),$t $(foreach s,$(OUTPUT_FORMATS),$t%-f$s)) \
     $(MAINFUL_TESTS) \
     $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
