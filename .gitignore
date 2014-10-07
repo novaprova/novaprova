@@ -14,8 +14,8 @@
 #  limitations under the License.
 #
 *.a
-*.o
 *.dSYM
+*.o
 .config
 .deps
 .vagrant
@@ -44,3 +44,4 @@ doc/xml
 install-sh
 novaprova-*.tar.bz2
 novaprova.pc
+plat.sh
