@@ -14,8 +14,8 @@
 #  limitations under the License.
 #
 *.a
-*.o
 *.dSYM/
+*.o
 .config
 .deps
 DEBIAN
@@ -23,6 +23,7 @@ Doxyfile
 Makefile
 aclocal.m4
 autom4te.cache/
+build-stamp
 build/deb
 config.guess
 config.h
@@ -31,6 +32,7 @@ config.log
 config.status
 config.sub
 configure
+cscope.out
 debian
 debian.old
 doc-*.tar.bz2
@@ -40,5 +42,4 @@ doc/man
 install-sh
 novaprova-*.tar.bz2
 novaprova.pc
-build-stamp
-cscope.out
+plat.sh
