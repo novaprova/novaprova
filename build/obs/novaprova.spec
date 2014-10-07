@@ -33,6 +33,7 @@ autoreconf -iv
 %configure
 
 make all
+make check
 make docs
 
 %install

@@ -21,6 +21,7 @@ build-stamp:
 	autoreconf -iv
 	./configure --prefix=/usr
 	make
+	make check
 	make docs
 	touch build-stamp
 
