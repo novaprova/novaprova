@@ -211,9 +211,6 @@ state_t::read_compile_units(linkobj_t *lo)
     reader_t infor = lo->sections_[DW_sec_info].get_contents();
     reader_t abbrevr = lo->sections_[DW_sec_abbrev].get_contents();
 
-#if _NP_DEBUG
-    infor.dump();
-#endif
     compile_unit_t *cu = 0;
     for (;;)
     {
