@@ -27,6 +27,7 @@ pkgconfigdir=	$(libdir)/pkgconfig
 
 libxml_CFLAGS=	@libxml_CFLAGS@
 libbfd_CFLAGS=	@libbfd_CFLAGS@
+valgrind_CFLAGS=@valgrind_CFLAGS@
 platform_CFLAGS=@platform_CFLAGS@
 platform_SOURCE=@platform_SOURCE@
 
@@ -34,7 +35,7 @@ CC=		g++
 CXX=		g++
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-I. $(platform_CFLAGS) $(libxml_CFLAGS) $(libbfd_CFLAGS)
+CDEFINES=	-I. $(platform_CFLAGS) $(libxml_CFLAGS) $(libbfd_CFLAGS) $(valgrind_CFLAGS)
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 CXXFLAGS=	$(CFLAGS)

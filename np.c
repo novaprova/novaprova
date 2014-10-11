@@ -55,7 +55,7 @@ be_valground(void)
 	    np::util::rel_timestamp());
 
     p = newargv = (const char **)np::util::xmalloc(sizeof(char *) * (argc+6));
-    *p++ = "/usr/bin/valgrind";
+    *p++ = VALGRIND_BINARY;
     *p++ = "-q";
     *p++ = "--tool=memcheck";
 //     *p++ = "--leak-check=full";

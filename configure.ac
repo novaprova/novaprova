@@ -114,6 +114,9 @@ AC_ARG_ENABLE(valgrind,
 	      [ valgrind=$enableval ])
 if test "$valgrind" = yes ; then
     AC_DEFINE(HAVE_VALGRIND, 1,[whether the runtime memory checker Valgrind is enabled])
+    AC_PATH_TOOL([VALGRIND_BINARY], [valgrind])
+    AC_DEFINE_UNQUOTED(VALGRIND_BINARY, "$VALGRIND_BINARY", [the Valgrind binary])
+    PKG_CHECK_MODULES(valgrind, valgrind)
 fi
 
 debug=no
