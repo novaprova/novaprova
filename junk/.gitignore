@@ -2,6 +2,7 @@ call-abi.s
 call-dlsym
 hello
 hello.map
+memleak
 mprotect
 osx-coredump
 osx-ctor
