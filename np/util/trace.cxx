@@ -22,9 +22,11 @@
 namespace np {
 namespace trace {
 
+#if _NP_ENABLE_TRACE
 char *buf = 0;
 #define BUFFER_SIZE (16*1024*1024)
 const char hexdigits[] = "0123456789abcdef";
+#endif
 
 void init()
 {
