@@ -102,6 +102,9 @@ state_t::linkobj_t::map_sections()
 	fprintf(stderr, "np: %s: not an object\n", path.c_str());
 	goto error;
     }
+#if _NP_DEBUG
+    printf("Object %s\n", path.c_str());
+#endif
 
     /* Extract the file shape of the DWARF sections */
     asection *sec;
@@ -231,9 +234,6 @@ state_t::read_compile_units(linkobj_t *lo)
     reader_t infor = lo->sections_[DW_sec_info].get_contents();
     reader_t abbrevr = lo->sections_[DW_sec_abbrev].get_contents();
 
-#if _NP_DEBUG
-    infor.dump();
-#endif
     compile_unit_t *cu = 0;
     for (;;)
     {
