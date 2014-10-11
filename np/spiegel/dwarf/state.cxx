@@ -345,6 +345,15 @@ state_t::read_linkobjs()
     vector<linkobj_t*>::iterator i;
     for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
     {
+#if HAVE_VALGRIND
+	/* Ignore Valgrind's preloaded dynamic objects.  No
+	 * good will come of trying to poke into those.
+	 */
+	const char *tt = strrchr((*i)->filename_, '/');
+	if (!strncmp(tt, "/vgpreload_", 11))
+	    continue;
+#endif
+
 	if (!(*i)->map_sections() ||
 	    !read_compile_units(*i))
 	    return false;
