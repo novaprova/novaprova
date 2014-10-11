@@ -64,6 +64,8 @@ be_valground(void)
 	*p++ = *argv++;
 
     execv(newargv[0], (char * const *)newargv);
+    perror(newargv[0]);
+    exit(1);
 #endif
 }
 
