@@ -12,3 +12,5 @@ osx-main
 osx-self-exe
 osx-setcontext
 osx-siginfo
+sigchld
+sigusr1
