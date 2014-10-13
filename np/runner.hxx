@@ -51,14 +51,14 @@ private:
     void end();
     void set_listener(listener_t *);
     child_t *fork_child(job_t *);
-    void handle_events();
-    void reap_children();
+    void reap_children(bool wait);
     void run_function(functype_t ft, spiegel::function_t *f);
     void run_fixtures(testnode_t *tn, functype_t type);
     result_t valgrind_errors(job_t *, result_t);
     result_t descriptor_leaks(job_t *j, const std::vector<std::string> &prefds, result_t res);
     result_t run_test_code(job_t *);
     void begin_job(job_t *);
+    /* Block until any child becomes finished (not necessarily reaped) */
     void wait();
 
     static runner_t *running_;
@@ -69,6 +69,7 @@ private:
     unsigned int nfailed_;
     int event_pipe_;		/* only in child processes */
     std::vector<child_t*> children_;	// only in the parent process
+    unsigned int nrunning_;	/* number of children not yet finished */
     unsigned int maxchildren_;
     std::vector<struct pollfd> pfd_;
     int timeout_;	/* in seconds, 0 to disable */

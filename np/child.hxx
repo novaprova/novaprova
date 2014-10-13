@@ -40,6 +40,7 @@ public:
     void set_deadline(int64_t d) { deadline_ = d; }
     void handle_timeout(int64_t);
     void merge_result(result_t r);
+    bool is_finished() const { return state_ == FINISHED; }
 
 private:
     pid_t pid_;

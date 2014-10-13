@@ -131,17 +131,20 @@ runner_t::run_tests(plan_t *plan)
     begin();
     plan_t::iterator pitr = plan->begin();
     plan_t::iterator pend = plan->end();
+    nrunning_ = 0;
     for (;;)
     {
-	while (children_.size() < maxchildren_ && pitr != pend)
+	while (nrunning_ < maxchildren_ && pitr != pend)
 	{
 	    begin_job(new job_t(pitr));
 	    ++pitr;
 	}
-	if (!children_.size())
+	if (nrunning_ == 0)
 	    break;
 	wait();
     }
+    if (children_.size() > 0)
+	reap_children(/*wait*/true);
     end();
 
     if (ourplan)
@@ -282,6 +285,7 @@ runner_t::fork_child(job_t *j)
     if (!pid)
     {
 	/* child process: return, will run the test */
+	signal(SIGCHLD, SIG_DFL);
 	close(pipefd[PIPE_READ]);
 	event_pipe_ = pipefd[PIPE_WRITE];
 	if (needs_stdout_)
@@ -312,6 +316,7 @@ runner_t::fork_child(job_t *j)
 	j->set_stderr_path(errpath);
     }
     children_.push_back(child);
+    nrunning_++;
 
     return child;
 #undef PIPE_READ
@@ -319,22 +324,29 @@ runner_t::fork_child(job_t *j)
 }
 
 void
-runner_t::handle_events()
+runner_t::wait()
 {
     int r;
     unsigned int nzeroes = 0;
+    unsigned int nfinished = 0;
 
-    if (!children_.size())
+    if (nrunning_ == 0)
 	return;
 
-    while (!caught_sigchld)
+    do
     {
+#if _NP_DEBUG > 1
+	fprintf(stderr, "np: handle_events() nchildren=%u caught_sigchld=%d nfinished=%u\n",
+		(unsigned)children_.size(), caught_sigchld, nfinished);
+#endif
 	int64_t start = rel_now();
 	int64_t timeout = -1;
 	pfd_.clear();
 	vector<child_t*>::iterator citr;
 	for (citr = children_.begin() ; citr != children_.end() ; ++citr)
 	{
+	    if ((*citr)->is_finished())
+		continue;
 	    struct pollfd p;
 	    memset(&p, 0, sizeof(struct pollfd));
 	    int fd = (*citr)->get_input_fd();
@@ -355,6 +367,9 @@ runner_t::handle_events()
 		    timeout = to;
 	    }
 	}
+
+	assert(pfd_.size() == nrunning_);
+	assert(pfd_.size() > 0);
 
 	if (timeout == 0)
 	{
@@ -389,8 +404,11 @@ runner_t::handle_events()
 #endif
 	if (r < 0)
 	{
-	    if (errno == EINTR)
+	    if (errno == EINTR && caught_sigchld)
+	    {
+		reap_children(/*wait*/false);
 		continue;
+	    }
 	    perror("np: poll");
 	    return;
 	}
@@ -399,22 +417,44 @@ runner_t::handle_events()
 	    /* poll() timed out */
 	    int64_t end = rel_now();
 	    for (citr = children_.begin() ; citr != children_.end() ; ++citr)
+	    {
+		if ((*citr)->is_finished())
+		    continue;
 		(*citr)->handle_timeout(end);
+		if ((*citr)->is_finished())
+		    nfinished++;
+	    }
 	}
 	else
 	{
 	    /* poll indicated some fds are available */
-	    vector<struct pollfd>::iterator pitr;
-	    for (pitr = pfd_.begin(), citr = children_.begin() ;
-		 citr != children_.end() ; ++pitr, ++citr)
+	    vector<struct pollfd>::iterator pitr = pfd_.begin();
+	    for (citr = children_.begin() ; citr != children_.end() ; ++citr)
+	    {
+		if ((*citr)->is_finished())
+		    continue;
 		if ((pitr->revents & POLLIN))
 		    (*citr)->handle_input();
+		if ((*citr)->is_finished())
+		    nfinished++;
+		++pitr;
+	    }
 	}
-    }
+	if (nfinished)
+	{
+	    nrunning_ -= nfinished;
+	    /* we might get lucky and reap a newly finished child */
+	    reap_children(/*wait*/false);
+	}
+    } while (nfinished == 0);
+#if _NP_DEBUG > 1
+    fprintf(stderr, "np: handle_events() returning, caught_sigchld=%d nfinished=%u\n",
+	    caught_sigchld, nfinished);
+#endif
 }
 
 void
-runner_t::reap_children()
+runner_t::reap_children(bool wait)
 {
     pid_t pid;
     int status;
@@ -424,13 +464,15 @@ runner_t::reap_children()
     fprintf(stderr, "np: [%s] reap_children()\n",
 		rel_timestamp());
 #endif
+    caught_sigchld = 0;
+
     for (;;)
     {
 #if _NP_DEBUG > 1
 	fprintf(stderr, "np: [%s] about to call waitpid\n",
 		rel_timestamp());
 #endif
-	pid = waitpid(-1, &status, WNOHANG);
+	pid = waitpid(-1, &status, wait ? 0 : WNOHANG);
 #if _NP_DEBUG > 1
 	{
 	    int e = errno;
@@ -506,7 +548,6 @@ runner_t::reap_children()
 	delete child;
     }
 
-    caught_sigchld = 0;
     /* nothing to reap here, move along */
 }
 
@@ -706,13 +747,6 @@ runner_t::begin_job(job_t *j)
 #endif
     delete j;
     exit(0);
-}
-
-void
-runner_t::wait()
-{
-    handle_events();
-    reap_children();
 }
 
 // close the namespace
