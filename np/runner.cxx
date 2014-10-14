@@ -144,7 +144,11 @@ runner_t::run_tests(plan_t *plan)
 	wait();
     }
     if (children_.size() > 0)
-	reap_children(/*wait*/true);
+    {
+	/* Wait for and reap child processes
+	 * until there are no more. */
+	reap_children(-1, 0);
+    }
     end();
 
     if (ourplan)
@@ -323,6 +327,17 @@ runner_t::fork_child(job_t *j)
 #undef PIPE_WRITE
 }
 
+child_t *
+runner_t::find_finished_child() const
+{
+    for (vector<child_t*>::const_iterator citr = children_.begin() ; citr != children_.end() ; ++citr)
+    {
+	if ((*citr)->is_finished())
+	    return *citr;
+    }
+    return 0;
+}
+
 void
 runner_t::wait()
 {
@@ -406,9 +421,15 @@ runner_t::wait()
 	{
 	    if (errno == EINTR && caught_sigchld)
 	    {
-		reap_children(/*wait*/false);
+		/*
+		 * Woken up from the poll() by a delivered SIGCHLD, so go
+		 * see if there any newly exited children to reap.  Note
+		 * that under Valgrind on Darwin, we don't get woken.
+		 */
+		reap_children(-1, WNOHANG);
 		continue;
 	    }
+	    /* poll reported an error */
 	    perror("np: poll");
 	    return;
 	}
@@ -421,8 +442,6 @@ runner_t::wait()
 		if ((*citr)->is_finished())
 		    continue;
 		(*citr)->handle_timeout(end);
-		if ((*citr)->is_finished())
-		    nfinished++;
 	    }
 	}
 	else
@@ -443,8 +462,15 @@ runner_t::wait()
 	if (nfinished)
 	{
 	    nrunning_ -= nfinished;
-	    /* we might get lucky and reap a newly finished child */
-	    reap_children(/*wait*/false);
+	    /* Synchronously reap all the finished children in their start
+	     * order.  This preserves the order of result messages and test
+	     * output seen when using the text listener, so that a -j1 run
+	     * has a predictable order.  This is actually really important
+	     * to ensure NP's own tests pass consistently.
+	     */
+	    child_t *child;
+	    while ((child = find_finished_child()) != 0)
+		reap_children(child->get_pid(), 0);
 	}
     } while (nfinished == 0);
 #if _NP_DEBUG > 1
@@ -454,7 +480,7 @@ runner_t::wait()
 }
 
 void
-runner_t::reap_children(bool wait)
+runner_t::reap_children(pid_t reqpid, int waitflags)
 {
     pid_t pid;
     int status;
@@ -469,10 +495,10 @@ runner_t::reap_children(bool wait)
     for (;;)
     {
 #if _NP_DEBUG > 1
-	fprintf(stderr, "np: [%s] about to call waitpid\n",
-		rel_timestamp());
+	fprintf(stderr, "np: [%s] about to call waitpid(%d, %u)\n",
+		rel_timestamp(), (int)reqpid, waitflags);
 #endif
-	pid = waitpid(-1, &status, wait ? 0 : WNOHANG);
+	pid = waitpid(reqpid, &status, waitflags);
 #if _NP_DEBUG > 1
 	{
 	    int e = errno;
