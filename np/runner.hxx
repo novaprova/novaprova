@@ -51,13 +51,19 @@ private:
     void end();
     void set_listener(listener_t *);
     child_t *fork_child(job_t *);
-    void reap_children(bool wait);
+    /* Wait for and reap the child process specified by pid.  If pid is -1,
+     * reaps any child processes.  If waitflags contains WNOHANG, do not
+     * wait for child processes to exit. */
+    void reap_children(pid_t pid, int waitflags);
     void run_function(functype_t ft, spiegel::function_t *f);
     void run_fixtures(testnode_t *tn, functype_t type);
     result_t valgrind_errors(job_t *, result_t);
     result_t descriptor_leaks(job_t *j, const std::vector<std::string> &prefds, result_t res);
     result_t run_test_code(job_t *);
     void begin_job(job_t *);
+    /* find and return the first (in start order) child which
+     * has reported that it is finished. */
+    child_t *find_finished_child() const;
     /* Block until any child becomes finished (not necessarily reaped) */
     void wait();
 
