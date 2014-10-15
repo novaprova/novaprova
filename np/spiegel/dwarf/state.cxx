@@ -350,7 +350,7 @@ state_t::read_linkobjs()
 	 * good will come of trying to poke into those.
 	 */
 	const char *tt = strrchr((*i)->filename_, '/');
-	if (!strncmp(tt, "/vgpreload_", 11))
+	if (tt && !strncmp(tt, "/vgpreload_", 11))
 	    continue;
 #endif
 
