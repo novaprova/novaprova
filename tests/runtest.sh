@@ -17,6 +17,8 @@
 
 source ../plat.sh
 
+FAILFILE=.failing-tests.dat
+
 function fatal()
 {
     echo "$0: $*" 1>&2
@@ -41,18 +43,33 @@ function fail()
 	fi
     done
 
+    # Add to the list of failing tests
+    ( cat $FAILFILE 2>/dev/null ; echo "$TEST $TESTARGS" ) | LANG=C sort -u > $FAILFILE.new && mv $FAILFILE.new $FAILFILE
+
     exit 1
 }
 
 function pass()
 {
     msg "PASS $TEST $TESTARGS"
+
+    # Remove from the list of failing tests
+    grep -v "^$TEST $TESTARGS\$" $FAILFILE 2>/dev/null > $FAILFILE.new && mv $FAILFILE.new $FAILFILE
+
     exit 0
 }
 
 verbose=
-if [ "$VERBOSE" = yes ] ; then
+if [ "$1" = "--verbose" ] ; then
     verbose=yes
+    export VERBOSE=yes
+    shift
+fi
+
+failing_only=
+if [ "$1" = "--failing-only" ] ; then
+    failing_only=yes
+    shift
 fi
 
 TEST="$1"
@@ -103,6 +120,12 @@ function runtest
 	fi
     done
 }
+
+if [ $failing_only ]; then
+    if ! grep "^$TEST $TESTARGS\$" $FAILFILE >/dev/null 2>&1 ; then
+	exit 0
+    fi
+fi
 
 if [ $verbose ] ; then
     VERBOSE=yes runtest 2>&1 | tee $ID.log
