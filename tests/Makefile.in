@@ -129,7 +129,17 @@ BUILT_SCRIPTS=	$(addsuffix -normalize.pl,$(DUMPERS))
 tests: $(TEST_EXES) $(BUILT_SCRIPTS) $(COMPOUND_DATA)
 
 # Default to un-verbose
-V=0
+ifeq ($V,)
+VERBOSE_FLAG=
+else
+VERBOSE_FLAG= --verbose
+endif
+# Default to all tests not just failing tests
+ifeq ($F,)
+FAILING_ONLY_FLAG=
+else
+FAILING_ONLY_FLAG= --failing-only
+endif
 
 check: tests run
 
@@ -142,10 +152,10 @@ run: .announce-run $(addprefix .run%,$(TESTS))
 
 .PHONEY: .announce-run
 .announce-run:
-	@echo "=== Running tests"
+	@echo "=== Running tests $(VERBOSE_FLAG) $(FAILING_ONLY_FLAG)"
 
 .run%:
-	@[ "$V" -gt 0 ] && export VERBOSE=yes ; env bash runtest.sh $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
+	@env bash runtest.sh $(VERBOSE_FLAG) $(FAILING_ONLY_FLAG) $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
 
 %: %.c fw.a fw.h $(DEPS)
 	$(LINK.c) -o $@ $< fw.a $(LIBS)
