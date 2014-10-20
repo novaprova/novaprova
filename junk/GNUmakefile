@@ -1,3 +1,4 @@
+VALGRIND_PREFIX=/usr/local/Cellar/valgrind/3.10.0
 
 CFLAGS=	-g
 
@@ -10,6 +11,9 @@ call-abi.s: call-abi.c
 
 hello hello.map: hello.c
 	$(CC) -o $@ -Wl,-map,hello.map hello.c
+
+osx-siginfo: osx-siginfo.c
+	$(CC) -I$(VALGRIND_PREFIX)/include/valgrind -g -o $@ $^
 
 osx-setcontext: osx-setcontext.o fixed_setcontext.o
 	$(CC) -o $@ $^
@@ -27,6 +31,10 @@ run-sigchld: sigchld
 	./sigchld
 	@echo "Running with valgrind"
 	valgrind ./sigchld
+
+run-osx-siginfo:
+	./osx-siginfo
+	$(VALGRIND_PREFIX)/bin/valgrind ./osx-siginfo
 
 clean:
 	$(RM) hello osx-setcontext osx-siginfo call-abi.s

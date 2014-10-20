@@ -5,8 +5,11 @@
 #include <signal.h>
 #include <string.h>
 #include <stdbool.h>
+#include <valgrind.h>
 
 #define offsetof(type, fld)	((unsigned long)&((type *)0)->fld)
+
+static bool using_int3 = false;
 
 static void
 handle_signal(int sig, siginfo_t *si, void *vuc)
@@ -50,7 +53,7 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
     printf("Setting up to return past the HLT\n");
     fflush(stdout);
 
-    uc->uc_mcontext->__ss.__rip += 1;
+    uc->uc_mcontext->__ss.__rip += (using_int3 ? 0 : 1);
 }
 
 int this_function_halts(void)
@@ -59,11 +62,16 @@ int this_function_halts(void)
     return 42;
 }
 
+int this_function_int3s(void)
+{
+    __asm__ volatile("int $3");
+    return 42;
+}
+
 int main(int argc, char **argv)
 {
     int r;
     struct sigaction act;
-    bool using_int3 = false;
 
     printf("top of stack is near %p\n", &act);
 
@@ -71,14 +79,14 @@ int main(int argc, char **argv)
     memset(&act, 0, sizeof(act));
     act.sa_sigaction = handle_signal;
     act.sa_flags |= SA_SIGINFO;
-//    if (RUNNING_ON_VALGRIND)
-//	using_int3 = true;
+    if (RUNNING_ON_VALGRIND)
+	using_int3 = true;
     r = sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
 
-    printf("Calling function with a HLT insn in it\n");
+    printf("Calling function with a breakpoint insn in it\n");
     fflush(stdout);
     r = 0;
-    r = this_function_halts();
+    r = using_int3 ? this_function_int3s() : this_function_halts();
     printf("Function returned %d\n", r);
 
     return 0;
