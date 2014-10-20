@@ -108,13 +108,28 @@ AC_CHECK_HEADERS([\
     signal.h \
 ])
 
-valgrind=yes
-AC_ARG_ENABLE(valgrind,
-	      [Enable the Valgrind runtime memory checker (recommended)],
-	      [ valgrind=$enableval ])
-if test "$valgrind" = yes ; then
-    AC_DEFINE(HAVE_VALGRIND, 1,[whether the runtime memory checker Valgrind is enabled])
+AC_ARG_WITH(valgrind,
+	    [Enable the Valgrind runtime memory checker (recommended)],
+	    [],
+	    [with_valgrind=yes])
+case "$with_valgrind" in
+yes)
     AC_PATH_TOOL([VALGRIND_BINARY], [valgrind])
+    ;;
+no)
+    ;;
+*)
+    if test -f "$withval" -a -x "$withval" ; then
+	VALGRIND_BINARY="$withval"
+	with_valgrind=yes
+    else
+	AC_MSG_ERROR([No Valgrind binary $withval found])
+    fi
+    ;;
+esac
+
+if test "$with_valgrind" = yes ; then
+    AC_DEFINE(HAVE_VALGRIND, 1,[whether the runtime memory checker Valgrind is enabled])
     AC_DEFINE_UNQUOTED(VALGRIND_BINARY, "$VALGRIND_BINARY", [the Valgrind binary])
     PKG_CHECK_MODULES(valgrind, valgrind)
 fi
