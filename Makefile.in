@@ -90,7 +90,7 @@ libnovaprova_SOURCE= \
 		np/util/filename.cxx \
 		np/util/profile.cxx \
 		np/util/tok.cxx \
-		np/util/trace.cxx \
+		np/util/trace.c \
 
 libnovaprova_PRIVHEADERS= \
 		np/spiegel/common.hxx \
@@ -113,6 +113,7 @@ libnovaprova_PRIVHEADERS= \
 		np/util/filename.hxx \
 		np/util/profile.hxx \
 		np/util/tok.hxx \
+		np/util/trace.h \
 		np_priv.h \
 
 libnovaprova_HEADERS= \

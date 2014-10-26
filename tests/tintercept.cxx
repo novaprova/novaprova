@@ -15,7 +15,7 @@
  */
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
-#include "np/util/trace.hxx"
+#include "np/util/trace.h"
 #if defined(__GLIBC__)
 #include <libintl.h>
 #endif
@@ -31,13 +31,13 @@ using namespace np::util;
 	unsigned long rbp; \
 	__asm__ volatile("movq %%rsp, %0" : "=r"(rsp)); \
 	__asm__ volatile("movq %%rbp, %0" : "=r"(rbp)); \
-	trace(ff ": started %rsp="); \
-	trace_hex(rsp); \
-	trace(" %rbp="); \
-	trace_hex(rbp); \
-	trace(" ra="); \
-	trace_hex((unsigned long)__builtin_return_address(0)); \
-	trace("\n"); \
+	np_trace(ff ": started %rsp="); \
+	np_trace_hex(rsp); \
+	np_trace(" %rbp="); \
+	np_trace_hex(rbp); \
+	np_trace(" ra="); \
+	np_trace_hex((unsigned long)__builtin_return_address(0)); \
+	np_trace("\n"); \
     }
 #else
 #define STACKME(ff)
@@ -292,7 +292,7 @@ main(int argc, char **argv __attribute__((unused)))
     {
 	fatal("Usage: testrunner intercept\n");
     }
-    if (is_verbose()) np::trace::init();
+    if (is_verbose()) np_trace_init();
     STACKME("main");
     if (is_verbose()) printf("Address of the_function is %p\n", the_function);
 
