@@ -13,49 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __NP_TRACE_HXX__
-#define __NP_TRACE_HXX__ 1
+#ifndef __NP_TRACE_H__
+#define __NP_TRACE_H__ 1
 
-
-namespace np {
-namespace trace {
-
-extern void init();
+extern void np_trace_init(void);
 
 #if _NP_ENABLE_TRACE
-extern char *buf;
-extern const char hexdigits[];
+extern char *_np_trace_buf;
+extern const char _np_trace_hexdigits[];
 
-#define trace(msg) \
+#define np_trace(msg) \
     { \
-	if (np::trace::buf) \
+	if (_np_trace_buf) \
 	{ \
 	    static const char _m[] = (msg); \
 	    for (register const char *_x = _m ; *_x ; _x++) \
-		*np::trace::buf++ = *_x; \
+		*_np_trace_buf++ = *_x; \
 	} \
     }
-#define trace_hex(n) \
+#define np_trace_hex(n) \
     { \
-	if (np::trace::buf) \
+	if (_np_trace_buf) \
 	{ \
 	    register uint64_t _n = (n); \
-	    *np::trace::buf++ = '0'; \
-	    *np::trace::buf++ = 'x'; \
+	    *_np_trace_buf++ = '0'; \
+	    *_np_trace_buf++ = 'x'; \
 	    for (register int _i = 15 ; _i >= 0 ; _i--) \
 	    { \
-		np::trace::buf[_i] = np::trace::hexdigits[_n & 0xf]; \
+		_np_trace_buf[_i] = _np_trace_hexdigits[_n & 0xf]; \
 		_n >>= 4; \
 	    } \
-	    np::trace::buf += 16; \
+	    _np_trace_buf += 16; \
 	} \
     }
 #else
-#define trace(msg)
-#define trace_hex(n)
+#define np_trace(msg)
+#define np_trace_hex(n)
 #endif
 
-// close the namespace
-}; };
-
-#endif /* __NP_TRACE_HXX__ */
+#endif /* __NP_TRACE_H__ */

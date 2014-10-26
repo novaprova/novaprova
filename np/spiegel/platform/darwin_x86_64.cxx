@@ -16,7 +16,7 @@
 #include "np/spiegel/common.hxx"
 #include "np/spiegel/intercept.hxx"
 #include "common.hxx"
-#include "np/util/trace.hxx"
+#include "np/util/trace.h"
 
 #include <signal.h>
 #include <sys/signal.h>
@@ -152,20 +152,20 @@ static unsigned long intercept_tramp(void)
 	unsigned long rbp;
 	__asm__ volatile("movq %%rsp, %0" : "=r"(rsp));
 	__asm__ volatile("movq %%rbp, %0" : "=r"(rbp));
-	trace("intercept_tramp: started frame=");
-	trace_hex((unsigned long)&frame.stack[0]);
-	trace(" %rsp=");
-	trace_hex(rsp);
-	trace(" %rbp=");
-	trace_hex(rbp);
-	trace("\n");
+	np_trace("intercept_tramp: started frame=");
+	np_trace_hex((unsigned long)&frame.stack[0]);
+	np_trace(" %rsp=");
+	np_trace_hex(rsp);
+	np_trace(" %rbp=");
+	np_trace_hex(rbp);
+	np_trace("\n");
     }
 #endif
 
     /* Point the RBP register at our own RBP register */
     __asm__ volatile("movq %%rbp, %0" : "=m"(tramp_uc.__mcontext_data.__ss.__rbp));
 
-    trace("intercept_tramp: building fake stack frame\n");
+    np_trace("intercept_tramp: building fake stack frame\n");
 
     /*
      * Build a new fake stack frame for calling the original
@@ -216,7 +216,7 @@ static unsigned long intercept_tramp(void)
     switch (tramp_intstate->type_)
     {
     case intstate_t::PUSHBP:
-	trace("intercept_tramp: simulating pushbp\n");
+	np_trace("intercept_tramp: simulating pushbp\n");
 	/* simulate the push %rbp insn which the breakpoint replaced */
 	frame.stack[nstack++] = (unsigned long)tramp_uc.__mcontext_data.__ss.__rbp;
 	/* setup to start executing the insn after the breakpoint */
@@ -224,7 +224,7 @@ static unsigned long intercept_tramp(void)
 	break;
 
     case intstate_t::OTHER:
-	trace("intercept_tramp: replacing original instruction\n");
+	np_trace("intercept_tramp: replacing original instruction\n");
 	/* replace the breakpoint with the original insn */
 	*(unsigned char *)frame.addr = tramp_intstate->orig_;
 	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
@@ -272,20 +272,20 @@ static unsigned long intercept_tramp(void)
      * Finally it should also be able to longjmp() out without
      * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
-    trace("intercept_tramp: dispatching before method\n");
+    np_trace("intercept_tramp: dispatching before method\n");
     frame.call.stack_ = frame.stack+nstack;
     frame.call.mcontext_ = &tramp_uc.__mcontext_data;
     intercept_t::dispatch_before(frame.addr, frame.call);
     if (frame.call.skip_)
     {
-	trace("intercept_tramp: skipping call to real function\n");
+	np_trace("intercept_tramp: skipping call to real function\n");
 	return frame.call.retval_;	/* before() requested skip() */
     }
     if (frame.call.redirect_)
     {
 	/* before() requested redirect, so setup the context to call
 	 * that function instead. */
-	trace("intercept_tramp: setting up to redirect to another function\n");
+	np_trace("intercept_tramp: setting up to redirect to another function\n");
 	tramp_uc.__mcontext_data.__ss.__rip = frame.call.redirect_;
 	switch (tramp_intstate->type_)
 	{
@@ -307,13 +307,13 @@ static unsigned long intercept_tramp(void)
     __asm__ volatile("movq %%rsp, %0" : "=m"(frame.our_rsp));
 
     /* switch to the ucontext */
-    trace("intercept_tramp: about to setcontext rip=");
-    trace_hex(tramp_uc.__mcontext_data.__ss.__rip);
-    trace(" rsp=");
-    trace_hex(tramp_uc.__mcontext_data.__ss.__rsp);
-    trace(" rbp=");
-    trace_hex(tramp_uc.__mcontext_data.__ss.__rbp);
-    trace("\n");
+    np_trace("intercept_tramp: about to setcontext rip=");
+    np_trace_hex(tramp_uc.__mcontext_data.__ss.__rip);
+    np_trace(" rsp=");
+    np_trace_hex(tramp_uc.__mcontext_data.__ss.__rsp);
+    np_trace(" rbp=");
+    np_trace_hex(tramp_uc.__mcontext_data.__ss.__rbp);
+    np_trace("\n");
 
     setcontext(&tramp_uc);
     /* notreached - setcontext() should not return under any
@@ -377,15 +377,15 @@ extern "C" unsigned long __np_intercept_after(unsigned long rax, struct frame &f
 	unsigned long rbp;
 	__asm__ volatile("movq %%rsp, %0" : "=r"(rsp));
 	__asm__ volatile("movq %%rbp, %0" : "=r"(rbp));
-	trace("__np_intercept_after: started rax=");
-	trace_hex(rax);
-	trace(" frame=");
-	trace_hex((unsigned long)&frame.stack[0]);
-	trace(" %rsp=");
-	trace_hex(rsp);
-	trace(" %rbp=");
-	trace_hex(rbp);
-	trace("\n");
+	np_trace("__np_intercept_after: started rax=");
+	np_trace_hex(rax);
+	np_trace(" frame=");
+	np_trace_hex((unsigned long)&frame.stack[0]);
+	np_trace(" %rsp=");
+	np_trace_hex(rsp);
+	np_trace(" %rbp=");
+	np_trace_hex(rbp);
+	np_trace("\n");
     }
 #endif
 
@@ -428,9 +428,9 @@ extern "C" unsigned long __np_intercept_after(unsigned long rax, struct frame &f
      * set_retval().  It should also be able to longjmp() out without
      * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
-    trace("intercept_after: dispatch after method\n");
+    np_trace("intercept_after: dispatch after method\n");
     intercept_t::dispatch_after(frame.addr, frame.call);
-    trace("intercept_after: returning\n");
+    np_trace("intercept_after: returning\n");
     return frame.call.retval_;
 }
 
@@ -439,13 +439,13 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
 {
     ucontext_t *uc = (ucontext_t *)vuc;
 
-    trace("handle_signal: starting, ucontext %rip=");
-    trace_hex(uc->uc_mcontext->__ss.__rip);
-    trace(" %rbp=");
-    trace_hex(uc->uc_mcontext->__ss.__rbp);
-    trace(" %rsp=");
-    trace_hex(uc->uc_mcontext->__ss.__rsp);
-    trace("\n");
+    np_trace("handle_signal: starting, ucontext %rip=");
+    np_trace_hex(uc->uc_mcontext->__ss.__rip);
+    np_trace(" %rbp=");
+    np_trace_hex(uc->uc_mcontext->__ss.__rbp);
+    np_trace(" %rsp=");
+    np_trace_hex(uc->uc_mcontext->__ss.__rsp);
+    np_trace("\n");
 
     /* double-check that this is not some spurious signal */
     unsigned char *rip = (unsigned char *)uc->uc_mcontext->__ss.__rip;
@@ -471,7 +471,7 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
     tramp_intstate = intercept_t::get_intstate((np::spiegel::addr_t)rip);
     if (!tramp_intstate)
 	goto wtf;   /* not an installed intercept */
-    trace("handle_signal: is installed\n");
+    np_trace("handle_signal: is installed\n");
 
     /* Stash the ucontext for the tramp.
      *
@@ -496,12 +496,12 @@ handle_signal(int sig, siginfo_t *si, void *vuc)
      * the signal into the tramp instead of the
      * original function */
     uc->uc_mcontext->__ss.__rip = (unsigned long)&intercept_tramp;
-    trace("handle_signal: returning to intercept_tramp\n");
+    np_trace("handle_signal: returning to intercept_tramp\n");
 
     return;
 
 wtf:
-    trace("handle_signal: unexpected SEGV, unregistering handler\n");
+    np_trace("handle_signal: unexpected SEGV, unregistering handler\n");
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_handler = SIG_DFL;

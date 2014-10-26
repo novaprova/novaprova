@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 #include "np/util/common.hxx"
-#include "np/util/trace.hxx"
+#include "np/util/trace.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 
-namespace np {
-namespace trace {
-
 #if _NP_ENABLE_TRACE
-char *buf = 0;
+char *_np_trace_buf = 0;
 #define BUFFER_SIZE (16*1024*1024)
-const char hexdigits[] = "0123456789abcdef";
+const char _np_trace_hexdigits[] = "0123456789abcdef";
 #endif
 
-void init()
+void np_trace_init(void)
 {
 #if _NP_ENABLE_TRACE
-    if (buf != 0)
+    if (_np_trace_buf != 0)
 	return;	    // already open
 
     static const char filename[] = "novaprova.trace.txt";
@@ -49,18 +46,16 @@ void init()
 	exit(1);
     }
 
-    buf = (char *)mmap(NULL, BUFFER_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-    if (buf == (char *)MAP_FAILED)
+    _np_trace_buf = (char *)mmap(NULL, BUFFER_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    if (_np_trace_buf == (char *)MAP_FAILED)
     {
 	perror("mmap");
 	exit(1);
     }
     close(fd);
 
-    memset(buf, '\n', BUFFER_SIZE);
+    memset(_np_trace_buf, '\n', BUFFER_SIZE);
     fprintf(stderr, "np: tracing to %s\n", filename);
 #endif
 }
 
-// close the namespaces
-}; };
