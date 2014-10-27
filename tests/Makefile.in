@@ -111,15 +111,17 @@ COMPOUND_DATA= $(addprefix d-,$(COMPOUND_SUBTESTS))
 
 TESTS= \
     $(SIMPLE_TESTS) \
-    $(foreach t,$(PARALLEL_TESTS),$t $(foreach j,$(PARALLELISM),$t%-j$j)) \
     $(foreach t,$(BASIC_TESTS),$t $(foreach s,$(OUTPUT_FORMATS),$t%-f$s)) \
     $(MAINFUL_TESTS) \
     $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
 
+UNRELIABLE_TESTS= \
+    $(foreach t,$(PARALLEL_TESTS),$t $(foreach j,$(PARALLELISM),$t%-j$j)) \
+
 # Extract only the test executables actually mentioned in $TESTS
 # which allows us to build only those executables actually needed
 # to run the tests named in $TESTS.
-TEST_EXES= $(sort $(foreach t,$(TESTS),$(firstword $(subst %,$(nul) $(nul),$t))))
+TEST_EXES= $(sort $(foreach t,$(TESTS) $(UNRELIABLE_TESTS),$(firstword $(subst %,$(nul) $(nul),$t))))
 
 BUILT_SCRIPTS=	$(addsuffix -normalize.pl,$(DUMPERS))
 
@@ -136,6 +138,7 @@ list:
 	done
 
 run: .announce-run $(addprefix .run%,$(TESTS))
+run-unreliable: .announce-run $(addprefix .run%,$(UNRELIABLE_TESTS))
 
 .PHONEY: .announce-run
 .announce-run:
