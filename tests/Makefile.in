@@ -140,6 +140,7 @@ run: .announce-run $(addprefix .run%,$(TESTS))
 .PHONEY: .announce-run
 .announce-run:
 	@echo "=== Running tests"
+	@echo "PARALLELISM=$(PARALLELISM)"
 
 .run%:
 	@[ "$V" -gt 0 ] && export VERBOSE=yes ; env bash runtest.sh $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
