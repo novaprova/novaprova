@@ -31,6 +31,14 @@ function fail()
     local mm="$*"
     [ -n "$mm" ] && mm=" ($mm)"
     msg "FAIL $TEST $TESTARGS$mm"
+
+    for a in $TEST $TESTARGS ; do
+	if [ -e a$a-failed.sh ] ; then
+	    [ $verbose ] && msg "running a$a-failed.sh $TEST $TESTARGS"
+	    bash a$a-failed.sh $TEST $TESTARGS
+	fi
+    done
+
     exit 1
 }
 
