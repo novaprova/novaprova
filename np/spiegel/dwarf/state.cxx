@@ -433,7 +433,11 @@ state_t::dump_structs()
 	    default: continue;
 	    }
 
-	    const char *structname = e->get_string_attribute(DW_AT_name);
+	    if (e->get_attribute(DW_AT_declaration) &&
+		e->get_uint32_attribute(DW_AT_declaration))
+		continue;
+
+	    const char *structname = get_partial_name(w.get_reference());
 	    if (!structname)
 		continue;
 	    printf("%s %s {\n", keyword, get_full_name(w.get_reference()).c_str());
@@ -819,6 +823,17 @@ state_t::get_full_name(reference_t ref)
     } while (e);
 
     return full;
+}
+
+const char *
+state_t::get_partial_name(reference_t ref)
+{
+    walker_t w(ref);
+    const entry_t *e = w.move_next();
+
+    if (e->get_attribute(DW_AT_specification))
+	e = w.move_to(e->get_reference_attribute(DW_AT_specification));
+    return e->get_string_attribute(DW_AT_name);
 }
 
 // close namespaces
