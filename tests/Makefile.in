@@ -25,7 +25,7 @@ CXX=		g++
 CXXFLAGS=	$(CFLAGS)
 
 INCLUDES=	-I..
-LIBS=		../libnovaprova.a -lstdc++ -lbfd -liberty -ldl -lrt \
+LIBS=		../libnovaprova.a -lstdc++ -lbfd -liberty -lz -ldl -lrt \
 		@libxml_LIBS@
 DEPS=		../np.h ../libnovaprova.a
 
