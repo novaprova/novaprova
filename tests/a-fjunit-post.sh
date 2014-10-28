@@ -16,5 +16,18 @@
 #
 
 TEST="$1"
+
+function fail()
+{
+    echo "FAIL $*"
+    exit
+}
+
+[ -d reports ] || fail 'reports directory not created'
+[ -f reports/TEST-$TEST.xml ] || fail 'report file not created'
+
+xx=$(which xmllint 2>/dev/null)
+[ -n "$xx" ] || fail 'could not find xmllint executable'
+
 xmllint --schema JUnit.xsd -noout reports/TEST-$TEST.xml || \
-    echo 'FAIL xml schema validation failed'
+    fail 'xml schema validation failed'
