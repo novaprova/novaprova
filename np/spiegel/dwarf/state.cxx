@@ -332,7 +332,7 @@ describe_type(const walker_t &ow)
 	return;
     }
 
-    const char *name = e->get_string_attribute(DW_AT_name);
+    const char *name = get_partial_name(w.get_reference());
     switch (e->get_tag())
     {
     case DW_TAG_base_type:
