@@ -95,7 +95,6 @@ private:
     void insert_ranges(const walker_t &w, reference_t funcref);
     bool is_within(np::spiegel::addr_t addr, const walker_t &w,
 		   unsigned int &offset) const;
-    const char *get_partial_name(reference_t ref);
 
     static state_t *instance_;
 

@@ -26,6 +26,8 @@ namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 using namespace np::util;
 
+static const char *get_partial_name(reference_t ref);
+
 state_t *state_t::instance_ = 0;
 
 state_t::state_t()
@@ -825,8 +827,8 @@ state_t::get_full_name(reference_t ref)
     return full;
 }
 
-const char *
-state_t::get_partial_name(reference_t ref)
+static const char *
+get_partial_name(reference_t ref)
 {
     walker_t w(ref);
     const entry_t *e = w.move_next();
