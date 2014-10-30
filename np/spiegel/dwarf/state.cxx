@@ -454,6 +454,7 @@ state_t::dump_structs()
 		switch (e->get_tag())
 		{
 		case DW_TAG_member:
+		case DW_TAG_variable:	/* seen on some older toolchains, e.g. SLES11 */
 		    printf("    /*member*/ ");
 		    describe_type(w);
 		    printf(" %s;\n", name);
