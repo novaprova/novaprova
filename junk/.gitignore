@@ -1,5 +1,7 @@
 call-abi.s
 call-dlsym
+except
+except.s
 hello
 hello.map
 memleak
