@@ -1,10 +1,11 @@
 VALGRIND_PREFIX=/usr/local/Cellar/valgrind/3.10.0
 
 CFLAGS=	-g
+CXXFLAGS=   -g
 
 all:	hello osx-setcontext osx-siginfo call-abi.s \
 	osx-file-descriptors osx-coredump memleak \
-	sigchld sigusr1
+	sigchld sigusr1 except
 
 call-abi.s: call-abi.c
 	$(CC) -S -o $@ $<
@@ -36,7 +37,16 @@ run-osx-siginfo:
 	./osx-siginfo
 	$(VALGRIND_PREFIX)/bin/valgrind ./osx-siginfo
 
+except: except.o iexcept.o
+	$(LINK.C) -o $@ $^
+
+%.o: %.cxx
+	$(COMPILE.C) -o $@ $^
+
+%.s:	%.cxx
+	$(CXX) $(CXXFLAGS) -g -S -o $@ $^
+
 clean:
 	$(RM) hello osx-setcontext osx-siginfo call-abi.s
 	$(RM) osx-file-descriptors osx-coredump memleak
-	$(RM) sigchld sigusr1
+	$(RM) sigchld sigusr1 except
