@@ -138,6 +138,7 @@ event_t::get_result() const
     case EV_SLMATCH:
     case EV_TIMEOUT:
     case EV_FDLEAK:
+    case EV_EXCEPTION:
 	return R_FAIL;
     case EV_EXPASS:
 	return R_PASS;
@@ -161,7 +162,7 @@ event_t::which_as_string() const
 	"NONE", "ASSERT", "EXIT", "SIGNAL",
 	"SYSLOG", "FIXTURE", "EXPASS", "EXFAIL",
 	"EXNA", "VALGRIND", "SLMATCH", "TIMEOUT",
-	"FDLEAK"
+	"FDLEAK", "EXCEPTION"
     };
     const char *wstr = ((unsigned)which < arraysize(whichstrs))
 			? whichstrs[(unsigned)which] : "unknown";

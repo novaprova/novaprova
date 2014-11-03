@@ -37,6 +37,7 @@ enum events_t
     EV_SLMATCH,		/* syslog matching */
     EV_TIMEOUT,		/* child took too long */
     EV_FDLEAK,		/* file descriptor leak */
+    EV_EXCEPTION,	/* C++ exception thrown */
 };
 
 class event_t

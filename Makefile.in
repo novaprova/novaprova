@@ -57,7 +57,7 @@ all-local: libnovaprova.a
 
 libnovaprova_SOURCE= \
 		np.c \
-		isyslog.c iassert.c icunit.c iexit.c uasserts.c \
+		isyslog.c iassert.c icunit.c iexit.c uasserts.c iexcept.c \
 		main.c \
 		np/child.cxx \
 		np/classifier.cxx \
