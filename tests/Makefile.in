@@ -60,6 +60,8 @@ BASIC_TESTS= \
 
 BASIC_TESTS_CXX= \
 
+BASIC_TESTS_CXX= \
+
 OUTPUT_FORMATS= \
     junit
 

@@ -87,6 +87,9 @@ extern void cleanup_current_exception();
 
 extern bool symbol_filename(const char *, std::string &);
 
+extern char *current_exception_type();
+extern void cleanup_current_exception();
+
 // close namespaces
 }; }; };
 
