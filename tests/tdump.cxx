@@ -86,12 +86,15 @@ dump_compile_units(np::spiegel::dwarf::state_t &state)
     printf("\n\n");
 }
 
+extern void __np_terminate_handler();
+
 int
 main(int argc, char **argv)
 {
     argv0 = argv[0];
     const char *a0 = 0;
     const char *filename = 0;
+    std::set_terminate(__np_terminate_handler);
     for (int i = 1 ; i < argc ; i++)
     {
 	if (argv[i][0] == '-')
