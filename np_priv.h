@@ -38,4 +38,6 @@
 #include "np/redirect.hxx"
 #include "np/runner.hxx"
 
+extern void __np_terminate_handler(void);
+
 #endif /* __NP_PRIV_H__ */

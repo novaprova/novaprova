@@ -91,6 +91,7 @@ extern "C" np_runner_t *
 np_init(void)
 {
     be_valground();
+    std::set_terminate(__np_terminate_handler);
     np::util::rel_timestamp();
     np_trace_init();
     np::testmanager_t::instance();
