@@ -36,7 +36,7 @@ event_t &event_t::with_stack()
 	static char tracebuf[2048];
 	strncpy(tracebuf, trace.c_str(), sizeof(tracebuf));
 	memcpy(tracebuf+sizeof(tracebuf)-5, "...\0", 4);
-	function = tracebuf;;
+	function = tracebuf;
     }
     return *this;
 }
