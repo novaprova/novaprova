@@ -40,8 +40,6 @@ fatal(const char *fmt, ...)
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-static void oom(void) __attribute__((noreturn));
-
 /* Do write() but handle short writes */
 static int
 do_write(int fd, const char *buf, int len)
@@ -59,7 +57,7 @@ do_write(int fd, const char *buf, int len)
     return len;
 }
 
-static void
+void
 oom(void)
 {
     static const char message[] = ": no memory, exiting\n";
