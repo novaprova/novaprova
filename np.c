@@ -84,6 +84,7 @@ extern "C" np_runner_t *
 np_init(void)
 {
     be_valground();
+    std::set_terminate(__np_terminate_handler);
     np::util::rel_timestamp();
     np::testmanager_t::instance();
     return new np::runner_t;

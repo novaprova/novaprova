@@ -17,31 +17,55 @@
 #include "np_priv.h"
 #include "except.h"
 #include "np/event.hxx"
-#include <typeinfo>
+#include <exception>
 
 /*
- * Intercept all exceptions at the throw point and emit
- * a NovaProva event instead.  This is easy but imperfect.
- * Known problems:
- *
- * 1.  memory allocated for the exception will be leaked
- *
- * 2.  exceptions which are thrown and then caught normally
- *     inside the code under test result in spurious test
- *     failures.
- *
- * A better approach would be to overload
- * __cxa_allocate_exception() to allocate extra space,
- * __cxa_throw() to build a np::event_t with a stack
- * sample in that space, __cxa_free_exception() to
- * free the event, and add some special case code in
- * np_try/np_catch to catch real C++ exceptions too.
+ * Verbose C++ terminate handler.  Installed with std::set_terminate().
+ * Provides a usefully verbose message on stderr, including a stack
+ * trace, and FAILs any running test, when an uncaught exception is
+ * thrown, an attempt is made to re-throw when there is no current
+ * exception, and a number of other C++ specific fatal error conditions
  */
-
-extern "C" void __cxa_throw(void *thrown_exception __attribute__((unused)),
-			    std::type_info *tinfo,
-			    void (*dtor)(void *) __attribute__((unused)))
+void __np_terminate_handler(void)
 {
-    np_throw(np::event_t(np::EV_EXCEPTION, tinfo->name()).with_stack());
-}
+    char *name = np::spiegel::platform::current_exception_type();
+    if (!name)
+    {
+	np_throw(np::event_t(np::EV_EXCEPTION,
+		 "terminate called without an active exception").with_stack());
+    }
 
+    static char desc[2048];
+    snprintf(desc, sizeof(desc), "terminate called with exception %s", name);
+    free(name);
+
+    /*
+     * STL std::exception has a useful method for generating a human
+     * readable message from the exception, call that if the exception
+     * derives from std::exception.
+     */
+    try
+    {
+	throw;	/* re-throw */
+    }
+    catch (std::exception &ex)
+    {
+	/* append to the static buffer */
+	int l = strlen(desc);
+	snprintf(desc+l, sizeof(desc)-l, ": %s", ex.what());
+    }
+    catch (...)
+    {
+	/* nope, it wasn't derived from std::exception.  Nevermind */
+    }
+
+    /*
+     * Unlike the library's verbose terminate handler, we need to
+     * actually clean up the exception object, because we know we're
+     * running under Valgrind and the memory leak will mess up our
+     * results.  There is no portable way to do this.
+     */
+    np::spiegel::platform::cleanup_current_exception();
+
+    np_throw(np::event_t(np::EV_EXCEPTION, desc).with_stack());
+}

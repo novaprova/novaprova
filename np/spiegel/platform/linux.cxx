@@ -28,6 +28,8 @@
 #include <valgrind/valgrind.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <typeinfo>
+#include <cxxabi.h>
 
 #ifndef MIN
 #define MIN(x, y)   ((x) < (y) ? (x) : (y))
@@ -505,6 +507,49 @@ vector<string> get_file_descriptors()
     }
 
     return fds;
+}
+
+/*
+ * The parts of the cxxabi we use here are common between the Darwin
+ * and GNU libc implementations.
+ */
+char *current_exception_type()
+{
+    /*
+     * Logic copied from __gnu_cxx::__verbose_terminate_handler() in
+     * gcc/libstdc++-v3/src/vterminate.cc.
+     */
+    type_info *tinfo = __cxxabiv1::__cxa_current_exception_type();
+    if (!tinfo)
+	return 0;
+
+    /* 0 = success, -1 = failed allocating memory,
+     * -2 = invalid name, -3 = invalid argument */
+    int status = 0;
+    char *demangled = __cxxabiv1::__cxa_demangle(tinfo->name(), NULL, NULL, &status);
+    if (status == -1)
+	oom(); /* failed allocating memory */
+
+    return (status == 0 ? demangled : xstrdup(tinfo->name()));
+}
+
+/* #include <unwind-cxx.h> */
+void cleanup_current_exception()
+{
+#if 0
+    /*
+     * I believe this is the correct code, but there's no way to
+     * compile it because the unwind-cxx.h header is not shipped.
+     */
+    __cxa_eh_globals *globals = __cxa_get_globals();
+    __cxa_exception *header = globals->caughtExceptions;
+    if (header)
+    {
+	if (header->exceptionDestructor)
+	    header->exceptionDestructor(header+1);
+	__cxa_free_exception(header+1)
+    }
+#endif
 }
 
 // close namespaces

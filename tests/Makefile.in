@@ -42,6 +42,8 @@ BASIC_TESTS= \
     tnsigill \
     tnsyslog \
 
+BASIC_TESTS_CXX= \
+
 OUTPUT_FORMATS= \
     junit
 
@@ -75,6 +77,9 @@ SIMPLE_TESTS= \
     tnsyslogmatch \
     tntimeout \
     tnfdleak \
+
+SIMPLE_TESTS_CXX= \
+    tnexcept \
 
 PARALLEL_TESTS= \
     tnparallel \
@@ -172,6 +177,9 @@ $(addsuffix -normalize.pl,$(DUMPERS)): cat.pl
 
 $(SIMPLE_TESTS) $(BASIC_TESTS) $(PARALLEL_TESTS): % : %.c $(DEPS)
 	$(LINK.c) -o $@ $< $(LIBS)
+
+$(SIMPLE_TESTS_CXX): % : %.cxx $(DEPS)
+	$(LINK.C) -o $@ $< $(LIBS)
 
 clean:
 	$(RM) $(TEST_EXES) $(COMPOUND_DATA)
