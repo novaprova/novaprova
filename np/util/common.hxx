@@ -83,6 +83,7 @@ extern void fatal(const char *fmt, ...)
     __attribute__ (( noreturn ))
     __attribute__ (( format(printf,1,2) ));
 
+extern void oom(void) __attribute__((noreturn));
 extern void *xmalloc(size_t sz);
 extern void *xrealloc(void *, size_t);
 extern char *xstrdup(const char *s);
