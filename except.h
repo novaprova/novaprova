@@ -29,8 +29,9 @@ struct __np_exceptstate_t
     np::event_t event;
 };
 
-/* in run.c */
+/* in runner.cxx */
 extern __np_exceptstate_t __np_exceptstate;
+extern void __np_uncaught_event(void) __attribute__((noreturn));
 
 #define np_try \
 	__np_exceptstate.catching = true; \
@@ -42,12 +43,11 @@ extern __np_exceptstate_t __np_exceptstate;
 
 #define np_throw(ev) \
 	do { \
+	    __np_exceptstate.event = (ev); \
 	    if (__np_exceptstate.catching) \
-	    { \
-		__np_exceptstate.event = (ev); \
 		longjmp(__np_exceptstate.jbuf, 1); \
-	    } \
-	    abort(); \
+	    else \
+		__np_uncaught_event(); \
 	} while(0)
 
 #endif /* __NP_EXCEPT_H__ */

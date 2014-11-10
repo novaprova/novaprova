@@ -28,6 +28,14 @@
 
 __np_exceptstate_t __np_exceptstate;
 
+void __np_uncaught_event(void)
+{
+    fprintf(stderr, "np: uncaught event: %s\n",
+	    __np_exceptstate.event.as_string().c_str());
+    fflush(stderr);
+    abort();
+}
+
 namespace np {
 using namespace std;
 using namespace np::util;
