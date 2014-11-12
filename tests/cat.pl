@@ -42,5 +42,5 @@ while (<STDIN>)
 	$pending = undef;
     }
     $n += $s;
-    print if (!$ignore);
+    print if (!$ignore || m/^(EVENT|MSG|PASS|FAIL|N\/A|EXIT|\?\?\?)/);
 }

@@ -819,9 +819,13 @@ state_t::get_full_name(reference_t ref)
 	    e = w.move_to(e->get_reference_attribute(DW_AT_specification));
 	if (e->get_tag() == DW_TAG_compile_unit)
 	    break;
-	if (full.length())
-	    full = string("::") + full;
-	full = string(e->get_string_attribute(DW_AT_name)) + full;
+	const char *name = e->get_string_attribute(DW_AT_name);
+	if (name)
+	{
+	    if (full.length())
+		full = string("::") + full;
+	    full = string(name) + full;
+	}
 	e = w.move_up();
     } while (e);
 
