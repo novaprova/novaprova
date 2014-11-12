@@ -41,14 +41,14 @@ void bar() throw(exception)
 
 };
 
-static void test_uncaught_exception(void)
+static void NP_USED test_uncaught_exception(void)
 {
     fprintf(stderr, "MSG before call to bar\n");
     foo::bar();
     fprintf(stderr, "MSG after call to bar\n");
 }
 
-static void test_caught_exception(void)
+static void NP_USED test_caught_exception(void)
 {
     try
     {
