@@ -28,6 +28,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <cxxabi.h>
 
 #include <string>
 #include <iostream>
@@ -432,6 +433,42 @@ bool symbol_filename(const char *filename, std::string &symfile)
 
     symfile = path;
     return true;
+}
+
+/*
+ * The parts of the cxxabi we use here are common between the Darwin
+ * and GNU libc implementations.
+ */
+char *current_exception_type()
+{
+    /*
+     * Logic copied from __gnu_cxx::__verbose_terminate_handler() in
+     * gcc/libstdc++-v3/src/vterminate.cc.
+     */
+    type_info *tinfo = __cxxabiv1::__cxa_current_exception_type();
+    if (!tinfo)
+	return 0;
+
+    /* 0 = success, -1 = failed allocating memory,
+     * -2 = invalid name, -3 = invalid argument */
+    int status = 0;
+    char *demangled = __cxxabiv1::__cxa_demangle(tinfo->name(), NULL, NULL, &status);
+    if (status == -1)
+	oom(); /* failed allocating memory */
+
+    return (status == 0 ? demangled : xstrdup(tinfo->name()));
+}
+
+void cleanup_current_exception()
+{
+    /*
+     * Here we use a pair of functions which are Apple extensions.
+     * These are declaredin the same header as the standard functions
+     * but for some reason fail to link.
+     */
+#if 0
+    __cxxabiv1::__cxa_decrement_exception_refcount(__cxxabiv1::__cxa_current_primary_exception());
+#endif
 }
 
 // Close namespaces
