@@ -1,6 +1,5 @@
 MSG before call to bar
 EVENT EXCEPTION terminate called with exception foo::exception: Oh that went badly
-EVENT VALGRIND 2 unsuppressed errors found by valgrind
 FAIL tnexcept.uncaught_exception
 MSG before call to bar, in try block
 MSG caught exception: Oh that went badly
