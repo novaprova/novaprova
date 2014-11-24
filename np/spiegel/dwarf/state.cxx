@@ -225,6 +225,8 @@ filename_is_ignored(const char *filename)
 	"/usr/bin/",
 	"/usr/lib/",
 	"/opt/",
+	"linux-gate.so",
+	"linux-vdso.so",
 	NULL
     };
     const char * const *p;
