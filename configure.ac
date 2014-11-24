@@ -150,12 +150,12 @@ if test "$libbfd_LIBS" = "" ; then
 
     libbfd_LIBS_1="-lbfd"
     libbfd_LIBS_2="-lbfd -liberty"
-    libbfd_LIBS_3="-lbfd -dl"
+    libbfd_LIBS_3="-lbfd -ldl"
     libbfd_LIBS_4="-lbfd -lz"
-    libbfd_LIBS_5="-lbfd -dl -lz"
-    libbfd_LIBS_6="-lbfd -liberty -dl"
+    libbfd_LIBS_5="-lbfd -ldl -lz"
+    libbfd_LIBS_6="-lbfd -liberty -ldl"
     libbfd_LIBS_7="-lbfd -liberty -lz"
-    libbfd_LIBS_8="-lbfd -liberty -dl -lz"
+    libbfd_LIBS_8="-lbfd -liberty -ldl -lz"
 
     saved_LIBS="$LIBS"
     i=1
