@@ -30,6 +30,8 @@ fi
 AC_SUBST(libxml)
 
 platform_CFLAGS=
+libbfd_CFLAGS=
+libbfd_LIBS=
 
 AC_MSG_CHECKING([Platform O/S])
 case "$target_os" in
@@ -73,6 +75,97 @@ AC_MSG_CHECKING([Platform specific source])
 platform_SOURCE="$os.cxx $os"_"$arch.cxx"
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
+
+if test "$libbfd_LIBS" = "" ; then
+    dnl Prime the AC cache of compiler behavior
+    AC_TRY_LINK([], [return 0])
+
+    AC_MSG_CHECKING([how to link against the BFD library])
+    dnl
+    dnl For non-Linux platforms we worked out the way to compile
+    dnl and link the BFD library above.  Here we handle the
+    dnl horrible morass which Linux distros make of this task,
+    dnl by trying each of several possible values of $libbfd_LIBS
+    dnl until one works.
+    dnl
+    dnl Several factors contribute to this mess.
+    dnl
+    dnl The distro can choose to ship libbfd as a static library, a
+    dnl dynamic library, or both.  If we choose to use a dynamic
+    dnl library, it will have all its downstream dependent libraries
+    dnl listed in it, and all we have to do is to link using "-lbfd"
+    dnl and we're done.  Thus "-lbfd" is the first choice.
+    dnl
+    dnl In general, there's a horrible downside to using the dynamic
+    dnl library.  On Ubuntu, the library is built such that the
+    dnl SONAME recorded in our application has the package version
+    dnl number of the currently installed binutils package encoded
+    dnl in it.  This is, of course, madness.  It means that our
+    dnl application will happily link and pass all tests, then some
+    dnl weeks or months after installation when binutils is upgraded
+    dnl our application will mysteriously fail to start.  The ggcov
+    dnl application suffered from this issue.  The fix is to detect
+    dnl that we're building on Ubuntu and use the static BFD library,
+    dnl i.e. -Wl,-Bstatic -lbfd -liberty -lz -Wl,-Bdynamic.  However
+    dnl NovaProva is a special case: the test executables linked against
+    dnl BFD are never installed and only have to run immediately after
+    dnl being built.  Furthermore they will probably be re-linked almost
+    dnl every time they run.  Thus it is unlikely that we will encounter
+    dnl binutils being upgraded, and conversely we benefit distinctly
+    dnl from the smaller executables and faster link time of dynamic
+    dnl libraries.  So here we will always attempt to use the dynamic
+    dnl BFD library.
+    dnl
+    dnl Now, Ubuntu didn't just choose their link scheme to make life
+    dnl difficult for us: there is an actual problem they were trying
+    dnl to solve.  The problem is that the BFD library does not have a
+    dnl stable ABI; the ABI changes at will between binutils versions.
+    dnl Other Linux vendors solved this problem differently, by not
+    dnl shipping a dynamic BFD library at all, only the static library.
+    dnl Because static libraries do not encode their list of downstream
+    dnl dependent libraries, we need to add those explicitly to the
+    dnl link line.  All the choices after the first choice do this.
+    dnl
+    dnl The BFD library uses a library of GNU utilities called -liberty,
+    dnl which is used by basically nobody else.  Some distros build this
+    dnl into libbfd itself, so sometimes we don't need it and sometimes
+    dnl we do.
+    dnl
+    dnl For older versions of the BFD library, all we need is is
+    dnl "-lbfd -liberty" and we're done.  However newer versions added
+    dnl support for compressing/uncompressing the contents of some
+    dnl object file sections.  These newer versions require zlib, so
+    dnl we need to try "-lbfd -liberty -lz"
+    dnl
+
+    libbfd_LIBS_1="-lbfd"
+    libbfd_LIBS_2="-lbfd -liberty"
+    libbfd_LIBS_3="-lbfd -lz"
+    libbfd_LIBS_4="-lbfd -liberty -lz"
+
+    saved_LIBS="$LIBS"
+    i=1
+    itworks=no
+    while true ; do
+	LIBS=`eval echo \\$libbfd_LIBS_$i`
+	test -z "$LIBS" && break
+	i=`expr $i + 1`
+	dnl Yes I know that AC_LINK_IFELSE is a thing but it
+	dnl causes aclocal to generate warnings.  Yuck.
+	AC_TRY_LINK([#include <bfd.h>], [bfd_init()], [ itworks=yes ])
+	test "$itworks" = yes && break
+    done
+    if test "$itworks" = yes ; then
+	libbfd_LIBS="$LIBS"
+	AC_MSG_RESULT($libbfd_LIBS)
+    else
+	AC_MSG_ERROR([Couldnt find a working library link combination for BFD])
+    fi
+    LIBS="$saved_LIBS"
+fi
+dnl TODO: add a --with-bfd option?
+AC_SUBST(libbfd_CFLAGS)
+AC_SUBST(libbfd_LIBS)
 
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([

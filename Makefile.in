@@ -26,6 +26,7 @@ mandir=		@mandir@
 pkgconfigdir=	$(libdir)/pkgconfig
 
 libxml_CFLAGS=	@libxml_CFLAGS@
+libbfd_CFLAGS=	@libbfd_CFLAGS@
 platform_CFLAGS=@platform_CFLAGS@
 platform_SOURCE=@platform_SOURCE@
 
@@ -33,7 +34,7 @@ CC=		g++
 CXX=		g++
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
-CDEFINES=	-I. $(platform_CFLAGS) $(libxml_CFLAGS)
+CDEFINES=	-I. $(platform_CFLAGS) $(libxml_CFLAGS) $(libbfd_CFLAGS)
 CWARNFLAGS=	-Wall -Wextra
 CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CDEFINES)
 CXXFLAGS=	$(CFLAGS)

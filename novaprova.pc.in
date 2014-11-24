@@ -5,5 +5,5 @@ Name: NovaProva
 Description: New generation unit test framework for C
 Version: @PACKAGE_VERSION@
 Requires: @libxml@
-Libs: -L@libdir@ -lnovaprova -lstdc++ -lbfd -ldl -lrt
+Libs: -L@libdir@ -lnovaprova -lstdc++ @libbfd_LIBS@ -ldl -lrt
 Cflags: -I@includedir@/novaprova
