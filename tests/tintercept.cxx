@@ -261,7 +261,9 @@ main(int argc, char **argv __attribute__((unused)))
 	fatal("Usage: testrunner intercept\n");
     }
 
+    if (is_verbose()) printf("main, about to create state_t\n");
     np::spiegel::dwarf::state_t state;
+    if (is_verbose()) printf("main, about to call add_self\n");
     if (!state.add_self())
 	return 1;
 
