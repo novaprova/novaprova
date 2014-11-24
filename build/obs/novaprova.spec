@@ -32,9 +32,9 @@ test frameworks for languages such as Java or Perl.
 autoreconf -iv
 %configure
 %if %{_vendor} == "suse"
-if [ -f config.status ] ; then
+if [ -f config.log ] ; then
     echo ========================================
-    cat config.status
+    cat config.log
     echo ========================================
 fi
 %endif
