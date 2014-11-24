@@ -152,7 +152,7 @@ if test "$libbfd_LIBS" = "" ; then
 	i=`expr $i + 1`
 	dnl Yes I know that AC_LINK_IFELSE is a thing but it
 	dnl causes aclocal to generate warnings.  Yuck.
-	AC_TRY_LINK([#include <bfd.h>], [bfd_init()], [ itworks=yes ])
+	AC_TRY_LINK([#include <bfd.h>], [ bfd_init(); bfd_openr("foo.o", "bar") ], [ itworks=yes ])
 	test "$itworks" = yes && break
     done
     if test "$itworks" = yes ; then
