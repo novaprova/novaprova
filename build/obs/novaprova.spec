@@ -31,6 +31,13 @@ test frameworks for languages such as Java or Perl.
 %build
 autoreconf -iv
 %configure
+%if %{_vendor} == "suse"
+if [ -f config.status ] ; then
+    echo ========================================
+    cat config.status
+    echo ========================================
+fi
+%endif
 
 make all
 make check
