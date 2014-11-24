@@ -96,6 +96,12 @@ if test "$libbfd_LIBS" = "" ; then
     dnl listed in it, and all we have to do is to link using "-lbfd"
     dnl and we're done.  Thus "-lbfd" is the first choice.
     dnl
+    dnl Some distros provide a file which pretends to be a dynamic
+    dnl library but is actually a GNU linker script which points at
+    dnl the static library and the correct downstream libraries.
+    dnl For link line purposes this works just like a dynamic library,
+    dnl and all we need is "-lbfd".
+    dnl
     dnl In general, there's a horrible downside to using the dynamic
     dnl library.  On Ubuntu, the library is built such that the
     dnl SONAME recorded in our application has the package version
@@ -159,6 +165,9 @@ if test "$libbfd_LIBS" = "" ; then
 	libbfd_LIBS="$LIBS"
 	AC_MSG_RESULT($libbfd_LIBS)
     else
+	echo ========================================
+	cat config.log
+	echo ========================================
 	AC_MSG_ERROR([Couldnt find a working library link combination for BFD])
     fi
     LIBS="$saved_LIBS"
