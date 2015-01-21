@@ -14,7 +14,7 @@
 #  limitations under the License.
 #
 
-AC_INIT(novaprova, 1.3, [gnb@fmeh.org])
+AC_INIT(novaprova, 1.4, [gnb@fmeh.org])
 AC_CANONICAL_TARGET
 # AM_MAINTAINER_MODE
 AC_PROG_INSTALL
