@@ -44,7 +44,7 @@ MKDIRP=		$(INSTALL) -m 0755 -d
 RANLIB=		@RANLIB@
 depdir=		.deps
 
-SUBDIRS_PRE=	doc/get-start
+SUBDIRS_PRE=	doc/get-start doc/manual
 SUBDIRS_POST=	tests
 
 all clean distclean check install docs:
@@ -158,7 +158,8 @@ DOC_DELIVERABLES= \
 	    get-start/example1/mycode.h \
 	    get-start/example1/mycode.c \
 	    get-start/example1/Makefile \
-	    api-ref
+	    api-ref \
+	    manual/_build/html
 
 # Builds a) doc tarball for upload to the website
 # and b) doc/inst directory for copying into the
@@ -217,6 +218,7 @@ DIST_FILES= $(shell git ls-files) \
 DIST_DIRS= \
 	doc/api-ref \
 	doc/man \
+	doc/manual \
 
 dist: docs
 	$(RM) -r $(DISTDIR)

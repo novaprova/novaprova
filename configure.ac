@@ -190,5 +190,7 @@ AC_CONFIG_FILES([
     tests/Makefile
     Doxyfile
     novaprova.pc
+    doc/manual/Makefile
+    doc/manual/conf.py
 ])
 AC_OUTPUT
