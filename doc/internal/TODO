@@ -30,11 +30,13 @@
  * need some way of expressing dependencies between tests or
    resource requirements to allow the test plan to choose the
    next test intelligently.
+   NO.  THIS IS A TERRIBLE IDEA.
 
  * __u4c_fail() et al need __attribute__((noreturn));
 
  * turn an uncaught C++ exception into an event which causes FAIL
    and not just via the uncaught exception handler exit()ing
+   DONE
 
  * discover test functions written in C++.  Use a classifier to
    find mangled C++ functions of the form CLASS::test_foo() where
@@ -79,8 +81,10 @@
      fork a Valground process.
 
  * add basic test assert macros
+   DONE
 
  * add syslog-capturing assert macros
+   DONE
 
  * add CUnit compatibility test assert macros - both FATAL and
    non-FATAL versions but both with FATAL semantics
@@ -95,9 +99,11 @@
    if it tries to affect state outside the base directory
 
  * drive the SUSE Open Build Service via version-controlled files
+   DONE
 
  * detect file descriptor leaks after a test by comparing the
    directory listing for /proc/self/fd/ before and after.
+   DONE
 
  * actually implement the jUnit system-out and system-err properties
    DONE
@@ -113,4 +119,39 @@
    DONE
 
  * the default main() should implement --load-list for testr integration
+
+ * write a proper manual in DocBook; steal Valgrind's build
+   infrastructure for it
+
+ * catch call to pure virtual function in C++
+
+ * catch bad dynamic cast in C++
+
+ * catch bad typeid in C++
+
+ * Need a C API for intercepts
+
+ * Detect leaked or changed environment variables
+
+ * Detect leaked threads
+
+ * Detect leaked child processes
+
+ * Detect changes to umask and cwd
+
+ * Failure injection to system calls and malloc
+   using intercepts
+
+ * Merge the new log format implementation from the experimental branch
+
+ * Merge the tag implementation from the experimental branch
+
+ * Change implementation of NP_TAG() so it can be used *INSIDE*
+   a test function and applies there only, or at file scope
+   and applies to the whole file.  Harder to achieve but better
+   semantics than "the next function"
+
+ * Add support for wildcard (or xpath-like?) expressions on test names.
+
+ * Add support for building tests with autotools
 
