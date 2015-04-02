@@ -91,6 +91,9 @@ state_t::linkobj_t::map_sections()
     if (!is_separate)
 	path = filename_;
 
+#if _NP_DEBUG
+    printf("state_t::linkobj_t::map_sections trying %s\n", path.c_str());
+#endif
     bfd *b = bfd_openr(path.c_str(), NULL);
     if (!b)
     {
@@ -140,6 +143,14 @@ state_t::linkobj_t::map_sections()
 	if (!sections_[idx].is_mapped() &&
 	    sections_[idx].get_size())
 	    tsec[nsec++] = &sections_[idx];
+
+    if (!nsec)
+    {
+	fprintf(stderr, "np: WARNING: no DWARF information found for %s\n", filename_);
+	r = false;
+	goto out;
+    }
+
     qsort(tsec, nsec, sizeof(section_t *), mapping_t::compare_by_offset);
     for (int idx = 0 ; idx < nsec ; idx++)
     {
@@ -282,6 +293,9 @@ state_t::add_self()
     const char *filename;
     for (i = los.begin() ; i != los.end() ; ++i)
     {
+#if _NP_DEBUG
+	printf("state_t::add_self: platform linkobj %s\n", i->name);
+#endif
 	filename = i->name;
 	if (!filename)
 	    filename = exe;
@@ -292,6 +306,9 @@ state_t::add_self()
 	linkobj_t *lo = get_linkobj(filename);
 	if (lo)
 	{
+#if _NP_DEBUG
+	    printf("state_t::add_self: have spiegel linkobj\n");
+#endif
 	    lo->system_mappings_ = i->mappings;
 	    lo->slide_ = i->slide;
 	    vector<mapping_t>::iterator sm;
@@ -345,6 +362,7 @@ state_t::read_linkobjs()
     vector<linkobj_t*>::iterator i;
     for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
     {
+	/* TODO: why isn't this in filename_is_ignored() ?? */
 #if HAVE_VALGRIND
 	/* Ignore Valgrind's preloaded dynamic objects.  No
 	 * good will come of trying to poke into those.
