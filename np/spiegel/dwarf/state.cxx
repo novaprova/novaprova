@@ -57,6 +57,9 @@ state_t::linkobj_t::map_sections()
 
     bfd_init();
 
+#if _NP_DEBUG
+    printf("state_t::linkobj_t::map_sections opening %s\n", filename_);
+#endif
     /* Open a BFD */
     bfd *b = bfd_openr(filename_, NULL);
     if (!b)
@@ -104,6 +107,14 @@ state_t::linkobj_t::map_sections()
 	if (!sections_[idx].is_mapped() &&
 	    sections_[idx].get_size())
 	    tsec[nsec++] = &sections_[idx];
+
+    if (!nsec)
+    {
+	fprintf(stderr, "np: WARNING: no DWARF information found for %s\n", filename_);
+	r = false;
+	goto out;
+    }
+
     qsort(tsec, nsec, sizeof(section_t *), mapping_t::compare_by_offset);
     for (int idx = 0 ; idx < nsec ; idx++)
     {
@@ -253,6 +264,9 @@ state_t::add_self()
     const char *filename;
     for (i = los.begin() ; i != los.end() ; ++i)
     {
+#if _NP_DEBUG
+	printf("state_t::add_self: platform linkobj %s\n", i->name);
+#endif
 	filename = i->name;
 	if (!filename)
 	    filename = exe;
@@ -262,7 +276,12 @@ state_t::add_self()
 
 	linkobj_t *lo = get_linkobj(filename);
 	if (lo)
+	{
+#if _NP_DEBUG
+	    printf("state_t::add_self: have spiegel linkobj\n");
+#endif
 	    lo->system_mappings_ = i->mappings;
+	}
     }
 
     r = read_linkobjs();
