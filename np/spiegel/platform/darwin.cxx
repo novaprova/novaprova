@@ -29,6 +29,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <cxxabi.h>
+#include <libproc.h>
 
 #include <string>
 #include <iostream>
@@ -201,8 +202,17 @@ vector<np::spiegel::addr_t> get_stacktrace()
 
 bool is_running_under_debugger()
 {
-    fprintf(stderr, "TODO: %s not implemented for this platform\n", __FUNCTION__);
-    return false;
+    struct proc_bsdinfo info;
+    memset(&info, 0, sizeof(info));
+
+    int r = proc_pidinfo(getpid(), PROC_PIDTBSDINFO, 0,  &info, sizeof(info));
+    if (r < 0)
+    {
+	perror("proc_pidinfo(PROC_PIDTBSDINFO)");
+	return false;
+    }
+
+    return (info.pbi_flags & PROC_FLAG_TRACED ? true : false);
 }
 
 static void describe_sockaddr(const struct sockaddr *sa, ostream &o)
