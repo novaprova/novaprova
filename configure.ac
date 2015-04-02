@@ -291,5 +291,9 @@ AC_CONFIG_FILES([
     doc/manual/Makefile
     doc/manual/conf.py
     plat.sh
+    uninstalled/bin/pkg-config
+    uninstalled/lib/pkgconfig/novaprova.pc
 ])
 AC_OUTPUT
+
+chmod +x uninstalled/bin/pkg-config
