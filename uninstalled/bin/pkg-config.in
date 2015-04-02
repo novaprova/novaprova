@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright 2011-2012 Gregory Banks
+#  Copyright 2011-2015 Gregory Banks
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -17,4 +17,4 @@
 
 top_builddir=$(cd $(dirname $0)/../.. ; pwd)
 export PKG_CONFIG_PATH=$top_builddir/uninstalled/lib/pkgconfig
-exec /usr/bin/pkg-config --define-variable=top_builddir=$top_builddir "$@"
+exec @PKG_CONFIG@ --define-variable=top_builddir=$top_builddir "$@"
