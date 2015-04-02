@@ -43,3 +43,5 @@ install-sh
 novaprova-*.tar.bz2
 novaprova.pc
 plat.sh
+uninstalled/bin/pkg-config
+uninstalled/lib/pkgconfig/novaprova.pc

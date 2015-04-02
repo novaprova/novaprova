@@ -156,5 +156,9 @@ AC_CONFIG_FILES([
     Doxyfile
     novaprova.pc
     plat.sh
+    uninstalled/bin/pkg-config
+    uninstalled/lib/pkgconfig/novaprova.pc
 ])
 AC_OUTPUT
+
+chmod +x uninstalled/bin/pkg-config
