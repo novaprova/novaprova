@@ -754,9 +754,8 @@ np_set_concurrency(np_runner_t *runner, int n)
  * @param runner	the runner object
  * @param plan		optional plan object
  *
- * If @a plan is NULL, a temporary default plan is created which
- * will result in all the discovered tests being listed in testnode tree
- * order.
+ * If @a plan is NULL, all the discovered tests will be
+ * listed in testnode tree order.
  */
 extern "C" void
 np_list_tests(np_runner_t *runner, np_plan_t *plan)
@@ -812,9 +811,8 @@ np_set_output_format(np_runner_t *runner, const char *fmt)
  * @return		0 on success or non-zero if any tests failed.
  *
  * Uses the @a runner object to run all the tests described in the @a plan
- * object.  If @a plan is NULL, a temporary default plan is created which
- * will result in all the discovered tests being run in testnode tree
- * order.
+ * object.  If @a plan is NULL, all the discovered tests will be run in
+ * testnode tree order.
  */
 extern "C" int
 np_run_tests(np_runner_t *runner, np_plan_t *plan)
@@ -822,6 +820,17 @@ np_run_tests(np_runner_t *runner, np_plan_t *plan)
     return runner->run_tests(plan);
 }
 
+/**
+ * Get the timeout for the currently running test.
+ *
+ * @return	    timeout in seconds of currently running test
+ *
+ * If called outside of a running test, returns 0.  Note that the
+ * timeout for a test can vary depending on how it's run.  For
+ * example, if the test executable is run under a debugger the
+ * timeout is disabled, and if it's run under Valgrind (which is
+ * the default) the timeout is tripled.
+ */
 extern "C" int
 np_get_timeout()
 {
