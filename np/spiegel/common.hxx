@@ -20,7 +20,7 @@
 #include "np/util/common.hxx"
 
 namespace np {
-/**
+/*
  * NovaProva reflection library namespace.
  *
  * The `spiegel` namespace is a set of utilities which implement true runtime
