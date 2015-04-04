@@ -186,6 +186,7 @@ docs-local: Doxyfile
 	$(RM) -r doc/api-ref doc/man doc/xml
 	doxygen
 	$(RM) doc/man/man*/_*
+	./prune-doxygen-xml.pl doc/xml
 	make -C doc/manual clean html
 	$(RM) -r doc/manual/_build/html/_sources
 	$(RM) -r doc-$(PACKAGE_VERSION)
