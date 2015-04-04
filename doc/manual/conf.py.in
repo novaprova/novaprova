@@ -31,7 +31,13 @@ import shlex
 # ones.
 extensions = [
     'sphinx.ext.ifconfig',
+    'breathe'
 ]
+
+breathe_projects = {
+    "novaprova": "@abs_top_builddir@/doc/xml"
+}
+breathe_default_project = "novaprova"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
