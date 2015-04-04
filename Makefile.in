@@ -188,6 +188,7 @@ docs-local: Doxyfile
 	doxygen
 	$(RM) doc/man/man*/_*
 	make -C doc/manual clean html
+	$(RM) -r doc/manual/_build/html/_sources
 	$(RM) -r doc-$(PACKAGE_VERSION)
 	@$(call install_deliverables,doc,doc-$(PACKAGE_VERSION),$(DOC_TAR_DELIVERABLES))
 	tar -cjvf doc-$(PACKAGE_VERSION).tar.bz2 doc-$(PACKAGE_VERSION)
