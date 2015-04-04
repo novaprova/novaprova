@@ -276,6 +276,9 @@ struct __np_param_dec
 	return &d; \
     }
 
+/* This typedef avoids C syntax which messes with Breathe's little mind */
+typedef void (*np_funcptr_t)(void);
+
 /**
  * Install a dynamic mock by function pointer.
  *
@@ -290,8 +293,8 @@ struct __np_param_dec
  * routine to install the mock for every test in a test source
  * file.
  */
-#define np_mock(fn, to) __np_mock((void (*)(void))(fn), #fn, (void (*)(void))to)
-extern void __np_mock(void (*from)(void), const char *name, void (*to)(void));
+#define np_mock(fn, to) __np_mock((np_funcptr_t)(fn), #fn, (np_funcptr_t)to)
+extern void __np_mock(np_funcptr_t from, const char *name, np_funcptr_t to);
 
 /**
  * Uninstall a dynamic mock by function pointer.
@@ -303,8 +306,8 @@ extern void __np_mock(void (*from)(void), const char *name, void (*to)(void));
  * uninstalled at the end of the test, so calling @c np_unmock()
  * might not even be necessary in your tests.
  */
-#define np_unmock(fn) __np_unmock((void (*)(void))(fn))
-extern void __np_unmock(void (*from)(void));
+#define np_unmock(fn) __np_unmock((np_funcptr_t)(fn))
+extern void __np_unmock(np_funcptr_t from);
 
 /**
  * Install a dynamic mock by function name.
@@ -320,8 +323,8 @@ extern void __np_unmock(void (*from)(void));
  * routine to install the mock for every test in a test source
  * file.
  */
-#define np_mock_by_name(fname, to) __np_mock_by_name(fname, (void (*)(void))to)
-extern void __np_mock_by_name(const char *fname, void (*to)(void));
+#define np_mock_by_name(fname, to) __np_mock_by_name(fname, (np_funcptr_t)to)
+extern void __np_mock_by_name(const char *fname, np_funcptr_t to);
 
 /**
  * Uninstall a dynamic mock by function name.
