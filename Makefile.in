@@ -45,7 +45,7 @@ MKDIRP=		$(INSTALL) -m 0755 -d
 RANLIB=		@RANLIB@
 depdir=		.deps
 
-SUBDIRS_PRE=	doc/get-start doc/manual
+SUBDIRS_PRE=	doc/get-start
 SUBDIRS_POST=	tests
 
 all clean distclean check install docs:
@@ -152,7 +152,7 @@ libnovaprova_DFILES= \
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
-DOC_DELIVERABLES= \
+DOC_INST_DELIVERABLES= \
 	    get-start/index.html \
 	    get-start/pygmentize.css \
 	    get-start/example1/mytest.c \
@@ -160,28 +160,40 @@ DOC_DELIVERABLES= \
 	    get-start/example1/mycode.c \
 	    get-start/example1/Makefile \
 	    api-ref \
-	    manual/_build/html
+	    manual/_build/html:manual/html
+DOC_TAR_DELIVERABLES= \
+	    $(DOC_INST_DELIVERABLES) \
+	    man
+
+# $1 = source directory
+# $2 = destination directory
+# $3 = list of deliverable definitions, each either 'path' or 'src-path:dst-path'
+define install_deliverables
+	for _def in $3 ; do \
+	    _src=`echo "$$_def" | cut -d: -f1` ;\
+	    _dst=`echo "$$_def" | cut -d: -f2` ;\
+	    [ -n "$$_dst" ] || _dst=$$_src ;\
+	    echo "Copying $1/$$_src -> $2/$$_dst" ;\
+	    mkdir -p `dirname $2/$$_dst` ;\
+	    cp -r $1/$$_src $2/$$_dst ;\
+	done
+
+endef
 
 # Builds a) doc tarball for upload to the website
 # and b) doc/inst directory for copying into the
 # package with a %doc directive
 docs-local: Doxyfile
-	$(RM) -r doc/api-ref doc/man
+	$(RM) -r doc/api-ref doc/man doc/xml
 	doxygen
-	$(RM) doc-$(PACKAGE_VERSION)
-	ln -s doc doc-$(PACKAGE_VERSION)
-	tar -chjvf doc-$(PACKAGE_VERSION).tar.bz2 $(addprefix doc-$(PACKAGE_VERSION)/,$(DOC_DELIVERABLES) man)
-	$(RM) doc-$(PACKAGE_VERSION)
+	$(RM) doc/man/man*/_*
+	make -C doc/manual clean html
+	$(RM) -r doc-$(PACKAGE_VERSION)
+	@$(call install_deliverables,doc,doc-$(PACKAGE_VERSION),$(DOC_TAR_DELIVERABLES))
+	tar -cjvf doc-$(PACKAGE_VERSION).tar.bz2 doc-$(PACKAGE_VERSION)
+	$(RM) -r doc-$(PACKAGE_VERSION)
 	$(RM) -r doc/inst
-	for doc in $(DOC_DELIVERABLES) ; do \
-	    if [ -d doc/$$doc ] ; then \
-		$(MKDIRP) doc/inst/$$doc ;\
-		ln doc/$$doc/* doc/inst/$$doc ;\
-	    else \
-		$(MKDIRP) `dirname doc/inst/$$doc` ;\
-		ln doc/$$doc doc/inst/$$doc ;\
-	    fi ;\
-	done
+	@$(call install_deliverables,doc,doc/inst,$(DOC_INST_DELIVERABLES))
 
 install:
 
