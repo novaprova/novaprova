@@ -7,8 +7,8 @@ Parameters
 Parameterized tests are the solution for when you want to run the same test
 code several times with just a little bit different each time.
 
-In Novaprova, test parameters are a ``static const char*`` variable attached to
-a test node, which is set to one of a number of fixed values by the Novaprova
+In NovaProva, test parameters are a ``static const char*`` variable attached to
+a test node, which is set to one of a number of fixed values by the NovaProva
 library.  Parameters are declared with the ``NP_PARAMETER()`` macro.
 
 * and all its possible values

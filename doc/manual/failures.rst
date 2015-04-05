@@ -2,7 +2,7 @@
 Failure Modes
 =============
 
-This chapter lists the various failure modes that Novaprova detects in
+This chapter lists the various failure modes that NovaProva detects in
 Code Under Test, in addition to explicit NP assert macros,
 and describes how they are reported.
 
@@ -11,12 +11,12 @@ Isolate and Detect
 
 The purpose of a test framework is to discover bugs in code at the
 earliest possible time, with the least amount of work by developers.
-To achieve this, Novaprova takes an "Isolate & Detect" approach,
+To achieve this, NovaProva takes an "Isolate & Detect" approach,
 meaning that failure modes are firstly isolated to the test that caused
 them (thus not affecting other tests) and secondly detected using
 the best automated debugging techniques possible.
 
-Novaprova uses a strong model of test isolation.  Each test is run in a
+NovaProva uses a strong model of test isolation.  Each test is run in a
 separate process, with a central process co-ordinating the starting of
 tests and the gathering of results.  This design eliminates a number of
 subtle failure modes where running one test can influence another, such
@@ -30,11 +30,11 @@ debugging tool, which enables detection of a great many subtle runtime
 errors not otherwise detectable.
 
 The use of Valgrind is on by default and is handled silently by the
-Novaprova library.  Normally, running a program under Valgrind requires
+NovaProva library.  Normally, running a program under Valgrind requires
 the use of a wrapper script or special care in the Makefile, but with
-Novaprova all you have to do is to run the test executable.
+NovaProva all you have to do is to run the test executable.
 
-Novaprova also detects when the test executable is being run under a
+NovaProva also detects when the test executable is being run under a
 debugger such as ``gdb``, and avoids using Valgrind.  This is because
 ``gdb`` and Valgrind usually interact poorly, and it's best to use only
 one or the other.

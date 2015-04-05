@@ -6,7 +6,7 @@ Runtime Discovery
 -----------------
 
 Test functions are discovered at runtime using Reflection.  The
-Novaprova library walks through all the functions linked into the test
+NovaProva library walks through all the functions linked into the test
 executable and matches those which take no arguments, return ``void``, and
 have a name matching one of the following patterns:
 
@@ -30,7 +30,7 @@ Here's an example of a test function.
 
 Note that you do not need to write any code to register this test
 function with the framework.  If it matches the above criteria, the
-function will be found and recorded by Novaprova.  Just write the
+function will be found and recorded by NovaProva.  Just write the
 function and you're done.
 
 
@@ -40,7 +40,7 @@ The Test Tree
 Most other test frameworks provide a simple, 2-level mechanism for
 organizing tests; *tests* are grouped into *suites*.
 
-By contrast Novaprova organizes tests into an **tree of test nodes**.
+By contrast NovaProva organizes tests into an **tree of test nodes**.
 All the tests built into a test executable are gathered at runtime
 and are fitted into a tree, with a single common root.  The root is
 then pruned until the test names are as short as possible.  Each test
@@ -125,7 +125,7 @@ immediately without recording a failure.
 
 Note that this does not necessarily mean the test will get a Pass
 result, only that the test itself thinks it has passed.  It is possible
-that Novaprova will detect more subtle failures that the test itself
+that NovaProva will detect more subtle failures that the test itself
 does not see; some of these failures are not even detectable until after
 the test terminates.  So, ``NP_PASS`` is really just a complicated
 ``return`` statement and you should probably never use it.
@@ -143,7 +143,7 @@ the test terminates.  So, ``NP_PASS`` is really just a complicated
 
 A test can use the ``NP_FAIL`` macro, which terminates the test and
 records a Fail result.  Unlike ``NP_PASS``, if a test says it fails
-then Novaprova believes it.
+then NovaProva believes it.
 
 .. highlight:: c
 
@@ -156,7 +156,7 @@ then Novaprova believes it.
         printf("Now I'm mourning my failure!\n");   /* never happens */
     }
 
-Note that Novaprova provides a number of declarative :ref:`assert_macros`
+Note that NovaProva provides a number of declarative :ref:`assert_macros`
 which are much more useful than using ``NP_FAIL`` inside a conditional
 statement.  Not only are they more concise, but if they cause a test
 failure they provide a more useful error message which helps with
@@ -194,7 +194,7 @@ Will generate the following error messages
     FAIL mytests.do_it_this_way_instead
 
 
-Novaprova also supports a third test result, Not Applicable, which is
+NovaProva also supports a third test result, Not Applicable, which is
 neither a Pass nor a Fail.  A test which runs but decides that some
 preconditions are not met, can call the ``NP_NOTAPPLICABLE`` macro.
 Such tests are not counted as either passes or failures; it's as if they
@@ -206,13 +206,13 @@ Dependencies
 
 Some unit test frameworks support a concept of test dependencies, i.e.
 the framework knows that some tests should not be run until after some
-other tests have been run.  Novaprova does not support test
+other tests have been run.  NovaProva does not support test
 dependencies.
 
 In the opinion of the author, test dependencies are a terrible idea.
 They encourage a style of test writing where some tests are used to
 generate external state (e.g. rows in a database) which is then used
-as input to other tests.  Novaprova is designed around a model where
+as input to other tests.  NovaProva is designed around a model where
 each test is isolated, repeatable, and stateless.  This means
 that each test must trigger the same behaviour in the Code Under Test
 and give the same result, regardless of which order tests were run,

@@ -3,14 +3,14 @@
 Running Tests Under GDB
 -----------------------
 
-Novaprova detects when the test executable is being run under a
+NovaProva detects when the test executable is being run under a
 debugger such as ``gdb``, and takes some actions to make this
 an easier experience for you.
 
 * Test timeouts are disabled, to avoid tests spuriously
   failing while you are debugging them.
 * Valgrind is disabled, because ``gdb`` and Valgrind usually
-  interact poorly.  Also, Novaprova needs to use different
+  interact poorly.  Also, NovaProva needs to use different
   techniques to implement mocking depending on whether
   Valgrind or gdb is present.
 

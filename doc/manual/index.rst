@@ -1,5 +1,5 @@
 ..
-.. Novaprova Manual 1.3
+.. NovaProva Manual 1.3
 .. Copyright (c) 2015 Gregory Banks
 ..
 .. Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
 .. limitations under the License.
 ..
 
-Novaprova Manual
+NovaProva Manual
 ================
 
 Contents

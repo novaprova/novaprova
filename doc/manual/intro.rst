@@ -2,27 +2,27 @@
 Introduction
 ============
 
-What is Novaprova?
+What is NovaProva?
 ------------------
 
-Novaprova is a new generation unit test framework for C and C++ programs.
+NovaProva is a new generation unit test framework for C and C++ programs.
 
-Novaprova starts with the well-known xUnit paradigm for testing, but
-extends some concepts in new directions.  For example, Novaprova
+NovaProva starts with the well-known xUnit paradigm for testing, but
+extends some concepts in new directions.  For example, NovaProva
 organises tests into trees rather than xUnit's two-level "suite and
 test" approach.
 
-Most importantly, Novaprova is designed using real world experience and
+Most importantly, NovaProva is designed using real world experience and
 modern technologies to make it much easier to write tests, and much
 easier to discover subtle bugs in the System Under Test, bugs that unit
-other test frameworks miss.  Novaprova's mission is to make testing C
+other test frameworks miss.  NovaProva's mission is to make testing C
 and C++ code as easy as possible.
 
 
-Why Create Novaprova?
+Why Create NovaProva?
 ---------------------
 
-At the time Novaprova was first written, the author had a day job
+At the time NovaProva was first written, the author had a day job
 working on a large C (K&R in some places) `codebase
 <http://git.cyrusimap.org/>`_  which was in parts decades old.
 This code had *zero* buildable tests. The author created hundreds of
@@ -33,15 +33,15 @@ tests using the venerable `CUnit library
 
 This experience showed that writing more than a handful of tests using
 CUnit is very hard, and gets harder the more tests are written and the
-more insightful the tests.  Novaprova is designed to make the process of
+more insightful the tests.  NovaProva is designed to make the process of
 writing and running C and C++ unit tests as easy as possible.
 
 Design Philosophy
 -----------------
 
-Novaprova's design philosophy is based on the following principles.
+NovaProva's design philosophy is based on the following principles.
 
-- Fully support C as well as C++.  This means that Novaprova does not
+- Fully support C as well as C++.  This means that NovaProva does not
   rely on C++ compile time features for test discovery or reflection.
   Test code must be buildable with only a C compiler, without C++.
 

@@ -1,16 +1,16 @@
 
 .. _porting:
 
-Porting Novaprova
+Porting NovaProva
 =================
 
 This chapter is intended as a resource for developers wanting to undertake
-a port of Novaprova to another platform.
+a port of NovaProva to another platform.
 
 Level of Difficulty
 -------------------
 
-The Novaprova library contains significant levels of platform dependency, so
+The NovaProva library contains significant levels of platform dependency, so
 porting it is a non-trivial task.  To undertake a port you will need to have a
 working knowledge of details of the following components of the target platform.
 
@@ -25,16 +25,16 @@ reading the system source, or for closed source systems applying reverse
 engineering techniques.  Some of these details do not form part of the system
 ABI and may be subject to unexpected change.
 
-As a rough guide, porting Novaprova to a new platform is more complex than
+As a rough guide, porting NovaProva to a new platform is more complex than
 porting any C library (except perhaps media codecs) and less complex than
 porting Valgrind or the Linux kernel.
 
 Executable File Format
 ----------------------
 
-Novaprova uses the BFD library from `the GNU binutils
+NovaProva uses the BFD library from `the GNU binutils
 package <http://www.gnu.org/software/binutils/>`_ to handle details of the
-executable file format (e.g. ELF on modern Linux systems).  Novaprova uses only
+executable file format (e.g. ELF on modern Linux systems).  NovaProva uses only
 the abstract (i.e.  format-independant) part of the BFD API, and only for a
 stricly limited set of tasks (such as discovering segment boundaries and
 types).  Hopefully this will require little porting to other executable file
@@ -43,11 +43,11 @@ formats (e.g. COFF or Mach objects).
 Debugging Information
 ---------------------
 
-Novaprova depends deeply on the DWARF debugging format.  There is a
+NovaProva depends deeply on the DWARF debugging format.  There is a
 considerable body of code which parses DWARF and depends on DWARF formats and
 semantics.  If your platform does not use DWARF natively, or cannot be
 convinced to by the use of compiler flags such as ``-gdwarf2``, then porting
-Novaprova will be very much harder and you should contact the mailing list for
+NovaProva will be very much harder and you should contact the mailing list for
 advice.
 
 Valgrind
@@ -55,13 +55,13 @@ Valgrind
 
 `Valgrind <http://www.valgrind.org/>`_ is an advanced memory debugging tool
 (actually, it's a program simulator which happens debug memory as a side
-effect).  Novaprova is designed to make use of Valgrind's powerful bug
+effect).  NovaProva is designed to make use of Valgrind's powerful bug
 discovery features.  If your platform doesn't support Valgrind you're going to
-get much less value out of Novaprova than if you had Valgrind, and Novaprova is
+get much less value out of NovaProva than if you had Valgrind, and NovaProva is
 going to be missing a great many test failure cases that you really want to be
 caught.
 
-For this reason, Novaprova will fail to build without Valgrind.
+For this reason, NovaProva will fail to build without Valgrind.
 
 .. This isnt true on the Darwin branch.  Use this text
 .. You'll need to make some minor tweaks to the package specifications to
@@ -73,11 +73,11 @@ For this reason, Novaprova will fail to build without Valgrind.
 Platform Specific Code
 ----------------------
 
-Novaprova is written to isolate the platform dependent code to a small set of
+NovaProva is written to isolate the platform dependent code to a small set of
 files with a well-defined interface.  Partly this is good program practice to
 set the scene for future ports (we shall see how well this succeeded when the
 first new port is done).  But partly it is due to current necessity, as
-Novaprova is sufficiently sensitive to platform details that 32 bit and 64 bit
+NovaProva is sufficiently sensitive to platform details that 32 bit and 64 bit
 x86 Linux platforms need different code.
 
 Code Layout
@@ -85,7 +85,7 @@ Code Layout
 
 The platform specific code is contained in the C++ namespace
 ``np::spiegel::platform`` and is implemented in ``.cxx`` files in the directory
-``np/spiegel/platform/``.  This follows the usual Novaprova convention where
+``np/spiegel/platform/``.  This follows the usual NovaProva convention where
 namespaces and directories have exactly the same shape.
 
 Generally there will be two platform specific files, one containing code which
@@ -113,7 +113,7 @@ and add a new case for your platform operating system.
 At this point you need to set the ``$os`` variable to the short name of the
 platform operating system, e.g. ``x86``.  This is going to be used to choose a
 filename ``$os.cxx``, so the name must be short and contain no spaces or / characters.
-Ideally it will be entirely lowercase, to match the Novaprova conventions.
+Ideally it will be entirely lowercase, to match the NovaProva conventions.
 
 Optionally, you can append to the ``$platform_CFLAGS`` variable if there are some
 compiler flags (e.g. ``-DGNU_SOURCE``) that should be set for that platform only.
@@ -135,7 +135,7 @@ At this point you need to set three variables.
   e.g. ``x86``.  This is going to be used to construct a filename
   ``${os}_${arch}.cxx`` and to add a compile flag ``-D_NP_$arch`` so
   it must contain only alphanumerics and the underscore character.
-  Ideally it will be entirely lowercase, to match the Novaprova conventions.
+  Ideally it will be entirely lowercase, to match the NovaProva conventions.
 - ``$addrsize`` is a decimal literal indicating the size of a platform virtual
   address in bytes, e.g. ``4`` for 32-bit platforms.
 - ``$maxaddr`` is a C unsigned integer literal indicating the maximum value
@@ -180,7 +180,7 @@ Returns in ``*argcp`` and ``*argvp`` the original commandline argument vector fo
 the process, and ``true`` on success.  Modern C runtime libraries will store the
 commandline argument vector values passed to ``main()`` in global variables in
 the C library before calling ``main()``. This method retrieves those values so
-that Novaprova can use them when forking itself to run Valgrind.  Because no
+that NovaProva can use them when forking itself to run Valgrind.  Because no
 standard or convention describes these variables, their names are platform
 specific; it is also possible on some platforms that no such variables might
 exist and the argument vector might need to be deduced by looking in the kernel
@@ -197,7 +197,7 @@ Get Executable Name
     char *self_exe()
 
 Returns a newly allocated string representing the absolute pathname of the
-process' executable.  This is used when Novaprova forks itself to run
+process' executable.  This is used when NovaProva forks itself to run
 Valgrind. The Linux code uses a ``readlink()`` call on the symlink ``/proc/self/exe``.
 
 List Loaded Libraries
@@ -330,7 +330,7 @@ Install Intercept
     int uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
 
 These functions are the most difficult but most rewarding part of porting
-Novaprova.  Intercepts are the key technology that drives advanced Novaprova
+NovaProva.  Intercepts are the key technology that drives advanced NovaProva
 features like mocks, redirects, and failpoints.  An intercept is basically a
 breakpoint inserted into code, similar to what a debugger uses, but instead of
 waking another process when triggered an intercept calls code in the same
@@ -344,7 +344,7 @@ call to ``uninstall_intercept``.  The ``intstate_t`` type is defined in the
 header file ``np/spiegel/platform/common.hxx`` for all ports (using ``#ifdef``)
 and contains any state which might be useful for uninstalling the intercept,
 e.g.  the original instructions which were replaced at install time.  The
-install function can assume that no Novaprova intercept is already installed at
+install function can assume that no NovaProva intercept is already installed at
 the given address, but it should take care to handle the case where a debugger
 like gdb has independently inserted it's own breakpoint.
 
@@ -404,7 +404,7 @@ trampoline has the following responsibilities.
 #.  Arrange to return ``call_t.retval_`` (which may have been changed as a
     side effect of calling ``dispatch_after()``) to the calling function.
 
-Currently Novaprova intercepts are not required to be thread-safe. This means
+Currently NovaProva intercepts are not required to be thread-safe. This means
 that the signal handler and trampoline function can use global state if
 necessary.
 
@@ -428,15 +428,15 @@ currently being handled, or ``0`` if no exception is being handled.
     void cleanup_current_exception()
 
 Frees any storage associated with the exception currently being handled.
-If this function does nothing, uncaught C++ exceptions reported by Novaprova
+If this function does nothing, uncaught C++ exceptions reported by NovaProva
 will also result in a Valgrind memory leak report.
 
 
 Utility Functions
 -----------------
 
-Some of Novaprova's utility functions have platform-specific features which need
-to be considered when porting Novaprova.
+Some of NovaProva's utility functions have platform-specific features which need
+to be considered when porting NovaProva.
 
 POSIX Clocks
 ~~~~~~~~~~~~
@@ -458,14 +458,14 @@ replacement.
 Static Library Intercepts
 -------------------------
 
-Novaprova also contains a number of functions which are designed to intercept
+NovaProva also contains a number of functions which are designed to intercept
 and change behavior of the standard C library, usually to provide more complete
 and graceful detection of test failures.  Some of these functions permanently
 replace functions in the standard C library with new versions by defining
 functions of the same signature and relying on link order.  Some are runtime
-intercepts using the Novaprova intercept mechanism.  Many of these functions are
+intercepts using the NovaProva intercept mechanism.  Many of these functions are
 undocumented or platform-specific, and need to be considered when porting
-Novaprova.
+NovaProva.
 
 __assert
 ~~~~~~~~
@@ -479,7 +479,7 @@ __assert
 This function is called to handle the failure case in the standard ``assert()``
 macro.  If it's called, the calling code has decided that an unrecoverable
 internal error has occurred.  Usually it prints a message and terminates the
-process in such a way that the kernel writes a coredump.  Novaprova defines it's
+process in such a way that the kernel writes a coredump.  NovaProva defines it's
 own version of this routine in ``iassert.c``, which fails the running test
 gracefully (including a stack trace message).  The function name and signature
 are not defined by any standard.  Systems based on GNU libc also define two
@@ -488,7 +488,7 @@ related functions ``__assert_fail()`` and ``__assert_perror_fail()``.
 syslog
 ~~~~~~
 
-Novaprova catches messages sent to the system logging facility and allows test
+NovaProva catches messages sent to the system logging facility and allows test
 cases to assert whether specific messages have or have not been emitted.  This
 is particularly useful for testing server code.  This is done via a runtime
 intercept on the libc ``syslog()`` function.  On GNU libc based systems, the

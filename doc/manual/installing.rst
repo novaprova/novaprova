@@ -1,11 +1,11 @@
 
-Installing Novaprova
+Installing NovaProva
 ====================
 
 From The Open Build Service
 ---------------------------
 
-Novaprova is available in installable repositories for many recent Linux
+NovaProva is available in installable repositories for many recent Linux
 distributions at `the OpenSUSE Build Service <http://download.opensuse.org/repositories/home:/gnb:/novaprova/>`_
 
 For Debian/Ubuntu systems, copy and paste the following commands.
@@ -17,7 +17,7 @@ For Debian/Ubuntu systems, copy and paste the following commands.
     # Choose a distro
     distro=xUbuntu_12.04
     
-    # This is the base URL for the Novaprova repo
+    # This is the base URL for the NovaProva repo
     repo=http://download.opensuse.org/repositories/home:/gnb:/novaprova/$distro
     
     # Download and install the repository GPG key
@@ -27,7 +27,7 @@ For Debian/Ubuntu systems, copy and paste the following commands.
     sudo bash -c "echo 'deb $repo ./' > /etc/apt/sources.list.d/novaprova.list"
     sudo apt-get update
     
-    # Install Novaprova
+    # Install NovaProva
     sudo apt-get install novaprova
 
 See `here <http://en.opensuse.org/openSUSE:Build_Service_Enduser_Info>`_ for RedHat and SUSE instructions.
@@ -37,7 +37,7 @@ From A Release Tarball
 
 First, download a release tarball.
 
-Novaprova is intended to be built in the usual way that any open source
+NovaProva is intended to be built in the usual way that any open source
 C software is built.  It has a configure script generated from autoconf,
 which you run before building.  To build you need to have g++ and gcc
 installed.  You will also need to have the ``valgrind.h`` header file
@@ -58,7 +58,7 @@ installed, which is typically in a package named something like
 From Read-Only Git
 ------------------
 
-For advanced users only.  Novaprova needs several more tools to build
+For advanced users only.  NovaProva needs several more tools to build
 from a Git checkout than from a release tarball, mainly for the
 documentation.  You will need to have `Python Markdown
 <http://freewisdom.org/projects/python-markdown/>`_, `Pygments
