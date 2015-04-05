@@ -2,7 +2,7 @@
 Output Formats
 ==============
 
-Novaprova supports two different test result output formats.  You
+NovaProva supports two different test result output formats.  You
 can select between these using the ``--format`` option to the
 test executable, or by calling ``np_set_output_format()`` if you
 write your own ``main()`` routine.
