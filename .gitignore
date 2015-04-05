@@ -15,6 +15,7 @@
 #
 *.a
 *.o
+*.dSYM
 .config
 .deps
 .vagrant
