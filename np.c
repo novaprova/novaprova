@@ -80,6 +80,10 @@ be_valground(void)
  * and the call to @c np_init will be run twice in two different
  * processes, the second time under Valgrind.
  *
+ * The function also sets a C++ terminate handler using
+ * @c std::set_terminate() which handles any uncaught C++ exceptions,
+ * generates a useful error message, and fails the running test.
+ *
  * \ingroup main
  */
 extern "C" np_runner_t *

@@ -35,6 +35,7 @@ Contents
    mocking
    parameters
    c-api-ref
+   porting
 
 Legal Notice
 ------------
