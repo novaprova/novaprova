@@ -96,7 +96,7 @@ Pass and Fail
 A test passes in a very simple way: it returns without failing.  A test
 can fail in any number of ways, some of them obvious, all of them
 indicative of a bug in the Code Under Test (or possibly the test
-itself).  See :ref:`asserts` and :doc:`failures` for full details.
+itself).  See :ref:`assert_macros` and :doc:`failures` for full details.
 
 Here's an example of a test which always passes.
 
@@ -156,7 +156,7 @@ then Novaprova believes it.
         printf("Now I'm mourning my failure!\n");   /* never happens */
     }
 
-Note that Novaprova provides a number of declarative :ref:`asserts`
+Note that Novaprova provides a number of declarative :ref:`assert_macros`
 which are much more useful than using ``NP_FAIL`` inside a conditional
 statement.  Not only are they more concise, but if they cause a test
 failure they provide a more useful error message which helps with
@@ -199,50 +199,6 @@ neither a Pass nor a Fail.  A test which runs but decides that some
 preconditions are not met, can call the ``NP_NOTAPPLICABLE`` macro.
 Such tests are not counted as either passes or failures; it's as if they
 never existed.
-
-.. _asserts:
-
-Assert Macros
--------------
-
-This section describes the various Novaprova assert macros.
-
-``NP_ASSERT(cc)``
-    Test that a given boolean condition is true, otherwise fail the test.
-
-``NP_ASSERT_TRUE(a)``
-    Test that a given boolean condition is true, otherwise fail the test.
-    This is the same as ``NP_ASSERT`` except that the message printed on
-    failure is slightly more helpful.
-
-``NP_ASSERT_FALSE(a)``
-    Test that a given boolean condition is false, otherwise fail the test.
-
-``NP_ASSERT_EQUAL(a, b)``
-    Test that two signed integers are equal, otherwise fail the test.
-
-``NP_ASSERT_NOT_EQUAL(a, b)``
-    Test that two signed integers are not equal, otherwise FAIL the test.
-
-``NP_ASSERT_PTR_EQUAL(a, b)``
-    Test that two pointers are equal, otherwise fail the test.
-
-``NP_ASSERT_PTR_NOT_EQUAL(a, b)``
-    Test that two pointers are not equal, otherwise fail the test.
-
-``NP_ASSERT_NULL(a)``
-    Test that a pointer is NULL, otherwise fail the test.
-
-``NP_ASSERT_NOT_NULL(a)``
-    Test that a pointer is not NULL, otherwise fail the test.
-
-``NP_ASSERT_STR_EQUAL(a, b)``
-    Test that two strings are equal, otherwise fail the test.
-    Either string can be NULL; NULL compares like the empty string.
-
-``NP_ASSERT_STR_NOT_EQUAL(a, b)``
-    Test that two strings are not equal, otherwise fail the test.
-    Either string can be NULL, it compares like the empty string.
 
 
 Dependencies

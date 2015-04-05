@@ -58,6 +58,11 @@ extern void __np_notapplicable(const char *file, int line);
 extern void __np_assert_failed(const char *filename, int lineno,
 				const char *fmt, ...);
 
+/**
+ * \defgroup result_macros Result Macros
+ * @{
+ */
+
 /** Causes the running test to terminate immediately with a PASS result.
  *
  * Causes the running test to terminate immediately with a PASS result.
@@ -79,6 +84,12 @@ extern void __np_assert_failed(const char *filename, int lineno,
  * satisfied and have thus not actually run. */
 #define NP_NOTAPPLICABLE \
     __np_notapplicable(__FILE__, __LINE__)
+
+/**
+ * @}
+ * \defgroup assert_macros Assert Macros
+ * @{
+ */
 
 /** Test that a given boolean condition is true, otherwise FAIL the test.
  *
@@ -196,7 +207,12 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    "NP_ASSERT_STR_NOT_EQUAL(" #a "=\"%s\", " #b "=\"%s\")", _a, _b); \
     } while(0)
 
-/* syslog matching support */
+/**
+ * @}
+ * \defgroup syslog Syslog Matching
+ * @{
+ */
+
 /** Set up to FAIL the test on syslog messages matching a regexp.
  *
  * @param re	    POSIX extended regular expression to match
@@ -243,7 +259,12 @@ extern void np_syslog_match(const char *re, int tag);
  */
 extern unsigned int np_syslog_count(int tag);
 
-/* parameter support */
+/**
+ * @}
+ * \defgroup parameters Parameters
+ * @{
+ */
+
 struct __np_param_dec
 {
     char **var;
@@ -275,6 +296,12 @@ struct __np_param_dec
 	static const struct __np_param_dec d = { & nm , vals }; \
 	return &d; \
     }
+
+/**
+ * @}
+ * \defgroup mocking Dynamic Mocking
+ * @{
+ */
 
 /* This typedef avoids C syntax which messes with Breathe's little mind */
 typedef void (*np_funcptr_t)(void);
@@ -337,6 +364,12 @@ extern void __np_mock_by_name(const char *fname, np_funcptr_t to);
  * might not even be necessary in your tests.
  */
 extern void np_unmock_by_name(const char *fname);
+/**@}*/
+
+/**
+ * \defgroup main Main Routine
+ * \defgroup misc Miscellany
+ */
 
 #ifdef __cplusplus
 };

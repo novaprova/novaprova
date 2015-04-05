@@ -115,6 +115,8 @@ void plan_t::iterator::find_testable_node()
  * (or list to stdout) a subset of all the discovered tests.  Note that
  * if you want to run all tests, you do not need to create a plan at
  * all; passing NULL to @c np_run_tests has that effect.
+ *
+ * \ingroup main
  */
 extern "C" np_plan_t *
 np_plan_new(void)
@@ -125,6 +127,8 @@ np_plan_new(void)
 /**
  * Destroys a plan object.
  * @param plan	    the plan object to destroy
+ *
+ * \ingroup main
  */
 extern "C" void
 np_plan_delete(np_plan_t *plan)
@@ -146,6 +150,8 @@ np_plan_delete(np_plan_t *plan)
  * descendants to be added to the plan.  The interface is designed to
  * take command-line arguments from your test runner program after
  * options have been parsed with @c getopt.
+ *
+ * \ingroup main
  */
 extern "C" bool
 np_plan_add_specs(np_plan_t *plan, int nspec, const char **spec)
