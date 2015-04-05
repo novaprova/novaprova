@@ -690,6 +690,8 @@ using namespace np;
  * serially.  A value of 0 is shorthand for one job per online CPU in
  * the system, which is likely to be the most efficient use of the
  * system.
+ *
+ * \ingroup main
  */
 extern "C" void
 np_set_concurrency(np_runner_t *runner, int n)
@@ -705,6 +707,8 @@ np_set_concurrency(np_runner_t *runner, int n)
  *
  * If @a plan is NULL, all the discovered tests will be
  * listed in testnode tree order.
+ *
+ * \ingroup main
  */
 extern "C" void
 np_list_tests(np_runner_t *runner, np_plan_t *plan)
@@ -734,6 +738,8 @@ np_list_tests(np_runner_t *runner, np_plan_t *plan)
  * write your own output formats by deriving from @c np::listener_t.
  *
  * Returns true if @c fmt is a valid format, or false on error.
+ *
+ * \ingroup main
  */
 extern "C" bool
 np_set_output_format(np_runner_t *runner, const char *fmt)
@@ -762,6 +768,8 @@ np_set_output_format(np_runner_t *runner, const char *fmt)
  * Uses the @a runner object to run all the tests described in the @a plan
  * object.  If @a plan is NULL, all the discovered tests will be run in
  * testnode tree order.
+ *
+ * \ingroup main
  */
 extern "C" int
 np_run_tests(np_runner_t *runner, np_plan_t *plan)
@@ -779,6 +787,8 @@ np_run_tests(np_runner_t *runner, np_plan_t *plan)
  * example, if the test executable is run under a debugger the
  * timeout is disabled, and if it's run under Valgrind (which is
  * the default) the timeout is tripled.
+ *
+ * \ingroup misc
  */
 extern "C" int
 np_get_timeout()

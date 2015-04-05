@@ -79,6 +79,8 @@ be_valground(void)
  * the process.  So be aware that any code between the start of @c main
  * and the call to @c np_init will be run twice in two different
  * processes, the second time under Valgrind.
+ *
+ * \ingroup main
  */
 extern "C" np_runner_t *
 np_init(void)
@@ -96,6 +98,8 @@ np_init(void)
  * @param runner    The runner object to destroy
  *
  * Destroys the given runner object and shuts down the library.
+ *
+ * \ingroup main
  */
 extern "C" void
 np_done(np_runner_t *runner)

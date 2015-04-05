@@ -85,6 +85,8 @@ calling exit() outside a test calls _exit()
     np: 1 run 1 failed
 
 
+.. _syslog:
+
 Messages emitted to syslog()
 ----------------------------
 

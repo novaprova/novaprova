@@ -11,6 +11,7 @@ distributions at `the OpenSUSE Build Service <http://download.opensuse.org/repos
 For Debian/Ubuntu systems, copy and paste the following commands.
 
 .. highlight:: bash
+
 ::
 
     # Choose a distro
@@ -44,6 +45,7 @@ installed, which is typically in a package named something like
 ``valgrind-dev``.
 
 .. highlight:: bash
+
 ::
 
     # download the release tarball from http://sourceforge.net/projects/novaprova/files/
@@ -65,6 +67,7 @@ installed.  On an Ubuntu system these are in packages
 ``python-markdown``, ``python-pygments``, and ``doxygen`` respectively.
 
 .. highlight:: bash
+
 ::
 
     git clone git://github.com/gnb/novaprova.git

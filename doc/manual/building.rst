@@ -60,6 +60,8 @@ Using GNU Autotools
 
 TODO.  Yadda yadda.  ``PKG_CHECK_MODULES`` autoconf macro.
 
+.. _main_routine:
+
 Main Routine
 ------------
 
