@@ -85,6 +85,7 @@ libnovaprova_SOURCE= \
 		np/testmanager.cxx \
 		np/testnode.cxx \
 		np/text_listener.cxx \
+		np/tap_listener.cxx \
 		np/types.cxx \
 		np/util/common.cxx \
 		np/util/filename.cxx \
@@ -128,6 +129,7 @@ libnovaprova_HEADERS= \
 		np/testmanager.hxx \
 		np/testnode.hxx \
 		np/text_listener.hxx \
+		np/tap_listener.hxx \
 		np/types.hxx \
 
 libnovaprova_OBJS= \

@@ -20,6 +20,7 @@
 #include "np/text_listener.hxx"
 #include "np/proxy_listener.hxx"
 #include "np/junit_listener.hxx"
+#include "np/tap_listener.hxx"
 #include "np/child.hxx"
 #include "np/spiegel/spiegel.hxx"
 #include "np_priv.h"
@@ -801,6 +802,11 @@ np_set_output_format(np_runner_t *runner, const char *fmt)
     if (!strcmp(fmt, "junit"))
     {
 	runner->add_listener(new junit_listener_t);
+	return true;
+    }
+    else if (!strcmp(fmt, "tap"))
+    {
+	runner->add_listener(new tap_listener_t);
 	return true;
     }
     else if (!strcmp(fmt, "text"))
