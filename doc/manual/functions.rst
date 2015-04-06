@@ -44,7 +44,7 @@ By contrast NovaProva organizes tests into an **tree of test nodes**.
 All the tests built into a test executable are gathered at runtime
 and are fitted into a tree, with a single common root.  The root is
 then pruned until the test names are as short as possible.  Each test
-function is a leaf node in this tree (usually, see TODO).
+function is a leaf node in this tree (usually).
 
 The locations of tests in this tree are derived from the names of the
 test function, the basename of the test source file containing the test
@@ -57,6 +57,7 @@ separated by ASCII '.' characters, and in general look like this.
 .. highlight:: none
 
 ::
+
     dir.subdir.more.subdirs.filename.function
 
 Here's an example showing how test node names fall naturally out of
