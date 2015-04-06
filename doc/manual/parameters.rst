@@ -4,17 +4,24 @@
 Parameters
 ==========
 
-Parameterized tests are the solution for when you want to run the same test
-code several times with just a little bit different each time.
+Parameterized tests are the solution for when you want to run the same
+test code several times with just a little bit different each time.
 
-In NovaProva, test parameters are a ``static const char*`` variable attached to
-a test node, which is set to one of a number of fixed values by the NovaProva
-library.  Parameters are declared with the ``NP_PARAMETER()`` macro.
+In NovaProva, test parameters are a ``static const char*`` variable
+attached to a test node, which is set to one of a number of fixed values
+by the NovaProva library.  Parameters are declared with the
+``NP_PARAMETER()`` macro.  This macro takes two arguments: the name of
+the variable and a string containing all the possible values, separated
+by commas or whitespace.
 
-* and all its possible values
-* attached to any node in the test tree
-* discovered at runtime using reflection
-* tests under that node are run once for each parameter value combination
+The parameter is attached to the level of the test node tree where it's
+declared, and applies to all the tests at that level or below, e.g. all
+the tests declared in the same ``.c`` file.  Those tests are run once
+for each value of the parameter, with the parameter's variable set to a
+different value each time.  In test results, the name and value of the
+parameter are shown inside ``[]`` appended to the full test name.
+
+For example, this parameter declaration
 
 .. highlight:: c
 
@@ -26,13 +33,12 @@ library.  Parameters are declared with the ``NP_PARAMETER()`` macro.
         fprintf(stderr, "I'd love a %s\n", pastry);
     }
 
-when run
+will result in the ``test_munchies()`` function being called three
+times, like this
 
 .. highlight:: none
 
 ::
-
-    % ./testrunner
 
     np: running: "mytest.munchies[pastry=donut]"
     I'd love a donut
@@ -48,7 +54,9 @@ when run
 
     np: 3 run 0 failed
 
-When multiple parameters apply, all the combinations are iterated
+When multiple parameters apply, the test functions are called once
+for each of the combinations of the parameters.  For example, this
+pair of parameters
 
 .. highlight:: c
 
@@ -61,13 +69,12 @@ When multiple parameters apply, all the combinations are iterated
         fprintf(stderr, "I'd love a %s with my %s\n", pastry, beverage);
     }
 
-when run
+will result in the ``test_munchies()`` function being called six
+times, like this
 
 .. highlight:: none
 
 ::
-
-    % ./testrunner
 
     np: running: "mytest.munchies[pastry=donut][beverage=tea]"
     I'd love a donut with my tea
