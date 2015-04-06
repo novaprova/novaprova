@@ -55,10 +55,71 @@ However, you should make sure that at least the test code is built with
 the ``-g`` option to include debugging information.  NovaProva uses that
 information to discover tests.
 
-Using GNU Autotools
--------------------
+Using GNU Automake
+------------------
 
-TODO.  Yadda yadda.  ``PKG_CHECK_MODULES`` autoconf macro.
+Many C developers prefer to use GNU automake to build their projects.
+One good reason is that it's by far the easiest technique to build shared
+libraries in a cross-platform manner.  NovaProva can be used to run
+tests in an automake-based project too.
+
+First, ensure that your ``configure.ac`` has the following
+
+::
+
+    dnl configure.ac
+
+    AC_INIT(15_automake, 1.4)
+    AM_INIT_AUTOMAKE([serial-tests])
+    AC_PROG_CC
+    AC_PROG_RANLIB
+
+    PKG_CHECK_MODULES(NOVAPROVA, novaprova)
+
+    AC_CONFIG_HEADERS([config.h])
+    AC_CONFIG_FILES([Makefile])
+    AC_OUTPUT
+
+.. highlight:: make
+
+Note the use of the ``serial-tests`` automake option.  Recent versions
+of automake feature a new "parallel tests" feature, which is enabled by
+default.  This feature is complicated to use and provides no benefit at
+all when used with NovaProva, as NovaProva implements it's own parallelism
+and doesn't need help from automake.  The ``serial-tests`` option disables
+the feature.  If you're running with an older version of automake which
+does not offer the parallel test feature, you do not need to specify the
+option.
+
+Note also the use of the ``PKG_CHECK_MODULES`` autoconf macro.  This
+sets up the variables ``NOVAPROVA_CFLAGS`` and ``NOVAPROVA_LIBS``
+to the correct value for compiling and linking with the NovaProva
+library.
+
+Next, ensure your Makefile.am contains something like the following.
+
+::
+
+    # Makefile.am
+
+    lib_LIBRARIES=	libmycode.a
+    libmycode_a_SOURCES=	mycode.c
+
+    # Tell automake to build the testrunner on "make check"
+    check_PROGRAMS=	testrunner
+    # Tell automake to run the testrunner on "make check"
+    TESTS= $(check_PROGRAMS)
+
+    # List all your test source code here
+    testrunner_SOURCES= mytest.c
+    # Compile only test code with -g and the NovaProva flags
+    testrunner_CFLAGS= -g $(NOVAPROVA_CFLAGS)
+    # Link testrunner with the Code Under Test and the NovaProva library
+    testrunner_LDADD= libmycode.a $(NOVAPROVA_LIBS)
+
+
+Now when you run ``make check``, make will build the Code Under Test,
+build the test code, link the test runner, and run the test runner.
 
 .. _main_routine:
 
