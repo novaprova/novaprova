@@ -201,6 +201,7 @@ preconditions are not met, can call the ``NP_NOTAPPLICABLE`` macro.
 Such tests are not counted as either passes or failures; it's as if they
 never existed.
 
+.. _dependencies:
 
 Dependencies
 ------------
