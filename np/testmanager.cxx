@@ -54,6 +54,7 @@ testmanager_t::~testmanager_t()
     instance_ = 0;
 }
 
+extern "C" void __np_linkme1(void);
 
 testmanager_t *
 testmanager_t::instance()
@@ -71,6 +72,7 @@ testmanager_t::instance()
 	/* TODO: check tree for a) leaves without FT_TEST
 	 * and b) non-leaves with FT_TEST */
 // 	instance_->root_->dump(0);
+	__np_linkme1();
     }
     return instance_;
 }

@@ -63,6 +63,7 @@ libnovaprova_SOURCE= \
 		main.c \
 		np/child.cxx \
 		np/classifier.cxx \
+		np/fdleak_decorator.cxx \
 		np/event.cxx \
 		np/job.cxx \
 		np/junit_listener.cxx \
