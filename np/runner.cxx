@@ -153,7 +153,7 @@ runner_t::run_tests(plan_t *plan)
     {
 	while (children_.size() < maxchildren_ && pitr != pend)
 	{
-	    begin_job(new job_t(pitr));
+	    begin_job(new job_t(pitr, testmanager_t::instance()->create_decorators()));
 	    ++pitr;
 	}
 	if (!children_.size())
@@ -679,7 +679,7 @@ runner_t::run_test_code(job_t *j)
 	res = merge(res, R_PASS);
     }
 
-    j->post_run(false);
+    res = merge(res, j->post_run(false));
 
     res = descriptor_leaks(j, prefds, res);
     prefds.clear();

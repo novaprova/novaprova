@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include "np/job.hxx"
+#include "np/decorator.hxx"
 
 namespace np {
 using namespace std;
@@ -23,10 +24,11 @@ using namespace np::util;
 
 unsigned int job_t::next_id_ = 1;
 
-job_t::job_t(const plan_t::iterator &i)
+job_t::job_t(const plan_t::iterator &i, std::vector<decorator_t*> d)
  :  id_(next_id_++),
     node_(i.get_node()),
-    assigns_(i.get_assignments())
+    assigns_(i.get_assignments()),
+    decorators_(d)
 {
 }
 
@@ -36,6 +38,11 @@ job_t::~job_t()
 	unlink(stdout_path_.c_str());
     if (stderr_path_ != "")
 	unlink(stderr_path_.c_str());
+    while (decorators_.size())
+    {
+	delete decorators_.back();
+	decorators_.pop_back();
+    }
 }
 
 string job_t::as_string() const
@@ -47,13 +54,22 @@ string job_t::as_string() const
     return s;
 }
 
-void
+result_t
 job_t::pre_run(bool in_parent)
 {
+    result_t res = R_UNKNOWN;
+
+    vector<decorator_t*>::const_iterator itr;
+    for (itr = decorators_.begin() ; itr != decorators_.end() ; ++itr)
+	if (in_parent)
+	    res = merge(res, (*itr)->parent_pre(this));
+	else
+	    res = merge(res, (*itr)->child_pre(this));
+
     if (in_parent)
     {
 	start_ = rel_now();
-	return;
+	return res;
     }
 
     vector<testnode_t::assignment_t>::const_iterator i;
@@ -61,15 +77,26 @@ job_t::pre_run(bool in_parent)
 	i->apply();
 
     node_->pre_run();
+
+    return res;
 }
 
-void
+result_t
 job_t::post_run(bool in_parent)
 {
+    result_t res = R_UNKNOWN;
+
+    vector<decorator_t*>::const_reverse_iterator itr;
+    for (itr = decorators_.rbegin() ; itr != decorators_.rend() ; ++itr)
+	if (in_parent)
+	    res = merge(res, (*itr)->parent_post(this));
+	else
+	    res = merge(res, (*itr)->child_post(this));
+
     if (in_parent)
     {
 	end_ = rel_now();
-	return;
+	return res;
     }
 
     node_->post_run();
@@ -77,6 +104,8 @@ job_t::post_run(bool in_parent)
     vector<testnode_t::assignment_t>::const_iterator i;
     for (i = assigns_.begin() ; i != assigns_.end() ; ++i)
 	i->unapply();
+
+    return res;
 }
 
 int64_t

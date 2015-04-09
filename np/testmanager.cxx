@@ -39,6 +39,8 @@ testmanager_t::~testmanager_t()
 	classifiers_.pop_back();
     }
 
+    decorator_descs_.clear();
+
     delete root_;
     if (common_ != root_)
 	delete common_;
@@ -133,6 +135,7 @@ testmanager_t::setup_classifiers()
     add_classifier("^mock_(.*)", false, FT_MOCK);
     add_classifier("^[mM]ock([A-Z].*)", false, FT_MOCK);
     add_classifier("^__np_parameter_(.*)", false, FT_PARAM);
+    add_classifier("^__np_decorator_(.*)", false, FT_DECORATOR);
 }
 
 static string
@@ -172,13 +175,25 @@ testmanager_t::find_mock_target(string name)
     return 0;
 }
 
-static const struct __np_param_dec *
-get_param_dec(np::spiegel::function_t *fn)
+static void *
+call_func(np::spiegel::function_t *fn)
 {
     vector<np::spiegel::value_t> args;
     np::spiegel::value_t ret = fn->invoke(args);
-    return (const struct __np_param_dec *)ret.val.vpointer;
+    return ret.val.vpointer;
 }
+
+int
+testmanager_t::decorator_desc_t::compare(const decorator_desc_t *a,
+					 const decorator_desc_t *b)
+{
+    int r = a->priority_ - b->priority_;
+    /* force a stable ordering which is not sensitive to link order */
+    if (!r)
+	r = strcmp(a->name_.c_str(), b->name_.c_str());
+    return r;
+}
+
 
 void
 testmanager_t::discover_functions()
@@ -275,9 +290,22 @@ testmanager_t::discover_functions()
 		// Parameters need a name
 		if (!submatch[0])
 		    continue;
-		const struct __np_param_dec *dec = get_param_dec(fn);
-		root_->make_path(test_name(fn, 0))->add_parameter(
-				submatch, dec->var, dec->values);
+		{
+		    const struct __np_param_dec *dec = (const struct __np_param_dec *)call_func(fn);
+		    root_->make_path(test_name(fn, 0))->add_parameter(
+				    submatch, dec->var, dec->values);
+		}
+		break;
+	    case FT_DECORATOR:
+		// Decorators should have a numeric priority and a string
+		// name encoded as two underscore-separated fields.
+		if (!submatch[0])
+		    continue;
+		char *name = strchr(submatch, '_');
+		if (!name)
+		    continue;
+		*name++ = '\0';
+		decorator_descs_.push_back(decorator_desc_t(name, atoi(submatch), fn));
 		break;
 	    }
 	}
@@ -288,6 +316,17 @@ testmanager_t::discover_functions()
     // Calculate the effective root_ and common_
     common_ = root_;
     root_ = root_->detach_common();
+
+    // Sort decorator descriptors by their priority
+    qsort(decorator_descs_.data(),
+	  decorator_descs_.size(),
+	  sizeof(decorator_desc_t),
+	  (int(*)(const void *, const void *))decorator_desc_t::compare);
+#if _NP_DEBUG
+    vector<decorator_desc_t>::const_iterator itr;
+    for (itr = decorator_descs_.begin() ; itr != decorator_descs_.end() ; itr++)
+	fprintf(stderr, "np: decorator %s priority %d\n", itr->name_.c_str(), itr->priority_);
+#endif
 }
 
 extern void init_syslog_intercepts(testnode_t *);
@@ -296,6 +335,23 @@ void
 testmanager_t::setup_builtin_intercepts()
 {
     init_syslog_intercepts(root_);
+}
+
+std::vector<decorator_t*>
+testmanager_t::create_decorators() const
+{
+    vector<decorator_t*> decs;
+    decs.reserve(decorator_descs_.size());
+
+    vector<decorator_desc_t>::const_iterator i;
+    for (i = decorator_descs_.begin() ; i != decorator_descs_.end() ; i++)
+    {
+	decorator_t *dec = (decorator_t *)call_func(i->create_);
+	if (dec)
+	    decs.push_back(dec);
+    }
+
+    return decs;
 }
 
 // close the namespace

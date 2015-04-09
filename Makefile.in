@@ -119,6 +119,7 @@ libnovaprova_HEADERS= \
 		np.h \
 		np/child.hxx \
 		np/classifier.hxx \
+		np/decorator.hxx \
 		np/event.hxx \
 		np/job.hxx \
 		np/junit_listener.hxx \

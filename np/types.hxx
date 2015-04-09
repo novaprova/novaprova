@@ -42,7 +42,8 @@ enum functype_t
 #define FT_NUM_SINGULAR	(FT_AFTER+1)
     FT_MOCK,
     FT_PARAM,
-#define FT_NUM		(FT_PARAM+1)
+    FT_DECORATOR,
+#define FT_NUM		(FT_DECORATOR+1)
 };
 
 extern const char *as_string(functype_t);

@@ -19,6 +19,7 @@
 #include "np/util/common.hxx"
 #include "np/types.hxx"
 #include "np/testnode.hxx"
+#include "np/decorator.hxx"
 #include <string>
 #include <vector>
 
@@ -44,9 +45,24 @@ public:
 
     spiegel::function_t *find_mock_target(std::string name);
 
+    std::vector<decorator_t*> create_decorators() const;
+
 private:
     testmanager_t();
     ~testmanager_t();
+
+    struct decorator_desc_t
+    {
+	decorator_desc_t(const char *name, int priority, np::spiegel::function_t *create)
+	    : name_(name), priority_(priority), create_(create) {}
+	decorator_desc_t(const decorator_desc_t &o)
+	    : name_(o.name_), priority_(o.priority_), create_(o.create_) {}
+	static int compare(const decorator_desc_t *, const decorator_desc_t *);
+
+	std::string name_;
+	int priority_;
+	np::spiegel::function_t *create_;
+    };
 
     void print_banner();
     functype_t classify_function(const char *func, char *match_return, size_t maxmatch);
@@ -58,6 +74,7 @@ private:
     static testmanager_t *instance_;
 
     std::vector<classifier_t*> classifiers_;
+    std::vector<decorator_desc_t> decorator_descs_;
     spiegel::dwarf::state_t *spiegel_;
     testnode_t *root_;
     testnode_t *common_;	// nodes from filesystem root down to root_
