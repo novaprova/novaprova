@@ -2,28 +2,47 @@
 Failure Modes
 =============
 
-This chapter lists the various failure modes that NovaProva detects in
-Code Under Test, in addition to explicit NP assert macros,
-and describes how they are reported.
+This chapter lists the various failure modes that NovaProva
+automatically detects in Code Under Test, in addition to the explicit
+assert macro calls that you write in test functions, and describes how
+they are reported.
 
-Isolate and Detect
-------------------
+Isolate, Detect, Report
+-----------------------
 
 The purpose of a test framework is to discover bugs in code at the
 earliest possible time, with the least amount of work by developers.
-To achieve this, NovaProva takes an "Isolate & Detect" approach,
-meaning that failure modes are firstly isolated to the test that caused
-them (thus not affecting other tests) and secondly detected using
-the best automated debugging techniques possible.
+To achieve this, NovaProva takes an "Isolate, Detect, Report" approach.
+
+- *Isolate*: failure modes are isolated to the test that caused
+  them, and thus do not affect other tests.  This helps mitigate
+  the problem of cascading spurious test failures, which it harder
+  for you to track down which test failures are directly due to
+  bugs in the Code Under Test.
+
+- *Detect*: failures are detected using the best automated debugging
+  techniques possible.  This reduces the time it takes you to find
+  subtle bugs.
+
+- *Report*: failures are reported with as much information as possible,
+  in the normal test report.  Ideally, many bugs can be diagnosed by
+  examining the test report without re-running the test in a debugger.
+  This reduces the time it takes you to diagnose test failures.
+
+Process Per Test
+++++++++++++++++
 
 NovaProva uses a strong model of test isolation.  Each test is run in a
 separate process, with a central process co-ordinating the starting of
 tests and the gathering of results.  This design eliminates a number of
 subtle failure modes where running one test can influence another, such
-as heap corruption, file descriptor leakage, and environment variable
+as heap corruption, file descriptor leakage, and global variable
 leakage.  The process-per-test model also has the advantage that tests
 can be run in parallel, and it allows for test timeouts to be handled
 reliably.
+
+Valgrind
+++++++++
 
 All tests are run using the `Valgrind <http://www.valgrind.org>`_ memory
 debugging tool, which enables detection of a great many subtle runtime
@@ -54,14 +73,28 @@ executable.  This is not a recommended practice.
 The downside of all this isolation and debugging is that tests can run
 quite slowly.
 
+Stack Traces
+++++++++++++
+
+NovaProva reports as much information as possible about each failure.
+In many cases this includes a stack trace showing the precise point
+at which the failure was detected.  When the failure is detected by
+Valgrind, often even more information is provided.  For example,
+when Valgrind detects that the Code Under Test written some bytes
+past the end of a struct allocated with ``malloc()``, it will tell
+also give you the stack trace showing where that struct was allocated.
+
 
 Call to exit()
 --------------
 
-NP library defines an exit()
-calling exit() during a test
-prints a stack trace fails the test
-calling exit() outside a test calls _exit()
+NovaProva assumes that the Code Under Test is library code, and that
+therefore any call to ``exit()`` is inappropriate.  Thus, any call to the
+libc ``exit()`` while running a test will cause the test to fail and
+print the exit code and a stack trace.  Note that calls to the
+underlying ``_exit()`` system call are *not* detected.
+
+Here's some example test output.
 
 .. highlight:: none
 
@@ -90,10 +123,12 @@ calling exit() outside a test calls _exit()
 Messages emitted to syslog()
 ----------------------------
 
-dynamic function intercept on syslog()
-installed before each test uninstalled after each test
-test may register regexps for expected syslogs
-unexpected syslogs fail the test
+NovaProva assumes by default that messages emitted using the libc
+``syslog()`` facility are error reports.  Thus any call to ``syslog()``
+while a test is running will cause the test to fail immediately,
+and the message and a stack trace will be printed.
+
+Here's some example output.
 
 .. highlight:: none
 
@@ -115,7 +150,18 @@ unexpected syslogs fail the test
     by 0x804AFC3: main
     FAIL mytest.unexpected_syslog
 
-And to tell NP to ignore a specific syslog
+Sometimes the Code Under Test is actually expected to emit messages to
+``syslog()``.  In these cases you can tell NovaProva to ignore the
+message and keep executing the test, using the ``np_syslog_ignore()``
+call.  This function takes a UNIX extended regular expression as an
+argument; any message which is emitted to ``syslog()`` from that point
+onwards in the test will still be reported but will not cause the test
+to fail.  You can make multiple calls to ``np_syslog_ignore()``, they
+accumulate until the end of the test.  There's no need to remove these
+regular expressions, they're automatically removed at the end of the
+test.
+
+Here's an example.
 
 .. highlight:: c
 
@@ -127,6 +173,9 @@ And to tell NP to ignore a specific syslog
         np_syslog_ignore("entirely expected");
         syslog(LOG_ERR, "This message was entirely expected");
     }
+
+When run, this test produces the following output.  Note that
+the test still passes.
 
 .. highlight:: none
 
@@ -147,6 +196,23 @@ And to tell NP to ignore a specific syslog
     by 0x80516E6: np_run_tests
     by 0x804AFC3: main
     PASS mytest.expected
+
+You can achieve more subtle effects than just ignoring messages with
+``np_syslog_ignore()`` by using it in combination with
+``np_syslog_fail()``.  The latter function also takes a regular
+expression which is matched against messages emitted to ``syslog()``,
+but it restores the default behavior where a match causes the test to
+fail.  Sometimes this can be easier to do than trying to construct
+complicated regular expressions.
+
+Finally, if the test
+TODO: ``np_syslog_match()`` and ``np_syslog_count()``.
+
+
+You can of course call any of ``np_syslog_ignore()``,
+``np_syslog_fail()`` and ``np_syslog_match()`` in a
+setup function (see :ref:`fixtures_chapter` ).
+
 
 Failed calls to libc assert()
 -----------------------------

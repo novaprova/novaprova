@@ -1,4 +1,6 @@
 
+.. _fixtures_chapter:
+
 Fixtures
 ========
 
