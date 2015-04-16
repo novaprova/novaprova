@@ -46,6 +46,10 @@ BASIC_TESTS= \
     tnsegv \
     tnsigill \
     tnsyslog \
+    tnnotests \
+    tnnotests_param \
+    tnnotests_fixture \
+    tnnotests_mock
 
 BASIC_TESTS_CXX= \
 

@@ -109,6 +109,8 @@ public:
 	{ return preorder_iterator(); }
 
 private:
+    bool is_elidable() const;
+
     testnode_t *next_;
     testnode_t *parent_;
     testnode_t *children_;

@@ -155,28 +155,45 @@ testnode_t::get_fullname() const
     return full;
 }
 
+bool
+testnode_t::is_elidable() const
+{
+    /* nodes with mocks or other intercepts cannot be elided */
+    if (intercepts_.size() > 0)
+	return false;
+    /* nodes with parameters cannot be elided */
+    if (parameters_.size() > 0)
+	return false;
+    /* nodes with tests or fixtures cannot be elided */
+    if (funcs_[FT_BEFORE] || funcs_[FT_TEST] || funcs_[FT_AFTER])
+	return false;
+    /* nodes with more than a single child cannot be elided */
+    if (children_ && children_->next_)
+	return false;
+    return true;
+}
+
 testnode_t *
 testnode_t::detach_common()
 {
     testnode_t *tn;
 
-    for (tn = this ;
-         !tn->intercepts_.size() &&
-         !tn->parameters_.size() &&
-	 tn->children_ && !tn->children_->next_ ;
-	 tn = tn->children_)
+    for (tn = this ; tn->children_ && tn->is_elidable() ; tn = tn->children_)
 	;
-    /* tn now points at the highest node with more than 1 child */
+    /* tn now points at the highest non-elidable node */
 
     /* corner case: we have exactly one test; give ourselves at least a
      * two-deep hierarchy so we don't see a sudden jump in naming when
      * adding the second test */
-    if (!tn->children_)
+    if (!tn->children_ && tn->parent_)
 	tn = tn->parent_;
 
-    tn->parent_->children_ = 0;
-    assert(!tn->next_);
-    tn->parent_ = 0;
+    if (tn->parent_)
+    {
+	tn->parent_->children_ = 0;
+	assert(!tn->next_);
+	tn->parent_ = 0;
+    }
 
     return tn;
 }
