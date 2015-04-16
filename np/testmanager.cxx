@@ -40,8 +40,9 @@ testmanager_t::~testmanager_t()
     }
 
     delete root_;
+    if (common_ != root_)
+	delete common_;
     root_ = 0;
-    delete common_;
     common_ = 0;
 
     if (spiegel_)
@@ -185,6 +186,7 @@ testmanager_t::discover_functions()
 
     vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
+    unsigned int ntests = 0;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 // fprintf(stderr, "discover_functions: compile unit %s\n", (*i)->get_absolute_path().c_str());
@@ -217,6 +219,7 @@ testmanager_t::discover_functions()
 		if (fn->get_parameter_types().size() != 0)
 		    continue;
 		root_->make_path(test_name(fn, submatch))->set_function(type, fn);
+		ntests++;
 		break;
 	    case FT_BEFORE:
 	    case FT_AFTER:
@@ -254,12 +257,9 @@ testmanager_t::discover_functions()
     }
 
 
-    // Calculate the effective root_ and common_
-    if (!root_->has_children())
-    {
+    if (!ntests)
 	fprintf(stderr, "np: WARNING: no tests discovered\n");
-	return;
-    }
+    // Calculate the effective root_ and common_
     common_ = root_;
     root_ = root_->detach_common();
 }
