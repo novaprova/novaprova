@@ -73,7 +73,7 @@ function normalize
 	awk -f $TEST-normalize.awk < $f
     else
 	# Default normalization
-	egrep '^(EVENT|MSG|PASS|FAIL|N/A|EXIT|\?\?\?) ' < $f |\
+	egrep '^(EVENT|MSG|PASS|FAIL|N/A|EXIT|np: WARNING:|\?\?\?) ' < $f |\
 	    sed -r \
 		-e 's|'$PWD'|%PWD%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \
