@@ -72,6 +72,10 @@ tnfdleak
 tnmemleak
 tnmocking
 tnna
+tnnotests
+tnnotests_fixture
+tnnotests_mock
+tnnotests_param
 tnparallel
 tnparallel.c
 tnparameter
