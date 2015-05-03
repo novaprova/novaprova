@@ -205,9 +205,10 @@ but it restores the default behavior where a match causes the test to
 fail.  Sometimes this can be easier to do than trying to construct
 complicated regular expressions.
 
-Finally, if the test
-TODO: ``np_syslog_match()`` and ``np_syslog_count()``.
-
+Finally, if the test depends on the Code Under Test generating
+(or not generating) specific messages, you can use ``np_syslog_match()``
+which tells NovaProva to just count any matching messages, and
+``np_syslog_count()`` to discover that count and assert on its value.
 
 You can of course call any of ``np_syslog_ignore()``,
 ``np_syslog_fail()`` and ``np_syslog_match()`` in a
@@ -216,6 +217,50 @@ setup function (see :ref:`fixtures_chapter` ).
 
 Failed calls to libc assert()
 -----------------------------
+
+The standard library's ``assert()`` macro is sometimes used in the Code
+Under Test to check for conditions which must be true or the program is
+fatally flawed, e.g. preconditions, or the internal consistency of data
+structures.  If the condition is false, the macro prints a message and
+exits the running process by calling ``abort()``.  NovaProva catches
+this occurrence, prints a more useful error message than the default
+(including a stack trace), and gracefully fails the test.
+
+Here's an example.
+
+.. highlight:: c
+
+::
+
+    static void test_assert(void)
+    {
+	int white = 1;
+	int black = 0;
+	assert(white == black);
+    }
+
+When run, this test produces the following output and the test fails.
+
+.. highlight:: none
+
+::
+
+    np: running: "tnassert.assert"
+    EVENT ASSERT white == black
+    at 0x41827F: np::spiegel::describe_stacktrace (np/spiegel/spiegel.cxx)
+    by 0x40555C: np::event_t::with_stack (np/event.cxx)
+    by 0x404CCD: __assert_fail (iassert.c)
+    by 0x4049F2: test_assert (tnassert.c)
+    by 0x417E0B: np::spiegel::function_t::invoke (np/spiegel/spiegel.cxx)
+    by 0x409E04: np::runner_t::run_function (np/runner.cxx)
+    by 0x40A83D: np::runner_t::run_test_code (np/runner.cxx)
+    by 0x40AB06: np::runner_t::begin_job (np/runner.cxx)
+    by 0x408DD6: np::runner_t::run_tests (np/runner.cxx)
+    by 0x40AD16: np_run_tests (np/runner.cxx)
+    by 0x40529A: main (main.c)
+
+    FAIL tnassert.assert
+
 
 Invalid memory accesses
 -----------------------
