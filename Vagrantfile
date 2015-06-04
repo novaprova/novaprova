@@ -67,7 +67,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Remove the default Vagrant directory sync
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
-  config.vm.synced_folder "../novaprova", "/build/novaprova-nfs", type: "nfs", nfs_udp: false
+  config.vm.synced_folder ".", "/build/novaprova-nfs", type: "nfs", nfs_udp: false
   config.bindfs.bind_folder "/build/novaprova-nfs", "/build/novaprova", owner: "vagrant", group: "vagrant"
 
   config.vm.define "centos64" do |pcpdev|
