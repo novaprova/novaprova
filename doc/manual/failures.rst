@@ -234,9 +234,9 @@ Here's an example.
 
     static void test_assert(void)
     {
-	int white = 1;
-	int black = 0;
-	assert(white == black);
+        int white = 1;
+        int black = 0;
+        assert(white == black);
     }
 
 When run, this test produces the following output and the test fails.
@@ -265,24 +265,26 @@ When run, this test produces the following output and the test fails.
 Invalid memory accesses
 -----------------------
 
-e.g. following a null pointer
+One of the plague spots of coding in C is the ease with which
+the Code Under Test can accidentally perform invalid memory accesses
+such as following a null pointer.
 
-Valgrind notices first and emits a useful analysis
+When this happens under NovaProva, Valgrind detects it first and
+emits a useful analysis containing:
 
-* stack trace
-* line numbers
-* fault address
-* info about where the fault address points
+* a stack trace,
+* line numbers,
+* the fault address, and
+* information about where the fault address points.
 
-child process dies with SIGSEGV or SIGBUS.
-test runner process reaps it & fails the test
+NovaProva then gracefully fails the test.  Here's an example:
 
 .. highlight:: none
 
 ::
 
     np: running: "mytest.segv"
-    About to follow a NULL pointer Valgrind report
+    About to follow a NULL pointer
     ==32587== Invalid write of size 1
     ==32587==
     ...
@@ -333,6 +335,8 @@ test process queries Valgrind
 
 File Descriptor leaks
 ---------------------
+
+
 
 Use of uninitialized variables
 ------------------------------
