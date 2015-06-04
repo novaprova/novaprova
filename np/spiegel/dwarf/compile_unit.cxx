@@ -48,7 +48,7 @@ compile_unit_t::read_header(reader_t &r)
 #endif
     }
     if (length > r.get_remains())
-	fatal("Bad DWARF compilation unit length %llu", (unsigned long long)length);
+	fatal("Bad DWARF compile unit length %llu", (unsigned long long)length);
 
     if (!r.read_u16(version))
 	return false;
@@ -56,7 +56,7 @@ compile_unit_t::read_header(reader_t &r)
 	fatal("Bad DWARF version %u, expecting %u-%u",
 	      version, MIN_DWARF_VERSION, MAX_DWARF_VERSION);
     if (length < (unsigned)(header_length-(is64 ? 14 : 6)/*read so far*/))
-	fatal("Bad DWARF compilation unit length %llu", (unsigned long long)length);
+	fatal("Bad DWARF compile unit length %llu", (unsigned long long)length);
 
     uint8_t addrsize;
     if (!r.read_u32(abbrevs_offset_) ||
