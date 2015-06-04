@@ -199,7 +199,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
     unsigned int res;
     int r;
 
-#if _NP_DEBUG > 1
+#if _NP_DEBUG
     fprintf(stderr, "np: proxy_listener_t::handle_call()\n");
 #endif
     r = deserialise_uint(fd, &which);
@@ -208,7 +208,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
     switch (which)
     {
     case PROXY_EVENT:
-#if _NP_DEBUG > 1
+#if _NP_DEBUG
 	fprintf(stderr, "np: deserializing EVENT\n");
 #endif
 	if ((r = deserialise_event(fd, &ev)))
@@ -216,7 +216,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 	*resp = merge(*resp, np::runner_t::running()->raise_event(j, &ev));
 	return true;	    /* call me again */
     case PROXY_FINISHED:
-#if _NP_DEBUG > 1
+#if _NP_DEBUG
 	fprintf(stderr, "np: deserializing FINISHED\n");
 #endif
 	if ((r = deserialise_uint(fd, &res)))

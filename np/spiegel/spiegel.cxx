@@ -378,12 +378,13 @@ compile_unit_t::populate()
     language_ = e->get_uint32_attribute(DW_AT_language);
 
 #if _NP_DEBUG
-    printf("Populated compile unit\n");
-    printf("    name %s\n", name_);
-    printf("    comp_dir %s\n", comp_dir_);
-    printf("    low_pc 0x%llx\n", (unsigned long long)low_pc_);
-    printf("    high_pc 0x%llx\n", (unsigned long long)high_pc_);
-    printf("    language %u\n", (unsigned)language_);
+    fprintf(stderr, "np: populated spiegel compile unit %s comp_dir %s "
+		    "low_pc 0x%llx high_pc 0x%llx language %u\n",
+		    name_,
+		    comp_dir_,
+		    (unsigned long long)low_pc_,
+		    (unsigned long long)high_pc_,
+		    (unsigned)language_);
 #endif
 
     return true;

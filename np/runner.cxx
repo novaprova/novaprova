@@ -375,12 +375,12 @@ runner_t::handle_events()
 	 * and smash all negative values to -1 */
 	timeout = (timeout < 0 ? -1 : (timeout+500000)/1000000);
 
-#if _NP_DEBUG > 1
+#if _NP_DEBUG
 	fprintf(stderr, "np: [%s] about to poll([%d fds] timeout=%lld msec)\n",
 		rel_timestamp(), (int)pfd_.size(), (long long)timeout);
 #endif
 	r = poll(pfd_.data(), pfd_.size(), timeout);
-#if _NP_DEBUG > 1
+#if _NP_DEBUG
 	{
 	    int e = errno;
 	    fprintf(stderr, "np: [%s] poll returned %d errno %d(%s)\n",

@@ -41,7 +41,7 @@ entry_t::dump() const
     if (!abbrev_)
 	return;
 
-    printf("Entry 0x%x [%u] %s {\n",
+    fprintf(stderr, "np: Entry 0x%x [%u] %s {\n",
 	offset_,
 	level_,
 	tagnames.to_name(abbrev_->tag));
@@ -49,15 +49,15 @@ entry_t::dump() const
     vector<abbrev_t::attr_spec_t>::const_iterator i;
     for (i = abbrev_->attr_specs.begin() ; i != abbrev_->attr_specs.end() ; ++i)
     {
-	printf("    %s = ", attrnames.to_name(i->name));
+	fprintf(stderr, "np:     %s = ", attrnames.to_name(i->name));
 	const value_t *v = get_attribute(i->name);
 	if (v)
 	    v->dump();
 	else
-	    printf("<missing>");
-	printf("\n");
+	    fprintf(stderr, "<missing>");
+	fprintf(stderr, "\n");
     }
-    printf("}\n");
+    fprintf(stderr, "}\n");
 }
 
 // close namespaces

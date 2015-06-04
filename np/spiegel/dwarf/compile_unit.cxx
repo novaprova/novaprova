@@ -28,6 +28,12 @@ compile_unit_t::read_header(reader_t &r)
 {
     reader_ = r;	    // sample offset of start of header
 
+#if _NP_DEBUG
+    fprintf(stderr, "np: DWARF compile unit header at "
+		    "section offset 0x%lx\n",
+		    r.get_offset());
+#endif
+
     np::spiegel::offset_t length;
     uint16_t version;
     bool is64 = false;
@@ -66,12 +72,12 @@ compile_unit_t::read_header(reader_t &r)
 	      addrsize, _NP_ADDRSIZE);
 
 #if _NP_DEBUG
-    printf("DWARF compilation unit header\n");
-    printf("    length %u\n", (unsigned)length);
-    printf("    version %u\n", (unsigned)version);
-    printf("    is64 %s\n", is64 ? "true" : "false");
-    printf("    abbrevs_offset %u\n", (unsigned)abbrevs_offset_);
-    printf("    addrsize %u\n", (unsigned)addrsize);
+    fprintf(stderr, "np: length %u version %u is64 %s abbrevs_offset %u addrsize %u\n",
+	    (unsigned)length,
+	    (unsigned)version,
+	    is64 ? "true" : "false",
+	    (unsigned)abbrevs_offset_,
+	    (unsigned)addrsize);
 #endif
 
     version_ = version;
@@ -93,6 +99,9 @@ compile_unit_t::read_header(reader_t &r)
 void
 compile_unit_t::read_abbrevs(reader_t &r)
 {
+#if _NP_DEBUG
+    fprintf(stderr, "np: reading abbrevs\n");
+#endif
     r.seek(abbrevs_offset_);
 
     uint32_t code;
@@ -115,31 +124,31 @@ compile_unit_t::read_abbrevs(reader_t &r)
 void
 compile_unit_t::dump_abbrevs() const
 {
-    printf("Abbrevs {\n");
+    fprintf(stderr, "np: Abbrevs {\n");
 
     vector<abbrev_t*>::const_iterator itr;
     for (itr = abbrevs_.begin() ; itr != abbrevs_.end() ; ++itr)
     {
 	abbrev_t *a = *itr;
 	if (!a) continue;
-	printf("Code %u\n", a->code);
-	printf("    tag 0x%x (%s)\n", a->tag, tagnames.to_name(a->tag));
-	printf("    children %u (%s)\n",
+	fprintf(stderr, "np: Code %u\n", a->code);
+	fprintf(stderr, "np:     tag 0x%x (%s)\n", a->tag, tagnames.to_name(a->tag));
+	fprintf(stderr, "np:     children %u (%s)\n",
 		(unsigned)a->children,
 		childvals.to_name(a->children));
-	printf("    attribute specifications {\n");
+	fprintf(stderr, "np:     attribute specifications {\n");
 
 	vector<abbrev_t::attr_spec_t>::iterator i;
 	for (i = a->attr_specs.begin() ; i != a->attr_specs.end() ; ++i)
 	{
-	    printf("        name 0x%x (%s)",
+	    fprintf(stderr, "np:         name 0x%x (%s)",
 		    i->name, attrnames.to_name(i->name));
-	    printf(" form 0x%x (%s)\n",
+	    fprintf(stderr, "np:  form 0x%x (%s)\n",
 		    i->form, formvals.to_name(i->form));
 	}
-	printf("    }\n");
+	fprintf(stderr, "np:     }\n");
     }
-    printf("}\n");
+    fprintf(stderr, "np: }\n");
 }
 
 const char *

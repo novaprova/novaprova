@@ -49,6 +49,9 @@ testnode_t::make_path(string name)
     testnode_t **tailp;
     tok_t tok(name.c_str(), "/");
 
+#if _NP_DEBUG
+    fprintf(stderr, "np: testnode_t::make_path(%s)\n", name.c_str());
+#endif
     while ((part = tok.next()))
     {
 	for (child = parent->children_, tailp = &parent->children_ ;

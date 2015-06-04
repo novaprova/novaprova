@@ -40,7 +40,7 @@ child_t::~child_t()
 void
 child_t::handle_input()
 {
-#if _NP_DEBUG > 1
+#if _NP_DEBUG
     fprintf(stderr, "np: [%s] pid %d job %s handle_input() state=%d\n",
 	    np::util::rel_timestamp(), (int)pid_, job_->as_string().c_str(), (int)state_);
 #endif
@@ -48,7 +48,7 @@ child_t::handle_input()
 	return;
     if (!proxy_listener_t::handle_call(event_pipe_, job_, &result_))
     {
-#if _NP_DEBUG > 1
+#if _NP_DEBUG
 	fprintf(stderr, "np: child now finished\n");
 #endif
 	state_ = FINISHED;

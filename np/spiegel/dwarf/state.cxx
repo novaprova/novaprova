@@ -58,7 +58,7 @@ state_t::linkobj_t::map_sections()
     bfd_init();
 
 #if _NP_DEBUG
-    printf("state_t::linkobj_t::map_sections opening %s\n", filename_);
+    fprintf(stderr, "np: opening bfd %s\n", filename_);
 #endif
     /* Open a BFD */
     bfd *b = bfd_openr(filename_, NULL);
@@ -74,14 +74,17 @@ state_t::linkobj_t::map_sections()
     }
 
     /* Extract the file shape of the DWARF sections */
+#if _NP_DEBUG
+    fprintf(stderr, "np: sections:\n");
+#endif
     asection *sec;
     for (sec = b->sections ; sec ; sec = sec->next)
     {
 	int idx = secnames.to_index(sec->name);
 #if _NP_DEBUG
-	printf("Section name=%s size=%lx filepos=%lx => %d\n",
-	    sec->name, (unsigned long)sec->size,
-	    (unsigned long)sec->filepos, idx);
+	fprintf(stderr, "np: section name %s size %lx filepos %lx index %d\n",
+		sec->name, (unsigned long)sec->size,
+		(unsigned long)sec->filepos, idx);
 #endif
 	if (idx == DW_sec_none)
 	    continue;
@@ -132,11 +135,11 @@ state_t::linkobj_t::map_sections()
     }
 
 #if _NP_DEBUG
-    printf("Mappings:\n");
+    fprintf(stderr, "np: mappings:\n");
     for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
     {
-	printf("offset=%lx size=%lx end=%lx\n",
-	       m->get_offset(), m->get_size(), m->get_end());
+	fprintf(stderr, "np: mapping offset 0x%lx size 0x%lx end 0x%lx\n",
+		m->get_offset(), m->get_size(), m->get_end());
     }
 #endif
 
@@ -172,9 +175,10 @@ state_t::linkobj_t::map_sections()
     }
 
 #if _NP_DEBUG
+    fprintf(stderr, "np: debug sections map:\n");
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
-	printf("[%d] name=%s map=0x%lx size=0x%lx\n",
+	fprintf(stderr, "np: index %d name %s map 0x%lx size 0x%lx\n",
 		idx, secnames.to_name(idx),
 		(unsigned long)sections_[idx].get_map(),
 		sections_[idx].get_size());
@@ -208,6 +212,9 @@ state_t::linkobj_t::unmap_sections()
 bool
 state_t::read_compile_units(linkobj_t *lo)
 {
+#if _NP_DEBUG
+    fprintf(stderr, "np: reading compile units for linkobj %s\n", lo->filename_);
+#endif
     reader_t infor = lo->sections_[DW_sec_info].get_contents();
     reader_t abbrevr = lo->sections_[DW_sec_abbrev].get_contents();
 
@@ -262,7 +269,7 @@ state_t::add_self()
     for (i = los.begin() ; i != los.end() ; ++i)
     {
 #if _NP_DEBUG
-	printf("state_t::add_self: platform linkobj %s\n", i->name);
+	fprintf(stderr, "np: state_t::add_self: platform linkobj %s\n", i->name);
 #endif
 	filename = i->name;
 	if (!filename)
@@ -275,7 +282,7 @@ state_t::add_self()
 	if (lo)
 	{
 #if _NP_DEBUG
-	    printf("state_t::add_self: have spiegel linkobj\n");
+	    fprintf(stderr, "np: state_t::add_self: have spiegel linkobj\n");
 #endif
 	    lo->system_mappings_ = i->mappings;
 	}

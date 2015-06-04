@@ -27,6 +27,7 @@ as_string(functype_t type)
     case FT_TEST: return "test";
     case FT_AFTER: return "after";
     case FT_MOCK: return "mock";
+    case FT_PARAM: return "param";
     default: return "INTERNAL ERROR!";
     }
 }
