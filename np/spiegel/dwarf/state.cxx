@@ -53,7 +53,8 @@ state_t::linkobj_t::map_sections()
     int fd = -1;
     vector<section_t>::iterator m;
     bool r = true;
-    int nsec = 0;
+    int nsec = 0;   /* number of DWARF sections to be explicitly mapped herein */
+    int ndwarf = 0; /* number of DWARF sections in the linkobj */
 
     bfd_init();
 
@@ -88,6 +89,7 @@ state_t::linkobj_t::map_sections()
 #endif
 	if (idx == DW_sec_none)
 	    continue;
+	ndwarf++;
 	sections_[idx].set_range((unsigned long)sec->filepos,
 				 (unsigned long)sec->size);
 
@@ -98,10 +100,22 @@ state_t::linkobj_t::map_sections()
 	{
 	    if (sm->contains(sections_[idx]))
 	    {
+#if _NP_DEBUG
+		fprintf(stderr, "np: found system mapping for section %s\n",
+			secnames.to_name(idx));
+#endif
 		sections_[idx].map_from(*sm);
 		break;
 	    }
 	}
+    }
+
+    if (!ndwarf)
+    {
+	/* no DWARF sections at all */
+	fprintf(stderr, "np: WARNING: no DWARF information found for %s\n", filename_);
+	r = false;
+	goto out;
     }
 
     /* Coalesce unmapped sections into a minimal number of mappings */
@@ -111,67 +125,67 @@ state_t::linkobj_t::map_sections()
 	    sections_[idx].get_size())
 	    tsec[nsec++] = &sections_[idx];
 
-    if (!nsec)
+    if (nsec)
     {
-	fprintf(stderr, "np: WARNING: no DWARF information found for %s\n", filename_);
-	r = false;
-	goto out;
-    }
+	/* some DWARF sections were not found in system mappings, need
+	 * to mmap() them ourselves. */
 
-    qsort(tsec, nsec, sizeof(section_t *), mapping_t::compare_by_offset);
-    for (int idx = 0 ; idx < nsec ; idx++)
-    {
-	if (mappings_.size() &&
-	    page_round_up(mappings_.back().get_end()) >= tsec[idx]->get_offset())
+	/* build a minimal set of mapping_t */
+	qsort(tsec, nsec, sizeof(section_t *), mapping_t::compare_by_offset);
+	for (int idx = 0 ; idx < nsec ; idx++)
 	{
-	    /* section abuts the last mapping, extend it */
-	    mappings_.back().set_end(tsec[idx]->get_end());
-	}
-	else
-	{
-	    /* create a new mapping */
-	    mappings_.push_back(*tsec[idx]);
-	}
-    }
-
-#if _NP_DEBUG
-    fprintf(stderr, "np: mappings:\n");
-    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-    {
-	fprintf(stderr, "np: mapping offset 0x%lx size 0x%lx end 0x%lx\n",
-		m->get_offset(), m->get_size(), m->get_end());
-    }
-#endif
-
-    /* mmap() the mappings */
-    fd = open(filename_, O_RDONLY, 0);
-    if (fd < 0)
-    {
-	perror(filename_);
-	goto error;
-    }
-
-    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-    {
-	if (m->mmap(fd, /*read-only*/false) < 0)
-	{
-	    perror("mmap");
-	    goto error;
-	}
-    }
-
-    /* setup sections[].map */
-    for (int idx = 0 ; idx < nsec ; idx++)
-    {
-	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-	{
-	    if (m->contains(*tsec[idx]))
+	    if (mappings_.size() &&
+		page_round_up(mappings_.back().get_end()) >= tsec[idx]->get_offset())
 	    {
-		tsec[idx]->map_from(*m);
-		break;
+		/* section abuts the last mapping, extend it */
+		mappings_.back().set_end(tsec[idx]->get_end());
+	    }
+	    else
+	    {
+		/* create a new mapping */
+		mappings_.push_back(*tsec[idx]);
 	    }
 	}
-	assert(tsec[idx]->is_mapped());
+
+#if _NP_DEBUG
+	fprintf(stderr, "np: mappings:\n");
+	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+	{
+	    fprintf(stderr, "np: mapping offset 0x%lx size 0x%lx end 0x%lx\n",
+		    m->get_offset(), m->get_size(), m->get_end());
+	}
+#endif
+
+	/* mmap() the mappings */
+	fd = open(filename_, O_RDONLY, 0);
+	if (fd < 0)
+	{
+	    perror(filename_);
+	    goto error;
+	}
+
+	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+	{
+	    if (m->mmap(fd, /*read-only*/false) < 0)
+	    {
+		perror("mmap");
+		goto error;
+	    }
+	}
+
+	/* setup sections[].map */
+	for (int idx = 0 ; idx < nsec ; idx++)
+	{
+	    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+	    {
+		if (m->contains(*tsec[idx]))
+		{
+		    tsec[idx]->map_from(*m);
+		    break;
+		}
+	    }
+	    assert(tsec[idx]->is_mapped());
+	}
     }
 
 #if _NP_DEBUG
