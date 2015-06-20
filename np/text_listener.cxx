@@ -16,6 +16,7 @@
 #include "np/text_listener.hxx"
 #include "np/job.hxx"
 #include "except.h"
+#include <sstream>
 
 namespace np {
 using namespace std;
@@ -70,20 +71,58 @@ text_listener_t::end_job(const job_t *j, result_t res)
 void
 text_listener_t::add_event(const job_t *j, const event_t *ev)
 {
-    string s;
+    ostringstream ss;
 
     // generate a message useful for programs which scrape make
     // output for compiler messages, like vi's "make" command.
     string loc = ev->get_make_location();
     if (loc != "")
-	s += loc + ": " + ev->as_string() + " (" + j->as_string() + ")\n";
+	ss << loc << ": " << ev->as_string() << " (" << j->as_string() << ")\n";
     else
-	s += string("EVENT ") + ev->as_string() + "\n";
+	ss << "EVENT " << ev->as_string() << "\n";
 
     // append the long location information including stack trace
-    s += ev->get_long_location() + "\n";
+    ss << ev->get_long_location() << "\n";
 
-    fputs(s.c_str(), stderr);
+    // find and annotate some source around the failure
+    unsigned int ncontext = 5;
+    const char *filename = ev->get_filename();
+    unsigned int lineno = ev->get_lineno();
+    if (filename && lineno)
+    {
+	FILE *fp = fopen(filename, "r");
+	if (fp == NULL)
+	{
+	    if (errno != ENOENT)
+		ss << "Cannot open \"" << filename << "\" for reading: " <<strerror(errno) << "\n";
+	}
+	else
+	{
+	    unsigned int lno = 0;
+	    char lnbuf[8];
+	    char line[1024];
+	    while (fgets(line, sizeof(line), fp))
+	    {
+		++lno;
+		if (lno + ncontext < lineno || lno > lineno + ncontext)
+		    continue;
+
+		// trim trailing whitespace
+		char *p = line+strlen(line)-1;
+		while (p >= line && isspace(*p))
+		    *p-- = '\0';
+
+		snprintf(lnbuf, sizeof(lnbuf), "%4u ", lno);
+		ss << "np: " << lnbuf << line;
+		if (lno == lineno)
+		    ss << " <-----";
+		ss << "\n";
+	    }
+	    fclose(fp);
+	}
+    }
+
+    fputs(ss.str().c_str(), stderr);
 }
 
 // close the namespace

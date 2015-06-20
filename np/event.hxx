@@ -141,6 +141,14 @@ public:
     std::string get_short_location() const;
     std::string get_long_location() const;
     std::string get_make_location() const;
+    const char *get_filename() const
+    {
+	return (locflags & LT_FILENAME ? filename : 0);
+    }
+    unsigned int get_lineno() const
+    {
+	return (locflags & LT_LINENO ? lineno : 0);
+    }
 
 // private:
 // This needs to be public for {de,}serialise_event
