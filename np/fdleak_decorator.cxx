@@ -18,8 +18,8 @@
 #include "np/runner.hxx"
 #include "np/decorator.hxx"
 
-namespace np {
 using namespace std;
+using namespace np;
 using namespace np::util;
 
 class fdleak_decorator_t : public decorator_t
@@ -93,5 +93,3 @@ _NP_DECORATOR(fdleak_decorator_t, 50)
 // hack to ensure we're linked into the executable
 extern "C" void __np_linkme1(void) { }
 
-// close the namespace
-};
