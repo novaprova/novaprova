@@ -22,6 +22,7 @@
 
 namespace np {
 using namespace std;
+using namespace np::util;
 
 testmanager_t *testmanager_t::instance_ = 0;
 
@@ -186,6 +187,27 @@ call_func(np::spiegel::function_t *fn)
     return ret.val.vpointer;
 }
 
+testmanager_t::decorator_desc_t::decorator_desc_t(const char *name,
+						  int priority,
+						  np::spiegel::function_t *create)
+ :  name_(xstrdup(name)),
+    priority_(priority),
+    create_(create)
+{
+}
+
+testmanager_t::decorator_desc_t::decorator_desc_t(const decorator_desc_t &o)
+ :  name_(xstrdup(o.name_)),
+    priority_(o.priority_),
+    create_(o.create_)
+{
+}
+
+testmanager_t::decorator_desc_t::~decorator_desc_t()
+{
+    xfree(name_);
+}
+
 int
 testmanager_t::decorator_desc_t::compare(const decorator_desc_t *a,
 					 const decorator_desc_t *b)
@@ -193,7 +215,7 @@ testmanager_t::decorator_desc_t::compare(const decorator_desc_t *a,
     int r = a->priority_ - b->priority_;
     /* force a stable ordering which is not sensitive to link order */
     if (!r)
-	r = strcmp(a->name_.c_str(), b->name_.c_str());
+	r = strcmp(a->name_, b->name_);
     return r;
 }
 
@@ -331,9 +353,9 @@ testmanager_t::discover_functions()
 	  sizeof(decorator_desc_t),
 	  (int(*)(const void *, const void *))decorator_desc_t::compare);
 #if _NP_DEBUG
-    vector<decorator_desc_t>::const_iterator itr;
+    vector<decorator_desc_t*>::const_iterator itr;
     for (itr = decorator_descs_.begin() ; itr != decorator_descs_.end() ; itr++)
-	fprintf(stderr, "np: decorator %s priority %d\n", itr->name_.c_str(), itr->priority_);
+	fprintf(stderr, "np: decorator %s priority %d\n", itr->name_, itr->priority_);
 #endif
 }
 

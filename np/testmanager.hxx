@@ -53,13 +53,12 @@ private:
 
     struct decorator_desc_t
     {
-	decorator_desc_t(const char *name, int priority, np::spiegel::function_t *create)
-	    : name_(name), priority_(priority), create_(create) {}
-	decorator_desc_t(const decorator_desc_t &o)
-	    : name_(o.name_), priority_(o.priority_), create_(o.create_) {}
+	decorator_desc_t(const char *name, int priority, np::spiegel::function_t *create);
+	decorator_desc_t(const decorator_desc_t &o);
+	~decorator_desc_t();
 	static int compare(const decorator_desc_t *, const decorator_desc_t *);
 
-	std::string name_;
+	char *name_;
 	int priority_;
 	np::spiegel::function_t *create_;
     };
