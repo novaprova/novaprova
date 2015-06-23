@@ -138,6 +138,7 @@ testmanager_t::setup_classifiers()
     add_classifier("^[mM]ock([A-Z].*)", false, FT_MOCK);
     add_classifier("^__np_parameter_(.*)", false, FT_PARAM);
     add_classifier("^__np_decorator_(.*)", false, FT_DECORATOR);
+    add_classifier("^__np_internal$", false, FT_INTERNAL);
 }
 
 static string
@@ -299,15 +300,20 @@ testmanager_t::discover_functions()
 		}
 		break;
 	    case FT_DECORATOR:
-		// Decorators should have a numeric priority and a string
-		// name encoded as two underscore-separated fields.
-		if (!submatch[0])
-		    continue;
-		char *name = strchr(submatch, '_');
-		if (!name)
-		    continue;
-		*name++ = '\0';
-		decorator_descs_.push_back(decorator_desc_t(name, atoi(submatch), fn));
+		{
+		    // Decorators should have a numeric priority and a string
+		    // name encoded as two underscore-separated fields.
+		    if (!submatch[0])
+			continue;
+		    char *name = strchr(submatch, '_');
+		    if (!name)
+			continue;
+		    *name++ = '\0';
+		    decorator_descs_.push_back(decorator_desc_t(name, atoi(submatch), fn));
+		}
+		break;
+	    case FT_INTERNAL:
+		(*i)->set_internal();
 		break;
 	    }
 	}

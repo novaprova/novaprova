@@ -704,11 +704,17 @@ std::string describe_stacktrace()
     bool done = false;
     for (i = stack.begin() ; !done && i != stack.end() ; ++i)
     {
+	location_t loc;
+	bool described = describe_address(*i, loc);
+
+	/* elide innermost sequence of functions from NP internal object files */
+	if (first && described && loc.compile_unit_ && loc.compile_unit_->is_internal())
+	    continue;
+
 	s += (first ? "at " : "by ");
 	s += HEX(*i);
 	s += ":";
-	location_t loc;
-	if (describe_address(*i, loc))
+	if (described)
 	{
 	    if (loc.function_)
 	    {

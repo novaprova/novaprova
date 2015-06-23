@@ -29,6 +29,7 @@ as_string(functype_t type)
     case FT_MOCK: return "mock";
     case FT_PARAM: return "param";
     case FT_DECORATOR: return "decorator";
+    case FT_INTERNAL: return "internal";
     default: return "INTERNAL ERROR!";
     }
 }

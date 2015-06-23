@@ -114,4 +114,10 @@ extern unsigned long page_round_down(unsigned long x);
 // close the namespaces
 }; };
 
+/* The presence of a function of this name in a compile
+ * unit is used to mark that unit as NovaProva-internal,
+ * meaning it will be hidden in stack traces.  */
+static void __np_internal(void) __attribute__((used));
+static void __np_internal(void) {}
+
 #endif /* __NP_COMMON_HXX__ */

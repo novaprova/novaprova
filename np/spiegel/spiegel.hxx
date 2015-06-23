@@ -87,8 +87,14 @@ public:
 
     void dump_types();
 
+    bool is_internal() const { return internal_; }
+    void set_internal() { internal_ = true; }
+
 private:
-    compile_unit_t(np::spiegel::dwarf::reference_t ref) :  _cacheable_t(ref) {}
+    compile_unit_t(np::spiegel::dwarf::reference_t ref)
+     :  _cacheable_t(ref),
+	internal_(false)
+    {}
     ~compile_unit_t() {}
 
     bool populate();
@@ -98,6 +104,7 @@ private:
     uint64_t low_pc_;	    // TODO: should be an addr_t
     uint64_t high_pc_;
     uint32_t language_;
+    bool internal_;
 
     friend class member_t;
     friend class np::spiegel::dwarf::state_t;
