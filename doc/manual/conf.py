@@ -35,7 +35,7 @@ extensions = [
 ]
 
 breathe_projects = {
-    "novaprova": "doc/xml"
+    "novaprova": "../xml"
 }
 breathe_default_project = "novaprova"
 
