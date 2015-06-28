@@ -35,7 +35,7 @@ extensions = [
 ]
 
 breathe_projects = {
-    "novaprova": "@abs_top_builddir@/doc/xml"
+    "novaprova": "doc/xml"
 }
 breathe_default_project = "novaprova"
 
