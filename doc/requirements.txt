@@ -1,0 +1,3 @@
+# pip requirements file
+# this is necessary for the readthedocs.org build
+breathe==4.0.0
