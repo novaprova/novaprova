@@ -12,12 +12,31 @@
 import sys
 import os
 import os.path
-from subprocess import call
+from subprocess import call, check_output
 from shutil import rmtree
 
 print "NovaProva running %s" % ' '.join(sys.argv)
 if sys.argv[1] != "install":
     sys.exit(0)
+
+# work out a reasonable string to use as the version
+# for documentation purposes.
+version = check_output(['git', 'tag', '--points-at', 'HEAD'])
+if version.startswith('novaprova-'):
+    version = version[10:]
+if version == '':
+    version = 'latest'
+
+print "version \"%s\"" % version
+
+# Expand @PACKAGE_VERSION@ in some files
+for filename in ['Doxyfile']:
+    print "expanding %s" % filename
+    with open(filename + '.in', 'r') as fin:
+        with open(filename, 'w') as fout:
+            for line in fin:
+                line = line.replace('@PACKAGE_VERSION@', version)
+                fout.write(line)
 
 # This is the first half of the docs: target in
 # the top-level Makefile converted into Python
