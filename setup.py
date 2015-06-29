@@ -30,7 +30,7 @@ if version == '':
 print "version \"%s\"" % version
 
 # Expand @PACKAGE_VERSION@ in some files
-for filename in ['Doxyfile']:
+for filename in ['Doxyfile', 'doc/manual/conf.py']:
     print "expanding %s" % filename
     with open(filename + '.in', 'r') as fin:
         with open(filename, 'w') as fout:
