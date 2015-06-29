@@ -19,10 +19,6 @@ print "NovaProva running %s" % ' '.join(sys.argv)
 if sys.argv[1] != "install":
     sys.exit(0)
 
-topdir = os.path.normpath(os.path.join(os.path.dirname(__file__), '../..'))
-os.chdir(topdir)
-# exception on failure
-
 # This is the first half of the docs: target in
 # the top-level Makefile converted into Python
 rmtree('doc/api-ref', ignore_errors=True)
