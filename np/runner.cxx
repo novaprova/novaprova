@@ -768,11 +768,6 @@ np_list_tests(np_runner_t *runner, np_plan_t *plan)
 }
 
 /**
- * Set the output format.
- *
- * @param runner	the runner object
- * @param fmt		string naming the output format
- *
  * Set the format in which test results will be emitted.  Available
  * formats are:
  *
@@ -785,10 +780,12 @@ np_list_tests(np_runner_t *runner, np_plan_t *plan)
  *    This is the default if @c np_set_output_format is not called.
  *
  * Note that the function is a misnomer, it actually @b adds an output
- * format. Also note that if the C++ API were documented, you could
- * write your own output formats by deriving from @c np::listener_t.
+ * format, so if you call it twice you will get two sets of output.
  *
  * Returns true if @c fmt is a valid format, or false on error.
+ *
+ * @param runner	the runner object
+ * @param fmt		string naming the output format
  *
  * \ingroup main
  */
@@ -810,15 +807,12 @@ np_set_output_format(np_runner_t *runner, const char *fmt)
 }
 
 /**
- * Run all the tests in the plan.
+ * Runs all the tests described in the @a plan object.  If @a plan
+ * is NULL, all the discovered tests will be run in testnode tree order.
  *
  * @param runner	the runner object
  * @param plan		optional plan object
  * @return		0 on success or non-zero if any tests failed.
- *
- * Uses the @a runner object to run all the tests described in the @a plan
- * object.  If @a plan is NULL, all the discovered tests will be run in
- * testnode tree order.
  *
  * \ingroup main
  */
@@ -830,14 +824,13 @@ np_run_tests(np_runner_t *runner, np_plan_t *plan)
 
 /**
  * Get the timeout for the currently running test.
- *
- * @return	    timeout in seconds of currently running test
- *
  * If called outside of a running test, returns 0.  Note that the
  * timeout for a test can vary depending on how it's run.  For
  * example, if the test executable is run under a debugger the
  * timeout is disabled, and if it's run under Valgrind (which is
  * the default) the timeout is tripled.
+ *
+ * @return	    timeout in seconds of currently running test
  *
  * \ingroup misc
  */

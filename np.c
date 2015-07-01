@@ -73,8 +73,6 @@ be_valground(void)
 /**
  * Initialise the NovaProva library.
  *
- * @return	a new runner object
- *
  * You should call @c np_init to initialise NovaProva before running
  * any tests.  It discovers tests in the current executable, and returns
  * a pointer to a @c np_runner_t object which you can pass to
@@ -89,6 +87,8 @@ be_valground(void)
  * The function also sets a C++ terminate handler using
  * @c std::set_terminate() which handles any uncaught C++ exceptions,
  * generates a useful error message, and fails the running test.
+ *
+ * @return	a new runner object
  *
  * \ingroup main
  */

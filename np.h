@@ -64,21 +64,15 @@ extern void __np_assert_failed(const char *filename, int lineno,
  */
 
 /** Causes the running test to terminate immediately with a PASS result.
- *
- * Causes the running test to terminate immediately with a PASS result.
  * You will probably never need to call this, as merely reaching the end
  * of a test function without FAILing is considered a PASS result.
  */
 #define NP_PASS  \
     __np_pass(__FILE__, __LINE__)
-/** Causes the running test to terminate immediately with a FAIL result.
- *
- * Causes the running test to terminate immediately with a FAIL result. */
+/** Causes the running test to terminate immediately with a FAIL result.  */
 #define NP_FAIL \
     __np_fail(__FILE__, __LINE__)
 /** Causes the running test to terminate immediately with a NOTAPPLICABLE result.
- *
- * Causes the running test to terminate immediately with a NOTAPPLICABLE result.
  * The NOTAPPLICABLE result is not counted towards either failures or
  * successes and is useful for tests whose preconditions are not
  * satisfied and have thus not actually run. */
@@ -91,9 +85,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
  * @{
  */
 
-/** Test that a given boolean condition is true, otherwise FAIL the test.
- *
- * Test that a given boolean condition is true, otherwise FAIL the test. */
+/** Test that a given boolean condition is true, otherwise FAIL the test. */
 #define NP_ASSERT(cc) \
     do { \
 	if (!(cc)) \
@@ -101,8 +93,6 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    "NP_ASSERT(" #cc ")"); \
     } while(0)
 /** Test that a given boolean condition is true, otherwise FAIL the test.
- *
- * Test that a given boolean condition is true, otherwise FAIL the test.
  * This is the same as @c NP_ASSERT except that the message printed on
  * failure is slightly more helpful.  */
 #define NP_ASSERT_TRUE(a) \
@@ -112,9 +102,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    __np_assert_failed(__FILE__, __LINE__, \
 	    "NP_ASSERT_TRUE(" #a "=%u)", _a); \
     } while(0)
-/** Test that a given boolean condition is false, otherwise FAIL the test.
- *
- * Test that a given boolean condition is false, otherwise FAIL the test. */
+/** Test that a given boolean condition is false, otherwise FAIL the test. */
 #define NP_ASSERT_FALSE(a) \
     do { \
 	bool _a = (a); \
@@ -122,9 +110,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    __np_assert_failed(__FILE__, __LINE__, \
 	    "NP_ASSERT_FALSE(" #a "=%u)", _a); \
     } while(0)
-/** Test that two signed integers are equal, otherwise FAIL the test.
- *
- * Test that two signed integers are equal, otherwise FAIL the test. */
+/** Test that two signed integers are equal, otherwise FAIL the test. */
 #define NP_ASSERT_EQUAL(a, b) \
     do { \
 	long long _a = (a), _b = (b); \
@@ -132,9 +118,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    __np_assert_failed(__FILE__, __LINE__, \
 	    "NP_ASSERT_EQUAL(" #a "=%lld, " #b "=%lld)", _a, _b); \
     } while(0)
-/** Test that two signed integers are not equal, otherwise FAIL the test.
- *
- * Test that two signed integers are not equal, otherwise FAIL the test. */
+/** Test that two signed integers are not equal, otherwise FAIL the test. */
 #define NP_ASSERT_NOT_EQUAL(a, b) \
     do { \
 	long long _a = (a), _b = (b); \
@@ -142,9 +126,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    __np_assert_failed(__FILE__, __LINE__, \
 	    "NP_ASSERT_NOT_EQUAL(" #a "=%lld, " #b "=%lld)", _a, _b); \
     } while(0)
-/** Test that two pointers are equal, otherwise FAIL the test.
- *
- * Test that two pointers are equal, otherwise FAIL the test. */
+/** Test that two pointers are equal, otherwise FAIL the test. */
 #define NP_ASSERT_PTR_EQUAL(a, b) \
     do { \
 	const void *_a = (a), *_b = (b); \
@@ -152,9 +134,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    __np_assert_failed(__FILE__, __LINE__, \
 	    "NP_ASSERT_PTR_EQUAL(" #a "=%p, " #b "=%p)", _a, _b); \
     } while(0)
-/** Test that two pointers are not equal, otherwise FAIL the test.
- *
- * Test that two pointers are not equal, otherwise FAIL the test. */
+/** Test that two pointers are not equal, otherwise FAIL the test. */
 #define NP_ASSERT_PTR_NOT_EQUAL(a, b) \
     do { \
 	const void *_a = (a), *_b = (b); \
@@ -162,9 +142,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    __np_assert_failed(__FILE__, __LINE__, \
 	    "NP_ASSERT_PTR_NOT_EQUAL(" #a "=%p, " #b "=%p)", _a, _b); \
     } while(0)
-/** Test that a pointer is NULL, otherwise FAIL the test.
- *
- * Test that a pointer is NULL, otherwise FAIL the test. */
+/** Test that a pointer is NULL, otherwise FAIL the test. */
 #define NP_ASSERT_NULL(a) \
     do { \
 	const void *_a = (a); \
@@ -172,9 +150,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    __np_assert_failed(__FILE__, __LINE__, \
 	    "NP_ASSERT_NULL(" #a "=%p)", _a); \
     } while(0)
-/** Test that a pointer is not NULL, otherwise FAIL the test.
- *
- * Test that a pointer is not NULL, otherwise FAIL the test. */
+/** Test that a pointer is not NULL, otherwise FAIL the test. */
 #define NP_ASSERT_NOT_NULL(a) \
     do { \
 	const void *_a = (a); \
@@ -183,8 +159,6 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    "NP_ASSERT_NOT_NULL(" #a "=%p)", _a); \
     } while(0)
 /** Test that two strings are equal, otherwise FAIL the test.
- *
- * Test that two strings are equal, otherwise FAIL the test.
  * Either string can be NULL; NULL compares like the empty string.
  */
 #define NP_ASSERT_STR_EQUAL(a, b) \
@@ -195,8 +169,6 @@ extern void __np_assert_failed(const char *filename, int lineno,
 	    "NP_ASSERT_STR_EQUAL(" #a "=\"%s\", " #b "=\"%s\")", _a, _b); \
     } while(0)
 /** Test that two strings are not equal, otherwise FAIL the test.
- *
- * Test that two strings are not equal, otherwise FAIL the test.
  * Either string can be NULL, it compares like the empty string.
  */
 #define NP_ASSERT_STR_NOT_EQUAL(a, b) \
@@ -218,7 +190,7 @@ extern void __np_assert_failed(const char *filename, int lineno,
  * @param re	    POSIX extended regular expression to match
  *
  * From this point until the end of the test, if any code emits a
- * message to @c syslog which matches the given regular expression, the
+ * message to @c syslog whose text matches the given regular expression, the
  * test will FAIL immediately as if @c NP_FAIL had been called from
  * inside @c syslog.
  */
@@ -228,7 +200,7 @@ extern void np_syslog_fail(const char *re);
  * @param re	    POSIX extended regular expression to match
  *
  * From this point until the end of the test function, if any code emits
- * a message to @c syslog which matches the given regular expression,
+ * a message to @c syslog whose text matches the given regular expression,
  * nothing will happen.  Note that this is the default behaviour, so
  * this call is only useful in complex cases where there are multiple
  * overlapping regexps being used for syslog matching.
@@ -240,7 +212,7 @@ extern void np_syslog_ignore(const char *re);
  * @param tag	    tag for later matching of counts
  *
  * From this point until the end of the test function, if any code emits
- * a message to @c syslog which matches the given regular expression, a
+ * a message to @c syslog whose text matches the given regular expression, a
  * counter will be incremented and no other action will be taken.  The
  * counts can be retrieved by calling @c np_syslog_count.  Note that
  * @a tag does not need to be unique; in fact always passing 0 is reasonable.

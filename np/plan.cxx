@@ -137,19 +137,18 @@ np_plan_delete(np_plan_t *plan)
 }
 
 /**
- * Add test specifications to a plan object.
+ * Add a sequence of test specifications to the plan object.  Each test
+ * specification is a string which matches a testnode in the discovered
+ * testnode hierarchy, and will cause that node (plus all of its
+ * descendant nodes) to be added to the plan.  The interface is designed to
+ * take command-line arguments from your test runner program after
+ * options have been parsed with @c getopt.  Alternately you can call
+ * @c np_plan_add_specs multiple times.
  *
  * @param plan	    the plan object
  * @param nspec	    number of specification strings
  * @param spec	    array of specification strings
  * @return	    false if any of the test specifications could not be found, true on success.
- *
- * Add a sequence of test specifications to the plan object.  Each test
- * specification is a string which matches a testnode in the discovered
- * testnode hierarchy, and will cause that node plus all of its
- * descendants to be added to the plan.  The interface is designed to
- * take command-line arguments from your test runner program after
- * options have been parsed with @c getopt.
  *
  * \ingroup main
  */
