@@ -85,7 +85,7 @@ past the end of a struct allocated with ``malloc()``, it will tell
 also give you the stack trace showing where that struct was allocated.
 
 
-Call to exit()
+Call To exit()
 --------------
 
 NovaProva assumes that the Code Under Test is library code, and that
@@ -120,7 +120,7 @@ Here's some example test output.
 
 .. _syslog:
 
-Messages emitted to syslog()
+Messages Emitted To syslog()
 ----------------------------
 
 NovaProva assumes by default that messages emitted using the libc
@@ -215,7 +215,7 @@ You can of course call any of ``np_syslog_ignore()``,
 setup function (see :ref:`fixtures_chapter` ).
 
 
-Failed calls to libc assert()
+Failed Calls To libc assert()
 -----------------------------
 
 The standard library's ``assert()`` macro is sometimes used in the Code
@@ -262,7 +262,7 @@ When run, this test produces the following output and the test fails.
     FAIL tnassert.assert
 
 
-Invalid memory accesses
+Invalid Memory Accesses
 -----------------------
 
 One of the plague spots of coding in C is the ease with which
@@ -301,19 +301,94 @@ NovaProva then gracefully fails the test.  Here's an example:
     np: 1 run 1 failed
 
 
-Buffer overruns
+Buffer Overruns
 ---------------
 
-buffer overruns, use of uninitialised variables
-discovered by Valgrind, as they happen which emits its usual helpful analysis
+Buffer overruns are when C code accidentally walks off the end
+of a buffer, corrupting memory beyond the buffer.  This is a classic
+security vulnerability and an important class of errors in C programs.
 
-Memory leaks
+When this happens under NovaProva, Valgrind detects it first and
+emits a useful analysis.  Depending on the exact failure mode,
+Valgrind might either just print the analysis or it might deliver
+a SEGV to the program.  In either case, NovaProva catches it and
+gracefully fails the test.  Here's an example:
+
+.. highlight:: none
+
+::
+
+    np: running: "tnoverrun.heap_overrun"
+    about to overrun a buffer
+    overran
+    ==5819== Use of uninitialised value of size 8
+    ==5819==    at 0x404A6E: test_heap_overrun (tnoverrun.c:36)
+    ==5819==    by 0xD86000000007FEFF: ???
+    ==5819==    by 0x8000000000603: ???
+    ==5819==    by 0xFFFFFFFFFFFF: ???
+    ==5819==    by 0x7FFFFFFFFFFFF: ???
+    ==5819==
+    ==5819== Jump to the invalid address stated on the next line
+    ==5819==    at 0x600000000005D3: ???
+    ==5819==    by 0xD86000000007FEFF: ???
+    ==5819==    by 0x8000000000603: ???
+    ==5819==    by 0xFFFFFFFFFFFF: ???
+    ==5819==    by 0x7FFFFFFFFFFFF: ???
+    ==5819==  Address 0x600000000005d3 is not stack'd, malloc'd or (recently) free'd
+    ==5819==
+    ==5819==
+    ==5819== Process terminating with default action of signal 11 (SIGSEGV)
+    ==5819==  Bad permissions for mapped region at address 0x600000000005D3
+    ==5819==    at 0x600000000005D3: ???
+    ==5819==    by 0xD86000000007FEFF: ???
+    ==5819==    by 0x8000000000603: ???
+    ==5819==    by 0xFFFFFFFFFFFF: ???
+    ==5819==    by 0x7FFFFFFFFFFFF: ???
+    EVENT SIGNAL child process 5819 died on signal 11
+    FAIL tnoverrun.heap_overrun
+    np: 1 run 1 failed
+
+
+Use Of Uninitialized Variables
+------------------------------
+
+The accidental use of uninitialised variables is yet another of
+C's awful failure modes.
+
+When this happens under NovaProva, Valgrind detects it first and emits a useful
+analysis.  Then NovaProva catches it and gracefully fails the test.  Here's an
+example:
+
+.. highlight:: none
+
+::
+
+    np: running: "tnuninit.uninitialized_int"
+    ==6020== Conditional jump or move depends on uninitialised value(s)
+    ==6020==    at 0x404A07: test_uninitialized_int (tnuninit.c:27)
+    ==6020==    by 0x4175C9: np::spiegel::function_t::invoke(std::vector<np::spiegel::value_t, std::allocator<np::spiegel::value_t> >) const (spiegel.cxx:606)
+    ==6020==    by 0x40983C: np::runner_t::run_function(np::functype_t, np::spiegel::function_t*) (runner.cxx:526)
+    ==6020==    by 0x40A275: np::runner_t::run_test_code(np::job_t*) (runner.cxx:650)
+    ==6020==    by 0x40A53E: np::runner_t::begin_job(np::job_t*) (runner.cxx:710)
+    ==6020==    by 0x408802: np::runner_t::run_tests(np::plan_t*) (runner.cxx:147)
+    ==6020==    by 0x40A74E: np_run_tests (runner.cxx:822)
+    ==6020==    by 0x405172: main (main.c:102)
+    ==6020==
+    EVENT VALGRIND 1 unsuppressed errors found by valgrind
+    FAIL tnuninit.uninitialized_int
+    np: 1 run 1 failed
+
+
+Memory Leaks
 ------------
 
-discovered by Valgrind, explicit leak check after each test completes
+The accidental leaking of memory which is allocated but never freed, is yet
+another of C's awful failure modes.
 
-test process queries Valgrind
-	unsuppressed errors → the test has failed
+NovaProva asks Valgrind to do an explicit memory leak check after each test
+finishes; Valgrind will print a report showing how much memory was leaked and
+the stack trace of where each leak was allocated.  If the test caused memory
+leaks, NovaProva fails the test.  Here's an example:
 
 .. highlight:: none
 
@@ -333,29 +408,47 @@ test process queries Valgrind
     FAIL mytest.memleak
     np: 1 run 1 failed
 
-File Descriptor leaks
+File Descriptor Leaks
 ---------------------
 
+A more subtle kind of resource leak is a file descriptor leak.  This typically
+happens in code which reads a file, encounters an error condition, and while
+handling the error forgets to ``fclose()`` the file.  This kind of problem can be
+very insidious in long-running server code.
+
+NovaProva detects file descriptor leaks by scanning the test child process'
+file descriptor table before and after each test and looking for leaks.  If the
+test (or any of the fixture code) caused a file descriptor leak, NovaProva
+fails the test.  Here's an example:
+
+.. highlight:: none
+
+::
+
+    np: running: "tnfdleak.leaky_test"
+    MSG leaking fd for .leaky_test.dat
+    EVENT FDLEAK test leaked file descriptor 5 -> /build/novaprova/tests/.leaky_test.dat
+    FAIL tnfdleak.leaky_test
+    np: running: "tnfdleak.leaky_fixture"
+    MSG leaking fd for .leaky_fixture.dat
+    EVENT FDLEAK test leaked file descriptor 3 -> /build/novaprova/tests/.leaky_fixture.dat
+    FAIL tnfdleak.leaky_fixture
+    np: 2 run 2 failed
 
 
-Use of uninitialized variables
-------------------------------
-
-Looping, deadlocked, or slow tests
+Looping, Deadlocked, Or Slow Tests
 ----------------------------------
 
-NP detects when its running under gdb and automatically disables the
-test timeout and Valgrind.
+Sometimes the Code Under Test enters an infinite loop, or causes a deadlock
+between two or more threads.  NovaProva uses a per-test timeout to detect
+these cases; if the test runs longer than the timeout NovaProva will kill
+the child test process with ``SIGTERM`` and gracefully fail the test.
 
-per-test timeout
-test fails if the timeout fires
-
-default timeout 30 sec
-3 x when running under Valgrind
-disabled when running under gdb
-
-implemented in the testrunner process
-child killed with SIGTERM
+The basic test timeout is 30 seconds.  NovaProva automatically detects and
+adjusts the timeout in certain situations.  When the test executable is being
+run under gdb, NovaProva disables the test timeout.  When the test executable
+is being run under Valgrind (the default behavior), NovaProva triples the
+timeout.
 
 .. highlight:: none
 
@@ -379,5 +472,7 @@ child killed with SIGTERM
 
 C++ Exceptions
 --------------
+
+TODO
 
 .. vim:set ft=rst:
