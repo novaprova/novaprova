@@ -318,35 +318,33 @@ gracefully fails the test.  Here's an example:
 
 ::
 
-    np: running: "tnoverrun.heap_overrun"
-    about to overrun a buffer
+    np: running: "tnoverrun.heap_overrun_small"
+    about to overrun a buffer by a small amount
+    ==6986== Invalid write of size 1
+    ==6986==    at 0x4C29D28: memcpy (mc_replace_strmem.c:882)
+    ==6986==    by 0x4049E8: do_a_small_overrun (tnoverrun.c:22)
+    ==6986==    by 0x404A8E: test_heap_overrun_small (tnoverrun.c:39)
+    ==6986==    by 0x4164A5: np::spiegel::function_t::invoke(std::vector<np::spiegel::value_t, std::allocator<np::spiegel::value_t> >) const (spiegel.cxx:606)
+    ==6986==    by 0x4085F0: np::runner_t::run_function(np::functype_t, np::spiegel::function_t*) (runner.cxx:526)
+    ==6986==    by 0x409029: np::runner_t::run_test_code(np::job_t*) (runner.cxx:650)
+    ==6986==    by 0x4092F2: np::runner_t::begin_job(np::job_t*) (runner.cxx:710)
+    ==6986==    by 0x4075B6: np::runner_t::run_tests(np::plan_t*) (runner.cxx:147)
+    ==6986==    by 0x409502: np_run_tests (runner.cxx:822)
+    ==6986==    by 0x404CDE: main (main.c:102)
+    ==6986==  Address 0x6b58801 is 1 bytes after a block of size 32 alloc'd
+    ==6986==    at 0x4C27A2E: malloc (vg_replace_malloc.c:270)
+    ==6986==    by 0x404A5A: test_heap_overrun_small (tnoverrun.c:36)
+    ==6986==    by 0x4164A5: np::spiegel::function_t::invoke(std::vector<np::spiegel::value_t, std::allocator<np::spiegel::value_t> >) const (spiegel.cxx:606)
+    ==6986==    by 0x4085F0: np::runner_t::run_function(np::functype_t, np::spiegel::function_t*) (runner.cxx:526)
+    ==6986==    by 0x409029: np::runner_t::run_test_code(np::job_t*) (runner.cxx:650)
+    ==6986==    by 0x4092F2: np::runner_t::begin_job(np::job_t*) (runner.cxx:710)
+    ==6986==    by 0x4075B6: np::runner_t::run_tests(np::plan_t*) (runner.cxx:147)
+    ==6986==    by 0x409502: np_run_tests (runner.cxx:822)
+    ==6986==    by 0x404CDE: main (main.c:102)
+    ==6986== 
     overran
-    ==5819== Use of uninitialised value of size 8
-    ==5819==    at 0x404A6E: test_heap_overrun (tnoverrun.c:36)
-    ==5819==    by 0xD86000000007FEFF: ???
-    ==5819==    by 0x8000000000603: ???
-    ==5819==    by 0xFFFFFFFFFFFF: ???
-    ==5819==    by 0x7FFFFFFFFFFFF: ???
-    ==5819==
-    ==5819== Jump to the invalid address stated on the next line
-    ==5819==    at 0x600000000005D3: ???
-    ==5819==    by 0xD86000000007FEFF: ???
-    ==5819==    by 0x8000000000603: ???
-    ==5819==    by 0xFFFFFFFFFFFF: ???
-    ==5819==    by 0x7FFFFFFFFFFFF: ???
-    ==5819==  Address 0x600000000005d3 is not stack'd, malloc'd or (recently) free'd
-    ==5819==
-    ==5819==
-    ==5819== Process terminating with default action of signal 11 (SIGSEGV)
-    ==5819==  Bad permissions for mapped region at address 0x600000000005D3
-    ==5819==    at 0x600000000005D3: ???
-    ==5819==    by 0xD86000000007FEFF: ???
-    ==5819==    by 0x8000000000603: ???
-    ==5819==    by 0xFFFFFFFFFFFF: ???
-    ==5819==    by 0x7FFFFFFFFFFFF: ???
-    EVENT SIGNAL child process 5819 died on signal 11
-    FAIL tnoverrun.heap_overrun
-    np: 1 run 1 failed
+    EVENT VALGRIND 2 unsuppressed errors found by valgrind
+    FAIL tnoverrun.heap_overrun_small
 
 
 Use Of Uninitialized Variables
@@ -473,6 +471,26 @@ timeout.
 C++ Exceptions
 --------------
 
-TODO
+A failure mode unique to C++ is the uncaught exception.  NovaProva catches
+all uncaught exceptions, by setting up a global default terminate handler.
+If the Code Under Test throws an exception which is not caught, NovaProva will
+print a message including the exception type, the result of ``e.what()`` if
+the exception is of a subclass of ``std::exception``, and the stacktrace of
+the ``throw`` statement.  NovaProva will then gracefully fail the test.
+
+.. highlight:: none
+
+::
+
+    np: running: "mytest.slow"
+    np: running: "tnexcept.uncaught_exception"
+    MSG before call to bar
+    EVENT EXCEPTION terminate called with exception foo::exception: Oh that went badly
+    at 0x416C2D: np::spiegel::describe_stacktrace (np/spiegel/spiegel.cxx)
+    by 0x426FCA: np::event_t::with_stack (np/event.cxx)
+    by 0x426A7B: __np_terminate_handler (iexcept.c)
+    ...
+    FAIL tnexcept.uncaught_exception
+
 
 .. vim:set ft=rst:
