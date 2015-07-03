@@ -76,6 +76,7 @@ tnnotests
 tnnotests_fixture
 tnnotests_mock
 tnnotests_param
+tnoverrun
 tnparallel
 tnparallel.c
 tnparameter
@@ -85,5 +86,6 @@ tnsigill
 tnsyslog
 tnsyslogmatch
 tntimeout
+tnuninit
 treader
 tstack

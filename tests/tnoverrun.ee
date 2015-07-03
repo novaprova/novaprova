@@ -1,0 +1,5 @@
+MSG about to overrun a buffer by a small amount
+MSG overran
+EVENT VALGRIND 2 unsuppressed errors found by valgrind
+FAIL tnoverrun.heap_overrun_small
+EXIT 1

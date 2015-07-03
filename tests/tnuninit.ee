@@ -1,0 +1,3 @@
+EVENT VALGRIND 1 unsuppressed errors found by valgrind
+FAIL tnuninit.uninitialized_int
+EXIT 1

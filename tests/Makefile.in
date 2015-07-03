@@ -49,7 +49,9 @@ BASIC_TESTS= \
     tnnotests \
     tnnotests_param \
     tnnotests_fixture \
-    tnnotests_mock
+    tnnotests_mock \
+    tnoverrun \
+    tnuninit
 
 BASIC_TESTS_CXX= \
 
