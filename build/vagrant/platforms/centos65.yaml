@@ -1,0 +1,2 @@
+box: "chef/centos-6.5"
+script_file: "centos.sh"
