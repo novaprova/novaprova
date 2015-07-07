@@ -20,16 +20,22 @@ Dir["#{platforms_dir}/*.yaml"].each do |filename|
     # entry or a 'script_file' entry which is a filename
     # relative to the platforms dir
     if opts['script_file']
-	s = ''
-	File.open "#{platforms_dir}/#{opts['script_file']}", 'r' do |f|
-	    while (line = f.gets)
-		s += line
-	    end
+	e = Erubis::Eruby.new(File.read("#{platforms_dir}/#{opts['script_file']}"))
+	h = {}
+	opts.each_pair do |k,v|
+	    h[k.intern] = v
 	end
-	opts['script'] = s
+	opts['script'] = e.evaluate(h)
     end
     platforms[name] = opts
 end
+
+# puts "XXX platforms={"
+# platforms.each_pair do |name, options|
+#    puts "    #{name} => #{options}"
+# end
+# puts "}"
+# exit 1
 
 # Main Vagrant Init
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |global_config|
