@@ -73,11 +73,12 @@ function normalize
 	awk -f $TEST-normalize.awk < $f
     else
 	# Default normalization
-	egrep '^(EVENT|MSG|PASS|FAIL|N/A|EXIT|np: WARNING:|\?\?\?) ' < $f |\
+	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: WARNING:|\?\?\? |==[0-9]+== [A-Z])' < $f |\
 	    sed -r \
 		-e 's|'$PWD'|%PWD%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \
-		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g'
+		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g' \
+		-e 's/^==[0-9]+== /==%PID%== /g'
     fi
 }
 

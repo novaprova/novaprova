@@ -1,1 +1,3 @@
+==%PID%== Invalid write of size 1
+==%PID%== Process terminating with default action of signal 11 (SIGSEGV)
 EXIT 1
