@@ -1,0 +1,4 @@
+box: "ubuntu/trusty64"
+script_file: "ubuntu.sh"
+ppa: "ubuntu-toolchain-r/test"
+gcc_version: 4.9
