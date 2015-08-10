@@ -1,7 +1,7 @@
-==%PID%== Use of uninitialised value of size 8
-==%PID%== Use of uninitialised value of size 8
-==%PID%== Use of uninitialised value of size 8
-==%PID%== Use of uninitialised value of size 8
-EVENT VALGRIND 4 unsuppressed errors found by valgrind
+==%PID%== Use of uninitialised value of size %SIZE%
+==%PID%== Use of uninitialised value of size %SIZE%
+==%PID%== Use of uninitialised value of size %SIZE%
+==%PID%== Use of uninitialised value of size %SIZE%
+EVENT VALGRIND %ERRORS% unsuppressed errors found by valgrind
 FAIL tnuninit.uninitialized_int
 EXIT 1
