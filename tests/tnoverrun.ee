@@ -1,6 +1,6 @@
 MSG about to overrun a buffer by a small amount
-==%PID%== Invalid write of size 2
+==%PID%== Invalid write of size %SIZE%
 MSG overran
-EVENT VALGRIND 1 unsuppressed errors found by valgrind
+EVENT VALGRIND %ERRORS% unsuppressed errors found by valgrind
 FAIL tnoverrun.heap_overrun_small
 EXIT 1

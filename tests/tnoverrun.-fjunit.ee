@@ -1,0 +1,2 @@
+==%PID%== Invalid write of size %SIZE%
+EXIT 1
