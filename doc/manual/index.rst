@@ -25,6 +25,7 @@ Contents
    :maxdepth: 2
 
    intro
+   getting-started
    platform
    installing
    building

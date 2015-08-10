@@ -83,14 +83,6 @@ from a Git checkout than from a release tarball, mainly for the
 documentation.  To build you need to have g++ and gcc installed,
 as well as the following:
 
-* `Python Markdown <http://freewisdom.org/projects/python-markdown/>`_
-  (Ubuntu ``apt-get install python-markdown``,
-  RedHat ``rpm -U python-markdown``,
-  or ``pip install Markdown``)
-* `Pygments <http://pygments.org/>`_
-  (Ubuntu ``apt-get install python-pygments``,
-  RedHat ``rpm -U python-pygments``,
-  or ``pip install Pygments``)
 * `Doxygen <http://www.doxygen.org/>`_
   (Ubuntu ``apt-get install doxygen``,
   RedHat ``rpm -U doxygen``)

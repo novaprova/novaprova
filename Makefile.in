@@ -45,11 +45,9 @@ MKDIRP=		$(INSTALL) -m 0755 -d
 RANLIB=		@RANLIB@
 depdir=		.deps
 
-SUBDIRS_PRE=	doc/get-start
 SUBDIRS_POST=	tests
 
 all clean distclean check install docs:
-	@for dir in $(SUBDIRS_PRE) ; do $(MAKE) -C $$dir $@ ; done
 	@$(MAKE) $@-local
 	@for dir in $(SUBDIRS_POST) ; do $(MAKE) -C $$dir $@ ; done
 
@@ -153,12 +151,6 @@ libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
 DOC_INST_DELIVERABLES= \
-	    get-start/index.html \
-	    get-start/pygmentize.css \
-	    get-start/example1/mytest.c \
-	    get-start/example1/mycode.h \
-	    get-start/example1/mycode.c \
-	    get-start/example1/Makefile \
 	    manual/_build/html:manual/html
 DOC_TAR_DELIVERABLES= \
 	    $(DOC_INST_DELIVERABLES) \
@@ -226,8 +218,6 @@ DIST_TARBALL=	$(PACKAGE_TARNAME)-$(PACKAGE_VERSION).tar.bz2
 DISTDIR=	$(PACKAGE_NAME)-$(PACKAGE_VERSION)
 
 DIST_FILES= $(shell git ls-files) \
-	doc/get-start/index.html \
-	doc/get-start/pygmentize.css \
 
 DIST_DIRS= \
 	doc/man \
