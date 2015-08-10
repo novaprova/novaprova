@@ -1,6 +1,6 @@
 # Licence #
 
-Copyright 2011-2013 Gregory Banks
+Copyright 2011-2015 Gregory Banks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -63,87 +63,9 @@ in the following ways.
   on or off at any time, including partway through a test.
 
 More documentation is in the source, or you can
-[read it online](http://www.novaprova.org/docs.html).
+[read it online](http://novaprova.readthedocs.org/en/latest/).
 
+# Getting started #
 
-# Getting started - ubuntu guide #
-
-### Required packages for build ###
-
-* build-essential
-* autoconf
-* automake
-* libtool
-* libxml++2.6-dev
-* valgrind
-* binutils-dev
-* python-pygments
-* python-markdown
-* doxygen
-
-### Build instructions ###
-
-    autoreconf
-    ./configure
-    make
-    make docs # optional
-    make install
-
-### Checking your install ###
-
-Build and check the getting started example.
-
-    cd doc/get-start/example1/
-    make check
-
-The result of the check should look similiar to this (build output supressed).
-
-    ./testrunner
-    [0.000] np: starting valgrind
-    np: NovaProva Copyright (c) Gregory Banks
-    np: Built for O/S linux architecture x86_64
-    np: running
-    np: running: "mytest.simple"
-    PASS mytest.simple
-    np: running: "mytest.initial"
-    EVENT ASSERT NP_ASSERT_EQUAL(r=532, 4=4)
-    at 0x417E0B: np::spiegel::describe_stacktrace
-    by 0x4049FE: np::event_t::with_stack
-    by 0x4043FE: __np_assert_failed
-    by 0x403DF3: test_initial
-    by 0x4179BD: np::spiegel::function_t::invoke
-    by 0x4092C8: np::runner_t::run_function
-    by 0x409DC7: np::runner_t::run_test_code
-    by 0x40A061: np::runner_t::begin_job
-    by 0x40810E: np::runner_t::run_tests
-    by 0x40A27A: np_run_tests
-    by 0x404786: main
-
-    FAIL mytest.initial
-    np: 2 run 1 failed
-    make: *** [check] Error 1
-
-Fix the bug in mycode.c.
-
-    -    for ( ; *s ; s++)
-    +    for ( ; *s >= '0' && *s <= '9' ; s++)
-
-Build and check the example again.
-
-    make check
-
-Now both tests should succeed (build output suppressed).
-
-    ./testrunner
-    [0.000] np: starting valgrind
-    np: NovaProva Copyright (c) Gregory Banks
-    np: Built for O/S linux architecture x86_64
-    np: running
-    np: running: "mytest.simple"
-    PASS mytest.simple
-    np: running: "mytest.initial"
-    PASS mytest.initial
-    np: 2 run 0 failed
-
-It works!!!
+[Read the Getting Started guide](http://novaprova.readthedocs.org/en/latest/getting-started.html)
 
