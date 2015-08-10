@@ -35,8 +35,6 @@ cscope.out
 debian
 debian.old
 doc-*.tar.bz2
-doc/api-ref
-doc/api-ref-*.tar.bz2
 doc/inst
 doc/man
 doc/manual/_build

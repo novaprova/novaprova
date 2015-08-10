@@ -40,7 +40,6 @@ for filename in ['Doxyfile', 'doc/manual/conf.py']:
 
 # This is the first half of the docs: target in
 # the top-level Makefile converted into Python
-rmtree('doc/api-ref', ignore_errors=True)
 rmtree('doc/man', ignore_errors=True)
 rmtree('doc/xml', ignore_errors=True)
 

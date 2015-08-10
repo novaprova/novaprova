@@ -159,7 +159,6 @@ DOC_INST_DELIVERABLES= \
 	    get-start/example1/mycode.h \
 	    get-start/example1/mycode.c \
 	    get-start/example1/Makefile \
-	    api-ref \
 	    manual/_build/html:manual/html
 DOC_TAR_DELIVERABLES= \
 	    $(DOC_INST_DELIVERABLES) \
@@ -184,7 +183,7 @@ endef
 # and b) doc/inst directory for copying into the
 # package with a %doc directive
 docs-local: Doxyfile
-	$(RM) -r doc/api-ref doc/man doc/xml
+	$(RM) -r doc/man doc/xml
 	doxygen
 	$(RM) doc/man/man*/_*
 	./prune-doxygen-xml.pl doc/xml
@@ -216,7 +215,7 @@ clean-local:
 	$(RM) libnovaprova.a $(libnovaprova_OBJS)
 
 distclean-local: clean-local
-	$(RM) -r doc/api-ref doc/man doc/inst
+	$(RM) -r doc/man doc/inst
 	$(RM) -r $(depdir)
 	$(RM) novaprova.pc
 	$(RM) config.status configure Makefile Doxyfile
@@ -231,7 +230,6 @@ DIST_FILES= $(shell git ls-files) \
 	doc/get-start/pygmentize.css \
 
 DIST_DIRS= \
-	doc/api-ref \
 	doc/man \
 	doc/manual \
 
