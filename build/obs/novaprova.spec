@@ -10,7 +10,7 @@ BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
 BuildRequires: autoconf, automake, gcc-c++
 BuildRequires: valgrind-devel, binutils-devel, libxml2-devel, pkgconfig
-BuildRequires: doxygen, python-pygments, python-markdown
+BuildRequires: doxygen, perl-XML-LibXML
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description

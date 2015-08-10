@@ -29,6 +29,5 @@ fi
 yum -y groupinstall 'Development Tools'
 yum -y install \
     git valgrind-devel binutils-devel libxml2-devel \
-    doxygen python-pygments python-markdown \
-    perl-XML-LibXML strace python-pip
+    doxygen perl-XML-LibXML strace python-pip
 pip install breathe Sphinx

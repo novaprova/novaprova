@@ -81,6 +81,7 @@ From Read-Only Git
 For advanced users only.  NovaProva needs several more tools to build
 from a Git checkout than from a release tarball, mainly for the
 documentation.  You will need to have `Doxygen <http://www.doxygen.org/>`_,
+`XML::LibXML <http://search.cpan.org/dist/XML-LibXML/>`_,
 `Sphinx <http://sphinx-doc.org/>`_, and
 `Breathe <https://pypi.python.org/pypi/breathe>`_ installed.  On an Ubuntu
 system, these commands download and install them.
@@ -91,7 +92,7 @@ system, these commands download and install them.
 
     # on Ubuntu
     # install all the prereqs above, then add...
-    sudo apt-get install -y doxygen python-pip
+    sudo apt-get install -y doxygen libxml-libxml-perl python-pip
     sudo pip install breathe Sphinx
 
 Once you have those prerequisites installed, you can clone, install
