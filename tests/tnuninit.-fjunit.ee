@@ -1,0 +1,5 @@
+==%PID%== Use of uninitialised value of size %SIZE%
+==%PID%== Use of uninitialised value of size %SIZE%
+==%PID%== Use of uninitialised value of size %SIZE%
+==%PID%== Use of uninitialised value of size %SIZE%
+EXIT 1
