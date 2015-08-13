@@ -7,7 +7,6 @@ EVENT SLMATCH err: fnarp
 FAIL tnsyslogmatch.one_message_no_matches
 EVENT SLMATCH err: fnarp
 FAIL tnsyslogmatch.one_message_unmatched
-EVENT SYSLOG err: fnarp
 PASS tnsyslogmatch.one_message_ignored
 EVENT SYSLOG err: foo bar baz
 PASS tnsyslogmatch.one_message_one_match

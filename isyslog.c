@@ -219,9 +219,10 @@ mock___syslog_chk(int prio,
 	np_throw(event_t(EV_SLMATCH, msg).with_stack());
 	break;
     case SL_UNKNOWN:
-    case SL_IGNORE:
     case SL_COUNT:
 	np_raise(event_t(EV_SYSLOG, msg).with_stack());
+	break;
+    case SL_IGNORE:
 	break;
     }
 }
@@ -242,9 +243,10 @@ mock_syslog(int prio, const char *fmt, ...)
 	np_throw(event_t(EV_SLMATCH, msg).with_stack());
 	break;
     case SL_UNKNOWN:
-    case SL_IGNORE:
     case SL_COUNT:
 	np_raise(event_t(EV_SYSLOG, msg).with_stack());
+	break;
+    case SL_IGNORE:
 	break;
     }
 }
