@@ -66,8 +66,9 @@ deserialise_bytes(int fd, char *p, unsigned int len)
     {
 	r = read(fd, p, len);
 	if (r < 0) {
+	    int e = errno;
 	    perror("np: error reading from proxy");
-	    return -errno;
+	    return -e;
 	}
 	if (r == 0) {
 	    fprintf(stderr, "np: unexpected EOF deserialising from proxy\n");
