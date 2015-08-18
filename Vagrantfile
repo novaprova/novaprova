@@ -8,7 +8,7 @@ unless Vagrant.has_plugin? 'vagrant-bindfs'
   raise error "The 'vagrant-bindfs' plugin is not installed!"
 end
 
-platforms_dir = 'build/vagrant/platforms'
+platforms_dir = 'build/vagrant'
 platforms = {}
 
 # Read all the .yaml files in the platforms directory;
