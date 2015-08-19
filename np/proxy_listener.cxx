@@ -21,6 +21,7 @@ namespace np {
 
 enum proxy_call
 {
+    PROXY_INVALID = 0,
     PROXY_EVENT = 1,
     PROXY_FINISHED = 2,
 };
@@ -197,39 +198,46 @@ proxy_listener_t::add_event(const job_t *j __attribute__((unused)),
 bool
 proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 {
-    unsigned int which;
+    unsigned int which = PROXY_INVALID;
     event_t ev;
     unsigned int res;
 
 #if _NP_DEBUG
     fprintf(stderr, "np: proxy_listener_t::handle_call()\n");
 #endif
-    if (!(deserialise_uint(fd, &which)))
-	return false;
-    switch (which)
+    if (deserialise_uint(fd, &which))
     {
-    case PROXY_EVENT:
+        switch (which)
+        {
+        case PROXY_EVENT:
 #if _NP_DEBUG
-	fprintf(stderr, "np: deserializing EVENT\n");
+            fprintf(stderr, "np: deserializing EVENT\n");
 #endif
-	if (!(deserialise_event(fd, &ev)))
-	    return false;    /* failed to decode */
-	*resp = merge(*resp, np::runner_t::running()->raise_event(j, &ev));
-	return true;	    /* call me again */
-    case PROXY_FINISHED:
+            if (deserialise_event(fd, &ev))
+            {
+                *resp = merge(*resp, np::runner_t::running()->raise_event(j, &ev));
+                return true;  /* call me again */
+            }
+            break;
+        case PROXY_FINISHED:
 #if _NP_DEBUG
-	fprintf(stderr, "np: deserializing FINISHED\n");
+            fprintf(stderr, "np: deserializing FINISHED\n");
 #endif
-	if (!(deserialise_uint(fd, &res)))
-	    return false;    /* failed to decode */
-	*resp = merge(*resp, (result_t)res);
-	return false;	      /* end of test, expect no more calls */
-    default:
-	fprintf(stderr,
-		"np: can't decode proxy call (which=%u)\n",
-		which);
-	return false;
+            if (deserialise_uint(fd, &res))
+            {
+                *resp = merge(*resp, (result_t)res);
+                return false;	      /* end of test, expect no more calls */
+            }
+            break;
+        default:
+            break;
+        }
     }
+
+    /* Decoding failed somehow so fail the test and tell the user */
+    *resp = merge(*resp, R_FAIL);
+    fprintf(stderr, "np: can't decode proxy call (which=%u)\n", which);
+    return false;
 }
 
 // close the namespace
