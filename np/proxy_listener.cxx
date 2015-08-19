@@ -57,7 +57,7 @@ serialise_event(int fd, const event_t *ev)
     serialise_uint(fd, ev->functype);
 }
 
-static int
+static bool
 deserialise_bytes(int fd, char *p, unsigned int len)
 {
     int r;
@@ -66,39 +66,41 @@ deserialise_bytes(int fd, char *p, unsigned int len)
     {
 	r = read(fd, p, len);
 	if (r < 0) {
-	    int e = errno;
 	    perror("np: error reading from proxy");
-	    return -e;
+	    return false;
 	}
 	if (r == 0) {
 	    fprintf(stderr, "np: unexpected EOF deserialising from proxy\n");
-	    return -EINVAL;
+	    return false;
 	}
 	len -= r;
 	p += r;
     }
-    return 0;
+    return true;
 }
 
-static int
+static bool
 deserialise_uint(int fd, unsigned int *ip)
 {
     return deserialise_bytes(fd, (char *)ip, sizeof(*ip));
 }
 
-static int
+static bool
 deserialise_string(int fd, char *buf, unsigned int maxlen)
 {
     unsigned int len;
-    int r;
-    if ((r = deserialise_uint(fd, &len)))
-	return r;
+
+    if (!(deserialise_uint(fd, &len)))
+	return false;
     if (len >= maxlen)
-	return -ENAMETOOLONG;
+    {
+	fprintf(stderr, "np: string too long to copy\n");
+	return false;
+    }
     if (!len)
     {
 	buf[0] = '\0';
-	return 0;
+	return true;
     }
     return deserialise_bytes(fd, buf, len+1);
 }
@@ -115,23 +117,23 @@ deserialise_event(int fd, event_t *ev)
     static char filename_buf[1024];
     static char function_buf[1024];
 
-    if ((r = deserialise_uint(fd, &which)))
-	return r;
-    if ((r = deserialise_string(fd, description_buf,
-				sizeof(description_buf))))
-	return r;
-    if ((r = deserialise_uint(fd, &locflags)))
-	return r;
-    if ((r = deserialise_string(fd, filename_buf,
-				sizeof(filename_buf))))
-	return r;
-    if ((r = deserialise_uint(fd, &lineno)))
-	return r;
-    if ((r = deserialise_string(fd, function_buf,
-				sizeof(function_buf))))
-	return r;
-    if ((r = deserialise_uint(fd, &ft)))
-	return r;
+    if (!(deserialise_uint(fd, &which)))
+	return false;
+    if (!(deserialise_string(fd, description_buf,
+			     sizeof(description_buf))))
+	return false;
+    if (!(deserialise_uint(fd, &locflags)))
+	return false;
+    if (!(deserialise_string(fd, filename_buf,
+			     sizeof(filename_buf))))
+	return false;
+    if (!(deserialise_uint(fd, &lineno)))
+	return false;
+    if (!(deserialise_string(fd, function_buf,
+			     sizeof(function_buf))))
+	return false;
+    if (!(deserialise_uint(fd, &ft)))
+	return false;
     ev->which = (enum events_t)which;
     ev->description = description_buf;
     ev->locflags = locflags;
@@ -139,7 +141,7 @@ deserialise_event(int fd, event_t *ev)
     ev->filename = filename_buf;
     ev->function = function_buf;
     ev->functype = (functype_t)ft;
-    return 0;
+    return true;
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -198,13 +200,11 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
     unsigned int which;
     event_t ev;
     unsigned int res;
-    int r;
 
 #if _NP_DEBUG
     fprintf(stderr, "np: proxy_listener_t::handle_call()\n");
 #endif
-    r = deserialise_uint(fd, &which);
-    if (r)
+    if (!(deserialise_uint(fd, &which)))
 	return false;
     switch (which)
     {
@@ -212,7 +212,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 #if _NP_DEBUG
 	fprintf(stderr, "np: deserializing EVENT\n");
 #endif
-	if ((r = deserialise_event(fd, &ev)))
+	if (!(deserialise_event(fd, &ev)))
 	    return false;    /* failed to decode */
 	*resp = merge(*resp, np::runner_t::running()->raise_event(j, &ev));
 	return true;	    /* call me again */
@@ -220,7 +220,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 #if _NP_DEBUG
 	fprintf(stderr, "np: deserializing FINISHED\n");
 #endif
-	if ((r = deserialise_uint(fd, &res)))
+	if (!(deserialise_uint(fd, &res)))
 	    return false;    /* failed to decode */
 	*resp = merge(*resp, (result_t)res);
 	return false;	      /* end of test, expect no more calls */
