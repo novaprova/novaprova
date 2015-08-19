@@ -105,7 +105,6 @@ deserialise_string(int fd, char **buf)
 static bool
 deserialise_event(int fd, event_t *ev)
 {
-    int r;
     unsigned int which;
     unsigned int locflags;
     unsigned int lineno;
