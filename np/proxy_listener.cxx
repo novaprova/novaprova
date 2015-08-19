@@ -87,23 +87,19 @@ deserialise_uint(int fd, unsigned int *ip)
 }
 
 static bool
-deserialise_string(int fd, char *buf, unsigned int maxlen)
+deserialise_string(int fd, char **buf)
 {
     unsigned int len;
 
     if (!(deserialise_uint(fd, &len)))
 	return false;
-    if (len >= maxlen)
-    {
-	fprintf(stderr, "np: string too long to copy\n");
-	return false;
-    }
+    *buf = (char *) malloc(sizeof(char) * (len + 1));
     if (!len)
     {
-	buf[0] = '\0';
-	return true;
+        *buf[0] = '\0';
+        return true;
     }
-    return deserialise_bytes(fd, buf, len+1);
+    return deserialise_bytes(fd, *buf, len+1);
 }
 
 static bool
@@ -114,35 +110,43 @@ deserialise_event(int fd, event_t *ev)
     unsigned int locflags;
     unsigned int lineno;
     unsigned int ft;
-    static char description_buf[1024];
-    static char filename_buf[1024];
-    static char function_buf[1024];
+    char * description = NULL;
+    char * filename = NULL;
+    char * function = NULL;
 
     if (!(deserialise_uint(fd, &which)))
 	return false;
-    if (!(deserialise_string(fd, description_buf,
-			     sizeof(description_buf))))
+    if (!(deserialise_string(fd, &description)))
 	return false;
     if (!(deserialise_uint(fd, &locflags)))
 	return false;
-    if (!(deserialise_string(fd, filename_buf,
-			     sizeof(filename_buf))))
+    if (!(deserialise_string(fd, &filename)))
 	return false;
     if (!(deserialise_uint(fd, &lineno)))
 	return false;
-    if (!(deserialise_string(fd, function_buf,
-			     sizeof(function_buf))))
+    if (!(deserialise_string(fd, &function)))
 	return false;
     if (!(deserialise_uint(fd, &ft)))
 	return false;
     ev->which = (enum events_t)which;
-    ev->description = description_buf;
+    ev->description = description;
     ev->locflags = locflags;
     ev->lineno = lineno;
-    ev->filename = filename_buf;
-    ev->function = function_buf;
+    ev->filename = filename;
+    ev->function = function;
     ev->functype = (functype_t)ft;
     return true;
+}
+
+static void
+deserialise_event_cleanup(event_t *ev)
+{
+    if (ev->description)
+        free((void *)ev->description);
+    if (ev->filename)
+        free((void *)ev->filename);
+    if (ev->function)
+        free((void *)ev->function);
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
@@ -216,8 +220,10 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
             if (deserialise_event(fd, &ev))
             {
                 *resp = merge(*resp, np::runner_t::running()->raise_event(j, &ev));
+                deserialise_event_cleanup(&ev);
                 return true;  /* call me again */
             }
+            deserialise_event_cleanup(&ev);
             break;
         case PROXY_FINISHED:
 #if _NP_DEBUG
