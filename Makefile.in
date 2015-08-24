@@ -199,7 +199,9 @@ install-local:
 	$(INSTALL_DATA) libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
 	$(MKDIRP) $(DESTDIR)$(mandir)/man3
-	$(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3
+	if [ -f doc/man/man3/np.h.3 ] ; then \
+	    $(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3 ;\
+	fi
 	$(MKDIRP) $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) novaprova.pc $(DESTDIR)$(pkgconfigdir)
 
