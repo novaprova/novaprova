@@ -179,13 +179,13 @@ doc/.doxy-stamp: Doxyfile
 	$(RM) -r doc/man doc/xml
 	doxygen
 	$(RM) doc/man/man*/_*
-	./prune-doxygen-xml.pl doc/xml
 	touch doc/.doxy-stamp
 
 # Builds a) doc tarball for upload to the website
 # and b) doc/inst directory for copying into the
 # package with a %doc directive
 docs-local: doc/.doxy-stamp
+	./prune-doxygen-xml.pl doc/xml
 	make -C doc/manual clean html
 	$(RM) -r doc/manual/_build/html/_sources
 	$(RM) -r doc-$(PACKAGE_VERSION)
