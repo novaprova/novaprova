@@ -53,7 +53,7 @@ all clean distclean check install docs:
 
 install check: all
 
-all-local: libnovaprova.a obs-metadata
+all-local: libnovaprova.a obs-metadata doc/.doxy-stamp
 
 libnovaprova_SOURCE= \
 		np.c \
@@ -171,14 +171,21 @@ define install_deliverables
 
 endef
 
-# Builds a) doc tarball for upload to the website
-# and b) doc/inst directory for copying into the
-# package with a %doc directive
-docs-local: Doxyfile
+# Do the part of the docs build that just runs Doxygen.
+# We can rely on this being present even for TOT builds.
+# The remainder of the docs builds rely on more advanced
+# tools like Sphinx and Breathe that are harder to get.
+doc/.doxy-stamp: Doxyfile
 	$(RM) -r doc/man doc/xml
 	doxygen
 	$(RM) doc/man/man*/_*
 	./prune-doxygen-xml.pl doc/xml
+	touch doc/.doxy-stamp
+
+# Builds a) doc tarball for upload to the website
+# and b) doc/inst directory for copying into the
+# package with a %doc directive
+docs-local: doc/.doxy-stamp
 	make -C doc/manual clean html
 	$(RM) -r doc/manual/_build/html/_sources
 	$(RM) -r doc-$(PACKAGE_VERSION)
@@ -199,9 +206,7 @@ install-local:
 	$(INSTALL_DATA) libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
 	$(MKDIRP) $(DESTDIR)$(mandir)/man3
-	if [ -f doc/man/man3/np.h.3 ] ; then \
-	    $(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3 ;\
-	fi
+	$(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3
 	$(MKDIRP) $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) novaprova.pc $(DESTDIR)$(pkgconfigdir)
 

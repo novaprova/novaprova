@@ -50,12 +50,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/novaprova/
 %{_libdir}/libnovaprova.a
 %{_libdir}/pkgconfig/novaprova.pc
-%doc doc/inst/*
 @ifdef release
+%doc doc/inst/*
+@endif
 %docdir %{_mandir}
 %{_mandir}/man3/np*.3*
 %{_mandir}/man3/NP*.3*
-@endif
 %doc README.md LICENSE ChangeLog
 
 %changelog
