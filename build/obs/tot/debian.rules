@@ -49,7 +49,6 @@ binary-indep: build install
 binary-arch: build install
 	dh_testdir
 	dh_testroot
-	dh_installdocs doc/inst/*
 	dh_installexamples
 	dh_installmenu
 	dh_installman
