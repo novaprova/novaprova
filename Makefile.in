@@ -53,7 +53,7 @@ all clean distclean check install docs:
 
 install check: all
 
-all-local: libnovaprova.a
+all-local: libnovaprova.a obs-metadata
 
 libnovaprova_SOURCE= \
 		np.c \
@@ -232,3 +232,23 @@ dist: docs
 	done
 	tar -chjvf $(DIST_TARBALL) $(DISTDIR)
 	$(RM) -r $(DISTDIR)
+
+#
+# The files in build/obs/{tot,rel}/ are unique in that they are *both*
+# generated *and* committed in git.  They are generated because we need
+# two sets of nearly identical files, and they are in git because
+# OpenBuildService needs them there.
+#
+OBS_SOURCE=	debian.changelog debian.control \
+		debian.rules novaprova.changes \
+		novaprova.dsc novaprova.spec
+obs-metadata:	$(addprefix build/obs/rel/,$(OBS_SOURCE)) $(addprefix build/obs/tot/,$(OBS_SOURCE))
+
+build/obs/tot/%: build/obs/% build/obs/ifdef.py
+	@mkdir -p $(@D)
+	build/obs/ifdef.py -Dtot -Dtop_of_tree < $< > $@
+
+build/obs/rel/%: build/obs/% build/obs/ifdef.py
+	@mkdir -p $(@D)
+	build/obs/ifdef.py -Drel -Drelease < $< > $@
+

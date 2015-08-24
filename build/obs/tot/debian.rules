@@ -22,9 +22,6 @@ build-stamp:
 	./configure --prefix=/usr
 	make
 	make check
-@ifdef release
-	make docs
-@endif
 	touch build-stamp
 
 clean:
