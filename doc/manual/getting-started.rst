@@ -217,7 +217,6 @@ test called `something` which calls the function.
 For example, let's create a test called `simple` which exercises
 the most basic functionality of `myatoi()`.
 
---------------------------------------------------
 .. highlight:: c
 
 ::
