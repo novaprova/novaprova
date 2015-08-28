@@ -26,7 +26,7 @@ public:
     filename_t() {}
     filename_t(const filename_t &o) : std::string(o.c_str()) {}
     filename_t(const std::string &o) : std::string(o) {}
-    filename_t(const char *s) : std::string(s) {}
+    filename_t(const char *s) : std::string(s ? s : "") {}
 
     bool is_absolute() const
     {
