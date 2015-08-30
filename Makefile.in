@@ -150,27 +150,6 @@ libnovaprova_DFILES= \
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
 
-DOC_INST_DELIVERABLES= \
-	    manual/_build/html:manual/html
-DOC_TAR_DELIVERABLES= \
-	    $(DOC_INST_DELIVERABLES) \
-	    man
-
-# $1 = source directory
-# $2 = destination directory
-# $3 = list of deliverable definitions, each either 'path' or 'src-path:dst-path'
-define install_deliverables
-	for _def in $3 ; do \
-	    _src=`echo "$$_def" | cut -d: -f1` ;\
-	    _dst=`echo "$$_def" | cut -d: -f2` ;\
-	    [ -n "$$_dst" ] || _dst=$$_src ;\
-	    echo "Copying $1/$$_src -> $2/$$_dst" ;\
-	    mkdir -p `dirname $2/$$_dst` ;\
-	    cp -r $1/$$_src $2/$$_dst ;\
-	done
-
-endef
-
 # Do the part of the docs build that just runs Doxygen.
 # We can rely on this being present even for TOT builds.
 # The remainder of the docs builds rely on more advanced
@@ -181,19 +160,22 @@ doc/.doxy-stamp: Doxyfile
 	$(RM) doc/man/man*/_*
 	touch doc/.doxy-stamp
 
-# Builds a) doc tarball for upload to the website
-# and b) doc/inst directory for copying into the
-# package with a %doc directive
+# Builds manual tarball at release time.  This tarball will be checked
+# into OBS, then built into binary release packages by the REL version
+# of novaprova.spec.  This convoluted pipeline is intended to avoid the
+# requirement to have a working version of Sphinx and Breathe on all
+# the release platforms in OBS.
+MANUAL_TARBALL=	$(PACKAGE_TARNAME)-manual-$(PACKAGE_VERSION).tar.bz2
 docs-local: doc/.doxy-stamp
 	./prune-doxygen-xml.pl doc/xml
 	make -C doc/manual clean html
 	$(RM) -r doc/manual/_build/html/_sources
-	$(RM) -r doc-$(PACKAGE_VERSION)
-	@$(call install_deliverables,doc,doc-$(PACKAGE_VERSION),$(DOC_TAR_DELIVERABLES))
-	tar -cjvf doc-$(PACKAGE_VERSION).tar.bz2 doc-$(PACKAGE_VERSION)
-	$(RM) -r doc-$(PACKAGE_VERSION)
-	$(RM) -r doc/inst
-	@$(call install_deliverables,doc,doc/inst,$(DOC_INST_DELIVERABLES))
+	$(RM) -r build
+	mkdir -p build/manual
+	cp -r doc/manual/_build/html build/manual/html
+	tar -cjvf $(MANUAL_TARBALL) build
+	$(RM) -r build
+	@echo "Manual in $(MANUAL_TARBALL)"
 
 install:
 
@@ -214,7 +196,7 @@ clean-local:
 	$(RM) libnovaprova.a $(libnovaprova_OBJS)
 
 distclean-local: clean-local
-	$(RM) -r doc/man doc/inst
+	$(RM) -r doc/man
 	$(RM) -r $(depdir)
 	$(RM) novaprova.pc
 	$(RM) config.status configure Makefile Doxyfile

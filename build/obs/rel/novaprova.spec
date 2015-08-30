@@ -5,6 +5,7 @@ Release: 1
 License: GPL
 Group: Development/C
 Source: http://sourceforge.net/projects/novaprova/files/novaprova-%{version}.tar.gz
+Source1: novaprova-manual-%{version}.tar.bz2
 Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
 Requires: valgrind, binutils-devel
@@ -26,7 +27,7 @@ test frameworks for languages such as Java or Perl.
 %endif
 
 %prep
-%setup -q
+%setup -q -b 1
 
 %build
 autoreconf -iv
@@ -48,7 +49,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/novaprova/
 %{_libdir}/libnovaprova.a
 %{_libdir}/pkgconfig/novaprova.pc
-%doc doc/inst/*
+%doc build/manual
 %docdir %{_mandir}
 %{_mandir}/man3/np*.3*
 %{_mandir}/man3/NP*.3*
