@@ -8,14 +8,18 @@ if [ ! -f $repo ] ; then
     cat <<EOM >/etc/yum.repos.d/epel-bootstrap.repo
 [epel]
 name=Bootstrap EPEL
-mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=epel-\\\$releasever&arch=\\\$basearch
+mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=epel-\$releasever&arch=\$basearch
 failovermethod=priority
 enabled=0
 gpgcheck=0
 EOM
 
-    yum --enablerepo=epel -y install epel-release
+    yum --enablerepo=epel -y install epel-release || exit 1
     rm -f /etc/yum.repos.d/epel-bootstrap.repo
+    if [ ! -f $repo ] ; then
+	echo "Failed to bootstrap EPEL: no such file $repo"
+	exit 1
+    fi
 
     # Horrible hack no.1 to work around a broken mirror
     (
