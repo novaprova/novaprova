@@ -55,7 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libnovaprova.a
 %{_libdir}/pkgconfig/novaprova.pc
 @ifdef release
-%doc tmp.manual/manual
+%doc ../novaprova-manual-%{version}/manual
 @endif
 %docdir %{_mandir}
 %{_mandir}/man3/np*.3*

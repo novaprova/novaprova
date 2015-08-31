@@ -166,15 +166,16 @@ doc/.doxy-stamp: Doxyfile
 # requirement to have a working version of Sphinx and Breathe on all
 # the release platforms in OBS.
 MANUAL_TARBALL=	$(PACKAGE_TARNAME)-manual-$(PACKAGE_VERSION).tar.bz2
+MANUAL_DIR=     $(PACKAGE_TARNAME)-manual-$(PACKAGE_VERSION)
 docs-local: doc/.doxy-stamp
 	./prune-doxygen-xml.pl doc/xml
 	make -C doc/manual clean html
 	$(RM) -r doc/manual/_build/html/_sources
-	$(RM) -r tmp.manual
-	mkdir -p tmp.manual/manual
-	cp -r doc/manual/_build/html tmp.manual/manual/html
-	tar -cjvf $(MANUAL_TARBALL) tmp.manual
-	$(RM) -r tmp.manual
+	$(RM) -r $(MANUAL_DIR)
+	mkdir -p $(MANUAL_DIR)/manual
+	cp -r doc/manual/_build/html $(MANUAL_DIR)/manual/html
+	tar -cjvf $(MANUAL_TARBALL) $(MANUAL_DIR)
+	$(RM) -r $(MANUAL_DIR)
 	@echo "Manual in $(MANUAL_TARBALL)"
 
 install:
