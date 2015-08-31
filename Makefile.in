@@ -170,11 +170,11 @@ docs-local: doc/.doxy-stamp
 	./prune-doxygen-xml.pl doc/xml
 	make -C doc/manual clean html
 	$(RM) -r doc/manual/_build/html/_sources
-	$(RM) -r build
-	mkdir -p build/manual
-	cp -r doc/manual/_build/html build/manual/html
-	tar -cjvf $(MANUAL_TARBALL) build
-	$(RM) -r build
+	$(RM) -r tmp.manual
+	mkdir -p tmp.manual/manual
+	cp -r doc/manual/_build/html tmp.manual/manual/html
+	tar -cjvf $(MANUAL_TARBALL) tmp.manual
+	$(RM) -r tmp.manual
 	@echo "Manual in $(MANUAL_TARBALL)"
 
 install:

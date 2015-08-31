@@ -49,7 +49,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/novaprova/
 %{_libdir}/libnovaprova.a
 %{_libdir}/pkgconfig/novaprova.pc
-%doc build/manual
+%doc tmp.manual/manual
 %docdir %{_mandir}
 %{_mandir}/man3/np*.3*
 %{_mandir}/man3/NP*.3*
