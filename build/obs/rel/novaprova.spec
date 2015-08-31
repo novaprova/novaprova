@@ -35,7 +35,6 @@ autoreconf -iv
 
 make all
 make V=1 check
-make docs
 
 %install
 rm -rf $RPM_BUILD_ROOT

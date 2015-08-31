@@ -41,9 +41,6 @@ autoreconf -iv
 
 make all
 make V=1 check
-@ifdef release
-make docs
-@endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
