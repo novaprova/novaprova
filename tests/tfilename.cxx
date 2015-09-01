@@ -146,6 +146,14 @@ main(int argc, char **argv __attribute__((unused)))
     TESTCASE("./../.././../foo/bar", "../../../foo/bar");
 #undef TESTCASE
 
+    // Check that passing a null pointer when creating
+    // a filename_t object doesn't cause a crash.
+    char *null_string = NULL;
+    BEGIN("null pointer passed to constructor");
+    np::util::filename_t _in(null_string);
+    CHECK(!strcmp(_in.c_str(), ""));
+    END;
+
     return 0;
 }
 
