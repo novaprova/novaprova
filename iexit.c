@@ -14,20 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "np/util/common.hxx"
+#include "np_priv.h"
 #include "except.h"
 #include <stdlib.h>
 #include <unistd.h>
 
-void exit(int status)
+namespace np {
+using namespace std;
+
+static void mock_exit(int status)
 {
-    if (__np_exceptstate.catching)
-    {
-	static char cond[64];
-	snprintf(cond, sizeof(cond), "exit(%d)", status);
-	np_throw(np::event_t(np::EV_EXIT, cond).with_stack());
-    }
-    _exit(status);
+    static char cond[64];
+    snprintf(cond, sizeof(cond), "exit(%d)", status);
+    np_throw(np::event_t(np::EV_EXIT, cond).with_stack());
 }
 
+void init_exit_intercepts(testnode_t *tn)
+{
+    tn->add_mock((np::spiegel::addr_t)&exit,
+		 "exit",
+		 (np::spiegel::addr_t)&mock_exit);
+}
 
+// close the namespace
+};

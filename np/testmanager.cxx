@@ -283,11 +283,13 @@ testmanager_t::discover_functions()
 }
 
 extern void init_syslog_intercepts(testnode_t *);
+extern void init_exit_intercepts(testnode_t *);
 
 void
 testmanager_t::setup_builtin_intercepts()
 {
     init_syslog_intercepts(root_);
+    init_exit_intercepts(root_);
 }
 
 // close the namespace
