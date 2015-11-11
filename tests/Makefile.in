@@ -21,9 +21,13 @@ libbfd_LIBS=	    @libbfd_LIBS@
 CC=		gcc
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
+CCOVFLAGS=
+ifneq ($(COVERAGE),)
+CCOVFLAGS:=	--coverage
+endif
 CDEFINES=	$(platform_CFLAGS)
 CWARNFLAGS=	-Wall -Wextra -Wno-unused-function -Wno-unused-parameter
-CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) \
+CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CCOVFLAGS) \
 		$(CDEFINES) $(INCLUDES)
 
 CXX=		g++
