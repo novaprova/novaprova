@@ -153,7 +153,7 @@ libnovaprova_DFILES= \
 
 %.o: %.c
 	@mkdir -p $(dir $(depdir)/$(patsubst %.c,%.d,$<))
-	$(COMPILE.c) -MMD -MF $(depdir)/$(patsubst %.c,%.d,$<) -MT $@ -o $@ $<
+	$(COMPILE.c) -MMD -MF $(depdir)/$(patsubst %.c,%.d,$<) -MT $@ -o $@ -x c++ $<
 
 %.s: %.cxx
 	$(CXX) $(CXXFLAGS) -S -o $@ $<
