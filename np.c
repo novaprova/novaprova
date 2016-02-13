@@ -54,7 +54,7 @@ be_valground(void)
     fprintf(stderr, "[%s] np: starting valgrind\n",
 	    np::util::rel_timestamp());
 
-    p = newargv = (const char **)np::util::xmalloc(sizeof(char *) * (argc+6));
+    p = newargv = (const char **)np::util::xmalloc(sizeof(char *) * (argc+7));
     *p++ = VALGRIND_BINARY;
     *p++ = "-q";
     *p++ = "--tool=memcheck";
@@ -62,6 +62,7 @@ be_valground(void)
     *p++ = "--gen-suppressions=all";
     *p++ = "--suppressions=" _NP_VALGRIND_SUPPRESSION_FILE;
 #endif
+    *p++ = "--sym-offsets=yes";
     while (*argv)
 	*p++ = *argv++;
 
