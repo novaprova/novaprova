@@ -21,7 +21,7 @@ Linux)
     ncpus=$(grep '^processor' /proc/cpuinfo | wc -l)
     ;;
 Darwin)
-    ncpus=$(sysctl hw.ncpu)
+    ncpus=$(sysctl -n hw.ncpu)
     ;;
 *)
     echo "$0: cannot determine available parallelism on this platform" 1>&2
