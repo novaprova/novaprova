@@ -15,7 +15,10 @@
  */
 #include <np.h>
 #include <stdio.h>
+#include <stdlib.h>
+#if HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 
 void do_a_small_overrun(char *buf)
 {

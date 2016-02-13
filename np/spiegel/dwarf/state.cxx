@@ -145,12 +145,12 @@ state_t::linkobj_t::map_sections()
 
 	if (!is_separate)
 	{
-	    bool found = map_from_system(sections_[idx]);
+	    if (map_from_system(sections_[idx]))
 #if _NP_DEBUG
-	    if (found)
 		fprintf(stderr, "np: found system mapping for section %s at %p\n",
-			secnames.to_name(idx), sm->get_map());
+			secnames.to_name(idx), sm->get_map())
 #endif
+		;
 	}
     }
 
