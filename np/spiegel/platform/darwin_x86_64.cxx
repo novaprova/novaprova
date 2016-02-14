@@ -121,12 +121,13 @@ struct frame
 {
     /* fake stack frame for the original function
      *
-     *  - saved RBP (for intercept type PUSHRBP only, the result of
-     *		 the simulated push %rbp instruction).
-     *  - return address
+     *  [0] either the saved RBP (for intercept type PUSHRBP only, the
+     *      result of the simulated push %rbp instruction), or an unused
+     *      slot to preserve the ABI-mandated 16B stack alignment.
+     *  [1] return address
      *  <arg0..arg5 passed in registers>
-     *  - arg6
-     *  - arg7...
+     *  [2] arg6
+     *  [3] arg7...
      */
     unsigned long stack[28];
     /* any data that we need to keep safe past the call to the
@@ -139,9 +140,9 @@ struct frame
 
 static unsigned long intercept_tramp(void)
 {
-    struct frame frame;
+    struct frame frame __attribute__((aligned(0x10)));
     unsigned long parent_size;
-    int nstack = 0;
+    unsigned long *new_rsp;
 
     /* address of the breakpoint insn */
     frame.addr = tramp_uc.__mcontext_data.__ss.__rip - (using_int3 ? 1 : 0);
@@ -213,18 +214,23 @@ static unsigned long intercept_tramp(void)
      *
      * "Trust me, I know what I'm doing."
      */
+    new_rsp = &frame.stack[2];
     switch (tramp_intstate->type_)
     {
     case intstate_t::PUSHBP:
 	np_trace("intercept_tramp: simulating pushbp\n");
+	/* simulate the callq insn pushing the return address */
+	*(--new_rsp) = (unsigned long)__np_intercept_tramp1;
 	/* simulate the push %rbp insn which the breakpoint replaced */
-	frame.stack[nstack++] = (unsigned long)tramp_uc.__mcontext_data.__ss.__rbp;
+	*(--new_rsp) = (unsigned long)tramp_uc.__mcontext_data.__ss.__rbp;
 	/* setup to start executing the insn after the breakpoint */
 	tramp_uc.__mcontext_data.__ss.__rip = frame.addr + 1;
 	break;
 
     case intstate_t::OTHER:
 	np_trace("intercept_tramp: replacing original instruction\n");
+	/* simulate the callq insn pushing the return address */
+	*(--new_rsp) = (unsigned long)__np_intercept_tramp0;
 	/* replace the breakpoint with the original insn */
 	*(unsigned char *)frame.addr = tramp_intstate->orig_;
 	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
@@ -237,30 +243,35 @@ static unsigned long intercept_tramp(void)
     }
 
     /*
-     * Setup the ucontext so the called function will return to the
+     * We setup the ucontext so the called function will return to the
      * start of the __np_intercept_after() function.  On Linux/gcc we
      * can get away with having that code at the end of this function
      * with a label, but on Darwin/clang the compiler seems to insist on
      * inserting instructions which trash %rax between the label and the
      * first __asm__ statement following it, which trashes the return
-     * value from the original function.
+     * value from the original function.  So we return to some handcrafted
+     * trampoline code, or rather one of two trampolines depending on
+     * whether the simulated push %rbp insn needs to be undone.
      */
-    if (nstack)
-	frame.stack[nstack++] = (unsigned long)__np_intercept_tramp1; /* return address */
-    else
-	frame.stack[nstack++] = (unsigned long)__np_intercept_tramp0; /* return address */
 
     /*
      * Copy enough of the original stack frame to make it look like
      * we have the original arguments from the seventh onwards.
      */
+    np_trace("intercept_tramp: setting up new input area ");
+    np_trace_hex((unsigned long)&frame.stack[2]);
+    np_trace("\n");
     parent_size = tramp_uc.__mcontext_data.__ss.__rbp -
 		  (tramp_uc.__mcontext_data.__ss.__rsp+8);
-    memcpy(&frame.stack[nstack],
+    memcpy(&frame.stack[2],
 	   (void *)(tramp_uc.__mcontext_data.__ss.__rsp+8),
-	   MIN(parent_size, sizeof(frame.stack)-nstack*sizeof(unsigned long)));
+	   MIN(parent_size, sizeof(frame.stack)-2*sizeof(unsigned long)));
+
     /* setup the ucontext's RSP register to point at the new stack frame */
-    tramp_uc.__mcontext_data.__ss.__rsp = (unsigned long)&frame;
+    np_trace("intercept_tramp: setting up new %rsp ");
+    np_trace_hex((unsigned long)new_rsp);
+    np_trace("\n");
+    tramp_uc.__mcontext_data.__ss.__rsp = (unsigned long)new_rsp;
 
     /*
      * Call the BEFORE method.  This call happens late enough that
@@ -273,7 +284,7 @@ static unsigned long intercept_tramp(void)
      * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
     np_trace("intercept_tramp: dispatching before method\n");
-    frame.call.stack_ = frame.stack+nstack;
+    frame.call.stack_ = &frame.stack[2];
     frame.call.mcontext_ = &tramp_uc.__mcontext_data;
     intercept_t::dispatch_before(frame.addr, frame.call);
     if (frame.call.skip_)

@@ -37,6 +37,13 @@ static NP_USED void test_mocking(void)
 
 int mock_bird_tequila(int x)
 {
+#ifdef _NP_x86_64
+    /* check that the ABI-mandated stack alignment is correct */
+    fprintf(stderr, "checking stack alignment\n");
+    unsigned long rbp;
+    __asm__ volatile("movq %%rbp, %0" : "=r"(rbp));
+    NP_ASSERT((rbp & 0xf) == 0);
+#endif
     fprintf(stderr, "mocked bird_tequila(%d)\n", x);
     called = 2;
     return x*2;
