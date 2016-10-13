@@ -5,7 +5,9 @@ Output Formats
 NovaProva supports two different test result output formats.  You
 can select between these using the ``--format`` option to the
 test executable, or by calling ``np_set_output_format()`` if you
-write your own ``main()`` routine.
+write your own ``main()`` routine.  If multiple formats are required
+then provide a comma separated list when using the ``--format``
+option or call ``np_set_output_format()`` multiple times.
 
 ``text``
     A simple text output format, designed to be read by humans.  Output
