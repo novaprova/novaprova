@@ -33,7 +33,7 @@ main(int argc, char **argv)
     int ec = 0;
     np_plan_t *plan = 0;
     np_runner_t *runner = 0;
-    const char *output_format = 0;
+    char *output_formats = 0;
     enum { UNKNOWN, RUN, LIST } mode = UNKNOWN;
     int concurrency = -1;
     int c;
@@ -51,7 +51,7 @@ main(int argc, char **argv)
 	switch (c)
 	{
 	case 'f':
-	    output_format = optarg;
+	    output_formats = strdup(optarg);
 	    break;
 	case 'j':
 	    if (!strcasecmp(optarg, "max"))
@@ -85,13 +85,20 @@ main(int argc, char **argv)
     case UNKNOWN:
     case RUN:	    /* Run the specified (or all the discovered) tests */
 	/* Set the output format */
-	if (output_format)
+	if (output_formats)
 	{
-	    if (!np_set_output_format(runner, output_format))
-	    {
-		fprintf(stderr, "np: unknown output format '%s'\n", output_format);
-		exit(1);
-	    }
+            char *format = strtok(output_formats, ",");
+            while (format)
+            {
+		if (!np_set_output_format(runner, format))
+		{
+		    fprintf(stderr, "np: unknown output format '%s'\n", format);
+		    exit(1);
+		}
+		format = strtok(NULL, ",");
+            }
+            free(output_formats);
+
 	}
 
 	/* Set how many tests will be run in parallel */
