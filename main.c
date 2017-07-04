@@ -28,6 +28,14 @@ usage(const char *argv0)
     exit(1);
 }
 
+// Codes returned from getopt_long() for options which have *only* long
+// forms.  These are integers outside of the 7bit ASCII range so they do
+// not clash with the characters used for short options.
+enum opt_codes_t
+{
+    OPT_HELP=256
+};
+
 int
 main(int argc, char **argv)
 {
@@ -43,6 +51,7 @@ main(int argc, char **argv)
 	{ "format", required_argument, NULL, 'f' },
 	{ "jobs", required_argument, NULL, 'j' },
 	{ "list", no_argument, NULL, 'l' },
+	{ "help", no_argument, NULL, OPT_HELP },
 	{ NULL, 0, NULL, 0 },
     };
 
@@ -63,7 +72,10 @@ main(int argc, char **argv)
 	case 'l':
 	    mode = LIST;
 	    break;
-	default:
+        case OPT_HELP:
+        default:
+            // note, for unknown options getopt_long() has already
+            // printed a message about the option being unknown..
 	    usage(argv[0]);
 	}
     }
