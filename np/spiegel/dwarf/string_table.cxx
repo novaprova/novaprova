@@ -45,18 +45,22 @@ string_table_t::to_name(int i) const
     else
 	name = names_[i];
 
-    static char buf[256];
+    enum { BUF_LEN=256, NUM_BUFS=8 };
+    static char bufs[NUM_BUFS][BUF_LEN];
+    /* TODO: make this atomic when we're thread-safe */
+    static unsigned int current_buf = 0;
+    char *buf = bufs[(current_buf++) % NUM_BUFS];
     if (prefix_len_)
     {
 	if (name)
-	    snprintf(buf, sizeof(buf), "%s%s", prefix_, name);
+	    snprintf(buf, BUF_LEN, "%s%s", prefix_, name);
 	else
-	    snprintf(buf, sizeof(buf), "%s0x%x", prefix_, (unsigned)i);
+	    snprintf(buf, BUF_LEN, "%s0x%x", prefix_, (unsigned)i);
 	name = buf;
     }
     else if (!name)
     {
-	snprintf(buf, sizeof(buf), "0x%x", (unsigned)i);
+	snprintf(buf, BUF_LEN, "0x%x", (unsigned)i);
 	name = buf;
     }
     return name;
