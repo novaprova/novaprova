@@ -60,7 +60,7 @@ walker_t::read_entry()
 	    return RE_EOF;   // end of subtree in scope
 	level_--;
 #if DEBUG_WALK
-	printf("\n# XXX [%u] %s:%d level=%u return 0\n",
+	fprintf(stderr, "\n# XXX [%u] %s:%d level=%u return 0\n",
 	       id_, __FUNCTION__, __LINE__, level_);
 #endif
 	return RE_EOL;
@@ -92,10 +92,10 @@ walker_t::read_entry()
 	level_++;
 
 #if DEBUG_WALK
-    printf("\n# XXX [%u]%s:%d level=%u entry={tag=%s level=%u offset=0x%x} return 1\n",
+    fprintf(stderr, "\n# XXX [%u]%s:%d level=%u entry={tag=%s level=%u offset=0x%x} return 1\n",
 	   id_, __FUNCTION__, __LINE__,
 	   level_,
-	   tagnames.to_name(entry_->get_tag()),
+	   tagnames.to_name(entry_.get_tag()),
 	   entry_.get_level(),
 	   entry_.get_offset());
 #endif
@@ -473,17 +473,18 @@ walker_t::get_path() const
 
 #if DEBUG_WALK
 #define BEGIN \
-    printf("\n# [%u] XXX %s:%d level=%u entry.level=%u\n", \
+    fprintf(stderr, "\n# [%u] XXX %s:%d level=%u entry.level=%u\n", \
 	   id_, __FUNCTION__, __LINE__, level_, entry_.get_level());
 #define RETURN(ret) \
     do { \
 	const entry_t *_ret = (ret); \
-	printf("\n# XXX [%u]%s:%d r=%d level %u entry.level=%u return %p\n", \
+	fprintf(stderr, "\n# XXX [%u]%s:%d r=%d level %u entry.level=%u return %p\n", \
 	       id_, __FUNCTION__, __LINE__, r, \
 	       level_, entry_.get_level(), _ret); \
 	return _ret; \
     } while(0)
 #else
+#define BEGIN
 #define RETURN(ret) \
     return (ret)
 #endif
@@ -495,6 +496,7 @@ walker_t::get_path() const
 const entry_t *
 walker_t::move_preorder()
 {
+    BEGIN
     int r;
     do
     {
@@ -511,6 +513,7 @@ walker_t::move_next()
     if (sib && sib->type == value_t::T_REF)
 	return move_to(sib->val.ref);
 
+    BEGIN
     unsigned target_level = entry_.get_level();
     int r = 0;
     for (;;)
@@ -533,6 +536,7 @@ walker_t::move_next()
 const entry_t *
 walker_t::move_down()
 {
+    BEGIN
     int r = 0;
     if (!entry_.has_children())
 	RETURN(0);
@@ -543,6 +547,7 @@ walker_t::move_down()
 const entry_t *
 walker_t::move_to(reference_t ref)
 {
+    BEGIN
     seek(ref);
     int r = read_entry();
     RETURN(r == RE_OK ? &entry_ : 0);
@@ -557,6 +562,7 @@ walker_t::move_up()
     return 0;
 }
 
+#undef BEGIN
 #undef RETURN
 
 // close namespaces
