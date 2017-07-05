@@ -55,6 +55,10 @@ public:
     {
 	return end_ - p_;
     }
+    unsigned long get_length() const
+    {
+	return end_ - base_;
+    }
 
     bool seek(size_t n)
     {

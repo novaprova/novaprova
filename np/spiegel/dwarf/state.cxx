@@ -733,6 +733,47 @@ state_t::dump_abbrevs()
     printf("\n\n");
 }
 
+compile_unit_t *
+state_t::get_compile_unit_by_offset(uint32_t loindex, np::spiegel::offset_t off) const
+{
+    vector<compile_unit_t*>::const_iterator i;
+    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    {
+        compile_unit_t *cu = *i;
+        if (loindex == cu->get_link_object_index() &&
+            cu->get_start_offset() <= off &&
+            off < cu->get_end_offset())
+            return cu;
+    }
+    return 0;
+}
+
+state_t::compile_unit_offset_tuple_t
+state_t::resolve_reference(reference_t ref) const
+{
+    compile_unit_t *cu = 0;
+    np::spiegel::offset_t off = 0;
+    switch (ref.type)
+    {
+    case reference_t::REF_CU:
+        cu = compile_units_[ref.cu];
+        off = ref.offset;
+        break;
+    case reference_t::REF_ADDR:
+        fprintf(stderr, "np: XXX resolving REF_ADDR\n");
+        cu = get_compile_unit_by_offset(ref.cu, ref.offset);
+        if (cu)
+            off = ref.offset - cu->get_start_offset();
+        break;
+    default:
+        fprintf(stderr,
+                "np: WTF? trying to resolve reference of type %d, not implemented\n",
+                (int)ref.type);
+        break;
+    }
+    return compile_unit_offset_tuple_t(cu, off);
+}
+
 void
 state_t::insert_ranges(const walker_t &w, reference_t funcref)
 {

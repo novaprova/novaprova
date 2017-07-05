@@ -18,12 +18,12 @@
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
-const reference_t reference_t::null = { 0, 0 };
+const reference_t reference_t::null = { REF_NULL, 0, 0 };
 
 string reference_t::as_string() const
 {
     char buf[64];
-    snprintf(buf, sizeof(buf), "(ref){0x%x,0x%x}", cu, offset);
+    snprintf(buf, sizeof(buf), "(ref){%d,0x%x,0x%llx}", (int)type, cu, (unsigned long long)offset);
     return buf;
 }
 

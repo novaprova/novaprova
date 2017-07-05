@@ -26,7 +26,8 @@ using namespace np::util;
 bool
 compile_unit_t::read_header(reader_t &r)
 {
-    reader_ = r;	    // sample offset of start of header
+    reader_ = r;
+    offset_ = r.get_offset(); // sample offset of start of header
 
 #if _NP_DEBUG
     fprintf(stderr, "np: DWARF compile unit header at "
