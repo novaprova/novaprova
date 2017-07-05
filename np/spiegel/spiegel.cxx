@@ -414,9 +414,10 @@ compile_unit_t::get_functions()
 const char *
 compile_unit_t::get_executable() const
 {
-    np::spiegel::dwarf::compile_unit_t *cu =
-	np::spiegel::dwarf::state_t::instance()->get_compile_unit(ref_);
-    return cu->get_executable();
+    np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
+    np::spiegel::dwarf::state_t::compile_unit_offset_tuple_t res = state->resolve_reference(ref_);
+    assert(res._cu);
+    return res._cu->get_executable();
 }
 
 void
@@ -472,8 +473,9 @@ const compile_unit_t *
 member_t::get_compile_unit() const
 {
     np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
-    np::spiegel::dwarf::compile_unit_t *dcu = state->get_compile_unit(ref_);
-    return _cacher_t::make_compile_unit(dcu->make_root_reference());
+    np::spiegel::dwarf::state_t::compile_unit_offset_tuple_t res = state->resolve_reference(ref_);
+    assert(res._cu);
+    return _cacher_t::make_compile_unit(res._cu->make_root_reference());
 }
 
 string
@@ -642,7 +644,11 @@ bool describe_address(addr_t addr, class location_t &loc)
 	return false;
 
     if (curef == np::spiegel::dwarf::reference_t::null)
-	curef = state->get_compile_unit(funcref)->make_root_reference();
+    {
+        np::spiegel::dwarf::state_t::compile_unit_offset_tuple_t res = state->resolve_reference(funcref);
+        assert(res._cu);
+	curef = res._cu->make_root_reference();
+    }
     loc.compile_unit_ = _cacher_t::make_compile_unit(curef);
     loc.function_ = _cacher_t::make_function(funcref);
     return true;

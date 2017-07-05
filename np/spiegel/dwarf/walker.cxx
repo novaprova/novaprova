@@ -34,9 +34,11 @@ walker_t::get_section_contents(uint32_t sec) const
 void
 walker_t::seek(reference_t ref)
 {
-    compile_unit_ = state_t::instance()->get_compile_unit(ref);
+    state_t::compile_unit_offset_tuple_t res = state_t::instance()->resolve_reference(ref);
+    compile_unit_ = res._cu;
+    assert(compile_unit_);
     reader_ = compile_unit_->get_contents();
-    reader_.seek(ref.offset);
+    reader_.seek(res._off);
     level_ = 0;
 }
 
@@ -214,6 +216,18 @@ walker_t::read_attributes()
 			value_t::make_ref(compile_unit_->make_reference(off)));
 		break;
 	    }
+	case DW_FORM_ref_addr:
+	    {
+                // Note that DW_FORM_ref_addr is poorly named in the
+                // standard, it's actually encoded as a file offset
+                // which will be 4B or 8B depending on the file format
+		np::spiegel::offset_t off = 0;
+		if (!reader_.read_offset(off))
+		    return RE_EOF;
+		entry_.add_attribute(i->name,
+                        value_t::make_ref(reference_t::make_addr(compile_unit_->get_link_object_index(), off)));
+		break;
+	    }
 	case DW_FORM_string:
 	    {
 		const char *v;
@@ -375,6 +389,10 @@ walker_t::skip_attributes()
 	    break;
 	case DW_FORM_ref8:
 	    if (!reader_.skip_u64())
+		return EOF;
+	    break;
+	case DW_FORM_ref_addr:
+	    if (!reader_.skip_offset())
 		return EOF;
 	    break;
 	case DW_FORM_string:

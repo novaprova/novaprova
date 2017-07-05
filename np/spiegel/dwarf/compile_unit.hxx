@@ -53,6 +53,10 @@ public:
 
     uint32_t get_index() const { return index_; }
     uint32_t get_link_object_index() const { return loindex_; }
+    // return the file offset of the first byte of the compile unit on the disk
+    np::spiegel::offset_t get_start_offset() const { return offset_; }
+    // return the file offset one byte beyond the last byte of the compile unit on the disk
+    np::spiegel::offset_t get_end_offset() const { return offset_ + reader_.get_length(); }
     const char *get_executable() const;
     const section_t *get_section(uint32_t) const;
     uint16_t get_version() const { return version_; }
@@ -60,17 +64,15 @@ public:
 
     reference_t make_reference(uint32_t off) const
     {
-	reference_t ref;
-	ref.cu = index_;
-	ref.offset = off;
-	return ref;
+        return reference_t::make_cu(index_, off);
     }
     reference_t make_root_reference() const
     {
-	reference_t ref;
-	ref.cu = index_;
-	ref.offset = header_length;
-	return ref;
+        return reference_t::make_cu(index_, header_length);
+    }
+    reference_t make_addr_reference(np::spiegel::offset_t off) const
+    {
+        return reference_t::make_addr(loindex_, off);
     }
 
     reader_t get_contents() const
@@ -91,6 +93,7 @@ private:
     uint16_t version_;
     bool is64_;		    // new 64b format introduced in DWARF3
     reader_t reader_;	    // for whole including header
+    np::spiegel::offset_t offset_;
     uint32_t abbrevs_offset_;
     std::vector<abbrev_t*> abbrevs_;
 };
