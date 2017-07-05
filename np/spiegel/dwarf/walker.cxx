@@ -356,20 +356,8 @@ walker_t::skip_attributes()
 		return EOF;
 	    break;
 	case DW_FORM_addr:
-	    if (sizeof(unsigned long) == 4)
-	    {
-		if (!reader_.skip_u32())
-		    return EOF;
-	    }
-	    else if (sizeof(unsigned long) == 8)
-	    {
-		if (!reader_.skip_u64())
-		    return EOF;
-	    }
-	    else
-	    {
-		fatal("Strange addrsize %u", (unsigned)sizeof(unsigned long));
-	    }
+            if (!reader_.skip_addr())
+                return EOF;
 	    break;
 	case DW_FORM_flag:
 	    if (!reader_.skip_u8())
