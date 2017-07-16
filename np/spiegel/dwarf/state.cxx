@@ -157,8 +157,8 @@ state_t::linkobj_t::map_sections()
     if (!ndwarf)
     {
 	/* no DWARF sections at all */
-	fprintf(stderr, "np: WARNING: no DWARF information found for %s\n", filename_);
-	r = false;
+	fprintf(stderr, "np: WARNING: no DWARF information found for %s, ignoring\n", filename_);
+	r = true;
 	goto out;
     }
 
@@ -420,8 +420,10 @@ state_t::read_linkobjs()
 	    continue;
 #endif
 
-	if (!(*i)->map_sections() ||
-	    !read_compile_units(*i))
+	if (!(*i)->map_sections())
+	    return false;
+        /* note map_sections() can succeed but result in no sections */
+        if ((*i)->has_sections() && !read_compile_units(*i))
 	    return false;
     }
     return true;

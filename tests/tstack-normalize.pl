@@ -22,6 +22,7 @@ while (<>)
 {
     chomp;
 
+    next if m/no DWARF information found.*libxml2/;
     s/0x[0-9a-fA-F]{4,16}/0xXXX/;
     print "$_\n";
 }
