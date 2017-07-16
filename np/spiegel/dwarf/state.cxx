@@ -760,7 +760,9 @@ state_t::resolve_reference(reference_t ref) const
         off = ref.offset;
         break;
     case reference_t::REF_ADDR:
-        fprintf(stderr, "np: XXX resolving REF_ADDR\n");
+#if _NP_DEBUG
+        fprintf(stderr, "np: Resolving REF_ADDR (cu=%u, offset=%llu)\n", ref.cu, ref.offset);
+#endif
         cu = get_compile_unit_by_offset(ref.cu, ref.offset);
         if (cu)
             off = ref.offset - cu->get_start_offset();
