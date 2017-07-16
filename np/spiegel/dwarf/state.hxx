@@ -107,6 +107,7 @@ private:
 	std::vector<np::spiegel::mapping_t> plts_;
 
 	bool is_in_plt(np::spiegel::addr_t addr) const;
+        bool has_sections() const { return sections_[DW_sec_info].get_size() > 0; }
 	bool map_from_system(mapping_t &m) const;
 	bool map_sections();
 	void unmap_sections();

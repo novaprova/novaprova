@@ -30,7 +30,7 @@ sub norm_accept()
     return 1 if m/^FAIL /;
     return 1 if m/^N\/A /;
     return 1 if m/^EXIT /;
-    return 1 if m/^np: WARNING:/;
+    return 1 if m/^np: WARNING:/ && !m/no DWARF information found.*libxml2/;
     return 1 if m/^\?\?\? /;
     return 1 if m/^==\d+== [A-Z]/;
     return 0;

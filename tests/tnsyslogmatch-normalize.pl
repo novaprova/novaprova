@@ -23,6 +23,7 @@ while (<>)
     chomp;
 
     next unless m/^(EVENT|MSG|PASS|FAIL|N\/A|EXIT|\?\?\?|np: WARNING:) /;
+    next if m/no DWARF information found.*libxml2/;
     s/: brackets \(\[ \]\) not balanced/: Unmatched [ or [^/;
     print "$_\n";
 }
