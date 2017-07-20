@@ -27,7 +27,7 @@ void do_a_small_overrun(char *buf)
 
 #if 0
 /* This generates a vgcore, which is inconvenient */
-static void test_stack_overrun_small(void)
+static NP_USED void test_stack_overrun_small(void)
 {
     char buf[32];
 
@@ -37,7 +37,7 @@ static void test_stack_overrun_small(void)
 }
 #endif
 
-static void test_heap_overrun_small(void)
+static NP_USED void test_heap_overrun_small(void)
 {
     char *buf = malloc(32);
 
@@ -49,7 +49,7 @@ static void test_heap_overrun_small(void)
 
 #if 0
 /* Valgrind doesn't detect overruns of static buffers */
-static void test_static_overrun_small(void)
+static NP_USED void test_static_overrun_small(void)
 {
     static char buf[32];
 

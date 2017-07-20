@@ -21,7 +21,7 @@ int function_one(int *ip)
     return 42 + *ip;
 }
 
-static void test_uninitialized_int(void)
+static NP_USED void test_uninitialized_int(void)
 {
     int never_initted;
     int x = function_one(&never_initted);
