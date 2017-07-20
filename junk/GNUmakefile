@@ -1,4 +1,5 @@
-VALGRIND_PREFIX=/usr/local/Cellar/valgrind/3.10.0
+# VALGRIND_PREFIX=/usr/local/Cellar/valgrind/3.10.0
+VALGRIND_PREFIX=/usr/local
 
 CFLAGS=	-g
 CXXFLAGS=   -g
