@@ -58,7 +58,7 @@ private:
     static testmanager_t *instance_;
 
     std::vector<classifier_t*> classifiers_;
-    spiegel::dwarf::state_t *spiegel_;
+    spiegel::state_t *spiegel_;
     testnode_t *root_;
     testnode_t *common_;	// nodes from filesystem root down to root_
 };

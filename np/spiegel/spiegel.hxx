@@ -33,6 +33,9 @@ class state_t;
 class entry_t;
 };
 
+class _factory_t;
+class state_t;
+
 #if SPIEGEL_DYNAMIC
 struct value_t
 {
@@ -65,13 +68,15 @@ class function_t;
 class _cacheable_t
 {
 public:
-    _cacheable_t(np::spiegel::dwarf::reference_t ref) : ref_(ref) {}
+    _cacheable_t(np::spiegel::dwarf::reference_t ref, _factory_t &factory)
+     : ref_(ref), factory_(factory) {}
     ~_cacheable_t() {}
+
+    np::spiegel::dwarf::reference_t ref() const { return ref_; }
 
 protected:
     np::spiegel::dwarf::reference_t ref_;
-
-    friend class _cacher_t;
+    _factory_t &factory_;
 };
 
 class compile_unit_t : public _cacheable_t
@@ -88,7 +93,7 @@ public:
     void dump_types();
 
 private:
-    compile_unit_t(np::spiegel::dwarf::reference_t ref) :  _cacheable_t(ref) {}
+    compile_unit_t(np::spiegel::dwarf::reference_t ref, _factory_t &factory) :  _cacheable_t(ref, factory) {}
     ~compile_unit_t() {}
 
     bool populate();
@@ -101,10 +106,9 @@ private:
 
     friend class member_t;
     friend class np::spiegel::dwarf::state_t;
-    friend class _cacher_t;
+    friend class _factory_t;
 };
 
-std::vector<compile_unit_t *> get_compile_units();
 
 class type_t : public _cacheable_t
 {
@@ -208,12 +212,12 @@ public:
 
 private:
     std::string to_string(std::string inner) const;
-    type_t(np::spiegel::dwarf::reference_t ref) : _cacheable_t(ref) {}
+    type_t(np::spiegel::dwarf::reference_t ref, _factory_t &factory) : _cacheable_t(ref, factory) {}
     ~type_t() {}
 
     friend class function_t;
     friend class compile_unit_t;
-    friend class _cacher_t;
+    friend class _factory_t;
 };
 
 class member_t : public _cacheable_t
@@ -225,11 +229,11 @@ public:
 //     int get_modifiers() const;
 
 protected:
-    member_t(np::spiegel::dwarf::walker_t &w);
+    member_t(np::spiegel::dwarf::walker_t &w, _factory_t &factory);
     ~member_t() {}
 
     const char *name_;
-    friend class _cacher_t;
+    friend class _factory_t;
 };
 
 #if 0
@@ -303,11 +307,11 @@ public:
     std::string to_string() const;
 
 private:
-    function_t(np::spiegel::dwarf::walker_t &w) : member_t(w) {}
+    function_t(np::spiegel::dwarf::walker_t &w, _factory_t &factory) : member_t(w, factory) {}
     ~function_t() {}
 
     friend class compile_unit_t;
-    friend class _cacher_t;
+    friend class _factory_t;
 };
 
 class location_t
@@ -320,31 +324,55 @@ public:
     unsigned int offset_;
 };
 
-bool describe_address(addr_t, class location_t &);
 
-class _cacher_t
+class _factory_t
 {
 public:
-    static type_t *make_type(np::spiegel::dwarf::reference_t);
-    static compile_unit_t *make_compile_unit(np::spiegel::dwarf::reference_t);
-    static function_t *make_function(np::spiegel::dwarf::walker_t &);
-    static function_t *make_function(np::spiegel::dwarf::reference_t ref);
-//     static constructor_t *make_constructor(np::spiegel::dwarf::reference_t);
-//     static destructor_t *make_destructor(np::spiegel::dwarf::reference_t);
-//     static field_t *make_field(np::spiegel::dwarf::reference_t);
+    type_t *make_type(np::spiegel::dwarf::reference_t);
+    compile_unit_t *make_compile_unit(np::spiegel::dwarf::reference_t);
+    function_t *make_function(np::spiegel::dwarf::walker_t &);
+    function_t *make_function(np::spiegel::dwarf::reference_t ref);
+//     constructor_t *make_constructor(np::spiegel::dwarf::reference_t);
+//     destructor_t *make_destructor(np::spiegel::dwarf::reference_t);
+//     field_t *make_field(np::spiegel::dwarf::reference_t);
 
 private:
-    // no instances for you
-    _cacher_t() {}
-    ~_cacher_t() {}
+    _factory_t() {}
+    ~_factory_t() {}
 
-    static _cacheable_t *find(np::spiegel::dwarf::reference_t ref);
-    static _cacheable_t *add(_cacheable_t *cc);
+    _cacheable_t *find(np::spiegel::dwarf::reference_t ref);
+    _cacheable_t *add(_cacheable_t *cc);
 
-    static std::map<np::spiegel::dwarf::reference_t, _cacheable_t*> cache_;
+    std::map<np::spiegel::dwarf::reference_t, _cacheable_t*> cache_;
+
+    friend class state_t;
 };
 
-extern std::string describe_stacktrace();
+class state_t
+{
+public:
+    state_t();
+    ~state_t();
+
+    bool add_self();
+    bool add_executable(const char *filename);
+
+    std::vector<compile_unit_t *> get_compile_units();
+    bool describe_address(addr_t, class location_t &);
+    std::string describe_stacktrace();
+
+    // for testing only
+    void dump_structs();
+    void dump_functions();
+    void dump_variables();
+    void dump_info(bool preorder, bool paths);
+    void dump_abbrevs();
+
+private:
+     np::spiegel::dwarf::state_t *state_;
+     _factory_t factory_;
+};
+
 
 // close the namespaces
 }; };

@@ -17,8 +17,8 @@
 #include "np/testmanager.hxx"
 #include "np/testnode.hxx"
 #include "np/classifier.hxx"
+#include "np/event.hxx"
 #include "np/spiegel/spiegel.hxx"
-#include "np/spiegel/dwarf/state.hxx"
 
 namespace np {
 using namespace std;
@@ -47,6 +47,7 @@ testmanager_t::~testmanager_t()
 
     if (spiegel_)
 	delete spiegel_;
+    event_t::fini();
 
     assert(instance_ == this);
     instance_ = 0;
@@ -157,7 +158,7 @@ test_name(np::spiegel::function_t *fn, char *submatch)
 np::spiegel::function_t *
 testmanager_t::find_mock_target(string name)
 {
-    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *> units = spiegel_->get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
@@ -186,10 +187,11 @@ testmanager_t::discover_functions()
     if (!spiegel_)
     {
 #if _NP_DEBUG
-	fprintf(stderr, "np: creating np::spiegel::dwarf::state_t instance\n");
+	fprintf(stderr, "np: creating np::spiegel::state_t instance\n");
 #endif
-	spiegel_ = new np::spiegel::dwarf::state_t();
+	spiegel_ = new np::spiegel::state_t();
 	spiegel_->add_self();
+        event_t::init(spiegel_);
 	root_ = new testnode_t(0);
     }
     // else: splice common_ and root_ back together
@@ -197,7 +199,7 @@ testmanager_t::discover_functions()
 #if _NP_DEBUG
     fprintf(stderr, "np: scanning for test functions\n");
 #endif
-    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *> units = spiegel_->get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
     unsigned int ntests = 0;
     for (i = units.begin() ; i != units.end() ; ++i)

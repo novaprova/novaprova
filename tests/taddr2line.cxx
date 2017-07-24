@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include "np/spiegel/spiegel.hxx"
-#include "np/spiegel/dwarf/state.hxx"
 
 using namespace std;
 using namespace np::util;
@@ -27,11 +26,11 @@ some_function(void)
     printf("Used to lookup DWARF info.\n");
 }
 
-static void addr2line(unsigned long addr)
+static void addr2line(np::spiegel::state_t &state, unsigned long addr)
 {
     np::spiegel::location_t loc;
 
-    if (!np::spiegel::describe_address(addr, loc))
+    if (!state.describe_address(addr, loc))
     {
 	printf("address 0x%lx filename - line - function - offset -\n", addr);
 	return;
@@ -67,7 +66,7 @@ main(int argc, char **argv __attribute__((unused)))
 	fatal("Usage: taddr2line [addr [executable]]\n");
     }
 
-    np::spiegel::dwarf::state_t state;
+    np::spiegel::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))
@@ -88,12 +87,12 @@ main(int argc, char **argv __attribute__((unused)))
 	    if (p)
 		*p = '\0';
 	    addr = strtoul(buf, 0, 0);
-	    addr2line(addr);
+	    addr2line(state, addr);
 	}
     }
     else
     {
-	addr2line(addr);
+	addr2line(state, addr);
     }
     return 0;
 }
