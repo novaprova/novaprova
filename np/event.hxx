@@ -151,10 +151,20 @@ public:
     const char *function;
     functype_t functype;
 
+    static void init(np::spiegel::state_t *s)
+    {
+        spiegel_ = s;
+    }
+    static void fini()
+    {
+        spiegel_ = 0;
+    }
+
 private:
 
     void save_strings();
     char *freeme_;
+    static np::spiegel::state_t *spiegel_;
 };
 
 // close the namespace

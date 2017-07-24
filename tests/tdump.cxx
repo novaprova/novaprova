@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 #include "np/spiegel/spiegel.hxx"
-#include "np/spiegel/dwarf/state.hxx"
 #include <string.h>
 
 using namespace std;
 using namespace np::util;
 
 static void
-dump_types(np::spiegel::dwarf::state_t &state)
+dump_types(np::spiegel::state_t &state)
 {
     printf("Types\n");
     printf("=====\n");
 
-    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *> units = state.get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
@@ -38,12 +37,12 @@ dump_types(np::spiegel::dwarf::state_t &state)
 }
 
 static void
-dump_functions(np::spiegel::dwarf::state_t &state)
+dump_functions(np::spiegel::state_t &state)
 {
     printf("Functions\n");
     printf("=========\n");
 
-    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *> units = state.get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
@@ -67,12 +66,12 @@ dump_functions(np::spiegel::dwarf::state_t &state)
 }
 
 static void
-dump_compile_units(np::spiegel::dwarf::state_t &state)
+dump_compile_units(np::spiegel::state_t &state)
 {
     printf("Compile Units\n");
     printf("=============\n");
 
-    vector<np::spiegel::compile_unit_t *> units = np::spiegel::get_compile_units();
+    vector<np::spiegel::compile_unit_t *> units = state.get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
@@ -110,7 +109,7 @@ usage:
 	}
     }
 
-    np::spiegel::dwarf::state_t state;
+    np::spiegel::state_t state;
     if (filename)
     {
 	if (!state.add_executable(filename))

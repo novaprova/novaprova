@@ -19,9 +19,11 @@
 using namespace std;
 using namespace np::util;
 
+static np::spiegel::state_t *state;
+
 int vegan(int x)
 {
-    string trace = np::spiegel::describe_stacktrace();
+    string trace = state->describe_stacktrace();
     printf("Stacktrace: \n%s\n", trace.c_str());
     return x/2;
 }
@@ -53,8 +55,8 @@ main(int argc, char **argv)
     if (argc != 1)
 	fatal("Usage: tstack\n");
 
-    np::spiegel::dwarf::state_t state;
-    if (!state.add_self())
+    state = new np::spiegel::state_t();
+    if (!state->add_self())
 	return 1;
 
     leggings::dreamcatcher(42);

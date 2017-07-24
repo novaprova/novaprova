@@ -19,9 +19,11 @@ namespace np {
 using namespace std;
 using namespace np::util;
 
+np::spiegel::state_t *event_t::spiegel_;
+
 event_t &event_t::with_stack()
 {
-    string trace = np::spiegel::describe_stacktrace();
+    string trace = spiegel_->describe_stacktrace();
     if (trace.length())
     {
 	/* only clobber `function' if we have something better */
@@ -212,7 +214,6 @@ string event_t::get_long_location() const
     }
     return get_short_location() + "\n";
 }
-
 
 // close the namespace
 };

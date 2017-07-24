@@ -105,7 +105,7 @@ type_t::get_classification() const
     case DW_TAG_typedef:
     case DW_TAG_volatile_type:
     case DW_TAG_const_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).get_classification();
+	return type_t(e->get_reference_attribute(DW_AT_type), factory_).get_classification();
     case DW_TAG_pointer_type:
 	return TC_POINTER;
     case DW_TAG_reference_type:
@@ -170,7 +170,7 @@ type_t::get_sizeof() const
     case DW_TAG_array_type:
 	if (!byte_size)
 	{
-	    uint32_t element_size = type_t(e->get_reference_attribute(DW_AT_type)).get_sizeof();
+	    uint32_t element_size = type_t(e->get_reference_attribute(DW_AT_type), factory_).get_sizeof();
 	    for (e = w.move_down() ; e ; e = w.move_next())
 	    {
 		uint32_t count;
@@ -187,7 +187,7 @@ type_t::get_sizeof() const
     case DW_TAG_typedef:
     case DW_TAG_volatile_type:
     case DW_TAG_const_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).get_sizeof();
+	return type_t(e->get_reference_attribute(DW_AT_type), factory_).get_sizeof();
     case DW_TAG_pointer_type:
     case DW_TAG_reference_type:
 	return _NP_ADDRSIZE;
@@ -251,13 +251,13 @@ type_t::to_string(string inner) const
 	s = (name ? name : "wtf?");
 	break;
     case DW_TAG_pointer_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("*" + inner);
+	return type_t(e->get_reference_attribute(DW_AT_type), factory_).to_string("*" + inner);
     case DW_TAG_reference_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("&" + inner);
+	return type_t(e->get_reference_attribute(DW_AT_type), factory_).to_string("&" + inner);
     case DW_TAG_volatile_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("volatile " + inner);
+	return type_t(e->get_reference_attribute(DW_AT_type), factory_).to_string("volatile " + inner);
     case DW_TAG_const_type:
-	return type_t(e->get_reference_attribute(DW_AT_type)).to_string("const " + inner);
+	return type_t(e->get_reference_attribute(DW_AT_type), factory_).to_string("const " + inner);
     case DW_TAG_structure_type:
 	s = string("struct ") + (name ? name : "{...}");
 	break;
@@ -275,7 +275,7 @@ type_t::to_string(string inner) const
 	break;
     case DW_TAG_array_type:
 	{
-	    type_t element_type(e->get_reference_attribute(DW_AT_type));
+	    type_t element_type(e->get_reference_attribute(DW_AT_type), factory_);
 	    bool found = false;
 	    for (e = w.move_down() ; e ; e = w.move_next())
 	    {
@@ -298,7 +298,7 @@ type_t::to_string(string inner) const
     case DW_TAG_subroutine_type:
 	{
 	    // TODO: elide the parenethese around inner if it's an identifier
-	    type_t return_type(e->get_reference_attribute(DW_AT_type));
+	    type_t return_type(e->get_reference_attribute(DW_AT_type), factory_);
 	    inner = "(" + inner + ")(";
 	    bool ellipsis = false;
 	    unsigned int nparam = 0;
@@ -311,7 +311,7 @@ type_t::to_string(string inner) const
 		    const char *param = e->get_string_attribute(DW_AT_name);
 		    if (!param)
 			param = "";
-		    inner += type_t(e->get_reference_attribute(DW_AT_type)).to_string(param);
+		    inner += type_t(e->get_reference_attribute(DW_AT_type), factory_).to_string(param);
 		}
 		else if (e->get_tag() == DW_TAG_unspecified_parameters)
 		{
@@ -345,17 +345,39 @@ compile_unit_t::get_absolute_path() const
     return filename_t(name_).make_absolute_to_dir(filename_t(comp_dir_));
 }
 
+state_t::state_t()
+{
+    state_ = new np::spiegel::dwarf::state_t();
+}
+
+state_t::~state_t()
+{
+    delete state_;
+}
+
+bool
+state_t::add_self()
+{
+    return state_->add_self();
+}
+
+bool
+state_t::add_executable(const char *filename)
+{
+    return state_->add_executable(filename);
+}
+
 vector<compile_unit_t *>
-get_compile_units()
+state_t::get_compile_units()
 {
     vector<np::spiegel::compile_unit_t *> res;
 
     const vector<np::spiegel::dwarf::compile_unit_t*> &units =
-	np::spiegel::dwarf::state_t::instance()->get_compile_units();
+	state_->get_compile_units();
     vector<np::spiegel::dwarf::compile_unit_t*>::const_iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-	compile_unit_t *cu = _cacher_t::make_compile_unit((*i)->make_root_reference());
+	compile_unit_t *cu = factory_.make_compile_unit((*i)->make_root_reference());
 	if (cu)
 	    res.push_back(cu);
     }
@@ -406,7 +428,7 @@ compile_unit_t::get_functions()
 	    !e->get_string_attribute(DW_AT_name))
 	    continue;
 
-	res.push_back(_cacher_t::make_function(w));
+	res.push_back(factory_.make_function(w));
     }
     return res;
 }
@@ -452,7 +474,7 @@ compile_unit_t::dump_types()
 	    continue;
 	}
 	printf("    Type %s at 0x%x\n", tagname, e->get_offset());
-	type_t type(w.get_reference());
+	type_t type(w.get_reference(), factory_);
 	printf("        to_string=\"%s\"\n", type.to_string().c_str());
 	printf("        sizeof=%u\n", type.get_sizeof());
 	printf("        classification=%u (%s)\n",
@@ -461,8 +483,8 @@ compile_unit_t::dump_types()
     }
 }
 
-member_t::member_t(np::spiegel::dwarf::walker_t &w)
- :  _cacheable_t(w.get_reference()),
+member_t::member_t(np::spiegel::dwarf::walker_t &w, _factory_t &factory)
+ :  _cacheable_t(w.get_reference(), factory),
     name_(w.get_entry()->get_string_attribute(DW_AT_name))
 {
     if (!name_)
@@ -475,7 +497,7 @@ member_t::get_compile_unit() const
     np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
     np::spiegel::dwarf::state_t::compile_unit_offset_tuple_t res = state->resolve_reference(ref_);
     assert(res._cu);
-    return _cacher_t::make_compile_unit(res._cu->make_root_reference());
+    return factory_.make_compile_unit(res._cu->make_root_reference());
 }
 
 string
@@ -490,7 +512,7 @@ function_t::get_return_type() const
 {
     np::spiegel::dwarf::walker_t w(ref_);
     const np::spiegel::dwarf::entry_t *e = w.move_next();
-    return _cacher_t::make_type(e->get_reference_attribute(DW_AT_type));
+    return factory_.make_type(e->get_reference_attribute(DW_AT_type));
 }
 
 vector<type_t*>
@@ -503,7 +525,7 @@ function_t::get_parameter_types() const
     for (e = w.move_down() ; e ; e = w.move_next())
     {
 	if (e->get_tag() == DW_TAG_formal_parameter)
-	    res.push_back(_cacher_t::make_type(e->get_reference_attribute(DW_AT_type)));
+	    res.push_back(factory_.make_type(e->get_reference_attribute(DW_AT_type)));
 	else if (e->get_tag() == DW_TAG_unspecified_parameters)
 	    break;
     }
@@ -550,7 +572,7 @@ function_t::to_string() const
 {
     np::spiegel::dwarf::walker_t w(ref_);
     const np::spiegel::dwarf::entry_t *e = w.move_next();
-    type_t return_type(e->get_reference_attribute(DW_AT_type));
+    type_t return_type(e->get_reference_attribute(DW_AT_type), factory_);
     string inner = name_;
     inner += "(";
     unsigned int nparam = 0;
@@ -563,7 +585,7 @@ function_t::to_string() const
 	    const char *param = e->get_string_attribute(DW_AT_name);
 	    if (!param)
 		param = "";
-	    inner += type_t(e->get_reference_attribute(DW_AT_type)).to_string(param);
+	    inner += type_t(e->get_reference_attribute(DW_AT_type), factory_).to_string(param);
 	}
 	else if (e->get_tag() == DW_TAG_unspecified_parameters)
 	{
@@ -631,33 +653,31 @@ function_t::invoke(vector<value_t> args __attribute__((unused))) const
 }
 #endif
 
-bool describe_address(addr_t addr, class location_t &loc)
+bool
+state_t::describe_address(addr_t addr, class location_t &loc)
 {
-    np::spiegel::dwarf::state_t *state = np::spiegel::dwarf::state_t::instance();
-
-    addr = state->recorded_address(addr);
+    addr = state_->recorded_address(addr);
 
     np::spiegel::dwarf::reference_t curef;
     np::spiegel::dwarf::reference_t funcref;
-    if (!state->describe_address(addr, curef, loc.line_,
+    if (!state_->describe_address(addr, curef, loc.line_,
 				 funcref, loc.offset_))
 	return false;
 
     if (curef == np::spiegel::dwarf::reference_t::null)
     {
-        np::spiegel::dwarf::state_t::compile_unit_offset_tuple_t res = state->resolve_reference(funcref);
+        np::spiegel::dwarf::state_t::compile_unit_offset_tuple_t res = state_->resolve_reference(funcref);
         assert(res._cu);
 	curef = res._cu->make_root_reference();
     }
-    loc.compile_unit_ = _cacher_t::make_compile_unit(curef);
-    loc.function_ = _cacher_t::make_function(funcref);
+    loc.compile_unit_ = factory_.make_compile_unit(curef);
+    loc.function_ = factory_.make_function(funcref);
     return true;
 }
 
-map<np::spiegel::dwarf::reference_t, _cacheable_t*> _cacher_t::cache_;
 
 _cacheable_t *
-_cacher_t::find(np::spiegel::dwarf::reference_t ref)
+_factory_t::find(np::spiegel::dwarf::reference_t ref)
 {
     std::map<np::spiegel::dwarf::reference_t, _cacheable_t*>::const_iterator i = cache_.find(ref);
     if (i == cache_.end())
@@ -666,20 +686,20 @@ _cacher_t::find(np::spiegel::dwarf::reference_t ref)
 }
 
 _cacheable_t *
-_cacher_t::add(_cacheable_t *cc)
+_factory_t::add(_cacheable_t *cc)
 {
-    cache_[cc->ref_] = cc;
+    cache_[cc->ref()] = cc;
     return cc;
 }
 
 compile_unit_t *
-_cacher_t::make_compile_unit(np::spiegel::dwarf::reference_t ref)
+_factory_t::make_compile_unit(np::spiegel::dwarf::reference_t ref)
 {
     if (ref == np::spiegel::dwarf::reference_t::null)
 	return 0;
     _cacheable_t *cc = find(ref);
     if (!cc)
-	cc = add(new compile_unit_t(ref));
+	cc = add(new compile_unit_t(ref, *this));
     compile_unit_t *cu = (compile_unit_t *)cc;
     if (!cu->populate())
     {
@@ -690,25 +710,25 @@ _cacher_t::make_compile_unit(np::spiegel::dwarf::reference_t ref)
 }
 
 type_t *
-_cacher_t::make_type(np::spiegel::dwarf::reference_t ref)
+_factory_t::make_type(np::spiegel::dwarf::reference_t ref)
 {
     _cacheable_t *cc = find(ref);
     if (!cc)
-	cc = add(new type_t(ref));
+	cc = add(new type_t(ref, *this));
     return (type_t *)cc;
 }
 
 function_t *
-_cacher_t::make_function(np::spiegel::dwarf::walker_t &w)
+_factory_t::make_function(np::spiegel::dwarf::walker_t &w)
 {
     _cacheable_t *cc = find(w.get_reference());
     if (!cc)
-	cc = add(new function_t(w));
+	cc = add(new function_t(w, *this));
     return (function_t *)cc;
 }
 
 function_t *
-_cacher_t::make_function(np::spiegel::dwarf::reference_t ref)
+_factory_t::make_function(np::spiegel::dwarf::reference_t ref)
 {
     if (ref == np::spiegel::dwarf::reference_t::null)
 	return 0;
@@ -717,7 +737,8 @@ _cacher_t::make_function(np::spiegel::dwarf::reference_t ref)
     return (e ? make_function(w) : 0);
 }
 
-std::string describe_stacktrace()
+std::string
+state_t::describe_stacktrace()
 {
     string s;
     vector<addr_t> stack = np::spiegel::platform::get_stacktrace();
@@ -756,6 +777,36 @@ std::string describe_stacktrace()
 	first = false;
     }
     return s;
+}
+
+void
+state_t::dump_structs()
+{
+    state_->dump_structs();
+}
+
+void
+state_t::dump_functions()
+{
+    state_->dump_functions();
+}
+
+void
+state_t::dump_variables()
+{
+    state_->dump_variables();
+}
+
+void
+state_t::dump_info(bool preorder, bool paths)
+{
+    state_->dump_info(preorder, paths);
+}
+
+void
+state_t::dump_abbrevs()
+{
+    state_->dump_abbrevs();
 }
 
 // close the namespaces
