@@ -46,10 +46,19 @@ __np_assert_failed(const char *file,
 {
     va_list args;
     static char condition[1024];
+    const char *p;
+    const char *filename;
+    char at_line[128];
 
     va_start(args, fmt);
     vsnprintf(condition, sizeof(condition), fmt, args);
     va_end(args);
+
+    p = strrchr(file, '/');
+    filename = (p != NULL) ? p + 1 : file;
+    snprintf(at_line, sizeof(at_line), " at %s:%d", filename, line);
+    if ((strlen(condition) + strlen(at_line)) < sizeof(condition))
+        strcat (condition, at_line);
 
     np_throw(np::event_t(np::EV_ASSERT, condition)
 	    .at_line(file, line).with_stack());
