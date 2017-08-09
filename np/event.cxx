@@ -208,7 +208,12 @@ string event_t::get_short_location() const
 string event_t::get_long_location() const
 {
     if (locflags & LT_STACK)
-	return string(function);
+    {
+	string s = "";
+	if ((locflags & (LT_FILENAME|LT_LINENO)) == (LT_FILENAME|LT_LINENO))
+	    s = get_short_location() + "\n";
+	return s + string(function);
+    }
     return get_short_location() + "\n";
 }
 
