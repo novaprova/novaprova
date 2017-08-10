@@ -5,7 +5,7 @@ VAGRANTFILE_API_VERSION = "2"
 
 # Throw an error if required Vagrant plugins are not installed
 unless Vagrant.has_plugin? 'vagrant-bindfs'
-  raise error "The 'vagrant-bindfs' plugin is not installed!"
+  raise Vagrant::Errors::VagrantError.new, "The 'vagrant-bindfs' plugin is not installed!"
 end
 
 platforms_dir = 'build/vagrant'
