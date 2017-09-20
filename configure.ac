@@ -192,6 +192,17 @@ if test "$debug" = yes ; then
     AC_DEFINE(_NP_DEBUG, 1, [Enable debugging output])
 fi
 
+BUILD_DOCS=yes
+AC_ARG_ENABLE(docs,
+	      [Enable building the documentation at compile time],
+	      [ docs=$enableval ])
+if test "$docs" = no ; then
+  BUILD_DOCS=no
+fi
+AC_MSG_CHECKING([Build documentation])
+AC_MSG_RESULT($BUILD_DOCS)
+AC_SUBST(BUILD_DOCS)
+
 AC_ARG_WITH(valgrind,
 	    [Enable the Valgrind runtime memory checker (recommended)],
 	    [],

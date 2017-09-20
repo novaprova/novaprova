@@ -30,6 +30,7 @@ libbfd_CFLAGS=	@libbfd_CFLAGS@
 valgrind_CFLAGS=@valgrind_CFLAGS@
 platform_CFLAGS=@platform_CFLAGS@
 platform_SOURCE=@platform_SOURCE@
+BUILD_DOCS=@BUILD_DOCS@
 
 CC=		g++
 CXX=		g++
@@ -53,7 +54,11 @@ all clean distclean check install docs:
 
 install check: all
 
+ifeq ($(BUILD_DOCS), yes)
 all-local: libnovaprova.a obs-metadata doc/.doxy-stamp
+else
+all-local: libnovaprova.a obs-metadata
+endif
 
 libnovaprova_SOURCE= \
 		np.c \
@@ -188,10 +193,12 @@ install-local:
 	$(MKDIRP) $(DESTDIR)$(libdir)
 	$(INSTALL_DATA) libnovaprova.a $(DESTDIR)$(libdir)/libnovaprova.a
 	$(RANLIB) $(DESTDIR)$(libdir)/libnovaprova.a
-	$(MKDIRP) $(DESTDIR)$(mandir)/man3
-	$(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3
 	$(MKDIRP) $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) novaprova.pc $(DESTDIR)$(pkgconfigdir)
+ifeq ($(BUILD_DOCS), yes)
+	$(MKDIRP) $(DESTDIR)$(mandir)/man3
+	$(INSTALL_DATA) doc/man/man3/np*.3 doc/man/man3/NP*.3 $(DESTDIR)$(mandir)/man3
+endif
 
 clean-local:
 	$(RM) libnovaprova.a $(libnovaprova_OBJS)
