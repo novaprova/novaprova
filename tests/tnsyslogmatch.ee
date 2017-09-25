@@ -8,13 +8,9 @@ FAIL tnsyslogmatch.one_message_no_matches
 EVENT SLMATCH err: retro
 FAIL tnsyslogmatch.one_message_unmatched
 PASS tnsyslogmatch.one_message_ignored
-EVENT SYSLOG err: dreamcatcher prism brooklyn
 PASS tnsyslogmatch.one_message_one_match
-EVENT SYSLOG err: kogi humblebrag hammock
 EVENT ASSERT NP_ASSERT_EQUAL(np_syslog_count(m1)=1, 5=5)
 FAIL tnsyslogmatch.one_message_one_match_want_five
-EVENT SYSLOG err: cray flannel vape
 PASS tnsyslogmatch.one_message_multiple_matches_same_tag
-EVENT SYSLOG err: cornhole hashtag hexagon
 PASS tnsyslogmatch.one_message_multiple_matches_different_tags
 EXIT 1
