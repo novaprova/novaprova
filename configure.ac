@@ -230,12 +230,12 @@ if test "$with_valgrind" = yes ; then
 fi
 
 AC_ARG_WITH(valgrind-suppression,
-	      [Use an additional suppression file when running Valgrind],
+	      [Path to a suppression file to use when running Valgrind],
 	      [with_valgrind_suppression=$withval],
 	      [with_valgrind_suppression=no])
 case "$with_valgrind_suppression" in
 yes)
-    SUPPRESSION_FILE="../../../np/valgrind.supp"
+    AC_MSG_ERROR([A file path to the Valgrind suppression file is mandatory])
     ;;
 no)
     ;;
@@ -246,7 +246,7 @@ no)
 esac
 
 if test "$with_valgrind_suppression" = yes ; then
-    AC_DEFINE_UNQUOTED(_NP_VALGRIND_SUPPRESSION_FILE, "$SUPPRESSION_FILE", [The Valgrind suppression file])
+    AC_DEFINE_UNQUOTED(_NP_VALGRIND_SUPPRESSION_FILE, "$SUPPRESSION_FILE", [The Valgrind suppression file path])
 fi
 
 AC_CONFIG_HEADERS([np/util/config.h])
