@@ -39,6 +39,7 @@ private:
     x86_linux_call_t() {}
 
     unsigned long *args_;
+    unsigned long returned_edx_;
 
     unsigned long get_arg(unsigned int i) const
     {
@@ -47,6 +48,10 @@ private:
     void set_arg(unsigned int i, unsigned long v)
     {
 	args_[i] = v;
+    }
+    uint64_t get_retval64() const
+    {
+	return (((uint64_t)returned_edx_)<<32) | retval_;
     }
 
     friend unsigned long intercept_tramp(void);
@@ -269,6 +274,9 @@ after:
 
     /* return value is in EAX, save it directly into the call_t */
     __asm__ volatile("movl %%eax, %0" : "=m"(frame.call.retval_));
+    /* when the function returns a 64b integral type the high
+     * 32 bits are in EDX, save that now just in case */
+    __asm__ volatile("movl %%edx, %0" : "=m"(frame.call.returned_edx_));
 
     /*
      * The compiler will emit (at least when unoptimised) instructions
@@ -306,6 +314,9 @@ after:
      * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
     intercept_t::dispatch_after(frame.addr, frame.call);
+    /* Restore the original function's EDX in case we're
+     * returning a 64bit result */
+    __asm__ volatile("movl %0, %%edx" : "=m"(frame.call.returned_edx_));
     return frame.call.retval_;
 }
 

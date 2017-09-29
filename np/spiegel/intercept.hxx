@@ -66,6 +66,8 @@ public:
      * original function with get_retval().
      */
     virtual unsigned long get_retval() const { return retval_; }
+    virtual unsigned long get_retval32() const { return retval_; }
+    virtual uint64_t get_retval64() const { return (uint64_t)retval_; }
     /*
      * The after() function can modify the return value from the
      * original function, before the caller sees it, with set_retval().
