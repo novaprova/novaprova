@@ -257,6 +257,7 @@ filename_is_ignored(const char *filename)
 	"/lib64/",
 	"/usr/bin/",
 	"/usr/lib/",
+	"/usr/lib64/",
 	"/opt/",
 	"linux-gate.so",
 	"linux-vdso.so",
