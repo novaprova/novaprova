@@ -155,7 +155,8 @@ Sometimes the Code Under Test is actually expected to emit messages to
 message and keep executing the test, using the ``np_syslog_ignore()``
 call.  This function takes a UNIX extended regular expression as an
 argument; any message which is emitted to ``syslog()`` from that point
-onwards in the test will still be reported but will not cause the test
+onwards in the test that matches the regular expression, will be
+silently ignored and will not cause the test
 to fail.  You can make multiple calls to ``np_syslog_ignore()``, they
 accumulate until the end of the test.  There's no need to remove these
 regular expressions, they're automatically removed at the end of the
@@ -175,27 +176,18 @@ Here's an example.
     }
 
 When run, this test produces the following output.  Note that
-the test still passes.
+the test passes and the message does not appear.
 
 .. highlight:: none
 
 ::
 
     np: running: "mytest.expected"
-    EVENT SYSLOG err: This message was entirely expected
-    at 0x8059B22: np::spiegel::describe_stacktrace
-    by 0x804DD9C: np::event_t::with_stack
-    by 0x804BABA: np::mock_syslog
-    by 0x807A519: np::spiegel::platform::intercept_tramp
-    by 0x804B031: test_expected
-    by 0x80597F0: np::spiegel::function_t::invoke
-    by 0x804FB99: np::runner_t::run_function
-    by 0x8050A7E: np::runner_t::run_test_code
-    by 0x8050CEB: np::runner_t::begin_job
-    by 0x805158E: np::runner_t::run_tests
-    by 0x80516E6: np_run_tests
-    by 0x804AFC3: main
     PASS mytest.expected
+
+This behavior changed in version 1.4 (commit 6234a2a). Before
+that, the call to ``syslog()`` would result in an ``EVENT`` and a
+stacktrace rather than being silently ignored.
 
 You can achieve more subtle effects than just ignoring messages with
 ``np_syslog_ignore()`` by using it in combination with
@@ -209,6 +201,9 @@ Finally, if the test depends on the Code Under Test generating
 (or not generating) specific messages, you can use ``np_syslog_match()``
 which tells NovaProva to just count any matching messages, and
 ``np_syslog_count()`` to discover that count and assert on its value.
+The behavior of ``np_syslog_match()`` changed in version 1.4
+(commit ef2f3b4).  Before that, the call to ``syslog()`` would result in
+an ``EVENT`` and a stacktrace rather than being silently counted.
 
 You can of course call any of ``np_syslog_ignore()``,
 ``np_syslog_fail()`` and ``np_syslog_match()`` in a
