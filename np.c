@@ -57,8 +57,10 @@ be_valground(void)
     *p++ = VALGRIND_BINARY;
     *p++ = "-q";
     *p++ = "--tool=memcheck";
-//     *p++ = "--leak-check=full";
-//     *p++ = "--suppressions=../../../np/valgrind.supp";
+#ifdef _NP_VALGRIND_SUPPRESSION_FILE
+    *p++ = "--gen-suppressions=all";
+    *p++ = "--suppressions="_NP_VALGRIND_SUPPRESSION_FILE;
+#endif
     while (*argv)
 	*p++ = *argv++;
 

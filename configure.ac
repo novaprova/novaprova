@@ -229,6 +229,26 @@ if test "$with_valgrind" = yes ; then
     PKG_CHECK_MODULES(valgrind, valgrind)
 fi
 
+AC_ARG_WITH(valgrind-suppression,
+	      [Path to a suppression file to use when running Valgrind],
+	      [with_valgrind_suppression=$withval],
+	      [with_valgrind_suppression=no])
+case "$with_valgrind_suppression" in
+yes)
+    AC_MSG_ERROR([A file path to the Valgrind suppression file is mandatory])
+    ;;
+no)
+    ;;
+*)
+	SUPPRESSION_FILE="$withval"
+	with_valgrind_suppression=yes
+    ;;
+esac
+
+if test "$with_valgrind_suppression" = yes ; then
+    AC_DEFINE_UNQUOTED(_NP_VALGRIND_SUPPRESSION_FILE, "$SUPPRESSION_FILE", [The Valgrind suppression file path])
+fi
+
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
     Makefile
