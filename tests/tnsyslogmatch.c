@@ -21,10 +21,12 @@
 #define m1	1
 #define m2	2
 
+/* silly words courtesy hipsum.co */
+
 static void test_invalid_regex(void)
 {
-    np_syslog_match("[foo", m1);	    /* fail */
-    syslog(LOG_ERR, "fnarp");
+    np_syslog_match("[edison", m1);	    /* fail */
+    syslog(LOG_ERR, "hoodie");
     NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
 }
 
@@ -37,7 +39,7 @@ static void test_unmatched_tag(void)
 static void test_no_messages(void)
 {
     /* no syslog messages => count is 0 */
-    np_syslog_match("foo.*baz", m1);
+    np_syslog_match("chia.*bushwick", m1);
     NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
     /* pass */
 }
@@ -46,23 +48,23 @@ static void test_one_message_no_matches(void)
 {
     /* one syslog message which doesn't match => unmatched
      * messages FAIL the test */
-    syslog(LOG_ERR, "fnarp");	    /* fail */
+    syslog(LOG_ERR, "stumptown");	    /* fail */
 }
 
 static void test_one_message_unmatched(void)
 {
     /* one syslog message which doesn't match => unmatched
      * messages FAIL the test */
-    np_syslog_match("foo.*baz", m1);
-    syslog(LOG_ERR, "fnarp");	    /* fail */
+    np_syslog_match("tacos.*listicle", m1);
+    syslog(LOG_ERR, "retro");	    /* fail */
     NP_ASSERT_EQUAL(np_syslog_count(m1), 0);
 }
 
 static void test_one_message_ignored(void)
 {
     /* one syslog message which matches an SL_IGNORE */
-    np_syslog_ignore("fna*");
-    syslog(LOG_ERR, "fnarp");
+    np_syslog_ignore("wha*");
+    syslog(LOG_ERR, "whatever");
     /* pass */
 }
 
@@ -70,8 +72,8 @@ static void test_one_message_one_match(void)
 {
     /* one syslog message which does match => count is 1,
      * both macros succeed */
-    np_syslog_match("foo.*baz", m1);
-    syslog(LOG_ERR, "foo bar baz");
+    np_syslog_match("dream.*lyn", m1);
+    syslog(LOG_ERR, "dreamcatcher prism brooklyn");
     NP_ASSERT_EQUAL(np_syslog_count(m1), 1);
     /* pass */
 }
@@ -80,17 +82,17 @@ static void test_one_message_one_match_want_five(void)
 {
     /* one syslog message which does match => count is 1,
      * we check for 5 */
-    np_syslog_match("foo.*baz", m1);
-    syslog(LOG_ERR, "foo bar baz");
+    np_syslog_match("kog.*ock", m1);
+    syslog(LOG_ERR, "kogi humblebrag hammock");
     NP_ASSERT_EQUAL(np_syslog_count(m1), 5);	/* fail */
 }
 
 static void test_one_message_multiple_matches_same_tag(void)
 {
     /* one syslog message with multiple matches => count is 1 */
-    np_syslog_match("fuu.*bas", m1);
-    np_syslog_match("bleah", m1);
-    syslog(LOG_ERR, "fuu bleah bas");
+    np_syslog_match("cra.*ape", m1);
+    np_syslog_match("flannel", m1);
+    syslog(LOG_ERR, "cray flannel vape");
     NP_ASSERT_EQUAL(np_syslog_count(m1), 1);
     /* pass */
 }
@@ -99,9 +101,9 @@ static void test_one_message_multiple_matches_different_tags(void)
 {
     /* one syslog message with multiple matches which are tracked
      * separately => count is 1 */
-    np_syslog_match("fuu.*bas", m1);
-    np_syslog_match("bleah", m2);
-    syslog(LOG_ERR, "fuu bleah bas");
+    np_syslog_match("corn.*gon", m1);
+    np_syslog_match("hashtag", m2);
+    syslog(LOG_ERR, "cornhole hashtag hexagon");
     NP_ASSERT_EQUAL(np_syslog_count(m1), 1);
     NP_ASSERT_EQUAL(np_syslog_count(m2), 0);
     /* pass */
