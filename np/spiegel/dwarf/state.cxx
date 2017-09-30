@@ -59,7 +59,7 @@ state_t::linkobj_t::map_sections()
     bfd_init();
 
 #if _NP_DEBUG
-    fprintf(stderr, "np: opening bfd %s\n", filename_);
+    fprintf(stderr, "np: state_t::linkobj_t::map_sections: opening bfd %s\n", filename_);
 #endif
     /* Open a BFD */
     bfd *b = bfd_openr(filename_, NULL);
@@ -101,8 +101,8 @@ state_t::linkobj_t::map_sections()
 	    if (sm->contains(sections_[idx]))
 	    {
 #if _NP_DEBUG
-		fprintf(stderr, "np: found system mapping for section %s\n",
-			secnames.to_name(idx));
+		fprintf(stderr, "np: found system mapping for section %s at %p\n",
+			secnames.to_name(idx), sm->get_map());
 #endif
 		sections_[idx].map_from(*sm);
 		break;
@@ -148,11 +148,11 @@ state_t::linkobj_t::map_sections()
 	}
 
 #if _NP_DEBUG
-	fprintf(stderr, "np: mappings:\n");
+	fprintf(stderr, "np: new minimal mappings not found in system mappings, before mmap()\n");
 	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
 	{
-	    fprintf(stderr, "np: mapping offset 0x%lx size 0x%lx end 0x%lx\n",
-		    m->get_offset(), m->get_size(), m->get_end());
+	    fprintf(stderr, "np:    { offset=0x%lx size=0x%lx }\n",
+		    m->get_offset(), m->get_size());
 	}
 #endif
 
@@ -189,12 +189,18 @@ state_t::linkobj_t::map_sections()
     }
 
 #if _NP_DEBUG
+    fprintf(stderr, "np: new mappings after mmap()\n");
+    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+    {
+        fprintf(stderr, "np:    { offset=0x%lx size=0x%lx map=%p }\n",
+                m->get_offset(), m->get_size(), m->get_map());
+    }
     fprintf(stderr, "np: debug sections map:\n");
     for (int idx = 0 ; idx < DW_sec_num ; idx++)
     {
-	fprintf(stderr, "np: index %d name %s map 0x%lx size 0x%lx\n",
+	fprintf(stderr, "np:     [%d] { name=%s map=%p size=0x%lx }\n",
 		idx, secnames.to_name(idx),
-		(unsigned long)sections_[idx].get_map(),
+		sections_[idx].get_map(),
 		sections_[idx].get_size());
     }
 #endif
@@ -282,23 +288,31 @@ state_t::add_self()
     vector<np::spiegel::platform::linkobj_t> los = np::spiegel::platform::get_linkobjs();
     vector<np::spiegel::platform::linkobj_t>::iterator i;
     const char *filename;
+#if _NP_DEBUG
+    fprintf(stderr, "np: state_t::add_self: converting platform linkobjs to spiegel linkobjs\n");
+#endif
     for (i = los.begin() ; i != los.end() ; ++i)
     {
 #if _NP_DEBUG
-	fprintf(stderr, "np: state_t::add_self: platform linkobj %s\n", i->name);
+	fprintf(stderr, "np: platform linkobj %s\n", i->name);
 #endif
 	filename = i->name;
 	if (!filename)
 	    filename = exe;
 
 	if (filename_is_ignored(filename))
+        {
+#if _NP_DEBUG
+	    fprintf(stderr, "np: (ignored)\n");
+#endif
 	    continue;
+        }
 
 	linkobj_t *lo = get_linkobj(filename);
 	if (lo)
 	{
 #if _NP_DEBUG
-	    fprintf(stderr, "np: state_t::add_self: have spiegel linkobj\n");
+	    fprintf(stderr, "np: have spiegel linkobj\n");
 #endif
 	    lo->system_mappings_ = i->mappings;
 	}

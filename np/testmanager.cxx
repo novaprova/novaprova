@@ -203,7 +203,7 @@ testmanager_t::discover_functions()
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 #if _NP_DEBUG
-	fprintf(stderr, "np: scanning compile unit %s\n", (*i)->get_absolute_path().c_str());
+	fprintf(stderr, "np:     scanning compile unit %s\n", (*i)->get_absolute_path().c_str());
 #endif
 	vector<np::spiegel::function_t *> fns = (*i)->get_functions();
 	vector<np::spiegel::function_t *>::iterator j;
@@ -220,7 +220,7 @@ testmanager_t::discover_functions()
 	    type = classify_function(fn->get_name().c_str(),
 				     submatch, sizeof(submatch));
 #if _NP_DEBUG
-	    fprintf(stderr, "np: function %s classified %s submatch \"%s\"\n",
+	    fprintf(stderr, "np:         function %s classified %s submatch \"%s\"\n",
 		    fn->get_name().c_str(), np::as_string(type), submatch);
 #endif
 	    switch (type)
