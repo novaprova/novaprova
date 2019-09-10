@@ -59,7 +59,7 @@ be_valground(void)
     *p++ = "--tool=memcheck";
 #ifdef _NP_VALGRIND_SUPPRESSION_FILE
     *p++ = "--gen-suppressions=all";
-    *p++ = "--suppressions="_NP_VALGRIND_SUPPRESSION_FILE;
+    *p++ = "--suppressions=" _NP_VALGRIND_SUPPRESSION_FILE;
 #endif
     while (*argv)
 	*p++ = *argv++;
