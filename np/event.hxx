@@ -134,7 +134,7 @@ public:
     event_t &with_stack();
 
     event_t *clone() const;
-    const event_t *normalise() const;
+    void normalise(const event_t *orig);
     result_t get_result() const;
     std::string which_as_string() const;
     std::string as_string() const;
