@@ -89,7 +89,7 @@ event_t::normalise() const
     static string filebuf;
     static string funcbuf;
 
-    memset(&norm, 0, sizeof(norm));
+    memset(static_cast<void *>(&norm), 0, sizeof(norm));
     norm.which = which;
     norm.description = xstr(description);
 
