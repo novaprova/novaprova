@@ -320,11 +320,11 @@ walker_t::skip_attributes()
 	case DW_FORM_data1:
 	    if (!reader_.skip_u8())
 		return EOF;
-		break;
+	    break;
 	case DW_FORM_data2:
 	    if (!reader_.skip_u16())
 		return EOF;
-		break;
+	    break;
 	case DW_FORM_data4:
 	    if (!reader_.skip_u32())
 		return EOF;
