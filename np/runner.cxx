@@ -218,9 +218,10 @@ runner_t::end()
 result_t
 runner_t::raise_event(job_t *j, const event_t *ev)
 {
-    ev = ev->normalise();
-    dispatch_listeners(add_event, j, ev);
-    return ev->get_result();
+    event_t n_ev;
+    n_ev.normalise(ev);
+    dispatch_listeners(add_event, j, &n_ev);
+    return n_ev.get_result();
 }
 
 static const char tmpfile_template[] = "/tmp/novaprova.out.XXXXXX";

@@ -82,47 +82,43 @@ event_t::save_strings()
     }
 }
 
-const event_t *
-event_t::normalise() const
+void
+event_t::normalise(const event_t *orig)
 {
-    static event_t norm;
     static string filebuf;
     static string funcbuf;
 
-    memset(&norm, 0, sizeof(norm));
-    norm.which = which;
-    norm.description = xstr(description);
+    this->which = orig->which;
+    this->description = xstr(orig->description);
 
-    if (locflags & LT_FUNCTYPE)
-	norm.in_functype(functype);
+    if (orig->locflags & LT_FUNCTYPE)
+	this->in_functype(orig->functype);
 
-    if (locflags & LT_SPIEGELFUNC)
+    if (orig->locflags & LT_SPIEGELFUNC)
     {
-	np::spiegel::function_t *f = (np::spiegel::function_t *)function;
+	np::spiegel::function_t *f = (np::spiegel::function_t *)orig->function;
 
 	filebuf = f->get_compile_unit()->get_absolute_path();
-	norm.in_file(filebuf);
+	this->in_file(filebuf);
 
 	funcbuf = f->get_name();
-	norm.in_function(funcbuf);
+	this->in_function(funcbuf);
     }
     else
     {
-	if ((locflags & (LT_FILENAME|LT_LINENO)) == (LT_FILENAME|LT_LINENO))
-	    norm.at_line(xstr(filename), lineno);
-	else if (locflags & LT_FILENAME)
-	    norm.in_file(xstr(filename));
+	if ((orig->locflags & (LT_FILENAME|LT_LINENO)) == (LT_FILENAME|LT_LINENO))
+	    this->at_line(xstr(orig->filename), orig->lineno);
+	else if (orig->locflags & LT_FILENAME)
+	    this->in_file(xstr(orig->filename));
 
-	if (locflags & LT_FUNCNAME)
-	    norm.in_function(xstr(function));
-	if (locflags & LT_STACK)
+	if (orig->locflags & LT_FUNCNAME)
+	    this->in_function(xstr(orig->function));
+	if (orig->locflags & LT_STACK)
 	{
-	    norm.locflags |= LT_STACK;
-	    norm.function = xstr(function);
+	    this->locflags |= LT_STACK;
+	    this->function = xstr(orig->function);
 	}
     }
-
-    return &norm;
 }
 
 result_t
