@@ -254,6 +254,7 @@ filename_is_ignored(const char *filename)
     {
 	"/bin/",
 	"/lib/",
+	"/lib64/",
 	"/usr/bin/",
 	"/usr/lib/",
 	"/opt/",
