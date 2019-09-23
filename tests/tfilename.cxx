@@ -32,7 +32,7 @@ setup(void)
     struct stat sb;
     int r;
 
-    r = system("rm -rf "TESTDIR);
+    r = system("rm -rf " TESTDIR);
     if (r)
 	return -1;
     r = stat(TESTDIR, &sb);
@@ -73,7 +73,7 @@ teardown()
     if (oldcwd[0])
 	chdir(oldcwd);
 
-    r = system("rm -rf "TESTDIR);
+    r = system("rm -rf " TESTDIR);
     if (r)
 	return -1;
     return 0;
