@@ -253,7 +253,7 @@ state_t::read_compile_units(linkobj_t *lo)
     return true;
 }
 
-static bool
+static const char *
 filename_is_ignored(const char *filename)
 {
     static const char * const prefixes[] =
@@ -274,9 +274,9 @@ filename_is_ignored(const char *filename)
     for (p = prefixes ; *p ; p++)
     {
 	if (!strncmp(filename, *p, strlen(*p)))
-	    return true;
+	    return *p;
     }
-    return false;
+    return 0;
 }
 
 bool
@@ -300,10 +300,11 @@ state_t::add_self()
 	if (!filename)
 	    filename = exe;
 
-	if (filename_is_ignored(filename))
+        const char *ignored_prefix = filename_is_ignored(filename);
+	if (ignored_prefix)
         {
 #if _NP_DEBUG
-	    fprintf(stderr, "np: (ignored)\n");
+	    fprintf(stderr, "np: matched prefix %s, ignoring\n", ignored_prefix);
 #endif
 	    continue;
         }

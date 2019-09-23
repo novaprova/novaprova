@@ -145,15 +145,25 @@ add_one_linkobj(struct dl_phdr_info *info,
     if (name && !*name)
 	name = NULL;
 
-    if (!name && info->dlpi_addr)
-	return 0;
-    if (!info->dlpi_phnum)
-	return 0;
-
 #if _NP_DEBUG
-    fprintf(stderr, "np:     dl_phdr_info { addr=%p name=%s }\n",
+    fprintf(stderr, "np:     shared object dl_phdr_info { addr=%p name=%s }\n",
 	    (void *)info->dlpi_addr, info->dlpi_name);
 #endif
+
+    if (!name && info->dlpi_addr)
+    {
+#if _NP_DEBUG
+        fprintf(stderr, "np:     shared object has an address but no name, ignoring\n");
+#endif
+	return 0;
+    }
+    if (!info->dlpi_phnum)
+    {
+#if _NP_DEBUG
+        fprintf(stderr, "np:     shared object has no PHDRs, ignoring\n");
+#endif
+	return 0;
+    }
 
     linkobj_t lo;
     lo.name = name;
@@ -161,14 +171,19 @@ add_one_linkobj(struct dl_phdr_info *info,
     for (int i = 0 ; i < info->dlpi_phnum ; i++)
     {
 	if (!info->dlpi_phdr[i].p_memsz)
+        {
+#if _NP_DEBUG
+            fprintf(stderr, "np:           PHDR[%d] has zero size, ignoring\n", i);
+#endif
 	    continue;
+        }
 
 	const ElfW(Phdr) *ph = &info->dlpi_phdr[i];
 	mapping_t m((unsigned long)ph->p_offset, (unsigned long)ph->p_memsz,
 		    (void *)((unsigned long)info->dlpi_addr + ph->p_vaddr));
 #if _NP_DEBUG
-        fprintf(stderr, "np:           mapping { offset=%lu size=%lu map=%p }\n",
-                m.get_offset(), m.get_size(), m.get_map());
+        fprintf(stderr, "np:           PHDR[%d] -> mapping { offset=%lu size=%lu map=%p }\n",
+                i, m.get_offset(), m.get_size(), m.get_map());
 #endif
 	lo.mappings.push_back(m);
     }
