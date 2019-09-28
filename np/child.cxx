@@ -56,6 +56,16 @@ child_t::handle_input()
 }
 
 void
+child_t::handle_hangup()
+{
+#if _NP_DEBUG
+    fprintf(stderr, "np: [%s] pid %d job %s handle_hangup() state=%d\n",
+	    np::util::rel_timestamp(), (int)pid_, job_->as_string().c_str(), (int)state_);
+#endif
+    state_ = FINISHED;
+}
+
+void
 child_t::handle_timeout(int64_t end)
 {
     switch (state_)
