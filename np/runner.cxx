@@ -458,6 +458,8 @@ runner_t::wait()
 		    continue;
 		if ((pitr->revents & POLLIN))
 		    (*citr)->handle_input();
+                if ((pitr->revents & POLLHUP))
+                    (*citr)->handle_hangup();
 		if ((*citr)->is_finished())
 		    nfinished++;
 		++pitr;

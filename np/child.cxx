@@ -53,6 +53,14 @@ child_t::handle_input()
 }
 
 void
+child_t::handle_hangup()
+{
+    dprintf("pid %d job %s handle_hangup() state=%d\n",
+	    (int)pid_, job_->as_string().c_str(), (int)state_);
+    state_ = FINISHED;
+}
+
+void
 child_t::handle_timeout(int64_t end)
 {
     switch (state_)
