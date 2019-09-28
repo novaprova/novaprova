@@ -149,13 +149,10 @@ add_one_linkobj(struct dl_phdr_info *info,
 	    (void *)info->dlpi_addr, info->dlpi_name);
 #endif
 
-    if (!name && info->dlpi_addr)
-    {
 #if _NP_DEBUG
-        fprintf(stderr, "np:     shared object has an address but no name, ignoring\n");
+    if (!name)
+        fprintf(stderr, "np:     main application has ASLR %s\n", (info->dlpi_addr ? "enabled" : "disabled"));
 #endif
-	return 0;
-    }
     if (!info->dlpi_phnum)
     {
 #if _NP_DEBUG
@@ -166,6 +163,7 @@ add_one_linkobj(struct dl_phdr_info *info,
 
     linkobj_t lo;
     lo.name = name;
+    lo.slide = (unsigned long)info->dlpi_addr;
 
     for (int i = 0 ; i < info->dlpi_phnum ; i++)
     {
@@ -179,7 +177,7 @@ add_one_linkobj(struct dl_phdr_info *info,
 
 	const ElfW(Phdr) *ph = &info->dlpi_phdr[i];
 	mapping_t m((unsigned long)ph->p_offset, (unsigned long)ph->p_memsz,
-		    (void *)((unsigned long)info->dlpi_addr + ph->p_vaddr));
+		    (void *)(lo.slide + ph->p_vaddr));
 #if _NP_DEBUG
         fprintf(stderr, "np:           PHDR[%d] -> mapping { offset=%lu size=%lu map=%p }\n",
                 i, m.get_offset(), m.get_size(), m.get_map());

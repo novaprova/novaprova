@@ -37,10 +37,23 @@ extern char *self_exe();
 extern int clock_gettime(int clk_id, struct timespec *res);
 
 
+// Represents a object (the main application or a shared library)
+// reported by the platforms-specific runtime linker.
 struct linkobj_t
 {
+    // The full pathname of the object, or NULL for the main
+    // application.  The string points into the runtime linker's
+    // data structures.
     const char *name;
+    // The difference in bytes between the actual in-memory load
+    // address of the object and the load address recorded in
+    // the object.  The two differ when ASLR (Address Space Layout
+    // Randomization) is enabled; it's a security technique
+    // designed to make it harder for malware to turn bugs like
+    // buffer overflows into running code.
     unsigned long slide;
+    // Memory mappings extracted from platform specific executable
+    // information, e.g. Program Headers on ELF systems.
     std::vector<np::spiegel::mapping_t> mappings;
 };
 extern std::vector<linkobj_t> get_linkobjs();
