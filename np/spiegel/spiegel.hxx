@@ -320,6 +320,10 @@ private:
     function_t(np::spiegel::dwarf::walker_t &w, _factory_t &factory) : member_t(w, factory) {}
     ~function_t() {}
 
+    bool populate();
+
+    uint64_t low_pc_;	    // TODO: should be an addr_t
+
     friend class compile_unit_t;
     friend class _factory_t;
 };
