@@ -19,6 +19,7 @@
 #include "np/spiegel/dwarf/entry.hxx"
 #include "np/spiegel/dwarf/enumerations.hxx"
 #include "np/spiegel/platform/common.hxx"
+#include <algorithm>
 
 namespace np {
 namespace spiegel {
@@ -412,6 +413,12 @@ compile_unit_t::populate()
     return true;
 }
 
+static bool
+compare_functions_by_address(function_t *fa, function_t *fb)
+{
+    return (fa->get_address() < fb->get_address());
+}
+
 vector<function_t *>
 compile_unit_t::get_functions()
 {
@@ -430,6 +437,10 @@ compile_unit_t::get_functions()
 
 	res.push_back(factory_.make_function(w));
     }
+    // Ensure the functions are reported in address order, even
+    // when the DWARF info has them recorded in some other order.
+    // Seen in Debian Buster.
+    std::sort(res.begin(), res.end(), compare_functions_by_address);
     return res;
 }
 
@@ -498,6 +509,20 @@ member_t::get_compile_unit() const
     np::spiegel::dwarf::state_t::compile_unit_offset_tuple_t res = state->resolve_reference(ref_);
     assert(res._cu);
     return factory_.make_compile_unit(res._cu->make_root_reference());
+}
+
+bool
+function_t::populate()
+{
+    np::spiegel::dwarf::walker_t w(ref_);
+    // move to DW_TAG_subprogram
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
+    if (!e)
+	return false;
+
+    low_pc_ = e->get_uint64_attribute(DW_AT_low_pc);
+
+    return true;
 }
 
 string
@@ -606,9 +631,7 @@ function_t::to_string() const
 addr_t
 function_t::get_address() const
 {
-    np::spiegel::dwarf::walker_t w(ref_);
-    const np::spiegel::dwarf::entry_t *e = w.move_next();
-    return e->get_address_attribute(DW_AT_low_pc);
+    return low_pc_;
 }
 
 // Return the live address of the function, or 0 if the function is not
@@ -721,10 +744,18 @@ _factory_t::make_type(np::spiegel::dwarf::reference_t ref)
 function_t *
 _factory_t::make_function(np::spiegel::dwarf::walker_t &w)
 {
-    _cacheable_t *cc = find(w.get_reference());
-    if (!cc)
-	cc = add(new function_t(w, *this));
-    return (function_t *)cc;
+    function_t *fn = (function_t *)find(w.get_reference());
+    if (!fn)
+    {
+        fn = new function_t(w, *this);
+        if (!fn->populate())
+        {
+            delete fn;
+            return 0;
+        }
+        add(fn);
+    }
+    return fn;
 }
 
 function_t *
