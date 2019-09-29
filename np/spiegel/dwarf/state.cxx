@@ -98,7 +98,7 @@ state_t::linkobj_t::map_sections()
 	path = filename_;
 
 #if _NP_DEBUG
-    fprintf(stderr, "state_t::linkobj_t::map_sections trying %s\n", path.c_str());
+    fprintf(stderr, "np: state_t::linkobj_t::map_sections trying %s\n", path.c_str());
 #endif
     bfd *b = bfd_openr(path.c_str(), NULL);
     if (!b)
@@ -112,7 +112,7 @@ state_t::linkobj_t::map_sections()
 	goto error;
     }
 #if _NP_DEBUG
-    fprintf(stderr, "Object %s\n", path.c_str());
+    fprintf(stderr, "np: object %s\n", path.c_str());
 #endif
 
     /* Extract the file shape of the DWARF sections */

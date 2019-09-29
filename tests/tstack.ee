@@ -1,5 +1,5 @@
 Stacktrace: 
-at 0xXXX: np::spiegel::state_t::describe_stacktrace (isyslog.c)
+at 0xXXX: np::spiegel::state_t::describe_stacktrace (np/spiegel/spiegel.cxx)
 by 0xXXX: vegan (tstack.cxx)
 by 0xXXX: umami::pickled::irony (tstack.cxx)
 by 0xXXX: leggings::dreamcatcher (tstack.cxx)
