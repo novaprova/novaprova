@@ -21,15 +21,31 @@
 
 static int the_fd = -1;
 
+/*
+ * For portability we ensure the file descriptors reported in the NP
+ * output are completely predictable rather than relying on the fd
+ * number returned naturally from open().
+ */
+static int opento(const char *filename, int mode, int flags, int tofd)
+{
+    int tmpfd, retfd;
+    tmpfd = open(filename, flags, mode);
+    if (tmpfd < 0)
+	return -1;
+    retfd = dup2(tmpfd, tofd);	// could be -1
+    close(tmpfd);
+    return retfd;
+}
+
 static void test_leaky_test(void)
 {
     fprintf(stderr, "MSG leaking fd for .leaky_test.dat\n");
-    open(".leaky_test.dat", O_WRONLY|O_CREAT, 0666);
+    opento(".leaky_test.dat", O_WRONLY|O_CREAT, 0666, 20);
 }
 
 static int set_up(void)
 {
-    the_fd = open(".leaky_fixture.dat", O_WRONLY|O_CREAT, 0666);
+    the_fd = opento(".leaky_fixture.dat", O_WRONLY|O_CREAT, 0666, 21);
     return 0;
 }
 
