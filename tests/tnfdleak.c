@@ -26,7 +26,7 @@ static int the_fd = -1;
  * output are completely predictable rather than relying on the fd
  * number returned naturally from open().
  */
-static int opento(const char *filename, int mode, int flags, int tofd)
+static int opento(const char *filename, int flags, int mode, int tofd)
 {
     int tmpfd, retfd;
     tmpfd = open(filename, flags, mode);
