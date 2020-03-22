@@ -102,7 +102,8 @@ some example commands which download and install them.
 
     # on RHEL / Fedora
     # install all the prereqs above, then add...
-    sudo yum install -y doxygen perl-XML-LibXML
+    sudo yum install -y doxygen perl-XML-LibXML \
+        python-breathe python-sphinx
 
 Once you have those prerequisites installed, you can clone, install
 and build NovaProva.
