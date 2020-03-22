@@ -48,18 +48,19 @@ installed, as well as the following:
 
 * `Valgrind <http://www.valgrind.org/>`_
   (Ubuntu ``apt-get install valgrind``,
-  RedHat ``rpm -U valgrind``)
+  RedHat ``yum install valgrind``)
 * `autoconf <https://www.gnu.org/software/autoconf/>`_
-  (Ubuntu ``apt-get install autoconf``)
+  (Ubuntu ``apt-get install autoconf``,
+  (RedHat ``yum install autoconf``)
 * `libxml2 <http://www.xmlsoft.org/>`_
   (Ubuntu ``apt-get install libxml2-dev``,
-  RedHat ``rpm -U libxml2-devel``)
+  RedHat ``yum install libxml2-devel``)
 * `pkg-config <http://www.freedesktop.org/wiki/Software/pkg-config/>`_
   (Ubuntu ``apt-get install pkg-config``,
-  RedHat ``rpm -U pkgconfig``)
+  RedHat ``yum install pkgconfig``)
 * `The BFD library <https://sourceware.org/binutils/docs/bfd/>`_
   (Ubuntu ``apt-get install binutils-dev``,
-  RedHat ``rpm -U binutils-devel``)
+  RedHat ``yum install binutils-devel``)
 
 After installing all that, run these commands.
 
@@ -85,24 +86,25 @@ as well as the following:
 
 * `Doxygen <http://www.doxygen.org/>`_
   (Ubuntu ``apt-get install doxygen``,
-  RedHat ``rpm -U doxygen``)
+  RedHat ``yum install doxygen``)
 * `Valgrind <http://www.valgrind.org/>`_
   (Ubuntu ``apt-get install valgrind``,
-  RedHat ``rpm -U valgrind``)
+  RedHat ``yum install valgrind``)
 * `Breathe <https://breathe.readthedocs.org/en/latest/>`_
   (Ubuntu ``apt-get install breathe-doc``,
   or ``pip install breathe``)
 * `autoconf <https://www.gnu.org/software/autoconf/>`_
-  (Ubuntu ``apt-get install autoconf``)
+  (Ubuntu ``apt-get install autoconf``,
+  (RedHat ``yum install autoconf``)
 * `libxml2 <http://www.xmlsoft.org/>`_
   (Ubuntu ``apt-get install libxml2-dev``,
-  RedHat ``rpm -U libxml2-devel``)
+  RedHat ``yum install libxml2-devel``)
 * `pkg-config <http://www.freedesktop.org/wiki/Software/pkg-config/>`_
   (Ubuntu ``apt-get install pkg-config``,
-  RedHat ``rpm -U pkgconfig``)
+  RedHat ``yum install pkgconfig``)
 * `The BFD library <https://sourceware.org/binutils/docs/bfd/>`_
   (Ubuntu ``apt-get install binutils-dev``,
-  RedHat ``rpm -U binutils-devel``)
+  RedHat ``yum install binutils-devel``)
 
 
 After installing all that, run these commands.
@@ -114,7 +116,6 @@ After installing all that, run these commands.
     git clone git://github.com/gnb/novaprova.git
     cd novaprova
 
-    automake -ac
     # ignore the errors, this is only needed to copy
     # in install-sh which autoconf wants
     autoreconf -iv
