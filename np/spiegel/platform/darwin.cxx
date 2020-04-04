@@ -17,6 +17,7 @@
 #include "np/spiegel/intercept.hxx"
 #include "np/util/tok.hxx"
 #include "np/util/filename.hxx"
+#include "np/util/log.hxx"
 #include "common.hxx"
 #include <mach-o/dyld.h>
 #include <mach/mach_time.h>
@@ -208,7 +209,7 @@ bool is_running_under_debugger()
     int r = proc_pidinfo(getpid(), PROC_PIDTBSDINFO, 0,  &info, sizeof(info));
     if (r < 0)
     {
-	perror("proc_pidinfo(PROC_PIDTBSDINFO)");
+        eprintf("Failed to call proc_pidinfo(PROC_PIDTBSDINFO): %s\n", strerror(errno));
 	return false;
     }
 
@@ -250,7 +251,7 @@ static void describe_sockaddr(const struct sockaddr *sa, ostream &o)
 	}
 	break;
     default:
-	fprintf(stderr, "unexpected socket family %d\n", sa->sa_family);
+	eprintf("unexpected socket family %d\n", sa->sa_family);
 	break;
     }
 }
@@ -276,7 +277,7 @@ static bool describe_fd(int fd, ostream &o)
 	    /* permission denied */
 	    return false;
 	}
-	perror("fstat");
+        eprintf("Failed to fstat fd %d: %s\n", fd, strerror(errno));
 	return false;
     }
     switch (sb.st_mode & S_IFMT)
@@ -317,7 +318,7 @@ static bool describe_fd(int fd, ostream &o)
      * a name in a UnionFS directory, and doesn't appear
      * as the type of any actual inodes */
     default:
-	fprintf(stderr, "fd %d: unexpected stat mode %d\n",
+	eprintf("fd %d: unexpected stat mode %d\n",
 		fd, sb.st_mode & S_IFMT);
 	return false;
     }
@@ -332,7 +333,7 @@ static bool describe_fd(int fd, ostream &o)
 	r = fcntl(fd, F_GETPATH, path);
 	if (r < 0)
 	{
-	    fprintf(stderr, "fcntl(%d, F_GETPATH): %s\n", fd, strerror(errno));
+	    eprintf("fcntl(%d, F_GETPATH) failed: %s\n", fd, strerror(errno));
 	    return false;
 	}
 	o << path;
@@ -344,7 +345,7 @@ static bool describe_fd(int fd, ostream &o)
 	r = getsockname(fd, (struct sockaddr *)&addr, &socklen);
 	if (r < 0)
 	{
-	    perror("getsockname");
+        eprintf("Failed to call getsockname(): %s\n", strerror(errno));
 	    return false;
 	}
 	o << "local ";
@@ -355,7 +356,7 @@ static bool describe_fd(int fd, ostream &o)
 	    r = getpeername(fd, (struct sockaddr *)&addr, &socklen);
 	    if (r < 0)
 	    {
-		perror("getpeername");
+                eprintf("Failed to call getpeername(): %s\n", strerror(errno));
 		return false;
 	    }
 	    o << " remote ";

@@ -15,6 +15,7 @@
  */
 #include "np/spiegel/common.hxx"
 #include "np/spiegel/intercept.hxx"
+#include "np/util/log.hxx"
 #include "common.hxx"
 
 #include <signal.h>
@@ -129,7 +130,7 @@ intercept_tramp(void)
     memset(&fpuc, 0, sizeof(fpuc));
     if (getcontext(&fpuc))
     {
-	perror("getcontext");
+        eprintf("Failed to call getcontext(): %s\n", strerror(errno));
 	exit(1);
     }
     tramp_uc.uc_mcontext.fpregs = fpuc.uc_mcontext.fpregs;
@@ -266,7 +267,7 @@ intercept_tramp(void)
     setcontext(&tramp_uc);
     /* notreached - setcontext() should not return, unless setting
      * the signal mask failed, which it doesn't */
-    perror("setcontext");
+    eprintf("setcontext() somehow returned: %s\n", strerror(errno));
     exit(1);
 
 after:
@@ -423,7 +424,7 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
 	r = sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
 	if (r < 0)
 	{
-	    perror("np: sigaction");
+	    eprintf("Failed to call sigaction(): %s\n", strerror(errno));
 	    err = "cannot install signal handler";
 	    return -1;
 	}

@@ -16,6 +16,7 @@
 #include "np/proxy_listener.hxx"
 #include "except.h"
 #include "np_priv.h"
+#include "np/util/log.hxx"
 
 namespace np {
 
@@ -67,11 +68,11 @@ deserialise_bytes(int fd, char *p, unsigned int len)
     {
 	r = read(fd, p, len);
 	if (r < 0) {
-	    perror("np: error reading from proxy");
+            eprintf("error reading from proxy: %s\n", strerror(errno));
 	    return false;
 	}
 	if (r == 0) {
-	    fprintf(stderr, "np: unexpected EOF deserialising from proxy\n");
+	    eprintf("unexpected EOF deserialising from proxy\n");
 	    return false;
 	}
 	len -= r;
@@ -205,17 +206,13 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
     event_t ev;
     unsigned int res;
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: proxy_listener_t::handle_call()\n");
-#endif
+    dprintf("starting to handle call\n");
     if (deserialise_uint(fd, &which))
     {
         switch (which)
         {
         case PROXY_EVENT:
-#if _NP_DEBUG
-            fprintf(stderr, "np: deserializing EVENT\n");
-#endif
+            dprintf("deserializing EVENT\n");
             if (deserialise_event(fd, &ev))
             {
                 *resp = merge(*resp, np::runner_t::running()->raise_event(j, &ev));
@@ -225,9 +222,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
             deserialise_event_cleanup(&ev);
             break;
         case PROXY_FINISHED:
-#if _NP_DEBUG
-            fprintf(stderr, "np: deserializing FINISHED\n");
-#endif
+            dprintf("deserializing FINISHED\n");
             if (deserialise_uint(fd, &res))
             {
                 *resp = merge(*resp, (result_t)res);
@@ -241,7 +236,7 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 
     /* Decoding failed somehow so fail the test and tell the user */
     *resp = merge(*resp, R_FAIL);
-    fprintf(stderr, "np: can't decode proxy call (which=%u)\n", which);
+    eprintf("can't decode proxy call (which=%u)\n", which);
     return false;
 }
 

@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include "np/job.hxx"
+#include "np/util/log.hxx"
 
 namespace np {
 using namespace std;
@@ -101,14 +102,14 @@ get_file_contents(const string &path)
     fd = open(path.c_str(), O_RDONLY, 0);
     if (fd < 0)
     {
-	perror(path.c_str());
+        eprintf("Failed to open file %s: %s\n", path.c_str(), strerror(errno));
 	return string("");
     }
 
     r = fstat(fd, &sb);
     if (r < 0)
     {
-	perror(path.c_str());
+        eprintf("Failed to fstat file %s: %s\n", path.c_str(), strerror(errno));
 	return string("");
     }
     buf.resize(sb.st_size);

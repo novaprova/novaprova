@@ -19,6 +19,7 @@
 #include "np/event.hxx"
 #include "np/proxy_listener.hxx"
 #include "np_priv.h"
+#include "np/util/log.hxx"
 
 namespace np {
 
@@ -40,17 +41,13 @@ child_t::~child_t()
 void
 child_t::handle_input()
 {
-#if _NP_DEBUG
-    fprintf(stderr, "np: [%s] pid %d job %s handle_input() state=%d\n",
-	    np::util::rel_timestamp(), (int)pid_, job_->as_string().c_str(), (int)state_);
-#endif
+    dprintf("pid %d job %s handle_input() state=%d\n",
+	    (int)pid_, job_->as_string().c_str(), (int)state_);
     if (state_ == FINISHED)
 	return;
     if (!proxy_listener_t::handle_call(event_pipe_, job_, &result_))
     {
-#if _NP_DEBUG
-	fprintf(stderr, "np: child now finished\n");
-#endif
+	dprintf("child now finished\n");
 	state_ = FINISHED;
     }
 }

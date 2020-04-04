@@ -15,6 +15,7 @@
  */
 #include "entry.hxx"
 #include "enumerations.hxx"
+#include "np/util/log.hxx"
 
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
@@ -41,7 +42,7 @@ entry_t::dump() const
     if (!abbrev_)
 	return;
 
-    fprintf(stderr, "np: Entry 0x%x [%u] %s {\n",
+    dprintf("Entry 0x%x [%u] %s {\n",
 	offset_,
 	level_,
 	tagnames.to_name(abbrev_->tag));
@@ -49,15 +50,16 @@ entry_t::dump() const
     vector<abbrev_t::attr_spec_t>::const_iterator i;
     for (i = abbrev_->attr_specs.begin() ; i != abbrev_->attr_specs.end() ; ++i)
     {
-	fprintf(stderr, "np:     %s = ", attrnames.to_name(i->name));
 	const value_t *v = get_attribute(i->name);
 	if (v)
-	    v->dump();
+        {
+            string s = v->to_string();
+	    dprintf("    %s = %s", attrnames.to_name(i->name), s.c_str());
+        }
 	else
-	    fprintf(stderr, "<missing>");
-	fprintf(stderr, "\n");
+	    dprintf("    %s = <missing>", attrnames.to_name(i->name));
     }
-    fprintf(stderr, "}\n");
+    dprintf("}\n");
 }
 
 // close namespaces

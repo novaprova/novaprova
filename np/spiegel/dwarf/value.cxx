@@ -18,44 +18,45 @@
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
-void
-value_t::dump() const
+string
+value_t::to_string() const
 {
+    char buf[64];
+
     switch (type)
     {
     case T_UNDEF:
-	printf("<undef>");
-	break;
+	return string("<undef>");
     case T_STRING:
-	printf("\"%s\"", val.string);
-	break;
+        return string("\"") + string(val.string) + string("\"");
     case T_SINT32:
-	printf("%d", val.sint32);
-	break;
+	snprintf(buf, sizeof(buf), "%d", val.sint32);
+        return string(buf);
     case T_UINT32:
-	printf("0x%x", val.uint32);
-	break;
+	snprintf(buf, sizeof(buf), "0x%x", val.uint32);
+        return string(buf);
     case T_SINT64:
-	printf("%lld", (long long)val.sint64);
-	break;
+	snprintf(buf, sizeof(buf), "%lld", (long long)val.sint64);
+        return string(buf);
     case T_UINT64:
-	printf("0x%llx", (unsigned long long)val.uint64);
-	break;
+	snprintf(buf, sizeof(buf), "0x%llx", (unsigned long long)val.uint64);
+        return string(buf);
     case T_BYTES:
 	{
+            string s = "";
 	    const unsigned char *u = val.bytes.buf;
 	    unsigned len = val.bytes.len;
 	    const char *sep = "";
 	    while (len--)
 	    {
-		printf("%s0x%02x", sep, (unsigned)*u++);
+		snprintf(buf, sizeof(buf), "%s0x%02x", sep, (unsigned)*u++);
+                s += buf;
 		sep = " ";
 	    }
+            return s;
 	}
-	break;
     case T_REF:
-	printf("%s", val.ref.as_string().c_str());
-	break;
+        return val.ref.as_string();
     }
 }
 

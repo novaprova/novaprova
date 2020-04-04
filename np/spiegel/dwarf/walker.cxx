@@ -16,6 +16,7 @@
 #include "walker.hxx"
 #include "enumerations.hxx"
 #include "state.hxx"
+#include "np/util/log.hxx"
 
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
@@ -62,8 +63,7 @@ walker_t::read_entry()
 	    return RE_EOF;   // end of subtree in scope
 	level_--;
 #if DEBUG_WALK
-	fprintf(stderr, "\n# XXX [%u] %s:%d level=%u return 0\n",
-	       id_, __FUNCTION__, __LINE__, level_);
+	dprintf("id=%u level=%u return 0\n", id_, level_);
 #endif
 	return RE_EOL;
     }
@@ -94,8 +94,8 @@ walker_t::read_entry()
 	level_++;
 
 #if DEBUG_WALK
-    fprintf(stderr, "\n# XXX [%u]%s:%d level=%u entry={tag=%s level=%u offset=0x%x} return 1\n",
-	   id_, __FUNCTION__, __LINE__,
+    dprintf("id %u level=%u entry={tag=%s level=%u offset=0x%x} return 1\n",
+	   id_,
 	   level_,
 	   tagnames.to_name(entry_.get_tag()),
 	   entry_.get_level(),
@@ -479,14 +479,13 @@ walker_t::get_path() const
 
 #if DEBUG_WALK
 #define BEGIN \
-    fprintf(stderr, "\n# [%u] XXX %s:%d level=%u entry.level=%u\n", \
-	   id_, __FUNCTION__, __LINE__, level_, entry_.get_level());
+    dprintf("id %u level=%u entry.level=%u\n", \
+	   id_, level_, entry_.get_level());
 #define RETURN(ret) \
     do { \
 	const entry_t *_ret = (ret); \
-	fprintf(stderr, "\n# XXX [%u]%s:%d r=%d level %u entry.level=%u return %p\n", \
-	       id_, __FUNCTION__, __LINE__, r, \
-	       level_, entry_.get_level(), _ret); \
+	dprintf("id %u r=%d level %u entry.level=%u return %p\n", \
+	       id_, r, level_, entry_.get_level(), _ret); \
 	return _ret; \
     } while(0)
 #else

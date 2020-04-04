@@ -18,6 +18,7 @@
  */
 #include "np/spiegel/common.hxx"
 #include "common.hxx"
+#include "np/util/log.hxx"
 #include <sys/mman.h>
 
 namespace np { namespace spiegel { namespace platform {
@@ -66,7 +67,7 @@ text_map_writable(addr_t addr, size_t len)
 		 PROT_READ|PROT_WRITE|PROT_EXEC);
     if (r)
     {
-	perror("np: mprotect");
+        eprintf("Failed to call mprotect(PROT_READ|PROT_WRITE|PROT_EXEC): %s\n", strerror(errno));
 	return -1;
     }
     return 0;
@@ -94,7 +95,7 @@ text_restore(addr_t addr, size_t len)
 	r = mprotect((void *)a, (size_t)page_size(), PROT_READ|PROT_EXEC);
 	if (r)
 	{
-	    perror("np: mprotect");
+            eprintf("Failed to mprotect(PROT_READ|PROT_EXEC): %s\n", strerror(errno));
 	    return -1;
 	}
     }

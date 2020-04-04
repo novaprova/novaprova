@@ -15,6 +15,7 @@
  */
 #include "np/util/common.hxx"
 #include "np/util/trace.h"
+#include "np/util/log.hxx"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -35,27 +36,27 @@ void np_trace_init(void)
     int fd = open(filename, O_RDWR|O_CREAT|O_TRUNC, 0666);
     if (fd < 0)
     {
-	perror(filename);
+        eprintf("Failed to open(\"%s\"): %s\n", filename, strerror(errno));
 	exit(1);
     }
 
     int r = ftruncate(fd, BUFFER_SIZE);
     if (r < 0)
     {
-	perror("ftruncate");
+        eprintf("Failed to ftruncate file \"%s\": %s\n", filename, strerror(errno));
 	exit(1);
     }
 
     _np_trace_buf = (char *)mmap(NULL, BUFFER_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (_np_trace_buf == (char *)MAP_FAILED)
     {
-	perror("mmap");
+        eprintf("Failed to mmap file: %s\n", strerror(errno));
 	exit(1);
     }
     close(fd);
 
     memset(_np_trace_buf, '\n', BUFFER_SIZE);
-    fprintf(stderr, "np: tracing to %s\n", filename);
+    iprintf("tracing to %s\n", filename);
 #endif
 }
 

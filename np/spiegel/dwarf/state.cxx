@@ -21,6 +21,7 @@
 #include "compile_unit.hxx"
 #include "walker.hxx"
 #include "np/spiegel/platform/common.hxx"
+#include "np/util/log.hxx"
 
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
@@ -77,6 +78,31 @@ state_t::linkobj_t::map_from_system(mapping_t &m) const
     return false;
 }
 
+static void _np_bfd_error_handler(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    if (!strncmp(fmt, "%B", 2))
+    {
+        // The BFD library does this wacky thing where they pass
+        // the struct bfd* as the printf argument of a fake %B
+        // conversion string.  Really could they have made this
+        // any less convenient?  FFS.  This is very difficult
+        // to deal with properly given the stdarg interface.
+        struct bfd *bfd = va_arg(args, struct bfd*);
+        eprintf("In file %s:\n", bfd->filename);
+        fmt += 2;
+        if (*fmt == ':')
+            fmt++;
+        while (isspace(*fmt))
+            fmt++;
+    }
+
+    _np_logvprintf(np::log::ERROR, fmt, args);
+    va_end(args);
+}
+
 bool
 state_t::linkobj_t::map_sections()
 {
@@ -87,38 +113,32 @@ state_t::linkobj_t::map_sections()
     int ndwarf = 0; /* number of DWARF sections in the linkobj */
 
     bfd_init();
+    bfd_set_error_handler(_np_bfd_error_handler);
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: state_t::linkobj_t::map_sections: opening bfd %s\n", filename_);
-#endif
+    dprintf("opening bfd %s\n", filename_);
     /* Open a BFD */
     std::string path;
     bool is_separate = np::spiegel::platform::symbol_filename(filename_, path);
     if (!is_separate)
 	path = filename_;
 
-#if _NP_DEBUG
-    fprintf(stderr, "state_t::linkobj_t::map_sections trying %s\n", path.c_str());
-#endif
+    dprintf("trying %s\n", path.c_str());
     bfd *b = bfd_openr(path.c_str(), NULL);
     if (!b)
     {
-	bfd_perror(path.c_str());
+        eprintf("BFD library failed to open %s: %s\n",
+                path.c_str(), bfd_errmsg(bfd_get_error()));
 	return false;
     }
     if (!bfd_check_format(b, bfd_object))
     {
-	fprintf(stderr, "np: %s: not an object\n", path.c_str());
+	eprintf("%s: not an object\n", path.c_str());
 	goto error;
     }
-#if _NP_DEBUG
-    fprintf(stderr, "Object %s\n", path.c_str());
-#endif
+    dprintf("Object %s\n", path.c_str());
 
     /* Extract the file shape of the DWARF sections */
-#if _NP_DEBUG
-    fprintf(stderr, "np: sections:\n");
-#endif
+    dprintf("sections:\n");
     asection *sec;
     for (sec = b->sections ; sec ; sec = sec->next)
     {
@@ -132,11 +152,9 @@ state_t::linkobj_t::map_sections()
 	}
 
 	int idx = secnames.to_index(sec->name);
-#if _NP_DEBUG
-	fprintf(stderr, "np: section name %s size %lx filepos %lx index %d\n",
+	dprintf("section name %s size %lx filepos %lx index %d\n",
 		sec->name, (unsigned long)sec->size,
 		(unsigned long)sec->filepos, idx);
-#endif
 	if (idx == DW_sec_none)
 	    continue;
 	ndwarf++;
@@ -146,18 +164,15 @@ state_t::linkobj_t::map_sections()
 	if (!is_separate)
 	{
 	    if (map_from_system(sections_[idx]))
-#if _NP_DEBUG
-		fprintf(stderr, "np: found system mapping for section %s at %p\n",
-			secnames.to_name(idx), sm->get_map())
-#endif
-		;
+		dprintf("found system mapping for section %s at %p\n",
+			secnames.to_name(idx), sm->get_map());
 	}
     }
 
     if (!ndwarf)
     {
 	/* no DWARF sections at all */
-	fprintf(stderr, "np: WARNING: no DWARF information found for %s, ignoring\n", filename_);
+	wprintf("no DWARF information found for %s, ignoring\n", filename_);
 	r = true;
 	goto out;
     }
@@ -191,20 +206,21 @@ state_t::linkobj_t::map_sections()
 	    }
 	}
 
-#if _NP_DEBUG
-	fprintf(stderr, "np: new minimal mappings not found in system mappings, before mmap()\n");
-	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-	{
-	    fprintf(stderr, "np:    { offset=0x%lx size=0x%lx }\n",
-		    m->get_offset(), m->get_size());
-	}
-#endif
+        if (is_enabled_for(np::log::DEBUG))
+        {
+            dprintf("mappings:\n");
+            for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+            {
+                dprintf("mapping offset 0x%lx size 0x%lx end 0x%lx\n",
+                        m->get_offset(), m->get_size(), m->get_end());
+            }
+        }
 
 	/* mmap() the mappings */
 	fd = open(path.c_str(), O_RDONLY, 0);
 	if (fd < 0)
 	{
-	    perror(path.c_str());
+	    eprintf("Failed to open %s: %s", path.c_str(), strerror(errno));
 	    goto error;
 	}
 
@@ -212,7 +228,7 @@ state_t::linkobj_t::map_sections()
 	{
 	    if (m->mmap(fd, /*read-only*/false) < 0)
 	    {
-		perror("mmap");
+                eprintf("Failed to mmap %s: %s", path.c_str(), strerror(errno));
 		goto error;
 	    }
 	}
@@ -232,22 +248,23 @@ state_t::linkobj_t::map_sections()
 	}
     }
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: new mappings after mmap()\n");
-    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+    if (is_enabled_for(np::log::DEBUG))
     {
-        fprintf(stderr, "np:    { offset=0x%lx size=0x%lx map=%p }\n",
-                m->get_offset(), m->get_size(), m->get_map());
+        dprintf("new mappings after mmap()\n");
+        for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
+        {
+            dprintf("    { offset=0x%lx size=0x%lx map=%p }\n",
+                    m->get_offset(), m->get_size(), m->get_map());
+        }
+        dprintf("debug sections map:\n");
+        for (int idx = 0 ; idx < DW_sec_num ; idx++)
+        {
+            dprintf("index %d name %s map 0x%lx size 0x%lx\n",
+                    idx, secnames.to_name(idx),
+                    (unsigned long)sections_[idx].get_map(),
+                    sections_[idx].get_size());
+        }
     }
-    fprintf(stderr, "np: debug sections map:\n");
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
-    {
-	fprintf(stderr, "np:     [%d] { name=%s map=%p size=0x%lx }\n",
-		idx, secnames.to_name(idx),
-		sections_[idx].get_map(),
-		sections_[idx].get_size());
-    }
-#endif
 
     goto out;
 
@@ -274,9 +291,7 @@ state_t::linkobj_t::unmap_sections()
 bool
 state_t::read_compile_units(linkobj_t *lo)
 {
-#if _NP_DEBUG
-    fprintf(stderr, "np: reading compile units for linkobj %s\n", lo->filename_);
-#endif
+    dprintf("reading compile units for linkobj %s\n", lo->filename_);
     reader_t infor = lo->sections_[DW_sec_info].get_contents();
     reader_t abbrevr = lo->sections_[DW_sec_abbrev].get_contents();
 
@@ -324,20 +339,17 @@ filename_is_ignored(const char *filename)
 bool
 state_t::add_self()
 {
+    dprintf("Adding self executable\n");
     char *exe = np::spiegel::platform::self_exe();
     bool r = false;
 
     vector<np::spiegel::platform::linkobj_t> los = np::spiegel::platform::get_linkobjs();
     vector<np::spiegel::platform::linkobj_t>::iterator i;
     const char *filename;
-#if _NP_DEBUG
-    fprintf(stderr, "np: state_t::add_self: converting platform linkobjs to spiegel linkobjs\n");
-#endif
+    dprintf("converting platform linkobjs to spiegel linkobjs\n");
     for (i = los.begin() ; i != los.end() ; ++i)
     {
-#if _NP_DEBUG
-	fprintf(stderr, "np: platform linkobj %s\n", i->name);
-#endif
+	dprintf("platform linkobj %s\n", i->name);
 	filename = i->name;
 	if (!filename)
 	    filename = exe;
@@ -345,18 +357,14 @@ state_t::add_self()
         const char *ignored_prefix = filename_is_ignored(filename);
 	if (ignored_prefix)
         {
-#if _NP_DEBUG
-	    fprintf(stderr, "np: matched prefix %s, ignoring\n", ignored_prefix);
-#endif
+	    dprintf("matched prefix \"%s\", ignoring\n", ignored_prefix);
 	    continue;
         }
 
 	linkobj_t *lo = get_linkobj(filename);
 	if (lo)
 	{
-#if _NP_DEBUG
-	    fprintf(stderr, "np: have spiegel linkobj\n");
-#endif
+	    dprintf("have spiegel linkobj\n");
 	    lo->system_mappings_ = i->mappings;
 	    lo->slide_ = i->slide;
 	    vector<mapping_t>::iterator sm;
@@ -377,6 +385,7 @@ state_t::add_self()
 bool
 state_t::add_executable(const char *filename)
 {
+    dprintf("Adding executable %s\n", filename);
     linkobj_t *lo = get_linkobj(filename);
     if (!lo)
 	return false;
@@ -762,16 +771,13 @@ state_t::resolve_reference(reference_t ref) const
         off = ref.offset;
         break;
     case reference_t::REF_ADDR:
-#if _NP_DEBUG
-        fprintf(stderr, "np: Resolving REF_ADDR (cu=%u, offset=%llu)\n", ref.cu, ref.offset);
-#endif
+        dprintf("Resolving REF_ADDR (cu=%u, offset=%llu)\n", ref.cu, ref.offset);
         cu = get_compile_unit_by_offset(ref.cu, ref.offset);
         if (cu)
             off = ref.offset - cu->get_start_offset();
         break;
     default:
-        fprintf(stderr,
-                "np: WTF? trying to resolve reference of type %d, not implemented\n",
+        eprintf("WTF? trying to resolve reference of type %d, not implemented\n",
                 (int)ref.type);
         break;
     }

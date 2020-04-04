@@ -19,6 +19,7 @@
 #include "np/spiegel/dwarf/entry.hxx"
 #include "np/spiegel/dwarf/enumerations.hxx"
 #include "np/spiegel/platform/common.hxx"
+#include "np/util/log.hxx"
 
 namespace np {
 namespace spiegel {
@@ -399,15 +400,13 @@ compile_unit_t::populate()
     high_pc_ = e->get_uint64_attribute(DW_AT_high_pc);
     language_ = e->get_uint32_attribute(DW_AT_language);
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: populated spiegel compile unit %s comp_dir %s "
-		    "low_pc 0x%llx high_pc 0x%llx language %u\n",
-		    name_,
-		    comp_dir_,
-		    (unsigned long long)low_pc_,
-		    (unsigned long long)high_pc_,
-		    (unsigned)language_);
-#endif
+    dprintf("populated spiegel compile unit %s comp_dir %s "
+            "low_pc 0x%llx high_pc 0x%llx language %u\n",
+            name_,
+            comp_dir_,
+            (unsigned long long)low_pc_,
+            (unsigned long long)high_pc_,
+            (unsigned)language_);
 
     return true;
 }

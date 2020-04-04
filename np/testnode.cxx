@@ -16,6 +16,7 @@
 #include "np/testnode.hxx"
 #include "np/redirect.hxx"
 #include "np/util/tok.hxx"
+#include "np/util/log.hxx"
 
 static std::vector<np::spiegel::intercept_t*> dynamic_intercepts;
 
@@ -49,9 +50,7 @@ testnode_t::make_path(string name)
     testnode_t **tailp;
     tok_t tok(name.c_str(), "/");
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: testnode_t::make_path(%s)\n", name.c_str());
-#endif
+    dprintf("name=%s\n", name.c_str());
     while ((part = tok.next()))
     {
 	for (child = parent->children_, tailp = &parent->children_ ;
@@ -77,13 +76,12 @@ void
 testnode_t::set_function(functype_t ft, np::spiegel::function_t *func)
 {
     if (funcs_[ft])
-	fprintf(stderr, "np: WARNING: duplicate %s functions: "
-			"%s:%s and %s:%s\n",
-			as_string(ft),
-			funcs_[ft]->get_compile_unit()->get_absolute_path().c_str(),
-			funcs_[ft]->get_name().c_str(),
-			func->get_compile_unit()->get_absolute_path().c_str(),
-			func->get_name().c_str());
+	wprintf("duplicate %s functions: %s:%s and %s:%s\n",
+                as_string(ft),
+                funcs_[ft]->get_compile_unit()->get_absolute_path().c_str(),
+                funcs_[ft]->get_name().c_str(),
+                func->get_compile_unit()->get_absolute_path().c_str(),
+                func->get_name().c_str());
     else
 	funcs_[ft] = func;
 }
@@ -91,12 +89,10 @@ testnode_t::set_function(functype_t ft, np::spiegel::function_t *func)
 void
 testnode_t::add_mock(np::spiegel::function_t *target, np::spiegel::function_t *mock)
 {
-#if _NP_DEBUG
-    fprintf(stderr, "np: testnode_t::add_mock: target_addr=%p target_name=%s mock_addr=%p\n", 
+    dprintf("target_addr=%p target_name=%s mock_addr=%p\n",
             (void*)target->get_address(),
 	    target->get_full_name().c_str(),
 	    (void*)mock->get_address());
-#endif
     add_mock(target->get_live_address(),
 	     target->get_full_name().c_str(),
 	     mock->get_live_address());
@@ -114,51 +110,41 @@ testnode_t::add_mock(np::spiegel::addr_t target, np::spiegel::addr_t mock)
     intercepts_.push_back(new redirect_t(target, 0, mock));
 }
 
-static void
-indent(int level)
-{
-    for ( ; level ; level--)
-	fputs("    ", stderr);
-}
-
 void
-testnode_t::dump(int level) const
+testnode_t::dump(string indent) const
 {
-    indent(level);
     if (name_)
     {
-	fprintf(stderr, "testnode %s (full %s)\n",
-		name_, get_fullname().c_str());
+	dprintf("%stestnode %s (full %s)\n",
+		indent.c_str(), name_, get_fullname().c_str());
     }
 
     for (int type = 0 ; type < FT_NUM_SINGULAR ; type++)
     {
 	if (funcs_[type])
 	{
-	    indent(level);
-	    fprintf(stderr, "  %s %s:%s\n",
-			    as_string((functype_t)type),
-			    funcs_[type]->get_compile_unit()->get_absolute_path().c_str(),
-			    funcs_[type]->get_name().c_str());
+	    dprintf("%s  %s %s:%s\n",
+                    indent.c_str(),
+                    as_string((functype_t)type),
+                    funcs_[type]->get_compile_unit()->get_absolute_path().c_str(),
+                    funcs_[type]->get_name().c_str());
 	}
     }
 
     vector<parameter_t*>::const_iterator ip;
     for (ip = parameters_.begin() ; ip != parameters_.end() ; ip++)
     {
-	indent(level);
-	fprintf(stderr, "  parameter %s\n", (*ip)->as_string().c_str());
+	dprintf("%s  parameter %s\n", indent.c_str(), (*ip)->as_string().c_str());
     }
 
     vector<np::spiegel::intercept_t*>::const_iterator ii;
     for (ii = intercepts_.begin(); ii != intercepts_.end() ; ii++)
     {
-	indent(level);
-	fprintf(stderr, "  intercept %s\n", (*ii)->as_string().c_str());
+	dprintf("%s  intercept %s\n", indent.c_str(), (*ii)->as_string().c_str());
     }
 
     for (testnode_t *child = children_ ; child ; child = child->next_)
-	child->dump(level+1);
+	child->dump(indent + string("    "));
 }
 
 string

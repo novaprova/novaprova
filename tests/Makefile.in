@@ -106,6 +106,7 @@ PARALLELISM= \
     $(shell ./parallelism.sh)
 
 MAINFUL_TESTS= \
+    tlog \
     tfilename \
     tintercept \
     treader \

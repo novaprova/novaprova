@@ -19,6 +19,7 @@
 #include "np/junit_listener.hxx"
 #include "np/job.hxx"
 #include "except.h"
+#include "np/util/log.hxx"
 
 namespace np {
 using namespace std;
@@ -60,14 +61,14 @@ void
 junit_listener_t::end()
 {
     string hostname = get_hostname();
-    string timestamp = abs_format_iso8601(abs_now());
+    string timestamp = abs_format_iso8601(abs_now(), NP_SECONDS);
 
     // TODO: mkdir_p
     string directory = "reports";
     int r = mkdir(directory.c_str(), 0777);
     if (r < 0 && errno != EEXIST)
     {
-	fprintf(stderr, "np: cannot make directory %s: %s\n",
+	eprintf("cannot make directory %s: %s\n",
 		directory.c_str(), strerror(errno));
 	return;
     }
@@ -146,7 +147,7 @@ junit_listener_t::end()
 	int r = xmlSaveFileEnc(filename.c_str(), xdoc, "UTF-8");
 	if (r < 0)
 	{
-	    fprintf(stderr, "np: failed to write JUnit XML file %s: %s\n",
+	    eprintf("failed to write JUnit XML file %s: %s\n",
 		    filename.c_str(), strerror(errno));
 	}
 	xmlFreeDoc(xdoc);

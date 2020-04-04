@@ -16,6 +16,7 @@
 #include "np/spiegel/intercept.hxx"
 #include "np/spiegel/platform/common.hxx"
 #include "np/spiegel/dwarf/state.hxx"
+#include "np/util/log.hxx"
 
 namespace np {
 namespace spiegel {
@@ -74,9 +75,8 @@ intercept_t::install()
 	string err;
 	r = np::spiegel::platform::install_intercept(addr_, as->state_, err);
 	if (r < 0)
-	    fprintf(stderr, "np: failed to install intercepted "
-			    "function %s at 0x%lx: %s\n",
-			    get_name(), (unsigned long)addr_, err.c_str());
+	    eprintf("failed to install intercepted function %s at 0x%lx: %s\n",
+                    get_name(), (unsigned long)addr_, err.c_str());
     }
     return r;
 }
@@ -100,9 +100,8 @@ intercept_t::uninstall()
 	string err;
 	r = np::spiegel::platform::uninstall_intercept(addr_, as->state_, err);
 	if (r < 0)
-	    fprintf(stderr, "np: failed to uninstall intercepted "
-			    "function %s at 0x%lx: %s\n",
-			    get_name(), (unsigned long)addr_, err.c_str());
+	    eprintf("failed to uninstall intercepted function %s at 0x%lx: %s\n",
+                    get_name(), (unsigned long)addr_, err.c_str());
 	remove_addrstate(addr_);
     }
     return r;

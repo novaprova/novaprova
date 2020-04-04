@@ -20,6 +20,7 @@
 #include <valgrind/valgrind.h>
 #endif
 #include "np/util/trace.h"
+#include "np/util/log.hxx"
 
 using namespace std;
 
@@ -44,15 +45,14 @@ be_valground(void)
 
     if (np::spiegel::platform::is_running_under_debugger())
     {
-	fprintf(stderr, "np: disabling Valgrind under debugger\n");
+	iprintf("disabling Valgrind under debugger\n");
 	return;
     }
 
     if (!np::spiegel::platform::get_argv(&argc, &argv))
 	return;
 
-    fprintf(stderr, "[%s] np: starting valgrind\n",
-	    np::util::rel_timestamp());
+    iprintf("starting valgrind\n");
 
     p = newargv = (const char **)np::util::xmalloc(sizeof(char *) * (argc+8));
     *p++ = VALGRIND_BINARY;
@@ -68,7 +68,7 @@ be_valground(void)
 	*p++ = *argv++;
 
     execv(newargv[0], (char * const *)newargv);
-    perror(newargv[0]);
+    eprintf("Failed to execv(\"%s\"): %s\n", newargv[0], strerror(errno));
     exit(1);
 #endif
 }
@@ -102,7 +102,7 @@ np_init(void)
 {
     be_valground();
     std::set_terminate(__np_terminate_handler);
-    np::util::rel_timestamp();
+    np::util::rel_time();
     np_trace_init();
     np::testmanager_t::instance();
     return new np::runner_t;

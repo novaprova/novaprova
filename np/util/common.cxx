@@ -151,13 +151,40 @@ int64_t rel_now()
     return posix_now(NP_CLOCK_MONOTONIC);
 }
 
-string abs_format_iso8601(int64_t abs)
+/*
+ * Frankly I don't think the C++ std::chrono interface is any better
+ * than the shitty C one designed decades earlier, if it still
+ * leaves me using strftime() with it's cruddy string handling and
+ * localtime_r() with its global timezone state.
+ */
+int abs_format_iso8601_buf(int64_t abs, char *buf, int maxlen, int precision)
 {
     time_t clock = abs / NANOSEC_PER_SEC;
+    unsigned long ns = abs % NANOSEC_PER_SEC;
     struct tm tm;
-    char buf[20];
-    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S",
-	     localtime_r(&clock, &tm));
+    int used = 0;
+    used += strftime(buf+used, maxlen-used, "%Y-%m-%dT%H:%M:%S", localtime_r(&clock, &tm));
+    switch (precision)
+    {
+    case NP_NANOSECONDS:
+        used += snprintf(buf+used, maxlen-used, ".%09lu", ns);
+        break;
+    case NP_MICROSECONDS:
+        used += snprintf(buf+used, maxlen-used, ".%06lu", ns/1000);
+        break;
+    case NP_MILLISECONDS:
+        used += snprintf(buf+used, maxlen-used, ".%03lu", ns/1000000);
+        break;
+    case NP_SECONDS:
+        break;
+    }
+    return used;
+}
+
+string abs_format_iso8601(int64_t abs, int precision)
+{
+    char buf[32];
+    abs_format_iso8601_buf(abs, buf, sizeof(buf), precision);
     return string(buf);
 }
 

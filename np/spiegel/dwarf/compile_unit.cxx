@@ -18,6 +18,7 @@
 #include "compile_unit.hxx"
 #include "walker.hxx"
 #include "enumerations.hxx"
+#include "np/util/log.hxx"
 
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
@@ -29,11 +30,8 @@ compile_unit_t::read_header(reader_t &r)
     reader_ = r;
     offset_ = r.get_offset(); // sample offset of start of header
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: DWARF compile unit header at "
-		    "section offset 0x%lx\n",
-		    r.get_offset());
-#endif
+    dprintf("DWARF compile unit header at section offset 0x%lx\n",
+            r.get_offset());
 
     np::spiegel::offset_t length;
     uint16_t version;
@@ -72,14 +70,12 @@ compile_unit_t::read_header(reader_t &r)
     if (addrsize != _NP_ADDRSIZE) fatal("Bad DWARF addrsize %u, expecting %u",
 	      addrsize, _NP_ADDRSIZE);
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: length %u version %u is64 %s abbrevs_offset %u addrsize %u\n",
+    dprintf("length %u version %u is64 %s abbrevs_offset %u addrsize %u\n",
 	    (unsigned)length,
 	    (unsigned)version,
 	    is64 ? "true" : "false",
 	    (unsigned)abbrevs_offset_,
 	    (unsigned)addrsize);
-#endif
 
     version_ = version;
     is64_ = is64;
@@ -100,25 +96,27 @@ compile_unit_t::read_header(reader_t &r)
 void
 compile_unit_t::read_abbrevs(reader_t &r)
 {
-#if _NP_DEBUG
-    fprintf(stderr, "np: reading abbrevs\n");
-#endif
+    dprintf("reading abbrevs\n");
     r.seek(abbrevs_offset_);
 
     uint32_t code;
+    unsigned int nread = 0;
     /* code 0 indicates end of compile unit */
     while (r.read_uleb128(code) && code)
     {
 	abbrev_t *a = new abbrev_t(code);
 	if (!a->read(r))
 	{
+            eprintf("Failed to read abbrev code %u\n", code);
 	    delete a;
 	    break;
 	}
+        nread++;
 	if (a->code >= abbrevs_.size())
 	    abbrevs_.resize(a->code+1, 0);
 	abbrevs_[a->code] = a;
     }
+    dprintf("Read %u abbrevs, largest code %u\n", nread, abbrevs_.size()-1);
 }
 
 

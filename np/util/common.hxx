@@ -103,9 +103,17 @@ extern std::string HEX(unsigned long x);
 extern std::string dec(unsigned int x);
 
 #define NANOSEC_PER_SEC	    (1000000000LL)
+
+/* precision values for abs_format_iso8601 */
+#define NP_NANOSECONDS 1
+#define NP_MICROSECONDS 2
+#define NP_MILLISECONDS 3
+#define NP_SECONDS 4
+
 extern int64_t rel_now();
 extern int64_t abs_now();
-extern std::string abs_format_iso8601(int64_t);
+extern std::string abs_format_iso8601(int64_t, int precision);
+extern int abs_format_iso8601_buf(int64_t, char *buf, int maxlen, int precision);
 extern std::string rel_format(int64_t);
 extern int64_t rel_time();
 extern const char *rel_timestamp();

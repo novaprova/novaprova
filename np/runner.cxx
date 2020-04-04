@@ -23,6 +23,7 @@
 #include "np/child.hxx"
 #include "np/spiegel/spiegel.hxx"
 #include "np_priv.h"
+#include "np/util/log.hxx"
 #include "except.h"
 #if HAVE_VALGRIND
 #include <valgrind/memcheck.h>
@@ -32,7 +33,7 @@ __np_exceptstate_t __np_exceptstate;
 
 void __np_uncaught_event(void)
 {
-    fprintf(stderr, "np: uncaught event: %s\n%s\n",
+    eprintf("uncaught event: %s\n%s\n",
 	    __np_exceptstate.event.as_string().c_str(),
 	    __np_exceptstate.event.get_long_location().c_str());
     fflush(stderr);
@@ -57,7 +58,7 @@ choose_timeout()
 {
     if (np::spiegel::platform::is_running_under_debugger())
     {
-	fprintf(stderr, "np: disabling test timeouts under debugger\n");
+	iprintf("disabling test timeouts under debugger\n");
 	return 0;
     }
     int64_t timeout = 30;
@@ -253,7 +254,7 @@ runner_t::fork_child(job_t *j)
     r = pipe(pipefd);
     if (r < 0)
     {
-	perror("np: pipe");
+        eprintf("Failed to create pipe: %s\n", strerror(errno));
 	exit(1);
     }
 
@@ -263,7 +264,7 @@ runner_t::fork_child(job_t *j)
 	outfd = mkstemp(outpath);
 	if (outfd < 0)
 	{
-	    perror(outpath);
+            eprintf("Failed to create temporary file %s: %s\n", outpath, strerror(errno));
 	    exit(1);
 	}
 
@@ -271,7 +272,7 @@ runner_t::fork_child(job_t *j)
 	errfd = mkstemp(errpath);
 	if (errfd < 0)
 	{
-	    perror(errpath);
+            eprintf("Failed to create temporary file %s: %s\n", errpath, strerror(errno));
 	    exit(1);
 	}
     }
@@ -284,13 +285,13 @@ runner_t::fork_child(job_t *j)
 	    if (errno == EAGAIN && max_sleeps-- > 0)
 	    {
 		/* rats, we fork-bombed, try again after a delay */
-		fprintf(stderr, "np: fork bomb! sleeping %u ms.\n",
+		iprintf("fork bomb! sleeping %u ms.\n",
 			delay_ms);
 		poll(0, 0, delay_ms);
 		delay_ms += (delay_ms>>1);	/* exponential backoff */
 		continue;
 	    }
-	    perror("np: fork");
+            eprintf("Failed to fork(): %s\n", strerror(errno));
 	    exit(1);
 	}
 	break;
@@ -314,10 +315,8 @@ runner_t::fork_child(job_t *j)
 
     /* parent process */
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: spawned child process %d for %s\n",
+    dprintf("spawned child process %d for %s\n",
 	    (int)pid, j->as_string().c_str());
-#endif
     close(pipefd[PIPE_WRITE]);
     child = new child_t(pid, pipefd[PIPE_READ], j);
     if (timeout_)
@@ -360,10 +359,8 @@ runner_t::wait()
 
     do
     {
-#if _NP_DEBUG > 1
-	fprintf(stderr, "np: handle_events() nchildren=%u caught_sigchld=%d nfinished=%u\n",
+	dprintf("nchildren=%u caught_sigchld=%d nfinished=%u\n",
 		(unsigned)children_.size(), caught_sigchld, nfinished);
-#endif
 	int64_t start = rel_now();
 	int64_t timeout = -1;
 	pfd_.clear();
@@ -410,23 +407,20 @@ runner_t::wait()
 	 * and smash all negative values to -1 */
 	timeout = (timeout < 0 ? -1 : (timeout+500000)/1000000);
 
-#if _NP_DEBUG
-	fprintf(stderr, "np: [%s] about to poll([%d fds] timeout=%lld msec)\n",
-		rel_timestamp(), (int)pfd_.size(), (long long)timeout);
-#endif
+	dprintf("about to poll([%d fds] timeout=%lld msec)\n",
+		(int)pfd_.size(), (long long)timeout);
 	r = poll(pfd_.data(), pfd_.size(), timeout);
-#if _NP_DEBUG
+        if (is_enabled_for(np::log::DEBUG))
 	{
 	    int e = errno;
-	    fprintf(stderr, "np: [%s] poll returned %d errno %d(%s)\n",
-		    rel_timestamp(), r, e, strerror(e));
+	    dprintf("poll returned %d errno %d(%s)\n",
+		    r, e, strerror(e));
 	    vector<struct pollfd>::iterator pitr;
 	    for (pitr = pfd_.begin() ; pitr != pfd_.end() ; ++pitr)
-		fprintf(stderr, "np:     fd %d revents %d\n",
+		dprintf("    fd %d revents %d\n",
 			pitr->fd, pitr->revents);
 	    errno = e;
 	}
-#endif
 	if (r < 0)
 	{
 	    if (errno == EINTR && caught_sigchld)
@@ -440,7 +434,7 @@ runner_t::wait()
 		continue;
 	    }
 	    /* poll reported an error */
-	    perror("np: poll");
+            eprintf("Failed to poll(): %s\n", strerror(errno));
 	    return;
 	}
 	if (r == 0)
@@ -483,10 +477,8 @@ runner_t::wait()
 		reap_children(child->get_pid(), 0);
 	}
     } while (nfinished == 0);
-#if _NP_DEBUG > 1
-    fprintf(stderr, "np: handle_events() returning, caught_sigchld=%d nfinished=%u\n",
+    dprintf("handle_events() returning, caught_sigchld=%d nfinished=%u\n",
 	    caught_sigchld, nfinished);
-#endif
 }
 
 void
@@ -496,46 +488,37 @@ runner_t::reap_children(pid_t reqpid, int waitflags)
     int status;
     char msg[1024];
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: [%s] reap_children()\n",
-		rel_timestamp());
-#endif
+    dprintf("starting to reap children\n");
     caught_sigchld = 0;
 
     for (;;)
     {
-#if _NP_DEBUG > 1
-	fprintf(stderr, "np: [%s] about to call waitpid(%d, %u)\n",
-		rel_timestamp(), (int)reqpid, waitflags);
-#endif
+	dprintf("about to call waitpid(%d, %u)\n",
+		(int)reqpid, waitflags);
 	pid = waitpid(reqpid, &status, waitflags);
-#if _NP_DEBUG > 1
+        if (is_enabled_for(np::log::DEBUG))
 	{
 	    int e = errno;
-	    fprintf(stderr, "np: [%s] waitpid returns %d, errno %d(%s)\n",
-		    rel_timestamp(), (int)pid, e, strerror(errno));
+	    dprintf("waitpid returns %d, errno %d(%s)\n",
+		    (int)pid, e, strerror(errno));
 	    errno = e;
 	}
-#endif
 	if (pid == 0)
 	    break;
 	if (pid < 0)
 	{
 	    if (errno == ESRCH || errno == ECHILD)
 		break;
-	    perror("np: waitpid");
+            eprintf("Failed to waitpid(): %s\n", strerror(errno));
 	    return;
 	}
 	if (WIFSTOPPED(status))
 	{
-	    fprintf(stderr, "np: process %d stopped on signal %d, ignoring\n",
+	    iprintf("process %d stopped on signal %d, ignoring\n",
 		    (int)pid, WSTOPSIG(status));
 	    continue;
 	}
-#if _NP_DEBUG
-	fprintf(stderr, "np: [%s] reaped process %d\n",
-		rel_timestamp(), (int)pid);
-#endif
+	dprintf("reaped process %d\n", (int)pid);
 	vector<child_t*>::iterator itr;
 	for (itr = children_.begin() ;
 	     itr != children_.end() && (*itr)->get_pid() != pid ;
@@ -544,7 +527,7 @@ runner_t::reap_children(pid_t reqpid, int waitflags)
 	if (itr == children_.end())
 	{
 	    /* some other process */
-	    fprintf(stderr, "np: reaped stray process %d\n", (int)pid);
+	    iprintf("reaped stray process %d\n", (int)pid);
 	    /* TODO: this is probably eventworthy */
 	    continue;	    /* whatever */
 	}
@@ -761,10 +744,7 @@ runner_t::begin_job(job_t *j)
 // 	    return;
 //     }
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: [%s] begin job %s\n",
-	    rel_timestamp(), j->as_string().c_str());
-#endif
+    dprintf("begin job %s\n", j->as_string().c_str());
 
     dispatch_listeners(begin_job, j);
     j->pre_run(true);
@@ -777,10 +757,8 @@ runner_t::begin_job(job_t *j)
     set_listener(new proxy_listener_t(event_pipe_));
     res = run_test_code(j);
     dispatch_listeners(end_job, j, res);
-#if _NP_DEBUG
-    fprintf(stderr, "np: [%s] child process %d (%s) exiting\n",
-	    rel_timestamp(), (int)getpid(), j->as_string().c_str());
-#endif
+    dprintf("child process %d (%s) exiting\n",
+	    (int)getpid(), j->as_string().c_str());
     delete j;
     exit(0);
 }

@@ -15,6 +15,7 @@
  */
 
 #include "classifier.hxx"
+#include "np/util/log.hxx"
 
 namespace np {
 
@@ -40,7 +41,7 @@ classifier_t::set_regexp(const char *re, bool case_sensitive)
 		    REG_EXTENDED|(case_sensitive ? 0 : REG_ICASE));
     if (error_)
     {
-	fprintf(stderr, "np: bad classifier %s\n", error_string());
+	eprintf("bad classifier %s\n", error_string());
 	return false;
     }
     return true;
@@ -56,24 +57,17 @@ classifier_t::classify(const char *func,
 
     if (r == 0)
     {
-// fprintf(stderr, "MATCHED \"%s\" to \"%s\"\n", func, cl->re);
-// fprintf(stderr, "    submatch [ {%d %d} {%d %d}]\n",
-// 	    match[0].rm_so, match[0].rm_eo,
-// 	    match[1].rm_so, match[1].rm_eo);
-
 	/* successful match */
 	if (match_return && match[1].rm_so >= 0)
 	{
 	    size_t len = match[1].rm_eo - match[1].rm_so;
 	    if (len >= maxmatch)
 	    {
-		fprintf(stderr, "np: match for classifier %s too long\n",
-				re_);
+		eprintf("match for classifier %s too long\n", re_);
 		return results_[0];
 	    }
 	    memcpy(match_return, func+match[1].rm_so, len);
 	    match_return[len] = '\0';
-// fprintf(stderr, "    match_return \"%s\"\n", match_return);
 	}
 	return results_[1];
     }
@@ -81,8 +75,7 @@ classifier_t::classify(const char *func,
     if (r != REG_NOMATCH)
     {
 	/* some runtime error */
-	fprintf(stderr, "np: failed matching \"%s\": %s\n",
-		func, error_string());
+	eprintf("failed matching \"%s\": %s\n", func, error_string());
     }
 
     return results_[0];

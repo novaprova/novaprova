@@ -17,6 +17,7 @@
 #include "np/spiegel/intercept.hxx"
 #include "common.hxx"
 #include "np/util/trace.h"
+#include "np/util/log.hxx"
 
 #include <signal.h>
 #include <sys/signal.h>
@@ -329,7 +330,7 @@ static unsigned long intercept_tramp(void)
     setcontext(&tramp_uc);
     /* notreached - setcontext() should not return under any
      * circumstances on Darwin */
-    perror("setcontext");
+    eprintf("setcontext() somehow returned: %s\n", strerror(errno));
     exit(1);
     /* not reached */
     return 0;
@@ -559,7 +560,7 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
 	sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
 	if (r < 0)
 	{
-	    perror("np: sigaction");
+            eprintf("Failed to call sigaction(): %s\n", strerror(errno));
 	    err = "cannot install signal handler";
 	    return -1;
 	}

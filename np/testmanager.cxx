@@ -19,6 +19,7 @@
 #include "np/classifier.hxx"
 #include "np/event.hxx"
 #include "np/spiegel/spiegel.hxx"
+#include "np/util/log.hxx"
 
 namespace np {
 using namespace std;
@@ -59,9 +60,7 @@ testmanager_t::instance()
 {
     if (!instance_)
     {
-#if _NP_DEBUG
-	fprintf(stderr, "np: creating testmanager_t instance\n");
-#endif
+	dprintf("creating testmanager_t instance\n");
 	new testmanager_t();
 	instance_->print_banner();
 	instance_->setup_classifiers();
@@ -114,10 +113,8 @@ testmanager_t::add_classifier(const char *re,
     }
     cl->set_results(FT_UNKNOWN, type);
     classifiers_.push_back(cl);
-#if _NP_DEBUG
-    fprintf(stderr, "np: adding classifier /%s/%s -> %s\n",
+    dprintf("adding classifier /%s/%s -> %s\n",
 	    re, (case_sensitive ? "i" : ""), np::as_string(type));
-#endif
 }
 
 void
@@ -186,9 +183,7 @@ testmanager_t::discover_functions()
 {
     if (!spiegel_)
     {
-#if _NP_DEBUG
-	fprintf(stderr, "np: creating np::spiegel::state_t instance\n");
-#endif
+	dprintf("creating np::spiegel::state_t instance\n");
 	spiegel_ = new np::spiegel::state_t();
 	spiegel_->add_self();
         event_t::init(spiegel_);
@@ -196,17 +191,13 @@ testmanager_t::discover_functions()
     }
     // else: splice common_ and root_ back together
 
-#if _NP_DEBUG
-    fprintf(stderr, "np: scanning for test functions\n");
-#endif
+    dprintf("scanning for test functions\n");
     vector<np::spiegel::compile_unit_t *> units = spiegel_->get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
     unsigned int ntests = 0;
     for (i = units.begin() ; i != units.end() ; ++i)
     {
-#if _NP_DEBUG
-	fprintf(stderr, "np:     scanning compile unit %s\n", (*i)->get_absolute_path().c_str());
-#endif
+	dprintf("scanning compile unit %s\n", (*i)->get_absolute_path().c_str());
 	vector<np::spiegel::function_t *> fns = (*i)->get_functions();
 	vector<np::spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
@@ -221,10 +212,8 @@ testmanager_t::discover_functions()
 
 	    type = classify_function(fn->get_name().c_str(),
 				     submatch, sizeof(submatch));
-#if _NP_DEBUG
-	    fprintf(stderr, "np:         function %s classified %s submatch \"%s\"\n",
+	    dprintf("function %s classified %s submatch \"%s\"\n",
 		    fn->get_name().c_str(), np::as_string(type), submatch);
-#endif
 	    switch (type)
 	    {
 	    case FT_UNKNOWN:
@@ -278,7 +267,7 @@ testmanager_t::discover_functions()
     }
 
     if (!ntests)
-	fprintf(stderr, "np: WARNING: no tests discovered\n");
+	wprintf("no tests discovered\n");
     // Calculate the effective root_ and common_
     common_ = root_;
     root_ = root_->detach_common();

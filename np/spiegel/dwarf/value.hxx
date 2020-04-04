@@ -123,7 +123,7 @@ struct value_t
 	return val;
     }
 
-    void dump() const;
+    std::string to_string() const;
 };
 
 // close namespaces

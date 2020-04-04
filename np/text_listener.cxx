@@ -16,6 +16,7 @@
 #include "np/text_listener.hxx"
 #include "np/job.hxx"
 #include "except.h"
+#include "np/util/log.hxx"
 
 namespace np {
 using namespace std;
@@ -62,7 +63,7 @@ text_listener_t::end_job(const job_t *j, result_t res)
 	fprintf(stderr, "FAIL %s\n", nm.c_str());
 	break;
     default:
-	fprintf(stderr, "??? (result %d) %s\n", res, nm.c_str());
+	eprintf("??? (result %d) %s\n", res, nm.c_str());
 	break;
     }
 }

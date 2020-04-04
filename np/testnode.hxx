@@ -47,7 +47,7 @@ public:
     void pre_run() const;
     void post_run() const;
 
-    void dump(int level) const;
+    void dump(std::string indent) const;
 
     struct parameter_t
     {

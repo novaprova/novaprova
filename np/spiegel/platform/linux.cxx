@@ -16,6 +16,7 @@
 #include "np/spiegel/common.hxx"
 #include "np/spiegel/intercept.hxx"
 #include "np/util/tok.hxx"
+#include "np/util/log.hxx"
 #include "common.hxx"
 
 #include <dlfcn.h>
@@ -93,7 +94,7 @@ self_exe()
     int r = readlink(filename, buf, sizeof(buf)-1);
     if (r < 0)
     {
-	perror(filename);
+        eprintf("Failed to readlink(\"%s\"): %s\n", filename, strerror(errno));
 	return 0;
     }
     // readlink() doesn't terminate the buffer
@@ -113,14 +114,14 @@ get_exe_by_pid(pid_t pid)
     FILE *fp = fopen(buf, "r");
     if (!fp)
     {
-	perror(buf);
+        eprintf("Failed to open(\"%s\"): %s\n", buf, strerror(errno));
 	return 0;
     }
 
     int r = fread(buf, 1, sizeof(buf)-1, fp);
     if (r <= 0)
     {
-	perror("read");
+        eprintf("Failed to fread(): %s\n", strerror(errno));
 	fclose(fp);
 	return 0;
     }
@@ -144,23 +145,17 @@ add_one_linkobj(struct dl_phdr_info *info,
     if (name && !*name)
 	name = NULL;
 
-#if _NP_DEBUG
-    fprintf(stderr, "np:     shared object dl_phdr_info { addr=%p name=%s }\n",
+    dprintf("shared object dl_phdr_info { addr=%p name=%s }\n",
 	    (void *)info->dlpi_addr, info->dlpi_name);
-#endif
 
     if (!name && info->dlpi_addr)
     {
-#if _NP_DEBUG
-        fprintf(stderr, "np:     shared object has an address but no name, ignoring\n");
-#endif
+        dprintf("shared object has an address but no name, ignoring\n");
 	return 0;
     }
     if (!info->dlpi_phnum)
     {
-#if _NP_DEBUG
-        fprintf(stderr, "np:     shared object has no PHDRs, ignoring\n");
-#endif
+        dprintf("shared object has no PHDRs, ignoring\n");
 	return 0;
     }
 
@@ -171,19 +166,15 @@ add_one_linkobj(struct dl_phdr_info *info,
     {
 	if (!info->dlpi_phdr[i].p_memsz)
         {
-#if _NP_DEBUG
-            fprintf(stderr, "np:           PHDR[%d] has zero size, ignoring\n", i);
-#endif
+            dprintf("PHDR[%d] has zero size, ignoring\n", i);
 	    continue;
         }
 
 	const ElfW(Phdr) *ph = &info->dlpi_phdr[i];
 	mapping_t m((unsigned long)ph->p_offset, (unsigned long)ph->p_memsz,
 		    (void *)((unsigned long)info->dlpi_addr + ph->p_vaddr));
-#if _NP_DEBUG
-        fprintf(stderr, "np:           PHDR[%d] -> mapping { offset=%lu size=%lu map=%p }\n",
+        dprintf("PHDR[%d] -> mapping { offset=%lu size=%lu map=%p }\n",
                 i, m.get_offset(), m.get_size(), m.get_map());
-#endif
 	lo.mappings.push_back(m);
     }
     vec->push_back(lo);
@@ -193,9 +184,7 @@ add_one_linkobj(struct dl_phdr_info *info,
 
 vector<linkobj_t> get_linkobjs()
 {
-#if _NP_DEBUG
-    fprintf(stderr, "np: iterating ELF PHDRs from runtime linker\n");
-#endif
+    dprintf("iterating ELF PHDRs from runtime linker\n");
     vector<linkobj_t> vec;
     dl_iterate_phdr(add_one_linkobj, &vec);
     return vec;
@@ -308,7 +297,7 @@ get_tracer_pid()
     if (!fp)
     {
 	/* most probable cause is that /proc is not mounted */
-	perror(procfile);
+        eprintf("Failed to open(\"%s\"): %s\n", procfile, strerror(errno));
 	return -1;
     }
 
@@ -375,7 +364,7 @@ bool is_running_under_debugger()
     {
 	if (!strcmp(tail, debuggers[i]))
 	{
-	    fprintf(stderr, "np: being debugged by %s\n", command);
+	    iprintf("being debugged by %s\n", command);
 	    free(command);
 	    return true;
 	}
@@ -414,7 +403,7 @@ vector<string> get_file_descriptors()
 	    r = readlink(filepath.c_str(), buf, sizeof(buf)-1);
 	    if (r < 0)
 	    {
-		perror(filepath.c_str());
+                eprintf("Failed to readlink(\"%s\"): %s\n", filepath.c_str(), strerror(errno));
 		continue;
 	    }
 	    buf[r] = '\0';

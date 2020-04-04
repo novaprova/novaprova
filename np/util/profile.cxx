@@ -16,6 +16,7 @@
 #include "np/util/common.hxx"
 #include "np/util/profile.hxx"
 #include <fcntl.h>
+#include "np/util/log.hxx"
 
 namespace np {
 namespace profile {
@@ -44,7 +45,7 @@ void probe_t::log(const char *which)
 	log_fd_ = open(filename, O_WRONLY|O_CREAT|O_TRUNC, 0666);
 	if (log_fd_ < 0)
 	{
-	    fprintf(stderr, "Cannot open %s for writing: %s\n",
+	    eprintf("Cannot open %s for writing: %s\n",
 		    filename, strerror(errno));
 	}
     }
