@@ -48,7 +48,6 @@ public:
     {}
 
     bool read_header(reader_t &r);
-    bool read_compile_unit_entry(walker_t &w);
     void read_abbrevs(reader_t &r);
     void dump_abbrevs() const;
 
