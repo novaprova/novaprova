@@ -20,11 +20,12 @@
 #include <getopt.h>
 #include "np/util/profile.hxx"
 #include "np/util/tok.hxx"
+#include "np/util/log.hxx"
 
 static void
 usage(const char *argv0)
 {
-    fprintf(stderr, "Usage: %s [-f output-format] [test-spec...]\n", argv0);
+    fprintf(stderr, "Usage: %s [--debug] [-f output-format] [test-spec...]\n", argv0);
     exit(1);
 }
 
@@ -33,7 +34,8 @@ usage(const char *argv0)
 // not clash with the characters used for short options.
 enum opt_codes_t
 {
-    OPT_HELP=256
+    OPT_HELP=256,
+    OPT_DEBUG
 };
 
 int
@@ -45,12 +47,14 @@ main(int argc, char **argv)
     const char *output_formats = 0;
     enum { UNKNOWN, RUN, LIST } mode = UNKNOWN;
     int concurrency = -1;
+    bool debug = false;
     int c;
     static const struct option opts[] =
     {
 	{ "format", required_argument, NULL, 'f' },
 	{ "jobs", required_argument, NULL, 'j' },
 	{ "list", no_argument, NULL, 'l' },
+	{ "debug", no_argument, NULL, OPT_DEBUG },
 	{ "help", no_argument, NULL, OPT_HELP },
 	{ NULL, 0, NULL, 0 },
     };
@@ -72,6 +76,9 @@ main(int argc, char **argv)
 	case 'l':
 	    mode = LIST;
 	    break;
+        case OPT_DEBUG:
+            debug = true;
+            break;
         case OPT_HELP:
         default:
             // note, for unknown options getopt_long() has already
@@ -79,6 +86,14 @@ main(int argc, char **argv)
 	    usage(argv[0]);
 	}
     }
+    if (!debug)
+    {
+        const char *env = getenv("NOVAPROVA_DEBUG");
+        if (env && !strcmp(env, "yes"))
+            debug = true;
+    }
+    np::log::basic_config(debug ? np::log::DEBUG : np::log::INFO, 0);
+
     if (optind < argc)
     {
 	/* Some tests were specified on the commandline */
