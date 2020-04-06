@@ -16,6 +16,7 @@
 #include "np/spiegel/common.hxx"
 #include "state.hxx"
 #include "compile_unit.hxx"
+#include "link_object.hxx"
 #include "walker.hxx"
 #include "enumerations.hxx"
 #include "np/util/log.hxx"
@@ -153,22 +154,22 @@ compile_unit_t::dump_abbrevs() const
 const char *
 compile_unit_t::get_executable() const
 {
-    const state_t::linkobj_t *lo = state_t::instance()->linkobjs_[loindex_];
-    return lo->filename_;
+    const link_object_t *lo = state_t::instance()->get_link_object(loindex_);
+    return lo->get_filename();
 }
 
 const section_t *
 compile_unit_t::get_section(uint32_t i) const
 {
-    const state_t::linkobj_t *lo = state_t::instance()->linkobjs_[loindex_];
-    return &lo->sections_[i];
+    const link_object_t *lo = state_t::instance()->get_link_object(loindex_);
+    return lo->get_section(i);
 }
 
 np::spiegel::addr_t
 compile_unit_t::live_address(np::spiegel::addr_t addr) const
 {
-    const state_t::linkobj_t *lo = state_t::instance()->linkobjs_[loindex_];
-    return addr ? addr + lo->slide_ : addr;
+    const link_object_t *lo = state_t::instance()->get_link_object(loindex_);
+    return lo->live_address(addr);
 }
 
 // close namespaces

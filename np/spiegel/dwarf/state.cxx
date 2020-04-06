@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 #include "np/spiegel/common.hxx"
-#include <sys/fcntl.h>
-#include <bfd.h>
 #include "state.hxx"
 #include "reader.hxx"
 #include "compile_unit.hxx"
+#include "link_object.hxx"
 #include "walker.hxx"
 #include "np/spiegel/platform/common.hxx"
 #include "np/util/log.hxx"
@@ -39,266 +38,27 @@ state_t::state_t()
 
 state_t::~state_t()
 {
-    vector<linkobj_t*>::iterator i;
-    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+    vector<link_object_t*>::iterator i;
+    for (i = link_objects_.begin() ; i != link_objects_.end() ; ++i)
 	delete *i;
     address_index_.clear();
-    linkobj_index_.clear();
+    link_object_index_.clear();
 
     assert(instance_ == this);
     instance_ = 0;
 }
 
 bool
-state_t::linkobj_t::is_in_plt(np::spiegel::addr_t addr) const
+state_t::read_compile_units(link_object_t *lo)
 {
-    vector<np::spiegel::mapping_t>::const_iterator i;
-    for (i = plts_.begin() ; i != plts_.end() ; ++i)
-    {
-	if (i->contains((void *)addr))
-	    return true;
-    }
-    return false;
-}
-
-/* See if the section can be satisfied out of
- * existing system mappings */
-bool
-state_t::linkobj_t::map_from_system(mapping_t &m) const
-{
-    vector<mapping_t>::const_iterator sm;
-    for (sm = system_mappings_.begin() ; sm != system_mappings_.end() ; ++sm)
-    {
-	if (sm->contains(m))
-	{
-	    m.map_from(*sm);
-	    return true;
-	}
-    }
-    return false;
-}
-
-static void _np_bfd_error_handler(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    if (!strncmp(fmt, "%B", 2))
-    {
-        // The BFD library does this wacky thing where they pass
-        // the struct bfd* as the printf argument of a fake %B
-        // conversion string.  Really could they have made this
-        // any less convenient?  FFS.  This is very difficult
-        // to deal with properly given the stdarg interface.
-        struct bfd *bfd = va_arg(args, struct bfd*);
-        eprintf("In file %s:\n", bfd->filename);
-        fmt += 2;
-        if (*fmt == ':')
-            fmt++;
-        while (isspace(*fmt))
-            fmt++;
-    }
-
-    _np_logvprintf(np::log::ERROR, fmt, args);
-    va_end(args);
-}
-
-bool
-state_t::linkobj_t::map_sections()
-{
-    int fd = -1;
-    vector<section_t>::iterator m;
-    bool r = true;
-    int nsec = 0;   /* number of DWARF sections to be explicitly mapped herein */
-    int ndwarf = 0; /* number of DWARF sections in the linkobj */
-
-    bfd_init();
-    bfd_set_error_handler(_np_bfd_error_handler);
-
-    dprintf("opening bfd %s\n", filename_);
-    /* Open a BFD */
-    std::string path;
-    bool is_separate = np::spiegel::platform::symbol_filename(filename_, path);
-    if (!is_separate)
-	path = filename_;
-
-    dprintf("trying %s\n", path.c_str());
-    bfd *b = bfd_openr(path.c_str(), NULL);
-    if (!b)
-    {
-        eprintf("BFD library failed to open %s: %s\n",
-                path.c_str(), bfd_errmsg(bfd_get_error()));
-	return false;
-    }
-    if (!bfd_check_format(b, bfd_object))
-    {
-	eprintf("%s: not an object\n", path.c_str());
-	goto error;
-    }
-    dprintf("Object %s\n", path.c_str());
-
-    /* Extract the file shape of the DWARF sections */
-    dprintf("sections:\n");
-    asection *sec;
-    for (sec = b->sections ; sec ; sec = sec->next)
-    {
-	if (np::spiegel::platform::is_plt_section(sec->name))
-	{
-	    mapping_t m((unsigned long)sec->filepos,
-			(unsigned long)sec->size);
-	    if (map_from_system(m))
-		plts_.push_back(m);
-	    continue;
-	}
-
-	int idx = secnames.to_index(sec->name);
-	dprintf("section name %s size %lx filepos %lx index %d\n",
-		sec->name, (unsigned long)sec->size,
-		(unsigned long)sec->filepos, idx);
-	if (idx == DW_sec_none)
-	    continue;
-	ndwarf++;
-	sections_[idx].set_range((unsigned long)sec->filepos,
-				 (unsigned long)sec->size);
-
-	if (!is_separate)
-	{
-	    if (map_from_system(sections_[idx]))
-		dprintf("found system mapping for section %s at %p\n",
-			secnames.to_name(idx), sm->get_map());
-	}
-    }
-
-    if (!ndwarf)
-    {
-	/* no DWARF sections at all */
-	wprintf("no DWARF information found for %s, ignoring\n", filename_);
-	r = true;
-	goto out;
-    }
-
-    /* Coalesce unmapped sections into a minimal number of mappings */
-    struct section_t *tsec[DW_sec_num];
-    for (int idx = 0 ; idx < DW_sec_num ; idx++)
-	if (!sections_[idx].is_mapped() &&
-	    sections_[idx].get_size())
-	    tsec[nsec++] = &sections_[idx];
-
-    if (nsec)
-    {
-	/* some DWARF sections were not found in system mappings, need
-	 * to mmap() them ourselves. */
-
-	/* build a minimal set of mapping_t */
-	qsort(tsec, nsec, sizeof(section_t *), mapping_t::compare_by_offset);
-	for (int idx = 0 ; idx < nsec ; idx++)
-	{
-	    if (mappings_.size() &&
-		page_round_up(mappings_.back().get_end()) >= tsec[idx]->get_offset())
-	    {
-		/* section abuts the last mapping, extend it */
-		mappings_.back().set_end(tsec[idx]->get_end());
-	    }
-	    else
-	    {
-		/* create a new mapping */
-		mappings_.push_back(*tsec[idx]);
-	    }
-	}
-
-        if (is_enabled_for(np::log::DEBUG))
-        {
-            dprintf("mappings:\n");
-            for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-            {
-                dprintf("mapping offset 0x%lx size 0x%lx end 0x%lx\n",
-                        m->get_offset(), m->get_size(), m->get_end());
-            }
-        }
-
-	/* mmap() the mappings */
-	fd = open(path.c_str(), O_RDONLY, 0);
-	if (fd < 0)
-	{
-	    eprintf("Failed to open %s: %s", path.c_str(), strerror(errno));
-	    goto error;
-	}
-
-	for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-	{
-	    if (m->mmap(fd, /*read-only*/false) < 0)
-	    {
-                eprintf("Failed to mmap %s: %s", path.c_str(), strerror(errno));
-		goto error;
-	    }
-	}
-
-	/* setup sections[].map */
-	for (int idx = 0 ; idx < nsec ; idx++)
-	{
-	    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-	    {
-		if (m->contains(*tsec[idx]))
-		{
-		    tsec[idx]->map_from(*m);
-		    break;
-		}
-	    }
-	    assert(tsec[idx]->is_mapped());
-	}
-    }
-
-    if (is_enabled_for(np::log::DEBUG))
-    {
-        dprintf("new mappings after mmap()\n");
-        for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-        {
-            dprintf("    { offset=0x%lx size=0x%lx map=%p }\n",
-                    m->get_offset(), m->get_size(), m->get_map());
-        }
-        dprintf("debug sections map:\n");
-        for (int idx = 0 ; idx < DW_sec_num ; idx++)
-        {
-            dprintf("index %d name %s map 0x%lx size 0x%lx\n",
-                    idx, secnames.to_name(idx),
-                    (unsigned long)sections_[idx].get_map(),
-                    sections_[idx].get_size());
-        }
-    }
-
-    goto out;
-
-error:
-    unmap_sections();
-    r = false;
-out:
-    if (fd >= 0)
-	close(fd);
-    bfd_close(b);
-    return r;
-}
-
-void
-state_t::linkobj_t::unmap_sections()
-{
-    vector<section_t>::iterator m;
-    for (m = mappings_.begin() ; m != mappings_.end() ; ++m)
-    {
-	m->munmap();
-    }
-}
-
-bool
-state_t::read_compile_units(linkobj_t *lo)
-{
-    dprintf("reading compile units for linkobj %s\n", lo->filename_);
-    reader_t infor = lo->sections_[DW_sec_info].get_contents();
-    reader_t abbrevr = lo->sections_[DW_sec_abbrev].get_contents();
+    dprintf("reading compile units for link_object %s\n", lo->get_filename());
+    reader_t infor = lo->get_section(DW_sec_info)->get_contents();
+    reader_t abbrevr = lo->get_section(DW_sec_abbrev)->get_contents();
 
     compile_unit_t *cu = 0;
     for (;;)
     {
-	cu = new compile_unit_t(compile_units_.size(), lo->index_);
+	cu = new compile_unit_t(compile_units_.size(), lo->get_index());
 	if (!cu->read_header(infor))
 	    break;
 
@@ -361,21 +121,21 @@ state_t::add_self()
 	    continue;
         }
 
-	linkobj_t *lo = get_linkobj(filename);
+	link_object_t *lo = get_link_object(filename);
 	if (lo)
 	{
-	    dprintf("have spiegel linkobj\n");
-	    lo->system_mappings_ = i->mappings;
-	    lo->slide_ = i->slide;
+	    dprintf("have spiegel link_object\n");
+            lo->set_system_mappings(i->mappings);
+	    lo->set_slide(i->slide);
 	    vector<mapping_t>::iterator sm;
-	    for (sm = lo->system_mappings_.begin() ; sm != lo->system_mappings_.end() ; ++sm)
-		linkobj_index_.insert((np::spiegel::addr_t)sm->get_map(),
-				      (np::spiegel::addr_t)sm->get_map() + sm->get_size(),
-				      lo);
+	    for (sm = i->mappings.begin() ; sm != i->mappings.end() ; ++sm)
+		link_object_index_.insert((np::spiegel::addr_t)sm->get_map(),
+                                          (np::spiegel::addr_t)sm->get_map() + sm->get_size(),
+                                          lo);
 	}
     }
 
-    r = read_linkobjs();
+    r = read_link_objects();
     if (r)
 	prepare_address_index();
     free(exe);
@@ -386,45 +146,45 @@ bool
 state_t::add_executable(const char *filename)
 {
     dprintf("Adding executable %s\n", filename);
-    linkobj_t *lo = get_linkobj(filename);
+    link_object_t *lo = get_link_object(filename);
     if (!lo)
 	return false;
-    bool r = read_linkobjs();
+    bool r = read_link_objects();
     if (r)
 	prepare_address_index();
     return r;
 }
 
-state_t::linkobj_t *
-state_t::get_linkobj(const char *filename)
+link_object_t *
+state_t::get_link_object(const char *filename)
 {
     if (!filename)
 	return 0;
 
-    vector<linkobj_t*>::iterator i;
-    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+    vector<link_object_t*>::iterator i;
+    for (i = link_objects_.begin() ; i != link_objects_.end() ; ++i)
     {
-	if (!strcmp((*i)->filename_, filename))
+	if (!strcmp((*i)->get_filename(), filename))
 	    return (*i);
     }
 
-    linkobj_t *lo = new linkobj_t(filename, linkobjs_.size());
-    linkobjs_.push_back(lo);
+    link_object_t *lo = new link_object_t(filename, link_objects_.size());
+    link_objects_.push_back(lo);
     return lo;
 }
 
 bool
-state_t::read_linkobjs()
+state_t::read_link_objects()
 {
-    vector<linkobj_t*>::iterator i;
-    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+    vector<link_object_t*>::iterator i;
+    for (i = link_objects_.begin() ; i != link_objects_.end() ; ++i)
     {
 	/* TODO: why isn't this in filename_is_ignored() ?? */
 #if HAVE_VALGRIND
 	/* Ignore Valgrind's preloaded dynamic objects.  No
 	 * good will come of trying to poke into those.
 	 */
-	const char *tt = strrchr((*i)->filename_, '/');
+	const char *tt = strrchr((*i)->get_filename(), '/');
 	if (tt && !strncmp(tt, "/vgpreload_", 11))
 	    continue;
 #endif
@@ -918,22 +678,24 @@ state_t::is_within(np::spiegel::addr_t addr, const walker_t &w,
     return false;
 }
 
+// XXX this method name no verb
 np::spiegel::addr_t
 state_t::instrumentable_address(np::spiegel::addr_t addr) const
 {
-    vector<linkobj_t*>::const_iterator i;
-    for (i = linkobjs_.begin() ; i != linkobjs_.end() ; ++i)
+    vector<link_object_t*>::const_iterator i;
+    for (i = link_objects_.begin() ; i != link_objects_.end() ; ++i)
 	if ((*i)->is_in_plt(addr))
 	    return np::spiegel::platform::follow_plt(addr);
     return addr;
 }
 
+// XXX this method name no verb
 np::spiegel::addr_t
 state_t::recorded_address(np::spiegel::addr_t addr) const
 {
-    np::util::rangetree<addr_t, linkobj_t*>::const_iterator i = linkobj_index_.find(addr);
-    if (i != linkobj_index_.end())
-	addr -= i->second->slide_;
+    np::util::rangetree<addr_t, link_object_t*>::const_iterator i = link_object_index_.find(addr);
+    if (i != link_object_index_.end())
+        return i->second->recorded_address(addr);
     return addr;
 }
 

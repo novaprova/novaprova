@@ -29,6 +29,7 @@ namespace dwarf {
 
 class walker_t;
 class compile_unit_t;
+class link_object_t;
 
 class state_t
 {
@@ -83,39 +84,13 @@ public:
     };
     compile_unit_offset_tuple_t resolve_reference(reference_t ref) const;
 
+    const std::vector<link_object_t*> &get_link_objects() const { return link_objects_; }
+    link_object_t *get_link_object(uint32_t loidx) { return loidx < link_objects_.size() ? link_objects_[loidx] : 0; }
+    link_object_t *get_link_object(const char *filename);
+
 private:
-    struct linkobj_t
-    {
-	linkobj_t(const char *n, uint32_t idx)
-	 :  filename_(np::util::xstrdup(n)),
-	    index_(idx)
-	{
-	    memset(sections_, 0, sizeof(sections_));
-	}
-	~linkobj_t()
-	{
-	    unmap_sections();
-	    free(filename_);
-	}
-
-	char *filename_;
-	uint32_t index_;
-	unsigned long slide_;
-	section_t sections_[DW_sec_num];
-	std::vector<section_t> mappings_;
-	std::vector<np::spiegel::mapping_t> system_mappings_;
-	std::vector<np::spiegel::mapping_t> plts_;
-
-	bool is_in_plt(np::spiegel::addr_t addr) const;
-        bool has_sections() const { return sections_[DW_sec_info].get_size() > 0; }
-	bool map_from_system(mapping_t &m) const;
-	bool map_sections();
-	void unmap_sections();
-    };
-
-    linkobj_t *get_linkobj(const char *filename);
-    bool read_linkobjs();
-    bool read_compile_units(linkobj_t *);
+    bool read_link_objects();
+    bool read_compile_units(link_object_t *);
     compile_unit_t *get_compile_unit_by_offset(uint32_t loindex, np::spiegel::offset_t off) const;
     /* Prepare an index which will speed up all later calls to describe_address(). */
     void prepare_address_index();
@@ -126,11 +101,11 @@ private:
 
     static state_t *instance_;
 
-    std::vector<linkobj_t*> linkobjs_;
+    std::vector<link_object_t*> link_objects_;
     std::vector<compile_unit_t*> compile_units_;
     np::util::rangetree<addr_t, reference_t> address_index_;
-    /* Index from real address ranges to linkobj_t */
-    np::util::rangetree<addr_t, linkobj_t*> linkobj_index_;
+    /* Index from real address ranges to link_object_t */
+    np::util::rangetree<addr_t, link_object_t*> link_object_index_;
 
     friend class walker_t;
     friend class compile_unit_t;
