@@ -58,7 +58,7 @@ state_t::read_compile_units(link_object_t *lo)
     compile_unit_t *cu = 0;
     for (;;)
     {
-	cu = new compile_unit_t(compile_units_.size(), lo->get_index());
+	cu = new compile_unit_t(compile_units_.size(), lo);
 	if (!cu->read_header(infor))
 	    break;
 
@@ -507,11 +507,12 @@ state_t::dump_abbrevs()
 compile_unit_t *
 state_t::get_compile_unit_by_offset(uint32_t loindex, np::spiegel::offset_t off) const
 {
+    link_object_t *lo = link_objects_[loindex];
     vector<compile_unit_t*>::const_iterator i;
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
         compile_unit_t *cu = *i;
-        if (loindex == cu->get_link_object_index() &&
+        if (lo == cu->get_link_object() &&
             cu->get_start_offset() <= off &&
             off < cu->get_end_offset())
             return cu;

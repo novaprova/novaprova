@@ -17,6 +17,9 @@
 #define __np_spiegel_dwarf_link_object_hxx__ 1
 
 #include "np/spiegel/common.hxx"
+#include "np/spiegel/mapping.hxx"
+#include "section.hxx"
+#include "reference.hxx"
 
 namespace np {
 namespace spiegel {
@@ -42,6 +45,10 @@ public:
     const section_t *get_section(uint32_t i) const { return i < DW_sec_num ? &sections_[i] : 0; }
     np::spiegel::addr_t live_address(np::spiegel::addr_t addr) const { return addr ? addr + slide_ : addr; }
     np::spiegel::addr_t recorded_address(np::spiegel::addr_t addr) const { return addr ? addr - slide_ : addr; }
+    reference_t make_addr_reference(np::spiegel::offset_t off) const
+    {
+        return reference_t::make_addr(index_, off);
+    }
 
     /* interface for state_t */
     void set_system_mappings(const std::vector<np::spiegel::mapping_t> &mappings) { system_mappings_ = mappings; }

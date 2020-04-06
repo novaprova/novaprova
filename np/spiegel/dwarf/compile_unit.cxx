@@ -154,22 +154,19 @@ compile_unit_t::dump_abbrevs() const
 const char *
 compile_unit_t::get_executable() const
 {
-    const link_object_t *lo = state_t::instance()->get_link_object(loindex_);
-    return lo->get_filename();
+    return link_object_->get_filename();
 }
 
 const section_t *
 compile_unit_t::get_section(uint32_t i) const
 {
-    const link_object_t *lo = state_t::instance()->get_link_object(loindex_);
-    return lo->get_section(i);
+    return link_object_->get_section(i);
 }
 
 np::spiegel::addr_t
 compile_unit_t::live_address(np::spiegel::addr_t addr) const
 {
-    const link_object_t *lo = state_t::instance()->get_link_object(loindex_);
-    return lo->live_address(addr);
+    return link_object_->live_address(addr);
 }
 
 // close namespaces

@@ -15,6 +15,7 @@
  */
 #include "walker.hxx"
 #include "enumerations.hxx"
+#include "link_object.hxx"
 #include "state.hxx"
 #include "np/util/log.hxx"
 
@@ -225,7 +226,7 @@ walker_t::read_attributes()
 		if (!reader_.read_offset(off))
 		    return RE_EOF;
 		entry_.add_attribute(i->name,
-                        value_t::make_ref(reference_t::make_addr(compile_unit_->get_link_object_index(), off)));
+                        value_t::make_ref(compile_unit_->get_link_object()->make_addr_reference(off)));
 		break;
 	    }
 	case DW_FORM_string:

@@ -27,6 +27,7 @@ namespace dwarf {
 struct abbrev_t;
 class walker_t;
 struct section_t;
+class link_object_t;
 
 class compile_unit_t
 {
@@ -38,9 +39,9 @@ private:
 	MAX_DWARF_VERSION = 4
     };
 public:
-    compile_unit_t(uint32_t idx, uint32_t loidx)
+    compile_unit_t(uint32_t idx, link_object_t *lo)
      :  index_(idx),
-        loindex_(loidx)
+        link_object_(lo)
     {}
 
     ~compile_unit_t()
@@ -52,7 +53,7 @@ public:
     void dump_abbrevs() const;
 
     uint32_t get_index() const { return index_; }
-    uint32_t get_link_object_index() const { return loindex_; }
+    link_object_t *get_link_object() const { return link_object_; }
     // return the file offset of the first byte of the compile unit on the disk
     np::spiegel::offset_t get_start_offset() const { return offset_; }
     // return the file offset one byte beyond the last byte of the compile unit on the disk
@@ -70,10 +71,6 @@ public:
     {
         return reference_t::make_cu(index_, header_length);
     }
-    reference_t make_addr_reference(np::spiegel::offset_t off) const
-    {
-        return reference_t::make_addr(loindex_, off);
-    }
 
     reader_t get_contents() const
     {
@@ -89,7 +86,7 @@ public:
 
 private:
     uint32_t index_;
-    uint32_t loindex_;
+    link_object_t *link_object_;
     uint16_t version_;
     bool is64_;		    // new 64b format introduced in DWARF3
     reader_t reader_;	    // for whole including header
