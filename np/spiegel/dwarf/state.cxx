@@ -168,7 +168,7 @@ state_t::get_link_object(const char *filename)
 	    return (*i);
     }
 
-    link_object_t *lo = new link_object_t(filename, link_objects_.size());
+    link_object_t *lo = new link_object_t(filename, this);
     link_objects_.push_back(lo);
     return lo;
 }
@@ -504,45 +504,20 @@ state_t::dump_abbrevs()
     printf("\n\n");
 }
 
-compile_unit_t *
-state_t::get_compile_unit_by_offset(uint32_t loindex, np::spiegel::offset_t off) const
+compile_unit_offset_tuple_t
+state_t::resolve_link_object_reference(const reference_t &ref) const
 {
-    link_object_t *lo = link_objects_[loindex];
-    vector<compile_unit_t*>::const_iterator i;
-    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    link_object_t *lo = (link_object_t *)ref.resolver;
+    uint64_t off = ref.offset;
+    for (auto itr = compile_units_.begin() ; itr != compile_units_.end() ; ++itr)
     {
-        compile_unit_t *cu = *i;
+        compile_unit_t *cu = *itr;
         if (lo == cu->get_link_object() &&
             cu->get_start_offset() <= off &&
             off < cu->get_end_offset())
-            return cu;
+            return compile_unit_offset_tuple_t(cu, off - cu->get_start_offset());
     }
-    return 0;
-}
-
-state_t::compile_unit_offset_tuple_t
-state_t::resolve_reference(reference_t ref) const
-{
-    compile_unit_t *cu = 0;
-    np::spiegel::offset_t off = 0;
-    switch (ref.type)
-    {
-    case reference_t::REF_CU:
-        cu = compile_units_[ref.cu];
-        off = ref.offset;
-        break;
-    case reference_t::REF_ADDR:
-        dprintf("Resolving REF_ADDR (cu=%u, offset=%llu)\n", ref.cu, ref.offset);
-        cu = get_compile_unit_by_offset(ref.cu, ref.offset);
-        if (cu)
-            off = ref.offset - cu->get_start_offset();
-        break;
-    default:
-        eprintf("WTF? trying to resolve reference of type %d, not implemented\n",
-                (int)ref.type);
-        break;
-    }
-    return compile_unit_offset_tuple_t(cu, off);
+    return compile_unit_offset_tuple_t(0, 0);
 }
 
 void

@@ -263,6 +263,18 @@ link_object_t::unmap_sections()
     }
 }
 
+compile_unit_offset_tuple_t
+link_object_t::resolve_reference(const reference_t &ref) const
+{
+    return state_->resolve_link_object_reference(ref);
+}
+
+string
+link_object_t::describe_resolver() const
+{
+    return string("link_object(") + string(filename_) + string(")");
+}
+
 
 // close namespaces
 }; }; };

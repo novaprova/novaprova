@@ -71,18 +71,7 @@ public:
 
     const std::vector<compile_unit_t*> &get_compile_units() const { return compile_units_; }
 
-    // This would be std::tuple<compile_unit_t*, np::spiegel::offset_t>
-    // if I felt I could enable C++11 support.
-    struct compile_unit_offset_tuple_t
-    {
-        compile_unit_offset_tuple_t(compile_unit_t *cu, np::spiegel::offset_t off)
-         : _cu(cu), _off(off)
-        {
-        }
-        compile_unit_t *_cu;
-        np::spiegel::offset_t _off;
-    };
-    compile_unit_offset_tuple_t resolve_reference(reference_t ref) const;
+    compile_unit_offset_tuple_t resolve_link_object_reference(const reference_t &ref) const;
 
     const std::vector<link_object_t*> &get_link_objects() const { return link_objects_; }
     link_object_t *get_link_object(uint32_t loidx) { return loidx < link_objects_.size() ? link_objects_[loidx] : 0; }
@@ -91,7 +80,6 @@ public:
 private:
     bool read_link_objects();
     bool read_compile_units(link_object_t *);
-    compile_unit_t *get_compile_unit_by_offset(uint32_t loindex, np::spiegel::offset_t off) const;
     /* Prepare an index which will speed up all later calls to describe_address(). */
     void prepare_address_index();
 

@@ -18,13 +18,15 @@
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
-const reference_t reference_t::null = { REF_NULL, 0, 0 };
+const reference_t reference_t::null = { 0, 0 };
 
 string reference_t::as_string() const
 {
-    char buf[64];
-    snprintf(buf, sizeof(buf), "(ref){%d,0x%x,0x%llx}", (int)type, cu, offset);
-    return buf;
+    if (!resolver)
+        return string("(ref){0,0}");
+    char offbuf[32];
+    snprintf(offbuf, sizeof(offbuf), ",0x%llx}", offset);
+    return string("(ref){") + resolver->describe_resolver() + string(offbuf);
 }
 
 // close the namespaces

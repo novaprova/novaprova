@@ -22,83 +22,85 @@ namespace np {
 namespace spiegel {
 namespace dwarf {
 
+class compile_unit_t;
+struct reference_t;
+
+// This would be std::tuple<compile_unit_t*, np::spiegel::offset_t>
+// if I felt I could enable C++11 support.
+struct compile_unit_offset_tuple_t
+{
+    compile_unit_offset_tuple_t(compile_unit_t *cu, np::spiegel::offset_t off)
+     : _cu(cu), _off(off)
+    {
+    }
+    compile_unit_t *_cu;
+    np::spiegel::offset_t _off;
+};
+
+class reference_resolver_t
+{
+public:
+    virtual ~reference_resolver_t() {}
+    virtual compile_unit_offset_tuple_t resolve_reference(const reference_t &) const = 0;
+    virtual std::string describe_resolver() const = 0;
+};
+
 struct reference_t
 {
-    // Types of reference, in the order defined in the standard
-    // The standard does not define names for these types.
-    enum type_t {
-        // Used only for the null reference
-        REF_NULL=0,
-        // Dwarf3.pdf p128
-        // The offset field is 1 to 8 byte offset from the first byte
-        // of the compile unit header for the containing compile unit.
-        // The cu field is state_t's index of the containing compile unit.
-        REF_CU,
-        // Dwarf3.pdf p128
-        // The offset field is a 4 or 8 byte offset from the start of the
-        // containing executable or shared object's .debug_info section.
-        // The cu field is state_t's index of the containing link object.
-        // The name comes from DW_FORM_ref_addr but is a misnomer as
-        // the offset is actually a exe file offset which is not the
-        // same concept at all.
-        REF_ADDR,
-        // DWARF4.pdf p150
-        // The offset field is the 64bit type signature calculated for
-        // a type DIE.
-        // The cu field...who knows ???
-        // This is not yet implemented.
-        REF_SIG8
-    };
-    type_t type:32;     // what type of reference this is
-                        // expanded to 32b to avoid anonymous padding to
-                        // avoid anonymous padding which makes Valgrind sad
-    uint32_t cu;	// compile unit index, interpretation varies by type
+    /*
+     * Types of reference, in the order defined in the standard
+     * The standard does not define names for these types.
+     *
+     * - Not in the standard. A null reference, used in the code
+     *   to indicate default values and failures, just like NULL
+     *   pointers.  Both offset and resolver are zero.
+     *
+     * - Defined in Dwarf3.pdf p128.  Stored as DW_FORM_ref[1248].
+     *   The offset is 1 to 8 byte offset from the first byte of
+     *   the compile unit header for the containing compile unit.
+     *   The resolver is the compile_unit_t.
+     *
+     * - Defined in Dwarf3.pdf p128.  Stored as DW_FORM_ref_addr.
+     *   The offset is a 4 or 8 byte offset from the start of the
+     *   containing executable or shared object's .debug_info
+     *   section.  The resolver is the link_object_t.
+     *
+     * - Defined in DWARF4.pdf p150.  Stored as DW_FORM_ref_sig8.
+     *   The offset is the 64bit type signature calculated for
+     *   a type DIE.  This is not yet implemented.
+     */
+
+    const reference_resolver_t *resolver;
     uint64_t offset;	// byte offset, interpretation varies by type
 
     // reference_t is kept in a union so it cannot have user-defined c'tor or d'tors.
-    // instead we provide static make() functions as pseudo-c'tors
+    // instead we provide the static make() function as a pseudo-c'tor
 
-    // make a compile-unit reference
-    static reference_t make_cu(uint32_t cu, uint32_t off)
+    static reference_t make(const reference_resolver_t *resolver, uint64_t off)
     {
-        reference_t ref;
-        ref.type = REF_CU;
-        ref.cu = cu;
-        ref.offset = off;
+        reference_t ref = { resolver, off };
         return ref;
     }
-    // make an address reference
-    static reference_t make_addr(uint32_t lo, np::spiegel::offset_t off)
-    {
-        reference_t ref;
-        ref.type = REF_ADDR;
-        ref.cu = lo;
-        ref.offset = off;
-        return ref;
-    }
-#if 0
-    // make a signature reference
-    static reference_t make_sig8(uint64_t sig8)
-    {
-        reference_t ref;
-        ref.type = REF_SIG8;
-        ref.cu = 0;
-        ref.offset = sig8;
-        return ref;
-    }
-#endif
 
     static const reference_t null;
 
+    compile_unit_offset_tuple_t resolve() const
+    {
+        return resolver ?
+            resolver->resolve_reference(*this) :
+            compile_unit_offset_tuple_t(0, 0);
+    }
+
     int operator==(const reference_t &o) const
     {
-	return (o.cu == cu && o.offset == offset);
+	return (o.resolver == resolver && o.offset == offset);
     }
+    // needs to be contained in a map
     int operator<(const reference_t &o) const
     {
-	if (cu < o.cu)
+	if (resolver < o.resolver)
 	    return true;
-	if (cu == o.cu && offset < o.offset)
+	if (resolver == o.resolver && offset < o.offset)
 	    return true;
 	return false;
     }

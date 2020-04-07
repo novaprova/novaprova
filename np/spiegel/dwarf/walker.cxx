@@ -36,7 +36,7 @@ walker_t::get_section_contents(uint32_t sec) const
 void
 walker_t::seek(reference_t ref)
 {
-    state_t::compile_unit_offset_tuple_t res = state_t::instance()->resolve_reference(ref);
+    compile_unit_offset_tuple_t res = ref.resolve();
     compile_unit_ = res._cu;
     assert(compile_unit_);
     reader_ = compile_unit_->get_contents();
@@ -226,7 +226,7 @@ walker_t::read_attributes()
 		if (!reader_.read_offset(off))
 		    return RE_EOF;
 		entry_.add_attribute(i->name,
-                        value_t::make_ref(compile_unit_->get_link_object()->make_addr_reference(off)));
+                        value_t::make_ref(compile_unit_->get_link_object()->make_reference(off)));
 		break;
 	    }
 	case DW_FORM_string:

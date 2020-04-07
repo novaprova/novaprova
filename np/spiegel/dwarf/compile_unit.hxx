@@ -29,7 +29,7 @@ class walker_t;
 struct section_t;
 class link_object_t;
 
-class compile_unit_t
+class compile_unit_t : public reference_resolver_t
 {
 private:
     enum {
@@ -64,12 +64,15 @@ public:
 
     reference_t make_reference(uint32_t off) const
     {
-        return reference_t::make_cu(index_, off);
+        return reference_t::make(this, off);
     }
     reference_t make_root_reference() const
     {
-        return reference_t::make_cu(index_, header_length);
+        return reference_t::make(this, header_length);
     }
+
+    compile_unit_offset_tuple_t resolve_reference(const reference_t &ref) const override;
+    std::string describe_resolver() const override;
 
     reader_t get_contents() const
     {

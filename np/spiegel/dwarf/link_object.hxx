@@ -25,12 +25,14 @@ namespace np {
 namespace spiegel {
 namespace dwarf {
 
-class link_object_t
+class state_t;
+
+class link_object_t : public reference_resolver_t
 {
 public:
-    link_object_t(const char *n, uint32_t idx)
+    link_object_t(const char *n, state_t *state)
      :  filename_(np::util::xstrdup(n)),
-        index_(idx)
+        state_(state)
     {
         memset(sections_, 0, sizeof(sections_));
     }
@@ -41,14 +43,15 @@ public:
     }
 
     const char *get_filename() const { return filename_; }
-    uint32_t get_index() const { return index_; }
     const section_t *get_section(uint32_t i) const { return i < DW_sec_num ? &sections_[i] : 0; }
     np::spiegel::addr_t live_address(np::spiegel::addr_t addr) const { return addr ? addr + slide_ : addr; }
     np::spiegel::addr_t recorded_address(np::spiegel::addr_t addr) const { return addr ? addr - slide_ : addr; }
-    reference_t make_addr_reference(np::spiegel::offset_t off) const
+    reference_t make_reference(np::spiegel::offset_t off) const
     {
-        return reference_t::make_addr(index_, off);
+        return reference_t::make(this, off);
     }
+    compile_unit_offset_tuple_t resolve_reference(const reference_t &ref) const override;
+    std::string describe_resolver() const override;
 
     /* interface for state_t */
     void set_system_mappings(const std::vector<np::spiegel::mapping_t> &mappings) { system_mappings_ = mappings; }
@@ -62,7 +65,7 @@ public:
 private:
 
     char *filename_;
-    uint32_t index_;
+    state_t *state_;
     unsigned long slide_;
     section_t sections_[DW_sec_num];
     std::vector<section_t> mappings_;

@@ -169,5 +169,19 @@ compile_unit_t::live_address(np::spiegel::addr_t addr) const
     return link_object_->live_address(addr);
 }
 
+compile_unit_offset_tuple_t
+compile_unit_t::resolve_reference(const reference_t &ref) const
+{
+    return compile_unit_offset_tuple_t(const_cast<compile_unit_t*>(this), ref.offset);
+}
+
+string
+compile_unit_t::describe_resolver() const
+{
+    char offbuf[32];
+    snprintf(offbuf, sizeof(offbuf), ":%u)", index_);
+    return string("compile_unit(") + string(link_object_->get_filename()) + string(offbuf);
+}
+
 // close namespaces
 }; }; };
