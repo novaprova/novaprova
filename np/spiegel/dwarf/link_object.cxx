@@ -58,6 +58,13 @@ static void _np_bfd_error_handler(const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
+    // In MacOS Catalina, executables contain a load command
+    // #define LC_BUILD_VERSION 0x32 /* build for platform min OS version */
+    // which BFD doesn't recognise but which is totally harmless to
+    // ignore.  We suppresses that error message here.
+    if (strstr(fmt, "unknown load command"))
+        return;
+
     if (!strncmp(fmt, "%B", 2))
     {
         // The BFD library does this wacky thing where they pass
