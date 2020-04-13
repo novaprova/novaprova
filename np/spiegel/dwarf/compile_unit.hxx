@@ -29,7 +29,7 @@ class walker_t;
 struct section_t;
 class link_object_t;
 
-class compile_unit_t : public reference_resolver_t
+class compile_unit_t : public reference_resolver_t, public np::util::zalloc
 {
 private:
     enum {
