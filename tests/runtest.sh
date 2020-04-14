@@ -92,9 +92,11 @@ function normalize
 	awk -f $TEST-normalize.awk < $f
     else
 	# Default normalization
-	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: WARNING:|\?\?\? |==[0-9]+== [A-Z])' < $f |\
+	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: .*\[(WARN|ERROR)\]|\?\?\? |==[0-9]+== [A-Z])' < $f |\
             egrep -v 'no DWARF information found.*libxml2' |\
 	    sed $sed_extended_opt \
+                -e 's/\[(WARN|ERROR)\]/\1/' \
+                -e 's/\[[^]=]*\]//g' \
 		-e 's|'$PWD'|%PWD%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \
 		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g' \
