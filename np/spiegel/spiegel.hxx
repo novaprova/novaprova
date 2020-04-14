@@ -18,6 +18,7 @@
 
 #include "np/util/common.hxx"
 #include "np/spiegel/dwarf/reference.hxx"
+#include "np/spiegel/dwarf/compile_unit.hxx"
 #include "np/spiegel/intercept.hxx"
 #include "np/util/filename.hxx"
 
@@ -82,10 +83,10 @@ protected:
 class compile_unit_t : public _cacheable_t
 {
 public:
-    np::util::filename_t get_name() const { return name_; }
-    np::util::filename_t get_compile_dir() const { return comp_dir_; }
-    np::util::filename_t get_absolute_path() const;
-    const char *get_executable() const;
+    np::util::filename_t get_filename() const { return lower()->get_filename(); }
+    np::util::filename_t get_compilation_directory() const { return lower()->get_compilation_directory(); }
+    np::util::filename_t get_absolute_path() const { return lower()->get_absolute_path(); }
+    const char *get_executable() const { return lower()->get_executable(); }
 //     static compile_unit_t *for_name(const char *name);
 
     std::vector<function_t *> get_functions();
@@ -93,20 +94,29 @@ public:
     void dump_types();
 
 private:
-    compile_unit_t(np::spiegel::dwarf::reference_t ref, _factory_t &factory) :  _cacheable_t(ref, factory) {}
+    compile_unit_t(np::spiegel::dwarf::reference_t ref, _factory_t &factory)
+      : _cacheable_t(ref.normalize_to_cu(), factory) {}
     ~compile_unit_t() {}
 
-    bool populate();
-
-    const char *name_;
-    const char *comp_dir_;
-    uint64_t low_pc_;	    // TODO: should be an addr_t
-    uint64_t high_pc_;
-    uint32_t language_;
+    // We keep the upper and lower compile unit objects
+    // as two separate allocations with pointer in both
+    // directions.  It's ugly, but there you go.
+    static compile_unit_t *to_upper(np::spiegel::dwarf::compile_unit_t *lcu)
+    {
+        return static_cast<compile_unit_t*>(lcu->get_upper());
+    }
+    np::spiegel::dwarf::compile_unit_t *lower() const
+    {
+        // this only works because we called normalize_to_cu() in the ctor
+        return static_cast<np::spiegel::dwarf::compile_unit_t*>(
+            const_cast<np::spiegel::dwarf::reference_resolver_t*>(
+                ref_.resolver
+            )
+        );
+    }
 
     friend class member_t;
-    friend class np::spiegel::dwarf::state_t;
-    friend class _factory_t;
+    friend class np::spiegel::state_t;
 };
 
 
@@ -329,7 +339,6 @@ class _factory_t
 {
 public:
     type_t *make_type(np::spiegel::dwarf::reference_t);
-    compile_unit_t *make_compile_unit(np::spiegel::dwarf::reference_t);
     function_t *make_function(np::spiegel::dwarf::walker_t &);
     function_t *make_function(np::spiegel::dwarf::reference_t ref);
 //     constructor_t *make_constructor(np::spiegel::dwarf::reference_t);
@@ -369,6 +378,8 @@ public:
     void dump_abbrevs();
 
 private:
+    compile_unit_t *cu_from_lower(np::spiegel::dwarf::compile_unit_t *lcu);
+
      np::spiegel::dwarf::state_t *state_;
      _factory_t factory_;
 };

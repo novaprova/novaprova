@@ -76,8 +76,8 @@ dump_compile_units(np::spiegel::state_t &state)
     for (i = units.begin() ; i != units.end() ; ++i)
     {
 	printf("compile_unit\n");
-	printf("    name: %s\n", (*i)->get_name().c_str());
-	printf("    compile_dir: %s\n", (*i)->get_compile_dir().c_str());
+	printf("    name: %s\n", (*i)->get_filename().c_str());
+	printf("    compile_dir: %s\n", (*i)->get_compilation_directory().c_str());
 	printf("    absolute_path: %s\n", (*i)->get_absolute_path().c_str());
 	printf("    executable: %s\n", (*i)->get_executable());
     }

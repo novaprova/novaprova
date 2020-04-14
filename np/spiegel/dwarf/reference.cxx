@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 #include "reference.hxx"
+#include "compile_unit.hxx"
 
 namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 
 const reference_t reference_t::null = { 0, 0 };
+
+reference_t reference_t::normalize_to_cu() const
+{
+    if (!resolver)
+        return *this;
+    compile_unit_offset_tuple_t res = resolver->resolve_reference(*this);
+    return make(res._cu, res._off);
+}
 
 string reference_t::as_string() const
 {

@@ -64,6 +64,9 @@ state_t::read_compile_units(link_object_t *lo)
 
 	cu->read_abbrevs(abbrevr);
 
+	if (!cu->read_attributes())
+	    break;
+
 	compile_units_.push_back(cu);
     }
     delete cu;

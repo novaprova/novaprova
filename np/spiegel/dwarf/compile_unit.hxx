@@ -19,6 +19,7 @@
 #include "np/spiegel/common.hxx"
 #include "reference.hxx"
 #include "reader.hxx"
+#include "np/util/filename.hxx"
 
 namespace np {
 namespace spiegel {
@@ -50,8 +51,11 @@ public:
     bool read_header(reader_t &r);
     void read_abbrevs(reader_t &r);
     void dump_abbrevs() const;
+    bool read_attributes();
 
     uint32_t get_index() const { return index_; }
+    void *get_upper() const { return upper_; }
+    void set_upper(void *u) { upper_ = u; }
     link_object_t *get_link_object() const { return link_object_; }
     // return the file offset of the first byte of the compile unit on the disk
     np::spiegel::offset_t get_start_offset() const { return offset_; }
@@ -86,15 +90,26 @@ public:
 	return (code >= abbrevs_.size() ? 0 : abbrevs_[code]);
     }
 
+    np::util::filename_t get_filename() const { return filename_; }
+    np::util::filename_t get_compilation_directory() const { return compilation_directory_; }
+    np::util::filename_t get_absolute_path() const;
+    uint32_t get_language() const { return language_; }
 private:
     uint32_t index_;
     link_object_t *link_object_;
+    void *upper_;
     uint16_t version_;
     bool is64_;		    // new 64b format introduced in DWARF3
     reader_t reader_;	    // for whole including header
     np::spiegel::offset_t offset_;
     uint32_t abbrevs_offset_;
     std::vector<abbrev_t*> abbrevs_;
+    // from attributes of DW_TAG_compile_unit
+    const char *filename_;
+    const char *compilation_directory_;
+    uint64_t low_pc_;	    // TODO: should be an addr_t
+    uint64_t high_pc_;
+    uint32_t language_;
 };
 
 // close namespaces

@@ -340,12 +340,6 @@ type_t::to_string() const
     return to_string(string(""));
 }
 
-filename_t
-compile_unit_t::get_absolute_path() const
-{
-    return filename_t(name_).make_absolute_to_dir(filename_t(comp_dir_));
-}
-
 state_t::state_t()
 {
     state_ = new np::spiegel::dwarf::state_t();
@@ -368,53 +362,32 @@ state_t::add_executable(const char *filename)
     return state_->add_executable(filename);
 }
 
+compile_unit_t *
+state_t::cu_from_lower(np::spiegel::dwarf::compile_unit_t *lcu)
+{
+    compile_unit_t *cu = compile_unit_t::to_upper(lcu);
+    if (!cu)
+    {
+        cu = new compile_unit_t(lcu->make_root_reference(), factory_);
+        lcu->set_upper(cu);
+    }
+    return cu;
+}
+
 vector<compile_unit_t *>
 state_t::get_compile_units()
 {
     vector<np::spiegel::compile_unit_t *> res;
 
-    const vector<np::spiegel::dwarf::compile_unit_t*> &units =
-	state_->get_compile_units();
-    vector<np::spiegel::dwarf::compile_unit_t*>::const_iterator i;
-    for (i = units.begin() ; i != units.end() ; ++i)
-    {
-	compile_unit_t *cu = factory_.make_compile_unit((*i)->make_root_reference());
-	if (cu)
-	    res.push_back(cu);
-    }
+    for (auto &i : state_->get_compile_units())
+        res.push_back(cu_from_lower(i));
     return res;
-}
-
-bool
-compile_unit_t::populate()
-{
-    np::spiegel::dwarf::walker_t w(ref_);
-    // move to DW_TAG_compile_unit
-    const np::spiegel::dwarf::entry_t *e = w.move_next();
-    if (!e)
-	return false;
-
-    name_ = e->get_string_attribute(DW_AT_name);
-    comp_dir_ = e->get_string_attribute(DW_AT_comp_dir);
-    low_pc_ = e->get_uint64_attribute(DW_AT_low_pc);
-    high_pc_ = e->get_uint64_attribute(DW_AT_high_pc);
-    language_ = e->get_uint32_attribute(DW_AT_language);
-
-    dprintf("populated spiegel compile unit %s comp_dir %s "
-            "low_pc 0x%llx high_pc 0x%llx language %u\n",
-            name_,
-            comp_dir_,
-            (unsigned long long)low_pc_,
-            (unsigned long long)high_pc_,
-            (unsigned)language_);
-
-    return true;
 }
 
 vector<function_t *>
 compile_unit_t::get_functions()
 {
-    np::spiegel::dwarf::walker_t w(ref_);
+    np::spiegel::dwarf::walker_t w(lower()->make_root_reference());
     // move to DW_TAG_compile_unit
     w.move_next();
 
@@ -430,14 +403,6 @@ compile_unit_t::get_functions()
 	res.push_back(factory_.make_function(w));
     }
     return res;
-}
-
-const char *
-compile_unit_t::get_executable() const
-{
-    dwarf::compile_unit_offset_tuple_t res = ref_.resolve();
-    assert(res._cu);
-    return res._cu->get_executable();
 }
 
 void
@@ -494,7 +459,7 @@ member_t::get_compile_unit() const
 {
     dwarf::compile_unit_offset_tuple_t res = ref_.resolve();
     assert(res._cu);
-    return factory_.make_compile_unit(res._cu->make_root_reference());
+    return static_cast<compile_unit_t*>(res._cu->get_upper());
 }
 
 string
@@ -661,13 +626,20 @@ state_t::describe_address(addr_t addr, class location_t &loc)
 				 funcref, loc.offset_))
 	return false;
 
+    dwarf::compile_unit_t *cu = 0;
     if (curef == np::spiegel::dwarf::reference_t::null)
     {
         dwarf::compile_unit_offset_tuple_t res = funcref.resolve();
         assert(res._cu);
-	curef = res._cu->make_root_reference();
+        cu = res._cu;
     }
-    loc.compile_unit_ = factory_.make_compile_unit(curef);
+    else
+    {
+        dwarf::compile_unit_offset_tuple_t res = curef.resolve();
+        assert(res._cu);
+        cu = res._cu;
+    }
+    loc.compile_unit_ = static_cast<compile_unit_t*>(cu->get_upper());
     loc.function_ = factory_.make_function(funcref);
     return true;
 }
@@ -687,23 +659,6 @@ _factory_t::add(_cacheable_t *cc)
 {
     cache_[cc->ref()] = cc;
     return cc;
-}
-
-compile_unit_t *
-_factory_t::make_compile_unit(np::spiegel::dwarf::reference_t ref)
-{
-    if (ref == np::spiegel::dwarf::reference_t::null)
-	return 0;
-    _cacheable_t *cc = find(ref);
-    if (!cc)
-	cc = add(new compile_unit_t(ref, *this));
-    compile_unit_t *cu = (compile_unit_t *)cc;
-    if (!cu->populate())
-    {
-	delete cu;
-	return 0;
-    }
-    return cu;
 }
 
 type_t *
@@ -759,7 +714,7 @@ state_t::describe_stacktrace()
 	    if (loc.compile_unit_)
 	    {
 		s += " (";
-		s += loc.compile_unit_->get_name();
+		s += loc.compile_unit_->get_filename();
 		if (loc.line_)
 		{
 		    s += ":";

@@ -90,6 +90,8 @@ struct reference_t
             resolver->resolve_reference(*this) :
             compile_unit_offset_tuple_t(0, 0);
     }
+    // Return a new reference whose resolver is always a dwarf::compile_unit_t
+    reference_t normalize_to_cu() const;
 
     int operator==(const reference_t &o) const
     {

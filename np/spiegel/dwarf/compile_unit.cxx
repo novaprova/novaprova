@@ -151,6 +151,38 @@ compile_unit_t::dump_abbrevs() const
     fprintf(stderr, "np: }\n");
 }
 
+bool
+compile_unit_t::read_attributes()
+{
+    np::spiegel::dwarf::walker_t w(make_root_reference());
+    // move to DW_TAG_compile_unit
+    const np::spiegel::dwarf::entry_t *e = w.move_next();
+    if (!e)
+	return false;
+
+    filename_ = e->get_string_attribute(DW_AT_name);
+    compilation_directory_ = e->get_string_attribute(DW_AT_comp_dir);
+    low_pc_ = e->get_uint64_attribute(DW_AT_low_pc);
+    high_pc_ = e->get_uint64_attribute(DW_AT_high_pc);
+    language_ = e->get_uint32_attribute(DW_AT_language);
+
+    dprintf("populated spiegel compile unit %s comp_dir %s "
+            "low_pc 0x%llx high_pc 0x%llx language %u\n",
+            filename_,
+            compilation_directory_,
+            (unsigned long long)low_pc_,
+            (unsigned long long)high_pc_,
+            (unsigned)language_);
+
+    return true;
+}
+
+filename_t
+compile_unit_t::get_absolute_path() const
+{
+    return filename_t(filename_).make_absolute_to_dir(filename_t(compilation_directory_));
+}
+
 const char *
 compile_unit_t::get_executable() const
 {
