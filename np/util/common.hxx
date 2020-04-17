@@ -25,7 +25,9 @@
  * The ISO C 9X standard specifies that in C++ implementations these
  * macros [UINT64_MAX et al] should only be defined if explicitly requested.
  */
-# define __STDC_LIMIT_MACROS 1
+# ifndef __STDC_LIMIT_MACROS
+#  define __STDC_LIMIT_MACROS 1
+# endif
 #endif
 
 #include <stdio.h>

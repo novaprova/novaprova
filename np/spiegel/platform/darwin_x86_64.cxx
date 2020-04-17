@@ -64,13 +64,13 @@ extern "C" void __np_intercept_tramp1(void);
 
 /* The x86_6 ABI passes the first 6 arguments in registers.  Here we
  * map the argument index to an offset into the mcontext_t structure */
-static int abi_arg_offsets[6] = {
-    offsetofp(mcontext_t, __ss.__rdi),
-    offsetofp(mcontext_t, __ss.__rsi),
-    offsetofp(mcontext_t, __ss.__rdx),
-    offsetofp(mcontext_t, __ss.__rcx),
-    offsetofp(mcontext_t, __ss.__r8),
-    offsetofp(mcontext_t, __ss.__r9)
+static unsigned int abi_arg_offsets[6] = {
+    (unsigned int)offsetofp(mcontext_t, __ss.__rdi),
+    (unsigned int)offsetofp(mcontext_t, __ss.__rsi),
+    (unsigned int)offsetofp(mcontext_t, __ss.__rdx),
+    (unsigned int)offsetofp(mcontext_t, __ss.__rcx),
+    (unsigned int)offsetofp(mcontext_t, __ss.__r8),
+    (unsigned int)offsetofp(mcontext_t, __ss.__r9)
 };
 
 class x86_64_darwin_call_t : public np::spiegel::call_t

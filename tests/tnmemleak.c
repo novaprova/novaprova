@@ -22,7 +22,7 @@
 
 static NP_USED void test_memleak(void)
 {
-    malloc(32);
+    void *p __attribute__((unused)) = malloc(32);
 }
 
 
