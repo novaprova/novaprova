@@ -121,19 +121,19 @@ deserialise_event(int fd, event_t *ev)
     char * function = NULL;
 
     if (!(deserialise_uint(fd, &which)))
-	return false;
+        goto err;
     if (!(deserialise_string(fd, &description)))
-	return false;
+        goto err;
     if (!(deserialise_uint(fd, &locflags)))
-	return false;
+        goto err;
     if (!(deserialise_string(fd, &filename)))
-	return false;
+        goto err;
     if (!(deserialise_uint(fd, &lineno)))
-	return false;
+        goto err;
     if (!(deserialise_string(fd, &function)))
-	return false;
+        goto err;
     if (!(deserialise_uint(fd, &ft)))
-	return false;
+        goto err;
     ev->which = (enum events_t)which;
     ev->description = description;
     ev->locflags = locflags;
@@ -142,17 +142,32 @@ deserialise_event(int fd, event_t *ev)
     ev->function = function;
     ev->functype = (functype_t)ft;
     return true;
+
+err:
+    xfree(description);
+    xfree(filename);
+    xfree(function);
+    return false;
 }
 
 static void
 deserialise_event_cleanup(event_t *ev)
 {
     if (ev->description)
+    {
         free((void *)ev->description);
+        ev->description = NULL;
+    }
     if (ev->filename)
+    {
         free((void *)ev->filename);
+        ev->filename = NULL;
+    }
     if (ev->function)
+    {
         free((void *)ev->function);
+        ev->function = NULL;
+    }
 }
 
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/

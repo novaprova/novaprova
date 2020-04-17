@@ -275,6 +275,31 @@ enum encoding_values
 //     DW_ATE_hi_user = 0xff,
 };
 
+enum source_languages
+{
+    DW_LANG_C89 = 0x1,
+    DW_LANG_C = 0x2,
+    DW_LANG_Ada83 = 0x3,
+    DW_LANG_C_plus_plus = 0x4,
+    DW_LANG_Cobol74 = 0x5,
+    DW_LANG_Cobol85 = 0x6,
+    DW_LANG_Fortan77 = 0x7,
+    DW_LANG_Fortan90 = 0x8,
+    DW_LANG_Pascal83 = 0x9,
+    DW_LANG_Modula2 = 0xa,
+    DW_LANG_Java = 0xb,
+    DW_LANG_C99 = 0xc,
+    DW_LANG_Ada95 = 0xd,
+    DW_LANG_Fortan95 = 0xe,
+    DW_LANG_PLI = 0xf,
+    DW_LANG_ObjC = 0x10,
+    DW_LANG_ObjC_plus_plus = 0x11,
+    DW_LANG_UPC = 0x12,
+    DW_LANG_D = 0x13,
+    DW_LANG_lo_user = 0x8000,
+    DW_LANG_hi_user = 0x8fff
+};
+
 namespace np {
 namespace spiegel {
 namespace dwarf {
@@ -285,6 +310,7 @@ extern string_table_t formvals;
 extern string_table_t tagnames;
 extern string_table_t attrnames;
 extern string_table_t encvals;
+extern string_table_t langvals;
 
 // close namespaces
 }; }; };

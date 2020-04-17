@@ -85,6 +85,7 @@ libnovaprova_SOURCE= \
 		np/spiegel/dwarf/walker.cxx \
 		np/spiegel/intercept.cxx \
 		np/spiegel/mapping.cxx \
+		np/spiegel/n3996.cxx \
 		$(addprefix np/spiegel/platform/,$(platform_SOURCE)) \
 		np/spiegel/spiegel.cxx \
 		np/testmanager.cxx \
@@ -114,6 +115,7 @@ libnovaprova_PRIVHEADERS= \
 		np/spiegel/dwarf/walker.hxx \
 		np/spiegel/intercept.hxx \
 		np/spiegel/mapping.hxx \
+		np/spiegel/n3996.hxx \
 		np/spiegel/platform/common.hxx \
 		np/spiegel/spiegel.hxx \
 		np/util/common.hxx \

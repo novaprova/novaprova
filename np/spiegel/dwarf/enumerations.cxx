@@ -279,5 +279,32 @@ static const char * const _encvals[] = {
 };
 string_table_t encvals("DW_ATE_", _encvals);
 
+static const char * const _langvals[] = {
+    "",
+    "C89",              /* 0x1 */
+    "C",                /* 0x2 */
+    "Ada83",            /* 0x3 */
+    "C_plus_plus",      /* 0x4 */
+    "Cobol74",          /* 0x5 */
+    "Cobol85",          /* 0x6 */
+    "Fortan77",         /* 0x7 */
+    "Fortan90",         /* 0x8 */
+    "Pascal83",         /* 0x9 */
+    "Modula2",          /* 0xa */
+    "Java",             /* 0xb */
+    "C99",              /* 0xc */
+    "Ada95",            /* 0xd */
+    "Fortan95",         /* 0xe */
+    "PLI",              /* 0xf */
+    "ObjC",             /* 0x10 */
+    "ObjC_plus_plus",   /* 0x11 */
+    "UPC",              /* 0x12 */
+    "D",                /* 0x13 */
+    "lo_user",          /* 0x8000 */
+    "hi_user",          /* 0x8fff */
+    0,
+};
+string_table_t langvals("DW_LANG_", _langvals);
+
 // close namespaces
 }; }; };

@@ -113,6 +113,7 @@ PARALLELISM= \
     $(shell ./parallelism.sh)
 
 MAINFUL_TESTS= \
+    n3996 \
     tlog \
     tfilename \
     tintercept \
