@@ -570,6 +570,14 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
     /* TODO: install the sig handler only when there are
      * any installed intercepts, or the pid has changed */
     *(unsigned char *)addr = (using_int3 ? INSN_INT3 : INSN_HLT);
+
+    r = text_restore(addr, 1);
+    if (r)
+    {
+        err = "cannot restore text page";
+        return -1;
+    }
+
     VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
 
     return 0;
@@ -583,11 +591,20 @@ uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &er
 	err = "intercept not installed";
 	return -1;
     }
+
+    int r = text_map_writable(addr, 1);
+    if (r)
+    {
+        err = "cannot make text page writable";
+        return -1;
+    }
+
     *(unsigned char *)addr = state.orig_;
     VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
-    int r = text_restore(addr, 1);
+
+    r = text_restore(addr, 1);
     if (r < 0)
-	err = "cannot restore text page";
+        err = "cannot restore text page";
     return r;
 }
 

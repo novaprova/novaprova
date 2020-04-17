@@ -16,3 +16,4 @@ osx-setcontext
 osx-siginfo
 sigchld
 sigusr1
+osx-writable

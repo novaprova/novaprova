@@ -40,6 +40,9 @@ run-osx-siginfo:
 except: except.o iexcept.o
 	$(LINK.C) -o $@ $^
 
+osx-writable: osx-writable.c
+	$(LINK.c) -o $@ $^
+
 %.o: %.cxx
 	$(COMPILE.C) -o $@ $^
 
@@ -49,4 +52,4 @@ except: except.o iexcept.o
 clean:
 	$(RM) hello osx-setcontext osx-siginfo call-abi.s
 	$(RM) osx-file-descriptors osx-coredump memleak
-	$(RM) sigchld sigusr1 except
+	$(RM) sigchld sigusr1 except osx-writable

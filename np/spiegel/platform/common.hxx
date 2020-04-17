@@ -56,6 +56,43 @@ np::spiegel::addr_t follow_plt(np::spiegel::addr_t);
 
 // extern np::spiegel::value_t invoke(void *fnaddr, vector<np::spiegel::value_t> args);
 
+/*
+ * Functions to ensure some .text space is writable so we can insert
+ * breakpoint insns, and to undo the effect.
+ *
+ * Originally NovaProva worked by mapping the page RWX as long as the
+ * intercept was installed.  However MacOS Catalina has a behavior
+ * change where the kernel refuses to give pages X and W permissions
+ * at the same time, except for some very narrow and unhelpful exceptions
+ * e.g. mmap(MAP_ANON|MAP_JIT) from a codesigned binary with a special
+ * entitlement.  From an OS security standpoint this is pretty sensible,
+ * so we're just going to cope with it.  Now NovaProva will map the
+ * page RW- long enough to install the intercept, then map it back to
+ * R-X while the test runs, repeating the two maps to uninstall the
+ * intercept.  NovaProva does this on all platforms now, for simplicity
+ * and in the expectation that the restrictive kernel behavior will
+ * eventually catch on in the Linux world.
+ *
+ * Unexplored ramifications:
+ *
+ * - the page reference counting behavior here needs re-assessing
+ * - intercepts are now even less thread-safe
+ * - there is now a short period when a text page will not be
+ *   executable, which might cause problems if a thread is executing
+ *   code in that page
+ * - worse, there's a possibility that the part of NovaProva which
+ *   installs intercepts might accidentally end up on the same page
+ *   as a function being intercepted.
+ *
+ * Uses per-page reference counting so that multiple calls can be
+ * nested.  This is for tidiness so that we can re-map pages back to
+ * their default state after we've finished, and still handle the case
+ * of two intercepts in separate functions which are located in the
+ * same page.
+ *
+ * These functions are more general than they need to be, as we only
+ * ever need the len=1 case.
+ */
 extern int text_map_writable(addr_t addr, size_t len);
 extern int text_restore(addr_t addr, size_t len);
 

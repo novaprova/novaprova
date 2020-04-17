@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * This file contains the code that uses the mprotect() system call.
- * So far it works just fine on Linux and Darwin.
+ * This file contains the code that uses the Mach vm_protect() system
+ * call, needed on MacOS Catalina and above.
  */
 #include "np/spiegel/common.hxx"
 #include "common.hxx"
 #include "np/util/log.hxx"
-#include <sys/mman.h>
+#include <mach/mach_init.h>
+#include <mach/vm_map.h>
+#include <mach/vm_prot.h>
 
 namespace np { namespace spiegel { namespace platform {
 using namespace std;
@@ -33,7 +35,7 @@ text_map_writable(addr_t addr, size_t len)
     addr_t start = page_round_down(addr);
     addr_t end = page_round_up(addr+len);
     addr_t a;
-    int r;
+    kern_return_t r;
 
     /* increment the reference counts on every page we hit */
     for (a = start ; a < end ; a += page_size())
@@ -47,12 +49,15 @@ text_map_writable(addr_t addr, size_t len)
 
     /* actually change the underlying mapping in one
      * big system call. */
-    r = mprotect((void *)start,
-		 (size_t)(end-start),
-		 PROT_READ|PROT_WRITE);
-    if (r)
+    r = ::vm_protect(
+        mach_task_self(),
+        (vm_address_t)start,
+        (vm_size_t)(end-start),
+        /*set_maximum*/false,
+        VM_PROT_READ|VM_PROT_WRITE|VM_PROT_COPY);
+    if (r != KERN_SUCCESS)
     {
-        eprintf("Failed to call mprotect(PROT_READ|PROT_WRITE): %s\n", strerror(errno));
+        eprintf("Failed to call vm_protect(VM_PROT_READ|VM_PROT_WRITE|VM_PROT_COPY): %d\n", r);
 	return -1;
     }
     return 0;
@@ -77,10 +82,15 @@ text_restore(addr_t addr, size_t len)
 	pagerefs.erase(itr);
 
 	/* change the underlying mapping one page at a time */
-	r = mprotect((void *)a, (size_t)page_size(), PROT_READ|PROT_EXEC);
-	if (r)
+	r = ::vm_protect(
+            mach_task_self(),
+            (vm_address_t)a,
+            (vm_size_t)page_size(),
+            /*set_maximum*/false,
+            VM_PROT_READ|VM_PROT_EXECUTE);
+	if (r != KERN_SUCCESS)
 	{
-            eprintf("Failed to mprotect(PROT_READ|PROT_EXEC): %s\n", strerror(errno));
+            eprintf("Failed to vm_protect(VM_PROT_READ|VM_PROT_EXECUTE): %d\n", r);
 	    return -1;
 	}
     }
