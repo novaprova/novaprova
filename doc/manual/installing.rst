@@ -116,8 +116,10 @@ After installing all that, run these commands.
     git clone git://github.com/gnb/novaprova.git
     cd novaprova
 
+    automake -ac
     # ignore the errors, this is only needed to copy
     # in install-sh which autoconf wants
+
     autoreconf -iv
 
     ./configure
