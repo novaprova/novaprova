@@ -24,4 +24,4 @@ matrix:
   include:
     - os: osx
       osx_image: xcode10.3
-script: "automake -ac ; autoreconf -iv && ./configure && make && make check"
+script: "automake -ac ; autoreconf -iv && ./configure --without-valgrind && make && make check"
