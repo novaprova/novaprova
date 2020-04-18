@@ -25,3 +25,10 @@ matrix:
     - os: osx
       osx_image: xcode10.3
 script: "automake -ac ; autoreconf -iv && ./configure --without-valgrind && make && make check"
+addons:
+  homebrew:
+    packages:
+     - doxygen
+     - binutils
+     - libxml2
+#     - valgrind
