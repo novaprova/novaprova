@@ -32,3 +32,4 @@ addons:
      - binutils
      - libxml2
 #     - valgrind
+    update: True
