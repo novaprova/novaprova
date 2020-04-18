@@ -603,10 +603,10 @@ runner_t::run_fixtures(testnode_t *tn, functype_t type)
 	run_function(type, *itr);
 }
 
+#if HAVE_VALGRIND
 result_t
 runner_t::valgrind_errors(job_t *j, result_t res)
 {
-#if HAVE_VALGRIND
     unsigned long leaked = 0;
     unsigned long dubious __attribute__((unused)) = 0;
     unsigned long reachable __attribute__((unused)) = 0;
@@ -632,10 +632,16 @@ runner_t::valgrind_errors(job_t *j, result_t res)
 	event_t ev(EV_VALGRIND, msg);
 	res = merge(res, raise_event(j, &ev));
     }
-#endif
 
     return res;
 }
+#else
+result_t
+runner_t::valgrind_errors(job_t *j __attribute__((unused)), result_t res)
+{
+    return res;
+}
+#endif
 
 result_t
 runner_t::descriptor_leaks(job_t *j, const vector<string> &prefds, result_t res)

@@ -31,5 +31,5 @@ addons:
      - doxygen
      - binutils
      - libxml2
-     - valgrind
+#     - valgrind
     update: True
