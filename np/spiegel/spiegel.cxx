@@ -639,7 +639,7 @@ state_t::describe_address(addr_t addr, class location_t &loc)
         assert(res._cu);
         cu = res._cu;
     }
-    loc.compile_unit_ = static_cast<compile_unit_t*>(cu->get_upper());
+    loc.compile_unit_ = cu_from_lower(cu);
     loc.function_ = factory_.make_function(funcref);
     return true;
 }
