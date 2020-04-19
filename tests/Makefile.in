@@ -18,6 +18,7 @@ platform_CFLAGS=    @platform_CFLAGS@
 platform_LIBS=	    @platform_LIBS@
 libxml_LIBS=	    @libxml_LIBS@
 libbfd_LIBS=	    @libbfd_LIBS@
+_VALGRIND_ENABLED:= $(shell [ "@HAVE_VALGRIND@" = 1 -a "$(NOVAPROVA_VALGRIND)" != no ] && echo yes )
 
 CC=		gcc
 CDEBUGFLAGS=	-g
@@ -46,7 +47,6 @@ BASIC_TESTS= \
     tnassert \
     tnexit \
     tnfail \
-    tnmemleak \
     tnna \
     tnpass \
     tnsegv \
@@ -56,8 +56,14 @@ BASIC_TESTS= \
     tnnotests_param \
     tnnotests_fixture \
     tnnotests_mock \
+
+ifeq ($(_VALGRIND_ENABLED),yes)
+BASIC_TESTS+= \
+    tnmemleak \
     tnoverrun \
-    tnuninit
+    tnuninit \
+
+endif
 
 BASIC_TESTS_CXX= \
 
@@ -151,17 +157,17 @@ BUILT_SCRIPTS=	$(addsuffix -normalize.pl,$(DUMPERS))
 
 tests: $(TEST_EXES) $(BUILT_SCRIPTS) $(COMPOUND_DATA)
 
+RUNTEST_FLAGS=
 # Default to un-verbose
-ifeq ($V,)
-VERBOSE_FLAG=
-else
-VERBOSE_FLAG= --verbose
+ifneq ($V,)
+RUNTEST_FLAGS+= --verbose
 endif
 # Default to all tests not just failing tests
-ifeq ($F,)
-FAILING_ONLY_FLAG=
-else
-FAILING_ONLY_FLAG= --failing-only
+ifneq ($F,)
+RUNTEST_FLAGS+= --failing-only
+endif
+ifeq ($(_VALGRIND_ENABLED),yes)
+RUNTEST_FLAGS+= --enable-valgrind
 endif
 
 check: tests run
@@ -176,11 +182,11 @@ run-unreliable: .announce-run $(addprefix .run%,$(UNRELIABLE_TESTS))
 
 .PHONEY: .announce-run
 .announce-run:
-	@echo "=== Running tests $(VERBOSE_FLAG) $(FAILING_ONLY_FLAG)"
+	@echo "=== Running tests $(RUNTEST_FLAGS)"
 	@echo "PARALLELISM=$(PARALLELISM)"
 
 .run%:
-	@env bash runtest.sh $(VERBOSE_FLAG) $(FAILING_ONLY_FLAG) $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
+	@env bash runtest.sh $(RUNTEST_FLAGS) $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
 
 %: %.c fw.a fw.h $(DEPS)
 	$(LINK.c) -o $@ $< fw.a $(LIBS)

@@ -1,3 +1,5 @@
 ==%PID%== Invalid write of size 1
 ==%PID%== Process terminating with default action of signal 11 (SIGSEGV)
+np: ERROR unexpected EOF deserialising from proxy
+np: ERROR can't decode proxy call (which=0)
 EXIT 1

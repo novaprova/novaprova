@@ -290,6 +290,7 @@ esac
 
 if test "$with_valgrind" = yes ; then
     AC_DEFINE(HAVE_VALGRIND, 1,[whether the runtime memory checker Valgrind is enabled])
+    AC_SUBST(HAVE_VALGRIND, 1)
     AC_DEFINE_UNQUOTED(VALGRIND_BINARY, "$VALGRIND_BINARY", [the Valgrind binary])
     PKG_CHECK_MODULES(valgrind, valgrind)
 fi

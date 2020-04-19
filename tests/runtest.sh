@@ -59,30 +59,54 @@ function pass()
     exit 0
 }
 
+function usagef()
+{
+    local msg="$*"
+    [ -n "$msg" ] && echo "$0: $msg" 1>&2
+    echo "Usage: $0 [--verbose] [--enable-valgrind] [--failing-only] test [arg...]" 1>&2
+    exit 1
+}
+
 verbose=
-if [ "$1" = "--verbose" ] ; then
-    verbose=yes
-    export VERBOSE=yes
-    shift
-fi
-
+enable_valgrind=no
 failing_only=
-if [ "$1" = "--failing-only" ] ; then
-    failing_only=yes
-    shift
-fi
+TEST=
+done=no
 
-TEST="$1"
-[ -x $TEST ] || fatal "$TEST: No such executable"
-shift
-TESTARGS="$*"
+while [ $# -gt 0 -a $done = no ] ; do
+    case "$1" in
+    --verbose)
+        verbose=yes
+        export VERBOSE=yes
+        msg "Enabling verbose output"
+        ;;
+    --enable-valgrind)
+        enable_valgrind=yes
+        ;;
+    --failing-only)
+        failing_only=yes
+        ;;
+    -*)
+        usagef "Unknown option $1"
+        ;;
+    *)
+        TEST="$1"
+        shift
+        TESTARGS="$*"
+        [ -x $TEST ] || fatal "$TEST: No such executable"
+        done=yes
+        ;;
+    esac
+    shift
+done
+[ -z "$TEST" ] && usagef
 
 ID="$TEST"
 [ -n "$TESTARGS" ] && ID="$ID."$(echo "$TESTARGS"|tr ' ' '.')
 
 [ $verbose ] && msg "starting $TEST $TESTARGS"
 
-function normalize
+function normalize_output
 {
     local f="$1"
     shift
@@ -98,8 +122,19 @@ function normalize
                 -e 's/\[[^]=]*\]//g' \
 		-e 's|'$PWD'|%PWD%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \
+		-e 's/signal 15/signal %DIE%/g' \
 		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g' \
 		-e 's/^==[0-9]+== /==%PID%== /g'
+    fi
+}
+
+function normalize_golden_output()
+{
+    local f="$1"
+    if [ $enable_valgrind = yes ] ; then
+        cat "$f"
+    else
+        egrep -v '^==%PID%==' < "$f"
     fi
 }
 
@@ -137,7 +172,19 @@ fi
 
 if [ -f $ID.ee ] ; then
     # compare logged output against expected output
-    normalize $ID.log $TESTARGS | diff -u $ID.ee - || fail "differences to golden output"
+    normalize_output $ID.log $TESTARGS > $ID.log.norm
+    if [ $verbose ] ; then
+        msg "normalized output"
+        cat $ID.log.norm
+    fi
+    normalize_golden_output $ID.ee > $ID.ee.norm
+    if [ $verbose ] ; then
+        msg "normalized golden output"
+        cat $ID.ee.norm
+    fi
+    [ $verbose ] && msg "difference against golden output"
+    diff -u $ID.ee.norm $ID.log.norm || fail "differences to golden output"
+    rm -f $ID.ee.norm $ID.log.norm
 else
     expstatus=0
     egrep '^(FAIL|EXIT) ' $ID.log > .logx

@@ -3,6 +3,8 @@ MSG Awoke!
 PASS tntimeout.notimeout
 MSG Sleeping for more than timeout
 EVENT TIMEOUT Child process %PID% timed out, killing
+np: ERROR unexpected EOF deserialising from proxy
+np: ERROR can't decode proxy call (which=0)
 EVENT SIGNAL child process %PID% died on signal %DIE%
 FAIL tntimeout.timeout
 EXIT 1
