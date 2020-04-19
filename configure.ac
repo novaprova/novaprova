@@ -217,6 +217,26 @@ dnl TODO: add a --with-bfd option?
 AC_SUBST(libbfd_CFLAGS)
 AC_SUBST(libbfd_LIBS)
 
+dnl Commit http://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=commit;f=bfd/bfd-in2.h;h=52d45da3f275b5d1c8ef2e96a7760585c736133b
+dnl which appears in binutils 2.27, incompatibly changed the type of bfd_set_error_handler
+dnl in a way which is super hard to test for.  Fortunately that commit also
+dnl removed function bfd_get_error_handler, which we don't care about but
+dnl removal of a function is a change we can easily test for.
+save_LIBS="$LIBS"
+save_CFLAGS="$CFLAGS"
+LIBS="$LIBS $libbfd_LIBS"
+CFLAGS="$CFLAGS $libbfd_CFLAGS"
+AC_MSG_CHECKING([type of error handler function])
+AC_TRY_LINK_FUNC(bfd_get_error_handler,
+[
+    AC_MSG_RESULT(printf-like)
+],[
+    AC_MSG_RESULT(vprintf-like)
+    AC_DEFINE(HAVE_BFD_ERROR_HANDLER_VPRINTFLIKE,1,[Whether the BFD error handler callback is vprintf like or printf like])
+])
+LIBS="$save_LIBS"
+CFLAGS="$save_CFLAGS"
+
 debug=no
 AC_ARG_ENABLE(debug,
 	      [Enable debugging output at compile time],

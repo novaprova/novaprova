@@ -53,11 +53,8 @@ link_object_t::map_from_system(mapping_t &m) const
     return false;
 }
 
-static void _np_bfd_error_handler(const char *fmt, ...)
+static void _np_bfd_error_vhandler(const char *fmt, va_list args)
 {
-    va_list args;
-    va_start(args, fmt);
-
     // In MacOS Catalina, executables contain a load command
     // #define LC_BUILD_VERSION 0x32 /* build for platform min OS version */
     // which BFD doesn't recognise but which is totally harmless to
@@ -82,8 +79,19 @@ static void _np_bfd_error_handler(const char *fmt, ...)
     }
 
     _np_logvprintf(np::log::ERROR, fmt, args);
+}
+
+#if HAVE_BFD_ERROR_HANDLER_VPRINTFLIKE
+#define _np_bfd_error_handler _np_bfd_error_vhandler
+#else
+static void _np_bfd_error_handler(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    _np_bfd_error_vhandler(fmt, args);
     va_end(args);
 }
+#endif
 
 bool
 link_object_t::map_sections()
