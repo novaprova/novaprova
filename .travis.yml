@@ -33,5 +33,6 @@ addons:
      - binutils
      - libxml2
      - libiberty
+     - gettext
 #     - valgrind
     update: True

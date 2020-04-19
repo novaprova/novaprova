@@ -87,6 +87,12 @@ filename_is_ignored(const char *filename)
 	"/opt/",
 	"linux-gate.so",
 	"linux-vdso.so",
+#if defined(__APPLE__)
+        /* Homebrew keg-only libraries */
+        "/usr/local/opt/",
+        /* Apple system libraries */
+        "/System/Library/Frameworks/CoreFoundation.framework",
+#endif
 	NULL
     };
     const char * const *p;

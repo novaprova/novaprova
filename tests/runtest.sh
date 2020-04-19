@@ -93,7 +93,6 @@ function normalize
     else
 	# Default normalization
 	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: .*\[(WARN|ERROR)\]|\?\?\? |==[0-9]+== [A-Z])' < $f |\
-            egrep -v 'no DWARF information found.*libxml2' |\
 	    sed $sed_extended_opt \
                 -e 's/\[(WARN|ERROR)\]/\1/' \
                 -e 's/\[[^]=]*\]//g' \
