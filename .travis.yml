@@ -27,9 +27,11 @@ matrix:
 script: "automake -ac ; autoreconf -iv && ./configure --without-valgrind && make && make check"
 addons:
   homebrew:
+    taps: novaprova/novaprova
     packages:
      - doxygen
      - binutils
      - libxml2
+     - libiberty
 #     - valgrind
     update: True

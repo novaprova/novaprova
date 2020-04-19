@@ -51,8 +51,12 @@ darwin*)
     os=darwin
     # we need _XOPEN_SOURCE for setcontext() et al
     platform_CFLAGS="$platform_CFLAGS -D_XOPEN_SOURCE"
-    libbfd_CFLAGS="-I/usr/local/include -I/usr/local/include/libiberty"
-    libbfd_LIBS="-L/usr/local/lib -lbfd -liberty -lintl -liconv -lz"
+    # libbfd comes from the homebrew "binutils" formula
+    # libiberty comes from a custom formula in the homebrew-novaprova tap
+    libbfd_basedir="/usr/local/opt/binutils"
+    libiberty_basedir="/usr/local/opt/libiberty"
+    libbfd_CFLAGS="-I${libbfd_basedir}/include -I${libiberty_basedir}/include/libiberty"
+    libbfd_LIBS="-L${libbfd_basedir}/lib -lbfd -L${libiberty_basedir}/lib -liberty -lintl -liconv -lz"
     platform_SOURCE="mach_vm_protect.cxx darwin_setcontext.S"
     sed_extended_opt="-E"
     ;;
