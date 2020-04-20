@@ -591,8 +591,6 @@ state_t::insert_ranges(const walker_t &w, reference_t funcref)
 void
 state_t::prepare_address_index()
 {
-    reference_t funcref;
-
     vector<compile_unit_t*>::iterator i;
     for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
     {
@@ -601,11 +599,7 @@ state_t::prepare_address_index()
 	while (const entry_t *e = w.move_preorder())
 	{
 	    assert(e->get_tag() == DW_TAG_subprogram);
-	    if (e->get_attribute(DW_AT_specification))
-		funcref = e->get_reference_attribute(DW_AT_specification);
-	    else
-		funcref = w.get_reference();
-	    insert_ranges(w, funcref);
+	    insert_ranges(w, w.get_reference());
 	}
     }
 }
