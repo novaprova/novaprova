@@ -36,30 +36,40 @@ entry_t::get_attribute_form(uint32_t name) const
     return (enum form_values)0;
 }
 
-void
-entry_t::dump() const
+string
+entry_t::to_string() const
 {
     if (!abbrev_)
-	return;
+	return string();
 
-    dprintf("Entry 0x%x [%u] %s {\n",
+    string ret;
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "Entry offset=0x%x level=%u tag=%s {",
 	offset_,
 	level_,
 	tagnames.to_name(abbrev_->tag));
+    ret += buf;
 
+    const char *sep = "";
     vector<abbrev_t::attr_spec_t>::const_iterator i;
     for (i = abbrev_->attr_specs.begin() ; i != abbrev_->attr_specs.end() ; ++i)
     {
+        ret += sep;
+        sep = ", ";
+        const char *attrname = attrnames.to_name(i->name);
+        if (attrname)
+            ret += attrname;
+        else
+            ret += "???";
+        ret += "=";
 	const value_t *v = get_attribute(i->name);
 	if (v)
-        {
-            string s = v->to_string();
-	    dprintf("    %s = %s", attrnames.to_name(i->name), s.c_str());
-        }
+            ret += v->to_string();
 	else
-	    dprintf("    %s = <missing>", attrnames.to_name(i->name));
+            ret += "<missing>";
     }
-    dprintf("}\n");
+    ret += "}";
+    return ret;
 }
 
 // close namespaces

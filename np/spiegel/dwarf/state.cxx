@@ -465,7 +465,11 @@ recursive_dump(const entry_t *e, walker_t &w, unsigned depth, bool paths)
     assert(e->get_level() == depth);
     if (paths)
 	dump_path(w);
-    e->dump();
+    for (unsigned int i = 0 ; i < depth ; i++)
+        fputs("  ", stdout);
+    string estr = e->to_string();
+    fputs(estr.c_str(), stdout);
+    fputs("\n", stdout);
     for (e = w.move_down() ; e ; e = w.move_next())
 	recursive_dump(e, w, depth+1, paths);
 }
@@ -486,7 +490,11 @@ state_t::dump_info(bool preorder, bool paths)
 	    {
 		if (paths)
 		    dump_path(w);
-		e->dump();
+                string estr = e->to_string();
+                for (unsigned int i = 0 ; i < e->get_level() ; i++)
+                    fputs("  ", stdout);
+                fputs(estr.c_str(), stdout);
+                fputs("\n", stdout);
 	    }
 	}
 	else

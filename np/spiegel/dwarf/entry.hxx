@@ -79,7 +79,7 @@ public:
     const abbrev_t *get_abbrev() const { return abbrev_; }
     uint32_t get_tag() const { return abbrev_->tag; }
     bool has_children() const { return abbrev_->children; }
-    void dump() const;
+    std::string to_string() const;
 
     const value_t *get_attribute(uint32_t name) const
     {
