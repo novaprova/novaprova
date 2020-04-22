@@ -18,6 +18,7 @@
 #include "np/util/trace.h"
 #include "np/util/log.hxx"
 #include <libintl.h>
+#include <zlib.h>
 #include "fw.h"
 
 using namespace std;
@@ -512,10 +513,51 @@ main(int argc, char **argv __attribute__((unused)))
     it5->uninstall();
     END;
 
+    /* On Linux and Darwin, libz is another shared library we use */
+    BEGIN("libz zlibVersion");
+    libc_intercept_tester_t *it = new libc_intercept_tester_t((fn_t)zlibVersion, "zlibVersion");
+    it->install();
+    CHECK(it->before_count == 0);
+    CHECK(it->after_count == 0);
+    const char *s __attribute__((unused));
+    s = zlibVersion();
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
+    it->uninstall();
+    END;
+
     /*
-     * strncpy() starts with "mov %rdi,$r8" on 64b and with "push %edi"
-     * on 32b.  The Darwin libc contains very few functions with oddball
+     * getpid() is a nice and system call wrapper.
+     *
+     * On Linux it lives in libc and is pretty uncontroversial.
+     *
+     * On Darwin it lives in /usr/lib/system/libsystem_kernel.dylib
+     * and suffers from the current inability to intercepts functions
+     * in certain critical system libraries.
+     */
+    BEGIN("libc getpid");
+    pid_t actual_pid = getpid();
+    libc_intercept_tester_t *it = new libc_intercept_tester_t((fn_t)getpid, "getpid");
+    it->install();
+    CHECK(it->before_count == 0);
+    CHECK(it->after_count == 0);
+    pid_t intercepted_pid = getpid();
+    CHECK(intercepted_pid == actual_pid);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
+    it->uninstall();
+    END;
+
+    /*
+     * On Linux, strncpy() starts with "mov %rdi,$r8" on 64b and with "push %edi"
+     * on 32b.
+     *
+     * The Darwin libc contains very few functions with oddball
      * prologs...maybe they don't optimise their libc?
+     *
+     * Sometime since NP was first ported to Darwin, we lost the ability
+     * to sucessfully intercept functions in certain critical libraries.
+     * strncpy() is in one of those.
      */
     BEGIN("libc strncpy");
     libc_intercept_tester_t *it6 = new libc_intercept_tester_t((fn_t)strncpy, "strncpy");
