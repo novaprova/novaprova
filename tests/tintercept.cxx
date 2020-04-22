@@ -16,10 +16,8 @@
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
 #include "np/util/trace.h"
-#if defined(__GLIBC__)
 #include "np/util/log.hxx"
 #include <libintl.h>
-#endif
 #include "fw.h"
 
 using namespace std;
@@ -481,8 +479,11 @@ main(int argc, char **argv __attribute__((unused)))
      *
      * So we try to cover all of these by testing specific functions
      * known to exhibit specific properties in one libc or another.
+     *
+     * On Darwin these functions are in the libintl shared library from
+     * the "gettext" Homebrew keg.  It's not libc but it's a case that
+     * needs to work.
      */
-#if defined(__GLIBC__)
     const char *s;
 
     /* textdomain uses the 0x55 prologue on x86 and x86_64 */
@@ -510,7 +511,7 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it5->after_count == 1);
     it5->uninstall();
     END;
-#elif defined(__APPLE__)
+
     /*
      * strncpy() starts with "mov %rdi,$r8" on 64b and with "push %edi"
      * on 32b.  The Darwin libc contains very few functions with oddball
@@ -528,9 +529,6 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it6->after_count == 1);
     it6->uninstall();
     END;
-#else
-#warning TODO implement this test for this platform
-#endif
 
     return 0;
 }
