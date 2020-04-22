@@ -17,6 +17,7 @@
 #include "np/spiegel/dwarf/state.hxx"
 #include "np/util/trace.h"
 #if defined(__GLIBC__)
+#include "np/util/log.hxx"
 #include <libintl.h>
 #endif
 #include "fw.h"
@@ -85,14 +86,14 @@ the_function(int x, int y)
     int i;
 
     STACKME("the_function");
-    if (is_verbose()) printf("Start of the_function, x=%d y=%d\n", x, y);
+    dprintf("Start of the_function, x=%d y=%d\n", x, y);
     the_function_count++;
     for (i = 0 ; i < x ; i++)
     {
 	y *= 5;
 	y--;
     }
-    if (is_verbose()) printf("End of the_function, returning %d\n", y);
+    dprintf("End of the_function, returning %d\n", y);
     return y;
 }
 
@@ -103,14 +104,14 @@ another_function(int x, int y)
 {
     int i;
 
-    if (is_verbose()) printf("Start of another_function, x=%d y=%d\n", x, y);
+    dprintf("Start of another_function, x=%d y=%d\n", x, y);
     another_function_count++;
     for (i = 0 ; i < x ; i++)
     {
 	y *= 2;
 	y++;
     }
-    if (is_verbose()) printf("End of another_function, returning %d\n", y);
+    dprintf("End of another_function, returning %d\n", y);
     return y;
 }
 
@@ -149,15 +150,15 @@ intercept_tester_t::before(np::spiegel::call_t &call)
     x = call.get_arg(0);
     y = call.get_arg(1);
     before_count++;
-    if (is_verbose()) printf("BEFORE x=%d y=%d\n", x, y);
+    dprintf("BEFORE x=%d y=%d\n", x, y);
     if (test_skip)
     {
-	if (is_verbose()) printf("SKIPPING r=%d\n", nr);
+	dprintf("SKIPPING r=%d\n", nr);
 	call.skip(nr);
     }
     if (test_redirect)
     {
-	if (is_verbose()) printf("REDIRECTING to another_function\n");
+	dprintf("REDIRECTING to another_function\n");
 	call.redirect((np::spiegel::addr_t)&another_function);
     }
 }
@@ -167,10 +168,10 @@ intercept_tester_t::after(np::spiegel::call_t &call)
 {
     r = call.get_retval();
     after_count++;
-    if (is_verbose()) printf("AFTER, returned %d\n", r);
+    dprintf("AFTER, returned %d\n", r);
     if (test_set_retval)
     {
-	if (is_verbose()) printf("SETTING RETVAL to %d\n", nr);
+	dprintf("SETTING RETVAL to %d\n", nr);
 	call.set_retval((unsigned long)nr);
     }
 }
@@ -194,27 +195,27 @@ intercept_tester_t::reset_counters()
 int moe(int x, int y)
 {
     STACKME("moe");
-    if (is_verbose()) printf("Start of moe, x=%d y=%d\n", x, y);
+    dprintf("Start of moe, x=%d y=%d\n", x, y);
     int r = the_function(x+1, y+1);
-    if (is_verbose()) printf("End of moe, r=%d\n", r);
+    dprintf("End of moe, r=%d\n", r);
     return r-1;
 }
 
 int curly(int x, int y)
 {
     STACKME("curly");
-    if (is_verbose()) printf("Start of curly, x=%d y=%d\n", x, y);
+    dprintf("Start of curly, x=%d y=%d\n", x, y);
     int r = moe(x+1, y+1);
-    if (is_verbose()) printf("End of curly, r=%d\n", r);
+    dprintf("End of curly, r=%d\n", r);
     return r-1;
 }
 
 int larry(int x, int y)
 {
     STACKME("larry");
-    if (is_verbose()) printf("Start of larry, x=%d y=%d\n", x, y);
+    dprintf("Start of larry, x=%d y=%d\n", x, y);
     int r = curly(x+1, y+1);
-    if (is_verbose()) printf("End of larry, r=%d\n", r);
+    dprintf("End of larry, r=%d\n", r);
     return r-1;
 }
 
@@ -245,12 +246,12 @@ public:
 	int i;
 	for (i = 0 ; i < 12 ; i++)
 	    x[i] = call.get_arg(i);
-	if (is_verbose()) printf("BEFORE\n");
+	dprintf("BEFORE\n");
     }
     void after(np::spiegel::call_t &call)
     {
 	r = call.get_retval();
-	if (is_verbose()) printf("AFTER, returning %d\n", r);
+	dprintf("AFTER, returning %d\n", r);
     }
 };
 
@@ -272,12 +273,12 @@ public:
 
     void before(np::spiegel::call_t &call)
     {
-	if (is_verbose()) printf("BEFORE %s\n", get_name());
+	dprintf("BEFORE %s\n", get_name());
 	before_count++;
     }
     void after(np::spiegel::call_t &call)
     {
-	if (is_verbose()) printf("AFTER %s\n", get_name());
+	dprintf("AFTER %s\n", get_name());
 	after_count++;
     }
 };
@@ -288,17 +289,24 @@ main(int argc, char **argv __attribute__((unused)))
 #if 0
     top_of_stack = (unsigned long)&argc;
 #endif
-    if (argc > 1)
+
+    bool debug = false;
+    if (argc == 2 && !strcmp(argv[1], "--debug"))
+    {
+        debug = true;
+    }
+    else if (argc > 1)
     {
 	fatal("Usage: testrunner intercept\n");
     }
+    np::log::basic_config(debug ? np::log::DEBUG : np::log::INFO, 0);
     if (is_verbose()) np_trace_init();
     STACKME("main");
-    if (is_verbose()) printf("Address of the_function is %p\n", the_function);
+    dprintf("Address of the_function is %p\n", the_function);
 
-    if (is_verbose()) printf("main, about to create state_t\n");
+    dprintf("main, about to create state_t\n");
     np::spiegel::dwarf::state_t state;
-    if (is_verbose()) printf("main, about to call add_self\n");
+    dprintf("main, about to call add_self\n");
     if (!state.add_self())
 	return 1;
 
