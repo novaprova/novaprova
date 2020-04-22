@@ -27,7 +27,7 @@ extern const char _np_trace_hexdigits[];
 	if (_np_trace_buf) \
 	{ \
 	    static const char _m[] = (msg); \
-	    for (register const char *_x = _m ; *_x ; _x++) \
+	    for (const char *_x = _m ; *_x ; _x++) \
 		*_np_trace_buf++ = *_x; \
 	} \
     }
@@ -35,10 +35,10 @@ extern const char _np_trace_hexdigits[];
     { \
 	if (_np_trace_buf) \
 	{ \
-	    register uint64_t _n = (n); \
+	    uint64_t _n = (n); \
 	    *_np_trace_buf++ = '0'; \
 	    *_np_trace_buf++ = 'x'; \
-	    for (register int _i = 15 ; _i >= 0 ; _i--) \
+	    for (int _i = 15 ; _i >= 0 ; _i--) \
 	    { \
 		_np_trace_buf[_i] = _np_trace_hexdigits[_n & 0xf]; \
 		_n >>= 4; \
