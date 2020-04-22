@@ -249,7 +249,7 @@ AC_TRY_LINK_FUNC(bfd_get_error_handler,
 LIBS="$save_LIBS"
 CFLAGS="$save_CFLAGS"
 
-debug=no
+debug=yes
 AC_ARG_ENABLE(debug,
 	      [Enable debugging output at compile time],
 	      [ debug=$enableval ])
