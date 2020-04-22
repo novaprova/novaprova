@@ -154,8 +154,8 @@ link_object_t::map_sections()
 	if (!is_separate)
 	{
 	    if (map_from_system(sections_[idx]))
-		dprintf("found system mapping for section %s at %p\n",
-			secnames.to_name(idx), sm->get_map());
+		dprintf("found system mapping for section %s\n",
+			secnames.to_name(idx));
 	}
     }
 
