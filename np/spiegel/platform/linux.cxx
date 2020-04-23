@@ -148,10 +148,12 @@ add_one_linkobj(struct dl_phdr_info *info,
     dprintf("shared object dl_phdr_info { addr=%p name=%s }\n",
 	    (void *)info->dlpi_addr, info->dlpi_name);
 
-    if (!name && info->dlpi_addr)
+    if (!name)
     {
-        dprintf("shared object has an address but no name, ignoring\n");
-	return 0;
+        if (info->dlpi_addr)
+            dprintf("XXX: link object is an executable with ASLR enabled, address 0x%lx", info->dlpi_addr);
+        else
+            dprintf("XXX: link object is an executable without ASLR enabled");
     }
     if (!info->dlpi_phnum)
     {
@@ -161,6 +163,14 @@ add_one_linkobj(struct dl_phdr_info *info,
 
     linkobj_t lo;
     lo.name = name;
+    /* post-ALSR dl_iterate_phdr.3 man page says:
+     *
+     * The dlpi_addr field indicates the base address of the shared object
+     * (i.e., the difference between the virtual memory address of the shared
+     * object and the offset of that object in the file from which it was
+     * loaded).
+     */
+    lo.slide = info->dlpi_addr;
 
     for (int i = 0 ; i < info->dlpi_phnum ; i++)
     {
