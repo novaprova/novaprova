@@ -18,7 +18,9 @@
 #include "np/util/trace.h"
 #include "np/util/log.hxx"
 #include <libintl.h>
+#ifdef __APPLE__
 #include <zlib.h>
+#endif
 #include "fw.h"
 
 using namespace std;
@@ -513,6 +515,7 @@ main(int argc, char **argv __attribute__((unused)))
     it5->uninstall();
     END;
 
+#ifdef __APPLE__
     /* On Linux and Darwin, libz is another shared library we use */
     BEGIN("libz zlibVersion");
     libc_intercept_tester_t *it = new libc_intercept_tester_t((fn_t)zlibVersion, "zlibVersion");
@@ -525,6 +528,7 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it->after_count == 1);
     it->uninstall();
     END;
+#endif
 
 #ifndef __APPLE__
     /*

@@ -58,6 +58,7 @@ value_t::to_string() const
     case T_REF:
         return val.ref.as_string();
     }
+    return string("<unknown>");
 }
 
 // close namespaces

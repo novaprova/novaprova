@@ -34,7 +34,7 @@ string reference_t::as_string() const
     if (!resolver)
         return string("(ref){0,0}");
     char offbuf[32];
-    snprintf(offbuf, sizeof(offbuf), ",0x%llx}", offset);
+    snprintf(offbuf, sizeof(offbuf), ",0x%llx}", (unsigned long long)offset);
     return string("(ref){") + resolver->describe_resolver() + string(offbuf);
 }
 

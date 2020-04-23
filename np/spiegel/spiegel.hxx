@@ -172,7 +172,7 @@ public:
 
     unsigned int get_classification() const;
     std::string get_classification_as_string() const;
-    static int major(unsigned int tc) { return (tc & _TC_MAJOR_MASK); }
+    static int major_type(unsigned int tc) { return (tc & _TC_MAJOR_MASK); }
     static int is_signed(unsigned int tc) { return !!(tc & _TC_SIGNED); }
 
     unsigned int get_sizeof() const;
