@@ -694,16 +694,14 @@ state_t::describe_stacktrace()
 {
     string s;
     vector<addr_t> stack = np::spiegel::platform::get_stacktrace();
-    vector<addr_t>::iterator i;
     bool first = true;
-    bool done = false;
-    for (i = stack.begin() ; !done && i != stack.end() ; ++i)
+    for (addr_t addr : stack)
     {
 	s += (first ? "at " : "by ");
-	s += HEX(*i);
+	s += HEX(addr);
 	s += ":";
 	location_t loc;
-	if (describe_address(*i, loc))
+	if (describe_address(addr, loc))
 	{
 	    if (loc.function_)
 	    {
@@ -723,7 +721,10 @@ state_t::describe_stacktrace()
 		s += ")";
 	    }
 	    if (loc.function_ && loc.function_->get_name() == "main")
-		done = true;
+            {
+                s += "\n";
+                break;
+            }
 	}
 	s += "\n";
 	first = false;

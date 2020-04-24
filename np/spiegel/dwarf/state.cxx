@@ -136,10 +136,9 @@ state_t::add_self()
 	    dprintf("have spiegel link_object\n");
             lo->set_system_mappings(i->mappings);
 	    lo->set_slide(i->slide);
-	    vector<mapping_t>::iterator sm;
-	    for (sm = i->mappings.begin() ; sm != i->mappings.end() ; ++sm)
-		link_object_index_.insert((np::spiegel::addr_t)sm->get_map(),
-                                          (np::spiegel::addr_t)sm->get_map() + sm->get_size(),
+	    for (auto &sm : i->mappings)
+		link_object_index_.insert((np::spiegel::addr_t)sm.get_map(),
+                                          (np::spiegel::addr_t)sm.get_map() + sm.get_size(),
                                           lo);
 	}
     }
