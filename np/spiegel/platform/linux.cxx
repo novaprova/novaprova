@@ -174,6 +174,12 @@ add_one_linkobj(struct dl_phdr_info *info,
 
     for (int i = 0 ; i < info->dlpi_phnum ; i++)
     {
+	if (info->dlpi_phdr[i].p_type != PT_LOAD)
+        {
+            dprintf("PHDR[%d] has type %d, ignoring\n", i, info->dlpi_phdr[i].p_type);
+	    continue;
+        }
+
 	if (!info->dlpi_phdr[i].p_memsz)
         {
             dprintf("PHDR[%d] has zero size, ignoring\n", i);
