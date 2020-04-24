@@ -1,5 +1,3 @@
-np: ERROR unexpected EOF deserialising from proxy
-np: ERROR can't decode proxy call (which=0)
 EVENT SIGNAL child process %PID% died on signal 4
 FAIL tnsigill.sigill
 EXIT 1

@@ -1,3 +1,1 @@
-np: ERROR unexpected EOF deserialising from proxy
-np: ERROR can't decode proxy call (which=0)
 EXIT 1

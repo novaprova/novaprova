@@ -72,7 +72,13 @@ deserialise_bytes(int fd, char *p, unsigned int len)
 	    return false;
 	}
 	if (r == 0) {
-	    eprintf("unexpected EOF deserialising from proxy\n");
+            /*
+             * Not reporting this as an error, because it seems to
+             * happen all the time on Darwin and never on Linux
+             * (where we note the premature end of child processes
+             * by seeing POLLHUP from poll(2)).
+             */
+	    dprintf("unexpected EOF deserialising from proxy\n");
 	    return false;
 	}
 	len -= r;
@@ -236,7 +242,13 @@ proxy_listener_t::handle_call(int fd, job_t *j, result_t *resp)
 
     /* Decoding failed somehow so fail the test and tell the user */
     *resp = merge(*resp, R_FAIL);
-    eprintf("can't decode proxy call (which=%u)\n", which);
+    /*
+     * Not reporting this as an error, because it seems to
+     * happen all the time on Darwin and never on Linux
+     * (where we note the premature end of child processes
+     * by seeing POLLHUP from poll(2)).
+     */
+    dprintf("can't decode proxy call (which=%u)\n", which);
     return false;
 }
 
