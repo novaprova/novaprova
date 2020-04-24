@@ -70,8 +70,11 @@ np::spiegel::addr_t follow_plt(np::spiegel::addr_t);
 // extern np::spiegel::value_t invoke(void *fnaddr, vector<np::spiegel::value_t> args);
 
 /*
- * Functions to ensure some .text space is writable so we can insert
- * breakpoint insns, and to undo the effect.
+ * Write the given bytes to the text segment, taking care of issues
+ * like memory protection and Valgrind translations.  Used to insert
+ * a software breakpoint instruction, and uninstall it again.  The
+ * text segment remains executable and not writable after the function
+ * returns.
  *
  * Originally NovaProva worked by mapping the page RWX as long as the
  * intercept was installed.  However MacOS Catalina has a behavior
@@ -86,28 +89,21 @@ np::spiegel::addr_t follow_plt(np::spiegel::addr_t);
  * and in the expectation that the restrictive kernel behavior will
  * eventually catch on in the Linux world.
  *
+ * With the new behavior we don't need two separate functions to make
+ * the text pages writable and not-writable anymore, so API is now
+ * a single function that does the prot/write/unprot cycle.  This also
+ * lets us cope with some gnarly side effects of having rw- pages, like
+ * accidentally making the PLT non-executable.  The page reference counting
+ * is also gone, it was moot and can't work without an executable PLT.
+ *
  * Unexplored ramifications:
  *
- * - the page reference counting behavior here needs re-assessing
  * - intercepts are now even less thread-safe
- * - there is now a short period when a text page will not be
- *   executable, which might cause problems if a thread is executing
- *   code in that page
- * - worse, there's a possibility that the part of NovaProva which
- *   installs intercepts might accidentally end up on the same page
- *   as a function being intercepted.
  *
- * Uses per-page reference counting so that multiple calls can be
- * nested.  This is for tidiness so that we can re-map pages back to
- * their default state after we've finished, and still handle the case
- * of two intercepts in separate functions which are located in the
- * same page.
- *
- * These functions are more general than they need to be, as we only
+ * This function is more general than it needs to be, as we only
  * ever need the len=1 case.
  */
-extern int text_map_writable(addr_t addr, size_t len);
-extern int text_restore(addr_t addr, size_t len);
+extern int text_write(addr_t addr, const uint8_t *trap_bytes, size_t len);
 
 struct intstate_t
 {
@@ -120,11 +116,9 @@ struct intstate_t
 #endif
 };
 extern int install_intercept(np::spiegel::addr_t,
-			     intstate_t &state,
-			     /*return*/std::string &err);
+			     intstate_t &state);
 extern int uninstall_intercept(np::spiegel::addr_t,
-			     intstate_t &state,
-			     /*return*/std::string &err);
+			     intstate_t &state);
 
 extern std::vector<np::spiegel::addr_t> get_stacktrace();
 

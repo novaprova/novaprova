@@ -22,30 +22,20 @@
 #include <mach/mach_init.h>
 #include <mach/vm_map.h>
 #include <mach/vm_prot.h>
+#include <valgrind/valgrind.h>
 
 namespace np { namespace spiegel { namespace platform {
 using namespace std;
 using namespace np::util;
 
-static map<addr_t, unsigned int> pagerefs;
 
-int
+static int
 text_map_writable(addr_t addr, size_t len)
 {
     addr_t start = page_round_down(addr);
     addr_t end = page_round_up(addr+len);
-    addr_t a;
     kern_return_t r;
 
-    /* increment the reference counts on every page we hit */
-    for (a = start ; a < end ; a += page_size())
-    {
-	map<addr_t, unsigned int>::iterator itr = pagerefs.find(a);
-	if (itr == pagerefs.end())
-	    pagerefs[a] = 1;
-	else
-	    itr->second++;
-    }
 
     /* actually change the underlying mapping in one
      * big system call. */
@@ -63,39 +53,53 @@ text_map_writable(addr_t addr, size_t len)
     return 0;
 }
 
-int
+static int
 text_restore(addr_t addr, size_t len)
 {
     addr_t start = page_round_down(addr);
     addr_t end = page_round_up(addr+len);
-    addr_t a;
     int r;
 
-    /* decrement the reference counts on every page we hit */
-    for (a = start ; a < end ; a += page_size())
+    /* actually change the underlying mapping in one
+     * big system call. */
+    r = ::vm_protect(
+        mach_task_self(),
+        (vm_address_t)start,
+        (vm_size_t)(end-start),
+        /*set_maximum*/false,
+        VM_PROT_READ|VM_PROT_EXECUTE);
+    if (r != KERN_SUCCESS)
     {
-	map<addr_t, unsigned int>::iterator itr = pagerefs.find(a);
-	if (itr == pagerefs.end())
-	    continue;
-	if (--itr->second)
-	    continue;	/* still other references */
-	pagerefs.erase(itr);
-
-	/* change the underlying mapping one page at a time */
-	r = ::vm_protect(
-            mach_task_self(),
-            (vm_address_t)a,
-            (vm_size_t)page_size(),
-            /*set_maximum*/false,
-            VM_PROT_READ|VM_PROT_EXECUTE);
-	if (r != KERN_SUCCESS)
-	{
-            eprintf("Failed to vm_protect(VM_PROT_READ|VM_PROT_EXECUTE): %d\n", r);
-	    return -1;
-	}
+        eprintf("Failed to vm_protect(VM_PROT_READ|VM_PROT_EXECUTE): %d\n", r);
+        return -1;
     }
 
     return 0;
+}
+
+int
+text_write(addr_t to, const uint8_t *from, size_t len)
+{
+    int r = text_map_writable(to, len);
+    if (r)
+        return r;
+    /*
+     * On Linux, this would be the start of a CRITICAL SECTION
+     * where there is no guarantee that calls to libc (or any
+     * other shared library) will work.
+     *
+     * That issues hasn't happened on Mac.  Yet.  But we will
+     * hew to the same basic design Just In Case.
+     */
+    for (unsigned int i = 0 ; i < len ; i++)
+        ((char *)to)[i] = ((const char *)from)[i];
+
+    r = text_restore(to, len);
+    /* end CRITICAL SECTION */
+
+    VALGRIND_DISCARD_TRANSLATIONS(to, len);
+
+    return r;
 }
 
 // close namespaces

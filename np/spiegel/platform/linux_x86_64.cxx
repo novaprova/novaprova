@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 Gregory Banks
+ * Copyright 2011-2020 Gregory Banks
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,6 +74,10 @@ static ucontext_t fpuc;
 static np::spiegel::platform::intstate_t *tramp_intstate;
 static bool hack1 = false;
 static bool using_int3 = false;
+static const uint8_t int3_trap_bytes[] = {INSN_INT3};
+static const uint8_t hlt_trap_bytes[] = {INSN_HLT};
+#define trap_bytes      (using_int3 ? int3_trap_bytes : hlt_trap_bytes)
+#define trap_len        (using_int3 ? sizeof(int3_trap_bytes) : sizeof(hlt_trap_bytes))
 
 static unsigned long
 intercept_tramp(void)
@@ -204,8 +208,7 @@ intercept_tramp(void)
 
     case intstate_t::OTHER:
 	/* replace the breakpoint with the original insn */
-	*(unsigned char *)frame.addr = tramp_intstate->orig_;
-	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+        text_write(frame.addr, &tramp_intstate->orig_, trap_len);
 	/* setup to start executing it again */
 	tramp_uc.uc_mcontext.gregs[REG_RIP] = frame.addr;
 	break;
@@ -259,8 +262,7 @@ intercept_tramp(void)
 	    break;
 	case intstate_t::OTHER:
 	    /* Re-insert the breakpoint */
-	    *(unsigned char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
-	    VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+            text_write(frame.addr, trap_bytes, trap_len);
 	    break;
 	case intstate_t::UNKNOWN:
 	    break;
@@ -308,8 +310,7 @@ after:
 	break;
     case intstate_t::OTHER:
 	/* Re-insert the breakpoint */
-	*(unsigned char *)frame.addr = (using_int3 ? INSN_INT3 : INSN_HLT);
-	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+        text_write(frame.addr, trap_bytes, trap_len);
 	break;
     case intstate_t::UNKNOWN:
 	break;
@@ -388,7 +389,7 @@ wtf:
 
 
 int
-install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
+install_intercept(np::spiegel::addr_t addr, intstate_t &state)
 {
     int r;
 
@@ -406,14 +407,9 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
 	state.type_ = intstate_t::OTHER;
 	break;
     }
-    state.orig_ = *(unsigned char *)addr;
-
-    r = text_map_writable(addr, 1);
-    if (r)
-    {
-	err = "cannot make text page writable";
-	return -1;
-    }
+    /* TODO: trap_len uses using_int3 before its correctly set,
+     * but this doesn't matter as trap_len=1 always */
+    memcpy((void *)&state.orig_, (const void *)addr, trap_len);
 
     static bool installed_sigaction = false;
     if (!installed_sigaction)
@@ -424,53 +420,37 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
 	act.sa_flags |= SA_SIGINFO;
 	if (RUNNING_ON_VALGRIND)
 	    using_int3 = true;
-	sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
+	r = sigaction((using_int3 ? SIGTRAP : SIGSEGV), &act, NULL);
 	if (r < 0)
 	{
 	    eprintf("Failed to call sigaction(): %s\n", strerror(errno));
-	    err = "cannot install signal handler";
 	    return -1;
 	}
 	installed_sigaction = true;
     }
 
-    /* TODO: install the sig handler only when there are
-     * any installed intercepts, or the pid has changed */
-    *(unsigned char *)addr = (using_int3 ? INSN_INT3 : INSN_HLT);
-    VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
-
-    r = text_restore(addr, 1);
+    r = text_write(addr, trap_bytes, trap_len);
     if (r)
     {
-        err = "cannot restore text page";
-        return -1;
+        eprintf("Cannot write trap bytes to text address 0x%lx", addr);
+        return r;
     }
 
     return 0;
 }
 
 int
-uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
+uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state)
 {
-    if (*(unsigned char *)addr != (using_int3 ? INSN_INT3 : INSN_HLT))
+    if (*(unsigned char *)addr != trap_bytes[0])
     {
-	err = "intercept not installed";
+        eprintf("Intercept not installed at 0x%lx", addr);
 	return -1;
     }
 
-    int r = text_map_writable(addr, 1);
+    int r = text_write(addr, &state.orig_, trap_len);
     if (r)
-    {
-        err = "cannot make text page writable";
-        return -1;
-    }
-
-    *(unsigned char *)addr = state.orig_;
-    VALGRIND_DISCARD_TRANSLATIONS(addr, 1);
-
-    r = text_restore(addr, 1);
-    if (r < 0)
-        err = "cannot restore text page";
+        eprintf("Failed to uninstall intercept at 0x%lx", addr);
 
     return r;
 }

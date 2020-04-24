@@ -72,11 +72,10 @@ intercept_t::install()
     as->intercepts_.push_back(this);
     if (as->intercepts_.size() == 1)
     {
-	string err;
-	r = np::spiegel::platform::install_intercept(addr_, as->state_, err);
+	r = np::spiegel::platform::install_intercept(addr_, as->state_);
 	if (r < 0)
-	    eprintf("failed to install intercepted function %s at 0x%lx: %s\n",
-                    get_name(), (unsigned long)addr_, err.c_str());
+	    eprintf("failed to install intercepted function %s at 0x%lx\n",
+                    get_name(), (unsigned long)addr_);
     }
     return r;
 }
@@ -97,11 +96,10 @@ intercept_t::uninstall()
     }
     if (as->intercepts_.size() == 0)
     {
-	string err;
-	r = np::spiegel::platform::uninstall_intercept(addr_, as->state_, err);
+	r = np::spiegel::platform::uninstall_intercept(addr_, as->state_);
 	if (r < 0)
-	    eprintf("failed to uninstall intercepted function %s at 0x%lx: %s\n",
-                    get_name(), (unsigned long)addr_, err.c_str());
+	    eprintf("failed to uninstall intercepted function %s at 0x%lxs\n",
+                    get_name(), (unsigned long)addr_);
 	remove_addrstate(addr_);
     }
     return r;
