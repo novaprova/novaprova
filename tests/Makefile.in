@@ -115,6 +115,7 @@ MAINFUL_TESTS= \
     tlog \
     tfilename \
     tintercept \
+    trangetree \
     treader \
     tstack \
     tdescaddr \
