@@ -109,7 +109,12 @@ intercept_tramp(void)
 	unsigned long our_rsp;
     } frame;
     unsigned long parent_size;
+    /* total number of words pushed onto the stack, *before* copying
+     * parent's stack argumens. */
     int nstack = 0;
+    /* number of padding words pushed onto the stack to preserve
+     * ABI stack alignment. */
+    int fstack = 0;
 
     /* address of the breakpoint insn */
     frame.addr = tramp_uc.uc_mcontext.gregs[REG_RIP] - (using_int3 ? 1 : 0);
@@ -211,6 +216,8 @@ intercept_tramp(void)
         text_write(frame.addr, &tramp_intstate->orig_, trap_len);
 	/* setup to start executing it again */
 	tramp_uc.uc_mcontext.gregs[REG_RIP] = frame.addr;
+        frame.stack[nstack++] = 0;
+        fstack = nstack;
 	break;
 
     case intstate_t::UNKNOWN:
@@ -231,7 +238,7 @@ intercept_tramp(void)
 	   (void *)(tramp_uc.uc_mcontext.gregs[REG_RSP]+8),
 	   MIN(parent_size, sizeof(frame.stack)-nstack*sizeof(unsigned long)));
     /* setup the ucontext's RSP register to point at the new stack frame */
-    tramp_uc.uc_mcontext.gregs[REG_RSP] = (unsigned long)&frame;
+    tramp_uc.uc_mcontext.gregs[REG_RSP] = (unsigned long)&frame.stack[fstack];
 
     /*
      * Call the BEFORE method.  This call happens late enough that
