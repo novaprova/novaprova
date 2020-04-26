@@ -69,3 +69,5 @@ More documentation is in the source, or you can
 
 [Read the Getting Started guide](http://novaprova.readthedocs.org/en/latest/getting-started.html)
 
+[![Build Status](https://travis-ci.org/novaprova/novaprova.svg?branch=1.5rc1)](https://travis-ci.org/novaprova/novaprova)
+
