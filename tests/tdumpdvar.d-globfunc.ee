@@ -1,5 +1,5 @@
 compile_unit d-globfunc.cxx {
-struct coffee * keffiyeh;
+struct coffee keffiyeh;
 int sartorial;
 } compile_unit
 EXIT 0
