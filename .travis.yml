@@ -14,9 +14,6 @@
 #  limitations under the License.
 #
 language: cpp
-compiler:
-  - clang
-#  - gcc
 branches:
   only:
     - 1.5rc1
@@ -24,8 +21,10 @@ matrix:
   include:
     - os: osx
       osx_image: xcode10.3
+      compiler: clang
     - os: linux
       dist: bionic
+      compiler: [ clang, gcc ]
 script: |
     automake -ac
     autoreconf -iv && \

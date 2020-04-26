@@ -32,8 +32,8 @@ platform_CFLAGS=@platform_CFLAGS@
 platform_SOURCE=@platform_SOURCE@
 BUILD_DOCS=@BUILD_DOCS@
 
-CC=		g++
-CXX=		g++
+CC=		@CXX@
+CXX=		@CXX@++
 CXXSTDFLAGS=	-std=c++11
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
