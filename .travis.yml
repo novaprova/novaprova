@@ -24,6 +24,8 @@ matrix:
   include:
     - os: osx
       osx_image: xcode10.3
+    - os: linux
+      dist: bionic
 script: |
     automake -ac
     autoreconf -iv && \
@@ -41,3 +43,15 @@ addons:
      - gettext
 #     - valgrind
     update: True
+  apt:
+    packages:
+     - binutils-dev
+     - doxygen
+     - libiberty-dev
+     - libxml-libxml-perl
+     - libxml2
+     - libxml2-dev
+     - libxml2-utils
+     - pkg-config
+#     - valgrind
+     - zlib1g-dev
