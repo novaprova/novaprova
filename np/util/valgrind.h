@@ -20,6 +20,7 @@
 
 #if HAVE_VALGRIND
 #include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
 #else
 #define RUNNING_ON_VALGRIND 0
 #define VALGRIND_DISCARD_TRANSLATIONS(a, l)
