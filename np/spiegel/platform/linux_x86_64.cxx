@@ -94,12 +94,13 @@ intercept_tramp(void)
     {
 	/* fake stack frame for the original function
 	 *
-	 *  - saved RBP (for intercept type PUSHBP only, the result of
-	 *		 the simulated push %rbp instruction).
-	 *  - return address
+         *  [0] either the saved RBP (for intercept type PUSHRBP only, the
+         *      result of the simulated push %rbp instruction), or an unused
+         *      slot to preserve the ABI-mandated 16B stack alignment.
+         *  [1] return address
 	 *  <arg0..arg5 passed in registers>
-	 *  - arg6
-	 *  - arg7...
+         *  [2] arg6
+         *  [3] arg7...
 	 */
 	unsigned long stack[28];
 	/* any data that we need to keep safe past the call to the
@@ -107,14 +108,9 @@ intercept_tramp(void)
 	x86_64_linux_call_t call;
 	addr_t addr;
 	unsigned long our_rsp;
-    } frame;
+    } frame __attribute__((aligned(0x10)));
     unsigned long parent_size;
-    /* total number of words pushed onto the stack, *before* copying
-     * parent's stack argumens. */
-    int nstack = 0;
-    /* number of padding words pushed onto the stack to preserve
-     * ABI stack alignment. */
-    int fstack = 0;
+    unsigned long *new_rsp;
 
     /* address of the breakpoint insn */
     frame.addr = tramp_uc.uc_mcontext.gregs[REG_RIP] - (using_int3 ? 1 : 0);
@@ -202,31 +198,33 @@ intercept_tramp(void)
      *
      * "Trust me, I know what I'm doing."
      */
+    new_rsp = &frame.stack[2];
     switch (tramp_intstate->type_)
     {
     case intstate_t::PUSHBP:
+        /* Setup the ucontext to look like we just called the
+         * function from immediately before the 'after' label */
+        *(--new_rsp) = (unsigned long)&&after; /* return address */
 	/* simulate the push %rbp insn which the breakpoint replaced */
-	frame.stack[nstack++] = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_RBP];
+        *(--new_rsp) = (unsigned long)tramp_uc.uc_mcontext.gregs[REG_RBP];
 	/* setup to start executing the insn after the breakpoint */
 	tramp_uc.uc_mcontext.gregs[REG_RIP] = frame.addr + 1;
 	break;
 
     case intstate_t::OTHER:
+        /* Setup the ucontext to look like we just called the
+         * function from immediately before the 'after' label */
+        *(--new_rsp) = (unsigned long)&&after; /* return address */
 	/* replace the breakpoint with the original insn */
         text_write(frame.addr, &tramp_intstate->orig_, trap_len);
 	/* setup to start executing it again */
 	tramp_uc.uc_mcontext.gregs[REG_RIP] = frame.addr;
-        frame.stack[nstack++] = 0;
-        fstack = nstack;
 	break;
 
     case intstate_t::UNKNOWN:
 	break;
     }
 
-    /* Setup the ucontext to look like we just called the
-     * function from immediately before the 'after' label */
-    frame.stack[nstack++] = (unsigned long)&&after; /* return address */
 
     /*
      * Copy enough of the original stack frame to make it look like
@@ -234,11 +232,11 @@ intercept_tramp(void)
      */
     parent_size = tramp_uc.uc_mcontext.gregs[REG_RBP] -
 		  (tramp_uc.uc_mcontext.gregs[REG_RSP]+8);
-    memcpy(&frame.stack[nstack],
+    memcpy(&frame.stack[2],
 	   (void *)(tramp_uc.uc_mcontext.gregs[REG_RSP]+8),
-	   MIN(parent_size, sizeof(frame.stack)-nstack*sizeof(unsigned long)));
+	   MIN(parent_size, sizeof(frame.stack)-2*sizeof(unsigned long)));
     /* setup the ucontext's RSP register to point at the new stack frame */
-    tramp_uc.uc_mcontext.gregs[REG_RSP] = (unsigned long)&frame.stack[fstack];
+    tramp_uc.uc_mcontext.gregs[REG_RSP] = (unsigned long)new_rsp;
 
     /*
      * Call the BEFORE method.  This call happens late enough that
@@ -250,7 +248,7 @@ intercept_tramp(void)
      * Finally it should also be able to longjmp() out without
      * drama, e.g. as a side effect of failing a NP_ASSERT().
      */
-    frame.call.stack_ = frame.stack+nstack;
+    frame.call.stack_ = &frame.stack[2];
     frame.call.regs_ = (unsigned long *)tramp_uc.uc_mcontext.gregs;
     intercept_t::dispatch_before(frame.addr, frame.call);
     if (frame.call.skip_)
