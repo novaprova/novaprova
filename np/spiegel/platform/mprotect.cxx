@@ -21,7 +21,7 @@
 #include "np/util/log.hxx"
 #include <sys/mman.h>
 #include <dlfcn.h>
-#include <valgrind/valgrind.h>
+#include "np/util/valgrind.h"
 
 namespace np { namespace spiegel { namespace platform {
 using namespace std;

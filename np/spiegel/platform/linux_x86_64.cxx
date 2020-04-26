@@ -22,7 +22,7 @@
 #include <memory.h>
 #include <sys/ucontext.h>
 #include <ucontext.h>
-#include <valgrind/valgrind.h>
+#include "np/util/valgrind.h"
 
 #ifndef MIN
 #define MIN(x, y)   ((x) < (y) ? (x) : (y))

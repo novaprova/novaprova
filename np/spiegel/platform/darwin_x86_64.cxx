@@ -18,18 +18,12 @@
 #include "common.hxx"
 #include "np/util/trace.h"
 #include "np/util/log.hxx"
+#include "np/util/valgrind.h"
 
 #include <signal.h>
 #include <sys/signal.h>
 #include <ucontext.h>
 #include <memory.h>
-
-#if HAVE_VALGRIND
-#include <valgrind/valgrind.h>
-#else
-#define RUNNING_ON_VALGRIND 0
-#define VALGRIND_DISCARD_TRANSLATIONS(a, l)
-#endif
 
 #ifndef MIN
 #define MIN(x, y)   ((x) < (y) ? (x) : (y))

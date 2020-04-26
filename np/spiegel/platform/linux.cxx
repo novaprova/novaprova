@@ -25,7 +25,7 @@
 #include <memory.h>
 #include <sys/ucontext.h>
 #include <ucontext.h>
-#include <valgrind/valgrind.h>
+#include "np/util/valgrind.h"
 #include <dirent.h>
 #include <ctype.h>
 #include <typeinfo>
@@ -424,11 +424,13 @@ vector<string> get_file_descriptors()
 	    }
 	    buf[r] = '\0';
 
+#if HAVE_VALGRIND
 	    // Silently ignore named pipes to and from
 	    // Valgrind's built-in gdbserver.
 	    char *tail = strrchr(buf, '/');
 	    if (tail && !strncmp(tail, "/vgdb-pipe", 10))
 		continue;
+#endif
 
 	    // STL is just so screwed
 	    if (fd >= (int)fds.size())

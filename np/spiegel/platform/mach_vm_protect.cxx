@@ -22,7 +22,7 @@
 #include <mach/mach_init.h>
 #include <mach/vm_map.h>
 #include <mach/vm_prot.h>
-#include <valgrind/valgrind.h>
+#include "np/util/valgrind.h"
 
 namespace np { namespace spiegel { namespace platform {
 using namespace std;

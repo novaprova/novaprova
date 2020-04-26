@@ -16,9 +16,7 @@
 #include "np_priv.h"
 #include "except.h"
 #include <sys/time.h>
-#if HAVE_VALGRIND
-#include <valgrind/valgrind.h>
-#endif
+#include "np/util/valgrind.h"
 #include "np/util/trace.h"
 #include "np/util/log.hxx"
 

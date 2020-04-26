@@ -25,9 +25,7 @@
 #include "np_priv.h"
 #include "np/util/log.hxx"
 #include "except.h"
-#if HAVE_VALGRIND
-#include <valgrind/memcheck.h>
-#endif
+#include "np/util/valgrind.h"
 
 __np_exceptstate_t __np_exceptstate;
 
@@ -62,10 +60,8 @@ choose_timeout()
 	return 0;
     }
     int64_t timeout = 30;
-#if HAVE_VALGRIND
     if (RUNNING_ON_VALGRIND)
 	timeout *= 3;
-#endif
     return timeout;
 }
 

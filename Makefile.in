@@ -122,6 +122,7 @@ libnovaprova_PRIVHEADERS= \
 		np/util/profile.hxx \
 		np/util/tok.hxx \
 		np/util/trace.h \
+		np/util/valgrind.h \
 		np_priv.h \
 
 libnovaprova_HEADERS= \
