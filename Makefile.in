@@ -33,7 +33,7 @@ platform_SOURCE=@platform_SOURCE@
 BUILD_DOCS=@BUILD_DOCS@
 
 CC=		@CXX@
-CXX=		@CXX@++
+CXX=		@CXX@
 CXXSTDFLAGS=	-std=c++11
 CDEBUGFLAGS=	-g
 COPTFLAGS=	-O0
