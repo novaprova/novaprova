@@ -300,6 +300,89 @@ enum source_languages
     DW_LANG_hi_user = 0x8fff
 };
 
+enum expression_opcodes
+{
+    /* Values 0x00..0x02 are not defined in DWARF3 */
+    /* Values defined in the DWARF3 standard */
+    DW_OP_addr = 0x03,
+    /* Values 0x04..0x05 are not defined in DWARF3 */
+    DW_OP_deref = 0x06,
+    /* Value 0x07 is not defined in DWARF3 */
+    DW_OP_const1u = 0x08,
+    DW_OP_const1s = 0x09,
+    DW_OP_const2u = 0x0a,
+    DW_OP_const2s = 0x0b,
+    DW_OP_const4u = 0x0c,
+    DW_OP_const4s = 0x0d,
+    DW_OP_const8u = 0x0e,
+    DW_OP_const8s = 0x0f,
+    DW_OP_constu = 0x10,
+    DW_OP_consts = 0x11,
+    DW_OP_dup = 0x12,
+    DW_OP_drop = 0x13,
+    DW_OP_over = 0x14,
+    DW_OP_pick = 0x15,
+    DW_OP_swap = 0x16,
+    DW_OP_rot = 0x17,
+    DW_OP_xderef = 0x18,
+    DW_OP_abs = 0x19,
+    DW_OP_and = 0x1a,
+    DW_OP_div = 0x1b,
+    DW_OP_minus = 0x1c,
+    DW_OP_mod = 0x1d,
+    DW_OP_mul = 0x1e,
+    DW_OP_neg = 0x1f,
+    DW_OP_not = 0x20,
+    DW_OP_or = 0x21,
+    DW_OP_plus = 0x22,
+    DW_OP_plus_uconst = 0x23,
+    DW_OP_shl = 0x24,
+    DW_OP_shr = 0x25,
+    DW_OP_shra = 0x26,
+    DW_OP_xor = 0x27,
+    DW_OP_bra = 0x28,
+    DW_OP_eq = 0x29,
+    DW_OP_ge = 0x2a,
+    DW_OP_gt = 0x2b,
+    DW_OP_le = 0x2c,
+    DW_OP_lt = 0x2d,
+    DW_OP_ne = 0x2e,
+    DW_OP_skip = 0x2f,
+    DW_OP_lit0 = 0x30,
+    DW_OP_lit16 = 0x40,
+    /* 0x31..0x4e are DW_OP_litXX */
+#define DW_OP_LIT_MASK  0xf0
+    DW_OP_lit31 = 0x4f,
+    DW_OP_reg0 = 0x50,
+    DW_OP_reg16 = 0x60,
+    /* 0x51..0x6e are DW_OP_regXX */
+    DW_OP_reg31 = 0x6f,
+    DW_OP_breg0 = 0x70,
+    DW_OP_breg16 = 0x80,
+    /* 0x71..0x8e are DW_OP_bregXX */
+    DW_OP_breg31 = 0x8f,
+    DW_OP_regx = 0x90,
+    DW_OP_fbreg = 0x91,
+    DW_OP_bregx = 0x92,
+    DW_OP_piece = 0x93,
+    DW_OP_deref_size = 0x94,
+    DW_OP_xderef_size = 0x95,
+    DW_OP_nop = 0x96,
+    DW_OP_push_object_address = 0x97,
+    DW_OP_call2 = 0x98,
+    DW_OP_call4 = 0x99,
+    DW_OP_call_ref = 0x9a,
+    DW_OP_form_tls_address = 0x9b,
+    DW_OP_call_frame_cfa = 0x9c,
+    DW_OP_bit_piece = 0x9d,
+    /* Values 0x9e..0xdf not defined in the DWARF3 standard */
+    /* Vendor expansion area.  How this is supposed
+     * to ever work in a backwards compatible way,
+     * I do not know. */
+    DW_OP_lo_user = 0xe0,
+    DW_OP_hi_user = 0xff
+};
+
 namespace np {
 namespace spiegel {
 namespace dwarf {
@@ -311,6 +394,7 @@ extern string_table_t tagnames;
 extern string_table_t attrnames;
 extern string_table_t encvals;
 extern string_table_t langvals;
+extern string_table_t opvals;
 
 // close namespaces
 }; }; };

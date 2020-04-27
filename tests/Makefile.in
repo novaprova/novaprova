@@ -115,6 +115,7 @@ PARALLELISM= \
 MAINFUL_TESTS= \
     n3996 \
     tlog \
+    texpression \
     tfilename \
     tintercept \
     trangetree \

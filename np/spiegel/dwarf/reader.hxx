@@ -47,6 +47,10 @@ public:
 	is64_ = b;
     }
 
+    void rewind()
+    {
+        p_ = base_;
+    }
     unsigned long get_offset() const
     {
 	return p_ - base_;
