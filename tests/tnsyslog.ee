@@ -1,3 +1,6 @@
 EVENT SLMATCH err: Hello world!
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_syslog (%TOPDIR%/tests/tnsyslog.c:21)
+by %ADDR%: %NPCODE% (%NPLOC%)
 FAIL tnsyslog.syslog
 EXIT 1

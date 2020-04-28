@@ -78,6 +78,7 @@ libnovaprova_SOURCE= \
 		np/spiegel/dwarf/entry.cxx \
 		np/spiegel/dwarf/enumerations.cxx \
 		np/spiegel/dwarf/expression.cxx \
+		np/spiegel/dwarf/lineno_program.cxx \
 		np/spiegel/dwarf/link_object.cxx \
 		np/spiegel/dwarf/reference.cxx \
 		np/spiegel/dwarf/state.cxx \
@@ -107,6 +108,7 @@ libnovaprova_PRIVHEADERS= \
 		np/spiegel/dwarf/entry.hxx \
 		np/spiegel/dwarf/enumerations.hxx \
 		np/spiegel/dwarf/expression.hxx \
+		np/spiegel/dwarf/lineno_program.hxx \
 		np/spiegel/dwarf/link_object.hxx \
 		np/spiegel/dwarf/reader.hxx \
 		np/spiegel/dwarf/reference.hxx \

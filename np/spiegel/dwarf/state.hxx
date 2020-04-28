@@ -61,7 +61,6 @@ public:
 
     bool describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
-			  unsigned int &lineno,
 			  reference_t &funcref,
 			  unsigned int &offset) const;
     std::string get_full_name(reference_t ref);

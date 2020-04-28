@@ -1,3 +1,6 @@
 EVENT ASSERT NP_ASSERT_NOT_NULL(x=0x0)
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_assert_not_null_fail (%TOPDIR%/tests/tnannullfail.c:22)
+by %ADDR%: %NPCODE% (%NPLOC%)
 FAIL tnannullfail.assert_not_null_fail
 EXIT 1

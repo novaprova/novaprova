@@ -285,7 +285,7 @@ vector<np::spiegel::addr_t> get_stacktrace()
 #endif
     for (;;)
     {
-	stack.push_back(((unsigned long *)bp)[1]-_NP_ADDRSIZE-1);
+	stack.push_back(((unsigned long *)bp)[1]-5);
 	unsigned long nextbp = ((unsigned long *)bp)[0];
 	if (!nextbp)
 	    break;

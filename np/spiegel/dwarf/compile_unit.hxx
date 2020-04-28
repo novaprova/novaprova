@@ -29,6 +29,7 @@ struct abbrev_t;
 class walker_t;
 struct section_t;
 class link_object_t;
+class lineno_program_t;
 
 class compile_unit_t : public reference_resolver_t, public np::util::zalloc
 {
@@ -50,6 +51,7 @@ public:
 
     bool read_header(reader_t &r);
     void read_abbrevs(reader_t &r);
+    bool read_lineno_program(reader_t &r);
     void dump_abbrevs() const;
     bool read_attributes();
 
@@ -90,6 +92,10 @@ public:
 	return (code >= abbrevs_.size() ? 0 : abbrevs_[code]);
     }
 
+    bool get_source_line(np::spiegel::addr_t addr,
+                         np::util::filename_t &filename,
+                         unsigned &line, unsigned &column);
+
     np::util::filename_t get_filename() const { return filename_; }
     np::util::filename_t get_compilation_directory() const { return compilation_directory_; }
     np::util::filename_t get_absolute_path() const;
@@ -110,6 +116,8 @@ private:
     uint64_t low_pc_;	    // TODO: should be an addr_t
     uint64_t high_pc_;
     uint32_t language_;
+    // from .debug_line section
+    lineno_program_t *lineno_program_;
 };
 
 // close namespaces

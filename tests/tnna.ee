@@ -1,3 +1,6 @@
 EVENT EXNA NP_NOTAPPLICABLE called
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_notapplicable (%TOPDIR%/tests/tnna.c:22)
+by %ADDR%: %NPCODE% (%NPLOC%)
 N/A tnna.notapplicable
 EXIT 0

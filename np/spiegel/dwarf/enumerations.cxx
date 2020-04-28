@@ -471,5 +471,33 @@ static const char * const _opvals[] = {
 };
 string_table_t opvals("DW_OP_", _opvals);
 
+static const char * const _lnsopvals[] = {
+    ""
+    "copy",
+    "advance_pc",
+    "advance_line",
+    "set_file",
+    "set_column",
+    "negate_stmt",
+    "set_basic_block",
+    "const_add_pc",
+    "fixed_advance_pc",
+    "set_prologue_end",
+    "set_epilogue_begin",
+    "set_isa",
+    0
+};
+string_table_t lnsopvals("DW_LNS_", _lnsopvals);
+
+static const char * const _lneopvals[] = {
+    "",
+    "end_sequence",
+    "set_address",
+    "define_file",
+    "set_discriminator",
+    0
+};
+string_table_t lneopvals("DW_LNE_", _lneopvals);
+
 // close namespaces
 }; }; };

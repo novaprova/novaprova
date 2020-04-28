@@ -1,3 +1,6 @@
 EVENT ASSERT white == black
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_assert (%TOPDIR%/tests/tnassert.c:24)
+by %ADDR%: %NPCODE% (%NPLOC%)
 FAIL tnassert.assert
 EXIT 1

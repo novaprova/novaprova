@@ -298,7 +298,7 @@ main(int argc, char **argv __attribute__((unused)))
     }
     else if (argc > 1)
     {
-	fatal("Usage: testrunner intercept\n");
+	fatal("Usage: intercept [--debug]\n");
     }
     np::log::basic_config(debug ? np::log::DEBUG : np::log::INFO, 0);
     if (is_verbose()) np_trace_init();

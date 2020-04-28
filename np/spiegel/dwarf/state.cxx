@@ -54,6 +54,7 @@ state_t::read_compile_units(link_object_t *lo)
     dprintf("reading compile units for link_object %s\n", lo->get_filename());
     reader_t infor = lo->get_section(DW_sec_info)->get_contents();
     reader_t abbrevr = lo->get_section(DW_sec_abbrev)->get_contents();
+    reader_t liner = lo->get_section(DW_sec_line)->get_contents();
 
     compile_unit_t *cu = 0;
     for (;;)
@@ -66,6 +67,9 @@ state_t::read_compile_units(link_object_t *lo)
 
 	if (!cu->read_attributes())
 	    break;
+
+        if (!cu->read_lineno_program(liner))
+            break;
 
 	compile_units_.push_back(cu);
     }
@@ -688,13 +692,11 @@ state_t::recorded_address(np::spiegel::addr_t addr) const
 bool
 state_t::describe_address(np::spiegel::addr_t addr,
 			  reference_t &curef,
-			  unsigned int &lineno,
 			  reference_t &funcref,
 			  unsigned int &offset) const
 {
     // initialise all the results to the "dunno" case
     curef = reference_t::null;
-    lineno = 0;
     funcref = reference_t::null;
     offset = 0;
 
