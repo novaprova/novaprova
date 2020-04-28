@@ -645,7 +645,7 @@ state_t::describe_address(addr_t addr, class location_t &loc)
 
     np::spiegel::dwarf::reference_t curef;
     np::spiegel::dwarf::reference_t funcref;
-    if (!state_->describe_address(addr, curef, loc.line_,
+    if (!state_->describe_address(addr, curef,
 				 funcref, loc.offset_))
 	return false;
 
@@ -662,6 +662,8 @@ state_t::describe_address(addr_t addr, class location_t &loc)
         assert(res._cu);
         cu = res._cu;
     }
+    if (!cu->get_source_line(addr, loc.filename_, loc.line_, loc.column_))
+        return false;
     loc.compile_unit_ = cu_from_lower(cu);
     loc.function_ = factory_.make_function(funcref);
     return true;
@@ -743,7 +745,7 @@ state_t::describe_stacktrace()
 	    if (loc.compile_unit_)
 	    {
 		s += " (";
-		s += loc.compile_unit_->get_filename();
+		s += loc.filename_;
 		if (loc.line_)
 		{
 		    s += ":";

@@ -1,3 +1,6 @@
 EVENT ASSERT NP_ASSERT_FALSE(x=1)
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_assert_false_fail (%TOPDIR%/tests/tnafalsefail.c:21)
+by %ADDR%: %NPCODE% (%NPLOC%)
 FAIL tnafalsefail.assert_false_fail
 EXIT 1

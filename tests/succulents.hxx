@@ -18,7 +18,7 @@ class succulents_t
 {
 public:
 
-    unsigned long normcore();
-    static unsigned long sartorial();
+    void normcore();
+    static void sartorial();
 };
 

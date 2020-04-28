@@ -18,6 +18,7 @@
 #include "compile_unit.hxx"
 #include "link_object.hxx"
 #include "walker.hxx"
+#include "lineno_program.hxx"
 #include "enumerations.hxx"
 #include "np/util/log.hxx"
 
@@ -31,31 +32,17 @@ compile_unit_t::read_header(reader_t &r)
     reader_ = r;
     offset_ = r.get_offset(); // sample offset of start of header
 
-    dprintf("DWARF compile unit header at section offset 0x%lx\n",
+    dprintf("DWARF debug_info compile unit header at section offset 0x%lx\n",
             r.get_offset());
 
     np::spiegel::offset_t length;
-    uint16_t version;
-    bool is64 = false;
-    if (!r.read_u32(length))
+    bool is64;
+    if (!r.read_initial_length(length, is64))
 	return false;
-    if (length == 0xffffffff)
-    {
-	/* An all-1 length marks the 64-bit format
-	 * introduced in the DWARF3 standard */
-#if _NP_ADDRSIZE == 4
-	fatal("The 64-bit DWARF format is not supported on 32-bit architectures");
-#elif _NP_ADDRSIZE == 8
-	is64 = true;
-	if (!r.read_u64(length))
-	    return false;
-#else
-#error "Unknown address size"
-#endif
-    }
     if (length > r.get_remains())
 	fatal("Bad DWARF compile unit length %llu", (unsigned long long)length);
 
+    uint16_t version;
     if (!r.read_u16(version))
 	return false;
     if (version < MIN_DWARF_VERSION || version > MAX_DWARF_VERSION)
@@ -120,6 +107,15 @@ compile_unit_t::read_abbrevs(reader_t &r)
     dprintf("Read %u abbrevs, largest code %u\n", nread, abbrevs_.size()-1);
 }
 
+bool
+compile_unit_t::read_lineno_program(reader_t &r)
+{
+    lineno_program_t *lp = new lineno_program_t(compilation_directory_);
+    if (!lp->read_header(r))
+        return false;
+    lineno_program_ = lp;
+    return true;
+}
 
 void
 compile_unit_t::dump_abbrevs() const
@@ -213,6 +209,15 @@ compile_unit_t::describe_resolver() const
     char offbuf[32];
     snprintf(offbuf, sizeof(offbuf), ":%u)", index_);
     return string("compile_unit(") + string(link_object_->get_filename()) + string(offbuf);
+}
+
+bool
+compile_unit_t::get_source_line(
+    np::spiegel::addr_t addr,
+    np::util::filename_t &filename,
+    unsigned &line, unsigned &column)
+{
+    return lineno_program_->get_source_line(addr, filename, line, column);
 }
 
 // close namespaces

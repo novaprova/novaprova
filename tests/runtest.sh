@@ -109,6 +109,7 @@ ID="$TEST"
 function normalize_output
 {
     local f="$1"
+    local TOPDIR=$(cd .. && /bin/pwd)
     shift
     if [ -f $TEST-normalize.pl ] ; then
 	perl $TEST-normalize.pl "$@" < $f
@@ -116,15 +117,27 @@ function normalize_output
 	awk -f $TEST-normalize.awk < $f
     else
 	# Default normalization
-	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: .*\[(WARN|ERROR)\]|\?\?\? |==[0-9]+== [A-Z])' < $f |\
+	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: .*\[(WARN|ERROR)\]|\?\?\? |==[0-9]+== [A-Z]|^at |^by )' < $f |\
 	    sed $sed_extended_opt \
                 -e 's/\[(WARN|ERROR)\]/\1/' \
                 -e 's/\[[^]=]*\]//g' \
-		-e 's|'$PWD'|%PWD%|g' \
+		-e 's|'$TOPDIR'|%TOPDIR%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \
 		-e 's/signal 15/signal %DIE%/g' \
+		-e 's/^(at|by) 0x[0-9A-F]{4,16}/\1 %ADDR%/' \
+		-e 's@^(at|by) %ADDR%:.*\(%TOPDIR%/(np/.*|[^:/]*)(:[0-9]+|)\)@\1 %ADDR%: %NPCODE% (%NPLOC%)@' \
 		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g' \
-		-e 's/^==[0-9]+== /==%PID%== /g'
+		-e 's/^==[0-9]+== /==%PID%== /' |\
+            awk '
+/%NPCODE%/ {
+    npcount++;
+    if (npcount == 1) print;
+    next;
+}
+{
+    npcount = 0;
+    print;
+}'
     fi
 }
 

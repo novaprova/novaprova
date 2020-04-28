@@ -1,3 +1,6 @@
 EVENT ASSERT NP_ASSERT(x == 43)
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_assert_fail (%TOPDIR%/tests/tnafail.c:21)
+by %ADDR%: %NPCODE% (%NPLOC%)
 FAIL tnafail.assert_fail
 EXIT 1

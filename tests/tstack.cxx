@@ -15,6 +15,7 @@
  */
 #include "np/spiegel/spiegel.hxx"
 #include "np/spiegel/dwarf/state.hxx"
+#include "np/util/log.hxx"
 
 using namespace std;
 using namespace np::util;
@@ -52,8 +53,16 @@ int
 main(int argc, char **argv)
 {
     np::util::argv0 = argv[0];
-    if (argc != 1)
-	fatal("Usage: tstack\n");
+    bool debug = false;
+    if (argc == 2 && !strcmp(argv[1], "--debug"))
+    {
+        debug = true;
+    }
+    else if (argc > 1)
+    {
+	fatal("Usage: tstack [--debug]\n");
+    }
+    np::log::basic_config(debug ? np::log::DEBUG : np::log::INFO, 0);
 
     state = new np::spiegel::state_t();
     if (!state->add_self())

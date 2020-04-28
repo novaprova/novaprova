@@ -1,8 +1,6 @@
-Stacktrace: 
-at 0xXXX: np::spiegel::state_t::describe_stacktrace (np/spiegel/spiegel.cxx)
-by 0xXXX: vegan (tstack.cxx)
-by 0xXXX: umami::pickled::irony (tstack.cxx)
-by 0xXXX: leggings::dreamcatcher (tstack.cxx)
-by 0xXXX: main (tstack.cxx)
-
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: vegan (%TOPDIR%/tests/tstack.cxx:27)
+by %ADDR%: umami::pickled::irony (%TOPDIR%/tests/tstack.cxx:38)
+by %ADDR%: leggings::dreamcatcher (%TOPDIR%/tests/tstack.cxx:48)
+by %ADDR%: main (%TOPDIR%/tests/tstack.cxx:71)
 EXIT 0

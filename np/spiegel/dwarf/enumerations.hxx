@@ -275,6 +275,34 @@ enum encoding_values
 //     DW_ATE_hi_user = 0xff,
 };
 
+enum lineno_standard_opcodes
+{
+    // Defined in DWARF3
+    /* 0 indicates an extended opcode */
+    DW_LNS_copy = 0x01,
+    DW_LNS_advance_pc = 0x02,
+    DW_LNS_advance_line = 0x03,
+    DW_LNS_set_file = 0x04,
+    DW_LNS_set_column = 0x05,
+    DW_LNS_negate_stmt = 0x06,
+    DW_LNS_set_basic_block = 0x07,
+    DW_LNS_const_add_pc = 0x08,
+    DW_LNS_fixed_advance_pc = 0x09,
+    DW_LNS_set_prologue_end = 0x0a,
+    DW_LNS_set_epilogue_begin = 0x0b,
+    DW_LNS_set_isa = 0x0c
+};
+
+enum lineno_extended_opcodes
+{
+    // Defined in DWARF3
+    DW_LNE_end_sequence = 0x01,
+    DW_LNE_set_address = 0x02,
+    DW_LNE_define_file = 0x03,
+    // Defined in DWARF4
+    DW_LNE_set_discriminator = 0x04
+};
+
 namespace np {
 namespace spiegel {
 namespace dwarf {
@@ -285,6 +313,8 @@ extern string_table_t formvals;
 extern string_table_t tagnames;
 extern string_table_t attrnames;
 extern string_table_t encvals;
+extern string_table_t lnsopvals;
+extern string_table_t lneopvals;
 
 // close namespaces
 }; }; };

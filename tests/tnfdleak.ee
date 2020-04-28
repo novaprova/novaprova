@@ -1,7 +1,7 @@
 MSG leaking fd for .leaky_test.dat
-EVENT FDLEAK test leaked file descriptor 20 -> %PWD%/.leaky_test.dat
+EVENT FDLEAK test leaked file descriptor 20 -> %TOPDIR%/tests/.leaky_test.dat
 FAIL tnfdleak.leaky_test
 MSG leaking fd for .leaky_fixture.dat
-EVENT FDLEAK test leaked file descriptor 21 -> %PWD%/.leaky_fixture.dat
+EVENT FDLEAK test leaked file descriptor 21 -> %TOPDIR%/tests/.leaky_fixture.dat
 FAIL tnfdleak.leaky_fixture
 EXIT 1

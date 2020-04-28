@@ -17,6 +17,7 @@
 #define __np_spiegel_dwarf_reader_hxx__ 1
 
 #include "np/spiegel/common.hxx"
+#include "np/util/log.hxx"
 
 namespace np {
 namespace spiegel {
@@ -250,6 +251,18 @@ public:
 	return skip(1);
     }
 
+    bool read_s8(int8_t &v)
+    {
+	if (p_ >= end_)
+	    return false;
+	v = (int8_t)(*p_++);
+	return true;
+    }
+    bool skip_s8()
+    {
+	return skip(1);
+    }
+
     bool read_string(const char *&v)
     {
 	const unsigned char *e =
@@ -282,6 +295,33 @@ public:
     bool skip_bytes(size_t len)
     {
 	return skip(len);
+    }
+
+    bool read_initial_length(offset_t &length, bool &is64)
+    {
+        is64 = false;
+        if (!read_u32(length))
+            return false;
+        if (length == 0xffffffff)
+        {
+            /* An all-1 length marks the 64-bit format
+             * introduced in the DWARF3 standard */
+#if _NP_ADDRSIZE == 4
+            fatal("The 64-bit DWARF format is not supported on 32-bit architectures");
+#elif _NP_ADDRSIZE == 8
+            is64 = true;
+            if (!read_u64(length))
+                return false;
+#else
+#error "Unknown address size"
+#endif
+        }
+        else if (length >= 0xfffffff0)
+        {
+            eprintf("Invalid initial length 0x%lx", (unsigned long)length);
+            return false;
+        }
+        return true;
     }
 
 private:

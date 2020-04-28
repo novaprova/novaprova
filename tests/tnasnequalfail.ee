@@ -1,3 +1,6 @@
 EVENT ASSERT NP_ASSERT_STR_NOT_EQUAL(x="Hello", GREET="Hello")
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_assert_str_not_equal_fail (%TOPDIR%/tests/tnasnequalfail.c:22)
+by %ADDR%: %NPCODE% (%NPLOC%)
 FAIL tnasnequalfail.assert_str_not_equal_fail
 EXIT 1
