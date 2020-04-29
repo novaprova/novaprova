@@ -122,10 +122,23 @@ state_t::add_self()
     dprintf("converting platform linkobjs to spiegel linkobjs\n");
     for (i = los.begin() ; i != los.end() ; ++i)
     {
-	dprintf("platform linkobj %s\n", i->name);
+	dprintf("platform linkobj %s slide 0x%lx\n", i->name, i->slide);
 	filename = i->name;
 	if (!filename)
 	    filename = exe;
+
+        if (is_enabled_for(np::log::DEBUG))
+        {
+            for (auto &sm : i->mappings)
+            {
+                dprintf("mapping addresses 0x%lx-0x%lx -> filename %s slide 0x%lx vaddr 0x%lx",
+                        (unsigned long)sm.get_map(),
+                        (unsigned long)sm.get_map() + sm.get_size(),
+                        filename,
+                        i->slide,
+                        (unsigned long)sm.get_map() - i->slide);
+            }
+        }
 
         const char *ignored_prefix = filename_is_ignored(filename);
 	if (ignored_prefix)
