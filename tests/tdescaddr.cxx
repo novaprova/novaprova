@@ -148,10 +148,16 @@ namespace helvetica
 int
 main(int argc, char **argv __attribute__((unused)))
 {
-    if (argc > 1)
+    bool debug = false;
+    if (argc == 2 && !strcmp(argv[1], "--debug"))
     {
-        fatal("Usage: testrunner intercept\n");
+        debug = true;
     }
+    else if (argc > 1)
+    {
+        fatal("Usage: tdescaddr [--debug]\n");
+    }
+    np::log::basic_config(debug ? np::log::DEBUG : np::log::INFO, 0);
 
     np::spiegel::state_t state;
     if (!state.add_self())
