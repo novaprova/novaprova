@@ -18,6 +18,7 @@
 source ../plat.sh
 
 FAILFILE=.failing-tests.dat
+RESULTSFILE=.results.dat
 
 function fatal()
 {
@@ -30,11 +31,17 @@ function msg()
     echo "=== $*"
 }
 
+function result()
+{
+    echo "$*" >> $RESULTSFILE
+}
+
 function fail()
 {
     local mm="$*"
     [ -n "$mm" ] && mm=" ($mm)"
     msg "FAIL $TEST $TESTARGS$mm"
+    result "FAIL $TEST $TESTARGS$mm"
 
     for a in $TEST $TESTARGS ; do
 	if [ -e a$a-failed.sh ] ; then
@@ -52,6 +59,7 @@ function fail()
 function pass()
 {
     msg "PASS $TEST $TESTARGS"
+    result "PASS $TEST $TESTARGS"
 
     # Remove from the list of failing tests
     grep -v "^$TEST $TESTARGS\$" $FAILFILE 2>/dev/null > $FAILFILE.new && mv $FAILFILE.new $FAILFILE
@@ -64,12 +72,14 @@ function usagef()
     local msg="$*"
     [ -n "$msg" ] && echo "$0: $msg" 1>&2
     echo "Usage: $0 [--verbose] [--enable-valgrind] [--failing-only] test [arg...]" 1>&2
+    echo "       $0 --begin|--end" 1>&2
     exit 1
 }
 
 verbose=
 enable_valgrind=no
 failing_only=
+mode=test
 TEST=
 done=no
 
@@ -86,6 +96,9 @@ while [ $# -gt 0 -a $done = no ] ; do
     --failing-only)
         failing_only=yes
         ;;
+    --begin|--test|--end)
+        mode=${1#--}
+        ;;
     -*)
         usagef "Unknown option $1"
         ;;
@@ -99,7 +112,42 @@ while [ $# -gt 0 -a $done = no ] ; do
     esac
     shift
 done
-[ -z "$TEST" ] && usagef
+
+case "$mode" in
+begin)
+    echo -n "" > $RESULTSFILE
+    exit 0
+    ;;
+end)
+    [ -f $RESULTSFILE ] || fatal "No results recorded, did you run $0 --begin ?"
+    awk -v summary_max_fails=10 '
+/^PASS / {
+    npass++;
+}
+/^FAIL / {
+    failed[nfail++] = substr($0, 6, length($0)-5);
+}
+END {
+    printf("%d/%d tests passed\n", npass, (npass+nfail));
+    if (nfail)
+    {
+        printf("First few failures:");
+        for (i = 0 ; i < nfail && i < summary_max_fails ; i++)
+            printf(" \"%s\"", failed[i]);
+        if (nfail > 10)
+            printf(" ...");
+        printf("\n");
+    }
+}
+' $RESULTSFILE
+    exit 0
+    ;;
+test)
+    [ -z "$TEST" ] && usagef
+    ;;
+esac
+
+
 
 ID="$TEST"
 [ -n "$TESTARGS" ] && ID="$ID."$(echo "$TESTARGS"|tr ' ' '.')

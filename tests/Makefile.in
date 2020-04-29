@@ -180,13 +180,17 @@ list:
 	    echo "$$t" | tr '%' ' ' ;\
 	done
 
-run: .announce-run $(addprefix .run%,$(TESTS))
-run-unreliable: .announce-run $(addprefix .run%,$(UNRELIABLE_TESTS))
+run: .announce-run $(addprefix .run%,$(TESTS)) .summary-run
+run-unreliable: .announce-run $(addprefix .run%,$(UNRELIABLE_TESTS)) .summary-run
 
 .PHONEY: .announce-run
 .announce-run:
 	@echo "=== Running tests $(RUNTEST_FLAGS)"
 	@echo "PARALLELISM=$(PARALLELISM)"
+	@env bash runtest.sh --begin
+
+.summary-run:
+	@env bash runtest.sh --end
 
 .run%:
 	@env bash runtest.sh $(RUNTEST_FLAGS) $(wordlist 2,10,$(subst %,$(nul) $(nul),$@))
