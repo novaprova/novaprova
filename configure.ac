@@ -118,6 +118,9 @@ AC_SUBST(platform_LIBS)
 
 AC_MSG_CHECKING([Platform specific source])
 platform_SOURCE="$os.cxx $os"_"$arch.cxx $platform_SOURCE"
+case "$arch" in
+x86|x86_64) platform_SOURCE="x86x.cxx $platform_SOURCE" ;;
+esac
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
 

@@ -333,6 +333,12 @@ static unsigned long intercept_tramp(void)
     return 0;
 }
 
+/* This function does nothing except provide a name visible to DWARF
+ * to appear in any stack trace that includes a return address
+ * which points at the actual code at __np_intercept_tramp1. */
+static void __np_intercept_tramp1z(void) __attribute__((used));
+static void __np_intercept_tramp1z(void)
+{
 /*
  * The original function returns here with this state:
  *
@@ -350,6 +356,10 @@ static unsigned long intercept_tramp(void)
  * and then return to intercept_tramp()'s caller.
  */
 __asm__ (
+/* 5 nops are the shape of a CALL instruction
+ * to ensure the function's entry symbol is far
+ * back enough from where the RA will point. */
+"nop; nop; nop; nop; nop;\n"
 "___np_intercept_tramp1:\n"
 "movq %rax,%rdi;\n"
 "movq %rsp,%rsi;\n"
@@ -360,12 +370,23 @@ __asm__ (
 "popq %rbp;\n"
 "retq;\n"
 );
+}
 
+/* This function does nothing except provide a name visible to DWARF
+ * to appear in any stack trace that includes a return address
+ * which points at the actual code at __np_intercept_tramp0. */
+static void __np_intercept_tramp0z(void) __attribute__((used));
+static void __np_intercept_tramp0z(void)
+{
 /* This is the same as __np_intercept_tramp1 but handles the case where
  * %rsp points at frame.stack[1] instead because we didn't simulate a
  * pushbp instruction in intercept_tramp()
  */
 __asm__ (
+/* 5 nops are the shape of a CALL instruction
+ * to ensure the function's entry symbol is far
+ * back enough from where the RA will point. */
+"nop; nop; nop; nop; nop;\n"
 "___np_intercept_tramp0:\n"
 "movq %rax,%rdi;\n"
 "movq %rsp,%rsi;\n"
@@ -376,6 +397,7 @@ __asm__ (
 "popq %rbp;\n"
 "retq;\n"
 );
+}
 
 
 extern "C" unsigned long __np_intercept_after(unsigned long rax, struct frame &frame)
