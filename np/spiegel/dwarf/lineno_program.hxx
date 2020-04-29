@@ -39,13 +39,6 @@ public:
         MAX_LINENO_VERSION = 4
     };
 
-    class run_state_t;
-    class delegate_t
-    {
-    public:
-        virtual bool receive_registers(const run_state_t *) { return true; }
-    };
-
     struct file_table_entry_t
     {
         const char *filename;
@@ -53,6 +46,14 @@ public:
         uint32_t mtime;     /* may be 0 = don't know */
         uint32_t length;    /* may be 0 = don't know */
     };
+
+    class range_t;
+    class delegate_t
+    {
+    public:
+        virtual bool receive_range(const range_t &) { return true; }
+    };
+
 
     struct registers_t
     {
@@ -75,9 +76,10 @@ public:
     {
     private:
         run_state_t(lineno_program_t &p)
-         :  program_(p), running_(true)
+         :  program_(p), have_start_(false), running_(true)
         {
             memset(&registers_, 0, sizeof(registers_));
+            memset(&start_, 0, sizeof(start_));
         }
         ~run_state_t() {}
 
@@ -111,11 +113,33 @@ public:
         const registers_t &registers() const { return registers_; }
 
     private:
-        void reset_registers(bool default_is_stmt);
+        void reset_registers();
         void copy(delegate_t *delegate)
         {
-            if (!delegate->receive_registers(this))
+#if 0
+            dprintf("registers: addr 0x%lx file %s line %u %s",
+                    registers_.address,
+                    get_absolute_filename(registers_.file).c_str(),
+                    registers_.line,
+                    registers_.end_sequence ? "EOS" : "");
+#endif
+            if (have_start_ && !delegate->receive_range(range_t(*this)))
+            {
                 running_ = false;
+                return;
+            }
+
+            if (registers_.end_sequence)
+            {
+                have_start_ = false;
+                memset(&start_, 0, sizeof(start_));
+            }
+            else
+            {
+                have_start_ = true;
+                start_ = registers_;
+            }
+
             registers_.basic_block = false;
             registers_.prologue_end = false;
             registers_.epilogue_begin = false;
@@ -136,13 +160,74 @@ public:
         }
 
     private:
-        registers_t registers_;
         lineno_program_t &program_;
+        registers_t registers_;
+        registers_t start_;
+        bool have_start_;
         std::vector<file_table_entry_t> additional_files_;
         bool running_;
 
         friend lineno_program_t;
+        friend range_t;
     };
+
+    class range_t
+    {
+        // This class is used to provide a facade to report information
+        // about ranges of operations described by a Line Number
+        // Program.  As a facade, it only reports information stored in
+        // the run_state_t and other places, and doesn't contain any
+        // state.  It's valid only for the lifetime of the
+        // receive_range() callback in delegate_t.
+    public:
+        /* Range of operations.  "start" is the address of the first
+         * operation in the range, "end" is one operation past the last
+         * operation in the range. */
+        addr_t get_start_address() const { return run_state_.start_.address; }
+        uint32_t get_start_op_index() const { return run_state_.start_.op_index; }
+        addr_t get_end_address() const { return run_state_.registers_.address; }
+        uint32_t get_end_op_index() const { return run_state_.registers_.op_index; }
+
+        bool contains(addr_t a, uint32_t op_index=0) const
+        {
+            if (a < get_start_address() ||
+                (a == get_start_address() && op_index < get_start_op_index()))
+                return false;
+            if (a >= get_end_address() ||
+                (a == get_end_address() && op_index >= get_end_op_index()))
+                return false;
+            return true;
+        }
+
+        np::util::filename_t get_absolute_filename() const
+        {
+            return run_state_.get_absolute_filename(run_state_.start_.file);
+        }
+        uint32_t get_file_mtime() const
+        {
+            const file_table_entry_t *e = run_state_.get_file_entry(run_state_.start_.file);
+            return e ? e->mtime : 0;
+        }
+        uint32_t get_file_length() const
+        {
+            const file_table_entry_t *e = run_state_.get_file_entry(run_state_.start_.file);
+            return e ? e->length : 0;
+        }
+        uint32_t get_line() const { return run_state_.start_.line; }
+        uint32_t get_column() const { return run_state_.start_.column; }
+        bool get_is_stmt() const { return run_state_.start_.is_stmt; }
+        bool get_is_basic_block() const { return run_state_.start_.basic_block; }
+        bool get_is_prologue_end() const { return run_state_.start_.prologue_end; }
+        bool get_is_epilogue_begin() const { return run_state_.start_.epilogue_begin; }
+        uint32_t get_isa() const { return run_state_.start_.isa; }
+        uint32_t get_discriminator() const { return run_state_.start_.discriminator; }
+
+    private:
+        range_t(run_state_t &rs) : run_state_(rs) {}
+        run_state_t &run_state_;
+        friend run_state_t;
+    };
+
 
     enum status_t
     {

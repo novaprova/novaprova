@@ -152,13 +152,13 @@ lineno_program_t::read_header(reader_t &r)
 }
 
 void
-lineno_program_t::run_state_t::reset_registers(bool default_is_stmt)
+lineno_program_t::run_state_t::reset_registers()
 {
     registers_.address = 0;
     registers_.file = 1;
     registers_.line = 1;
     registers_.column = 0;
-    registers_.is_stmt = default_is_stmt;
+    registers_.is_stmt = program_.default_is_stmt_;
     registers_.basic_block = false;
     registers_.end_sequence = false;
     registers_.prologue_end = false;
@@ -172,7 +172,7 @@ lineno_program_t::status_t
 lineno_program_t::run(delegate_t *delegate)
 {
     run_state_t rs(*this);
-    rs.reset_registers(default_is_stmt_);
+    rs.reset_registers();
     reader_t r = reader_;
     r.seek(header_length_);
     rs.running_ = true;
@@ -193,7 +193,7 @@ lineno_program_t::run(delegate_t *delegate)
             case DW_LNE_end_sequence:
                 rs.registers_.end_sequence = true;
                 rs.copy(delegate);
-                rs.reset_registers(default_is_stmt_);
+                rs.reset_registers();
                 break;
             case DW_LNE_set_address:
                 {
@@ -324,66 +324,39 @@ lineno_program_t::get_source_line(
     class get_source_line_delegate_t : public lineno_program_t::delegate_t
     {
     public:
-        get_source_line_delegate_t(addr_t a)
+        get_source_line_delegate_t(addr_t a, np::util::filename_t &f, unsigned &l, unsigned &c)
           : seeking_(a),
-            have_last_(false),
+            filename_(f),
+            line_(l),
+            column_(c),
             found_(false)
-        {
-            memset(&last_, 0, sizeof(last_));
-        }
+        { }
 
-        bool receive_registers(const lineno_program_t::run_state_t *rs) override
+        bool receive_range(const lineno_program_t::range_t &r) override
         {
-            auto reg = rs->registers();
-            if (have_last_)
+            if (r.contains(seeking_))
             {
-#if 0
-                dprintf("registers: addr 0x%lx file %s line %u %s",
-                        reg.address,
-                        rs->get_absolute_filename(reg.file).c_str(),
-                        reg.line,
-                        reg.end_sequence ? "EOS" : "");
-#endif
-                if (seeking_ >= last_.address && seeking_ < reg.address)
-                {
-                    found_ = true;
-                    abs_filename_ = rs->get_absolute_filename(last_.file);
-                    return false;
-                }
-            }
-            if (reg.end_sequence)
-            {
-                have_last_ = false;
-                memset(&last_, 0, sizeof(last_));
-            }
-            else
-            {
-                have_last_ = true;
-                last_ = reg;
+                found_ = true;
+                filename_ = r.get_absolute_filename();
+                line_ = r.get_line();
+                column_ = r.get_column();
+                return false;   /* stop running the Line Number Program */
             }
             return true;
         }
 
         bool was_found() const { return found_; }
-        np::util::filename_t get_absolute_filename() const { return abs_filename_; }
-        uint32_t get_line() const { return last_.line; }
-        uint32_t get_column() const { return last_.column; }
 
     private:
         addr_t seeking_;
-        bool have_last_;
-        lineno_program_t::registers_t last_;
+        np::util::filename_t &filename_;
+        unsigned &line_;
+        unsigned &column_;
         bool found_;
-        np::util::filename_t abs_filename_;
     };
-    get_source_line_delegate_t delegate(addr);
+    get_source_line_delegate_t delegate(addr, filename, line, column);
     status_t status = run(&delegate);
-    if (status != ERR_HALTED_BY_DELEGATE || !delegate.was_found())
-        return false;
-    filename = delegate.get_absolute_filename();
-    line = delegate.get_line();
-    column = delegate.get_column();
-    return true;
+    return (status == ERR_HALTED_BY_DELEGATE && delegate.was_found());
 }
 
 // close namespaces
