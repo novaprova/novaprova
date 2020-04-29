@@ -173,7 +173,7 @@ function normalize_output
 		-e 's/process [0-9]+/process %PID%/g' \
 		-e 's/signal 15/signal %DIE%/g' \
 		-e 's/^(at|by) 0x[0-9A-F]{4,16}/\1 %ADDR%/' \
-		-e 's@^(at|by) %ADDR%:.*\(%TOPDIR%/(np/.*|[^:/]*)(:[0-9]+|)\)@\1 %ADDR%: %NPCODE% (%NPLOC%)@' \
+		-e 's@^(at|by) %ADDR%:.*\(%TOPDIR%/(np/.*|[^:/]*)(:[0-9]+\)|\))@\1 %ADDR%: %NPCODE% (%NPLOC%)@' \
 		-e 's/0x[0-9A-F]{7,16}/%ADDR%/g' \
 		-e 's/^==[0-9]+== /==%PID%== /' |\
             awk '
