@@ -35,7 +35,7 @@ public:
 
     enum
     {
-        MIN_LINENO_VERSION = 3,
+        MIN_LINENO_VERSION = 2,
         MAX_LINENO_VERSION = 4
     };
 
@@ -57,6 +57,7 @@ public:
 
     struct registers_t
     {
+        // Present in DWARF2
         addr_t address;
         uint32_t file;
         uint32_t line;
@@ -64,6 +65,7 @@ public:
         bool is_stmt;
         bool basic_block;
         bool end_sequence;
+        // Added in DWARF3
         bool prologue_end;
         bool epilogue_begin;
         uint32_t isa;
