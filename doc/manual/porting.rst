@@ -29,6 +29,12 @@ As a rough guide, porting NovaProva to a new platform is more complex than
 porting any C library (except perhaps media codecs) and less complex than
 porting Valgrind or the Linux kernel.
 
+C++ Standard Compliance
+-----------------------
+
+Starting with release 1.5, NovaProva uses the C++11 standard internally, and
+requires a compiler with C++11 support.
+
 Executable File Format
 ----------------------
 
@@ -40,6 +46,13 @@ stricly limited set of tasks (such as discovering segment boundaries and
 types).  Hopefully this will require little porting to other executable file
 formats (e.g. COFF or Mach objects).
 
+You may need to do platform-specific things to set variables ``$libbfd_CFLAGS``
+and ``$libbfd_LIBS`` in ``configure.ac`` to enable the compiler to find the
+BFD library.  There is a surprising amount of variation and poor practice
+with OS vendor's packaging of this library and it's associated libraries like
+``libiberty``.
+
+
 Debugging Information
 ---------------------
 
@@ -49,6 +62,8 @@ semantics.  If your platform does not use DWARF natively, or cannot be
 convinced to by the use of compiler flags such as ``-gdwarf2``, then porting
 NovaProva will be very much harder and you should contact the mailing list for
 advice.
+
+NovaProva supports versions 2, 3 and 4 of the DWARF standard.
 
 Valgrind
 --------
@@ -61,22 +76,28 @@ get much less value out of NovaProva than if you had Valgrind, and NovaProva is
 going to be missing a great many test failure cases that you really want to be
 caught.
 
-For this reason, NovaProva will fail to build without Valgrind.
+NovaProva can be built without Valgrind by specifying the ``--without-valgrind``
+option to ``configure``, even though this will result in a significant loss of
+functionality.  The internal header file ``np/util/valgrind.h`` contains
+alternate dummy definitions of the Valgrind compile-time macros so that
+NovaProva can be built without Valgrind.
 
-.. This isnt true on the Darwin branch.  Use this text
-.. You'll need to make some minor tweaks to the package specifications to
-.. turn off the explicit build time dependency on Valgrind.  The configure.ac
-.. script should detect and handle the lack of Valgrind and turn off the
-.. features in the code which depend on the presence of Valgrind.
+In addition, Valgrind can be disabled at runtime by setting the environment
+variable ``$NOVAPROVA_VALGRIND`` to ``no`` when running executables built
+with NovaProva.
+
+Platform-specific code needs to support both running with and without Valgrind,
+using the ``RUNNING_ON_VALGRIND`` macro to detect at runtime which case is in
+effect.  For example, the Linux intercept installation code uses different
+software breakpoint instructions when running under Valgrind.
 
 
 Platform Specific Code
 ----------------------
 
 NovaProva is written to isolate the platform dependent code to a small set of
-files with a well-defined interface.  Partly this is good program practice to
-set the scene for future ports (we shall see how well this succeeded when the
-first new port is done).  But partly it is due to current necessity, as
+files with a well-defined interface.  Partly this is good programming practice to
+set the scene for future ports.  But partly it is due to current necessity, as
 NovaProva is sufficiently sensitive to platform details that 32 bit and 64 bit
 x86 Linux platforms need different code.
 
@@ -88,10 +109,11 @@ The platform specific code is contained in the C++ namespace
 ``np/spiegel/platform/``.  This follows the usual NovaProva convention where
 namespaces and directories have exactly the same shape.
 
-Generally there will be two platform specific files, one containing code which
-depends on the OS alone (e.g. ``linux.cxx``) and the other containing code which
-depends on the combination of the OS the machine architecture (e.g.
-``linux_x86.cxx``).
+Generally there will be three platform specific files:
+
+- one containing code which depends on the OS alone (e.g. ``linux.cxx``), and
+- one containing code which depends on the machine architecture alone (e.g.  ``x86x.cxx``), and
+- one containing code which depends on the combination of the OS the machine architecture (e.g.  ``linux_x86.cxx``).
 
 Build Infrastructure
 ~~~~~~~~~~~~~~~~~~~~
@@ -111,7 +133,7 @@ the code that begins
 and add a new case for your platform operating system.
 
 At this point you need to set the ``$os`` variable to the short name of the
-platform operating system, e.g. ``x86``.  This is going to be used to choose a
+platform operating system, e.g. ``linux``.  This is going to be used to choose a
 filename ``$os.cxx``, so the name must be short and contain no spaces or / characters.
 Ideally it will be entirely lowercase, to match the NovaProva conventions.
 
@@ -216,6 +238,12 @@ by one ``linkobj_t`` for each dynamically linked library.  This information can
 be extracted with a platform specific call into the runtime linker.  For Linux
 glibc systems that call is ``dl_iterate_phdr()``.
 
+On systems which support Address Space Layout Randomization, this function
+should fill in the ``slide`` member of the ``linkobj_t`` structure with a number
+that represents the difference between the loaded virtual address and the
+virtual address recorded in the executable.
+
+
 Normalise an Address
 ++++++++++++++++++++
 
@@ -246,23 +274,38 @@ function
 is called from the object handling code to indicate the boundaries of the
 PLT in each object.
 
-Remap Text
+Write Text
 ++++++++++
 
 .. highlight:: c
 
 ::
 
-    int text_map_writable(addr_t addr, size_t len)
+    int text_write(addr_t to, const uint8_t *from, size_t len)
 
-    int text_restore(addr_t addr, size_t len)
+This function is used when inserting intercepts to ensure that some code in
+a ``.text`` or similar segment is replaced with some specific trap code.
+The function handles re-mapping the pages to be writable, copying the
+trap code in, and re-mapping the pages executable again.
 
-These functions are used when inserting intercepts to ensure that some code in
-a ``.text`` or similar segment is mapped writable (modern OSes will map all code
-read-only by default for security reasons).  The Linux implementation uses the
-``mprotect()`` system call and reference counts pages to allow for the case where
-multiple intercepts are installed in the same page.  This code should also work
-on most platforms that support the ``mprotect()`` call.
+Note that the behavior of NovaProva changed in release 1.5.  Previously
+the text page was left in a writable and executable state as long as the
+intercept remained installed.  This doesn't work on MacOS Catalina, which
+doesn't allow pages to be both writable and executable (without some
+extreme measures).  The new behavior on all platforms is to make the
+page writable and not executable just long enough to copy the trap code.
+This also removes the need for reference counting pages.
+
+The Linux implementation uses the ``mprotect()`` system call.  This code
+should also work on most platforms that support the ``mprotect()`` call.
+The MacOS implementation uses the Mach ``vm_protect()`` call because
+MacOS Catalina needs a special flag which cannot be passed with
+``mprotect()``.
+
+The function should call the Valgrind macro ``VALGRIND_DISCARD_TRANSLATIONS()``
+after modifying the instruction stream; Valgrind uses a JIT-like mechanism
+for caching translated native instructions and it is important that this
+cache not contain stale translations.
 
 Get A Stacktrace
 ++++++++++++++++
@@ -275,13 +318,18 @@ Get A Stacktrace
 
 Returns a stacktrace as a vector of code addresses (``%eip`` samples in x86) of
 the calling address, in order from the innermost to the outermost.  The current
-(somewhat disappointing) implementation walks stack frames using the frame
+implementation walks stack frames using the frame
 pointer, which is somewhat fragile on x86 platforms (where libraries are often
 shipped built with the ``-fomit-frame-pointer`` flag, which breaks this
 technique).  This function is used only to generate error reports that are read
 by humans, so it really should be implemented in a way which emphasizes accuracy
 over speed, e.g. using the DWARF2 unwind information to pick apart stack frames
 accurately.
+
+Note also that the vector should contain *calling* addresses, not *return
+addresses*.  In most architectures the stack contains the latter, but to
+generate accurate source line information in the decorate stack trace, NovaProva
+needs the former.
 
 Detect Debuggers
 ++++++++++++++++
@@ -325,9 +373,9 @@ Install Intercept
 
 ::
 
-    int install_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
+    int install_intercept(np::spiegel::addr_t addr, intstate_t &state)
 
-    int uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state, std::string &err)
+    int uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state)
 
 These functions are the most difficult but most rewarding part of porting
 NovaProva.  Intercepts are the key technology that drives advanced NovaProva
@@ -355,16 +403,13 @@ functions is ``pushl %ebp`` whose binary form is the byte 0x55.
 
 The install function will presumably be modifying 1 or more bytes in the
 instruction stream to contain some kind of breakpoint instruction; it should
-call ``text_map_writable()`` before modifying the bytes to ensure the byte range
-is mapped writable.  Similarly the uninstall function should call
-``text_restore()`` after restoring the original instruction, to potentially map
-the bytes read-only again.  Both functions should call the Valgrind macro
-``VALGRIND_DISCARD_TRANSLATIONS()`` after modifying the instruction stream;
-Valgrind uses a JIT-like mechanism for caching translated native instructions
-and it is important that this cache not contain stale translations.
+call ``text_write()`` to handle the details.  Similarly the uninstall function
+should call ``text_write()`` again to restore the original instruction.
+The ``text_write()`` function handles calling ``VALGRIND_DISCARD_TRANSLATIONS()``.
+Note that this API changed in release 1.5.
 
-Both functions return ``0`` on success.  On error they set ``err`` to a
-human-readable English error string and return ``-1``.
+Both functions return ``0`` on success.  On error they return ``-1`` and
+log details to the NovaProva logging system.
 
 While an intercept is installed, any attempt to execute the code at ``addr``
 should not execute the original code but instead cause a special function
@@ -407,6 +452,11 @@ trampoline has the following responsibilities.
 Currently NovaProva intercepts are not required to be thread-safe. This means
 that the signal handler and trampoline function can use global state if
 necessary.
+
+The intercept code should take care that stack traces can be successfully
+made all the way out to ``main()`` from code running in intercepts, and
+that function names and source locations can be found for every entry
+in the stack trace.
 
 Exception Handling
 ++++++++++++++++++
