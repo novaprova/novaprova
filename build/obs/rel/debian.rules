@@ -18,6 +18,7 @@ endif
 build: build-stamp
 build-stamp:
 	dh_testdir
+	automake -ac
 	autoreconf -iv
 	./configure --prefix=/usr
 	make

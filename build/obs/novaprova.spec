@@ -36,6 +36,7 @@ test frameworks for languages such as Java or Perl.
 @endif
 
 %build
+automake -ac
 autoreconf -iv
 %configure
 

@@ -30,6 +30,7 @@ test frameworks for languages such as Java or Perl.
 %setup -q -b 1
 
 %build
+automake -ac
 autoreconf -iv
 %configure
 
