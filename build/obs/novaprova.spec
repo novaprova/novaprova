@@ -36,7 +36,7 @@ test frameworks for languages such as Java or Perl.
 @endif
 
 %build
-automake -ac
+automake -ac || echo woopsie
 autoreconf -iv
 %configure
 

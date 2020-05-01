@@ -18,7 +18,7 @@ endif
 build: build-stamp
 build-stamp:
 	dh_testdir
-	automake -ac
+	automake -ac || echo woopsie
 	autoreconf -iv
 	./configure --prefix=/usr
 	make
