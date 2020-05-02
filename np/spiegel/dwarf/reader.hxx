@@ -307,7 +307,8 @@ public:
             /* An all-1 length marks the 64-bit format
              * introduced in the DWARF3 standard */
 #if _NP_ADDRSIZE == 4
-            fatal("The 64-bit DWARF format is not supported on 32-bit architectures");
+            eprintf("The 64-bit DWARF format is not supported on 32-bit architectures");
+            return false;
 #elif _NP_ADDRSIZE == 8
             is64 = true;
             if (!read_u64(length))
