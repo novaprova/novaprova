@@ -255,7 +255,8 @@ dist: docs
 #
 OBS_SOURCE=	debian.changelog debian.control \
 		debian.rules novaprova.changes \
-		novaprova.dsc novaprova.spec
+		novaprova.dsc novaprova.spec \
+                debian.compat
 obs-metadata:	$(addprefix build/obs/rel/,$(OBS_SOURCE)) $(addprefix build/obs/tot/,$(OBS_SOURCE))
 
 build/obs/tot/%: build/obs/% build/obs/ifdef.py
