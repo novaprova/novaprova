@@ -260,11 +260,11 @@ obs-metadata:	$(addprefix build/obs/rel/,$(OBS_SOURCE)) $(addprefix build/obs/to
 
 build/obs/tot/%: build/obs/% build/obs/ifdef.py
 	@mkdir -p $(@D)
-	build/obs/ifdef.py -Dtot -Dtop_of_tree < $< > $@
+	build/obs/ifdef.py -Dtot -Dtop_of_tree -DPACKAGE_VERSION=$(PACKAGE_VERSION) < $< > $@
 
 build/obs/rel/%: build/obs/% build/obs/ifdef.py
 	@mkdir -p $(@D)
-	build/obs/ifdef.py -Drel -Drelease < $< > $@
+	build/obs/ifdef.py -Drel -Drelease -DPACKAGE_VERSION=$(PACKAGE_VERSION) < $< > $@
 
 # Build CScope database
 tags:

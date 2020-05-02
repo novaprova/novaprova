@@ -6,7 +6,9 @@
 #export DH_VERBOSE=1
 
 # This is the debhelper compatibility version to use.
-export DH_COMPAT=5
+# Level 9 is available on Xenial, the oldest Ubuntu
+# LTS still supported at time of writing.
+export DH_COMPAT=9
 
 CFLAGS = -g
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))

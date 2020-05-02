@@ -1,6 +1,6 @@
 Summary: novaprova, the new generation unit test framework for C
 Name: novaprova
-Version: 1.3
+Version: @PACKAGE_VERSION@
 Release: 1
 License: GPL
 Group: Development/C

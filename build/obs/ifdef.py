@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-#  Copyright 2011-2015 Gregory Banks
+#  Copyright 2011-2020 Gregory Banks
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -19,13 +19,23 @@ import sys
 import os
 import re
 
+ifdef_re = re.compile(r'^@ifdef\s+(\S+)\s*$')
+else_re = re.compile(r'^@else\s*$')
+endif_re = re.compile(r'^@endif\s*$')
+reference_re = re.compile(r'@([a-zA-Z_][a-zA-Z0-9_]*)@')
+
 if __name__ == "__main__":
     # Cannot rely on argparse being present
     # so we parse args ourselves.
-    defines = set()
+    defines = {}
     for a in sys.argv[1:]:
         if a.startswith('-D'):
-            defines.add(a[2:])
+            if "=" in a:
+                name, value = a[2:].split("=", 1)
+            else:
+                name = a[2:]
+                value = 1
+            defines[name] = value
         else:
             raise RuntimeError("Unknown option \"%s\"" % a)
 
@@ -33,19 +43,19 @@ if __name__ == "__main__":
     for line in sys.stdin:
         line = line.rstrip("\r\n")
 
-        m = re.match(r'^@ifdef\s+(\S+)\s*$', line)
+        m = ifdef_re.match(line)
         if m is not None:
             stack.append(m.group(1) in defines)
             continue
 
-        m = re.match(r'^@else\s*$', line)
+        m = else_re.match(line)
         if m is not None:
             if len(stack) == 0:
                 raise RuntimeError("@else without @ifdef")
             stack[-1] = not stack[-1]
             continue
 
-        m = re.match(r'^@endif\s*$', line)
+        m = endif_re.match(line)
         if m is not None:
             if len(stack) == 0:
                 raise RuntimeError("@endif without @ifdef")
@@ -53,4 +63,12 @@ if __name__ == "__main__":
             continue
 
         if len(stack) == 0 or stack[-1]:
+            while True:
+                m = reference_re.search(line)
+                if not m:
+                    break
+                name = m.group(1)
+                if name not in defines:
+                    raise RuntimeError("undefined variable {}".format(name))
+                line = line[0:m.start()] + str(defines[name]) + line[m.end():]
             sys.stdout.write(line + "\n")

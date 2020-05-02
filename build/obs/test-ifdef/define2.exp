@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "../ifdef.py", line 72, in <module>
+    raise RuntimeError("undefined variable {}".format(name))
+RuntimeError: undefined variable authentic

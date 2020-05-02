@@ -1,5 +1,5 @@
 #
-#  Copyright 2011-2015 Gregory Banks
+#  Copyright 2011-2020 Gregory Banks
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ TESTS=	$(patsubst %.args,%,$(wildcard *.args))
 run-tests:
 	@nfailed=0 ; for test in $(TESTS) ; do \
 	    res=FAIL ;\
-	    ../ifdef.py `cat $$test.args` < $$test.in > $$test.out ;\
+	    ../ifdef.py `cat $$test.args` < $$test.in > $$test.out 2>&1 ;\
 	    diff -u $$test.out $$test.exp && res=PASS ;\
 	    echo "$$res $$test" ;\
 	    if [ $$res == FAIL ]; then nfailed=`expr $$nfailed + 1` ; fi ;\

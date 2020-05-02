@@ -1,6 +1,6 @@
 Format: 1.0
 Source: novaprova
-Version: 1.3-1
+Version: @PACKAGE_VERSION@-1
 Binary: novaprova
 Maintainer: Greg Banks <gnb@fmeh.org>
 Architecture: any
