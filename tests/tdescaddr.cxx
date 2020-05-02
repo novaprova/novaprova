@@ -129,6 +129,7 @@ namespace helvetica
     }
 };
 
+#define OFFSET_DONTCARE (~0U)
 #define TESTCASE(addr, filename, lineno, function, offset) \
     { \
         np::spiegel::addr_t _addr = (np::spiegel::addr_t)(addr); \
@@ -140,7 +141,7 @@ namespace helvetica
         CHECK(loc.line_ == (lineno)); \
         CHECK(loc.function_ != 0); \
         CHECK(!strcmp(loc.function_->get_full_name().c_str(), (function))); \
-        if ((offset) != ~0UL) { \
+        if ((offset) != OFFSET_DONTCARE) { \
             CHECK(loc.offset_ == (offset)); \
         } \
     }
@@ -184,40 +185,40 @@ main(int argc, char **argv __attribute__((unused)))
     BEGIN("class-member-function-same-file");
     semiotics_t s;
     s.gentrify();
-    TESTCASE(gentrify_PC, "tdescaddr.cxx", gentrify_LINE, "semiotics_t::gentrify", ~0UL);
+    TESTCASE(gentrify_PC, "tdescaddr.cxx", gentrify_LINE, "semiotics_t::gentrify", OFFSET_DONTCARE);
     END;
 
     BEGIN("virtual-class-member-function-same-file");
     semiotics_t s;
     s.flannel();
-    TESTCASE(flannel_PC, "tdescaddr.cxx", flannel_LINE, "semiotics_t::flannel", ~0UL);
+    TESTCASE(flannel_PC, "tdescaddr.cxx", flannel_LINE, "semiotics_t::flannel", OFFSET_DONTCARE);
     END;
 
     BEGIN("static-class-member-function-same-file");
     semiotics_t::chicharrones();
-    TESTCASE(chicharrones_PC, "tdescaddr.cxx", chicharrones_LINE, "semiotics_t::chicharrones", ~0UL);
+    TESTCASE(chicharrones_PC, "tdescaddr.cxx", chicharrones_LINE, "semiotics_t::chicharrones", OFFSET_DONTCARE);
     END;
 
     BEGIN("declared-class-member-function-same-file");
     semiotics_t s;
     s.gastropub();
-    TESTCASE(gastropub_PC, "tdescaddr.cxx", gastropub_LINE, "semiotics_t::gastropub", ~0UL);
+    TESTCASE(gastropub_PC, "tdescaddr.cxx", gastropub_LINE, "semiotics_t::gastropub", OFFSET_DONTCARE);
     END;
 
     BEGIN("declared-static-class-member-function-same-file");
     semiotics_t::chambray();
-    TESTCASE(chambray_PC, "tdescaddr.cxx", chambray_LINE, "semiotics_t::chambray", ~0UL);
+    TESTCASE(chambray_PC, "tdescaddr.cxx", chambray_LINE, "semiotics_t::chambray", OFFSET_DONTCARE);
     END;
 
     BEGIN("declared-class-member-function-header-file");
     succulents_t s;
     s.normcore();
-    TESTCASE(normcore_PC, "tdescaddr.cxx", normcore_LINE, "succulents_t::normcore", ~0UL);
+    TESTCASE(normcore_PC, "tdescaddr.cxx", normcore_LINE, "succulents_t::normcore", OFFSET_DONTCARE);
     END;
 
     BEGIN("declared-static-class-member-function-header-file");
     succulents_t::sartorial();
-    TESTCASE(sartorial_PC, "tdescaddr.cxx", sartorial_LINE, "succulents_t::sartorial", ~0UL);
+    TESTCASE(sartorial_PC, "tdescaddr.cxx", sartorial_LINE, "succulents_t::sartorial", OFFSET_DONTCARE);
     END;
 
     BEGIN("namespace-member-function-same-file");
