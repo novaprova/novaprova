@@ -93,8 +93,8 @@ public:
     }
 
     bool get_source_line(np::spiegel::addr_t addr,
-                         np::util::filename_t &filename,
-                         unsigned &line, unsigned &column);
+                         /*out*/np::util::filename_t *filenamep,
+                         /*out*/uint32_t *linep, /*out*/uint32_t *columnp);
 
     np::util::filename_t get_filename() const { return filename_; }
     np::util::filename_t get_compilation_directory() const { return compilation_directory_; }

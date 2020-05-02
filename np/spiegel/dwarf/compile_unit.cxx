@@ -214,10 +214,10 @@ compile_unit_t::describe_resolver() const
 bool
 compile_unit_t::get_source_line(
     np::spiegel::addr_t addr,
-    np::util::filename_t &filename,
-    unsigned &line, unsigned &column)
+    /*out*/np::util::filename_t *filenamep,
+    /*out*/uint32_t *linep, /*out*/uint32_t *columnp)
 {
-    return lineno_program_->get_source_line(addr, filename, line, column);
+    return lineno_program_->get_source_line(addr, filenamep, linep, columnp);
 }
 
 // close namespaces

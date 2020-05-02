@@ -333,8 +333,8 @@ class location_t
 public:
     compile_unit_t *compile_unit_;
     np::util::filename_t filename_;
-    unsigned int line_;
-    unsigned int column_;
+    uint32_t line_;
+    uint32_t column_;
     type_t *class_;
     function_t *function_;
     unsigned int offset_;

@@ -662,7 +662,7 @@ state_t::describe_address(addr_t addr, class location_t &loc)
         assert(res._cu);
         cu = res._cu;
     }
-    if (!cu->get_source_line(addr, loc.filename_, loc.line_, loc.column_))
+    if (!cu->get_source_line(addr, &loc.filename_, &loc.line_, &loc.column_))
         return false;
     loc.compile_unit_ = cu_from_lower(cu);
     loc.function_ = factory_.make_function(funcref);

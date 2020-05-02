@@ -243,8 +243,9 @@ public:
     bool read_header(reader_t &);
     status_t run(delegate_t *);
     bool get_source_line(np::spiegel::addr_t addr,
-                         np::util::filename_t &filename,
-                         unsigned &line, unsigned &column);
+                         /*out*/np::util::filename_t *filenamep,
+                         /*out*/uint32_t *linep,
+                         /*out*/uint32_t *columnp);
 
 private:
     int32_t special_opcode_line_advance(uint8_t opcode) const

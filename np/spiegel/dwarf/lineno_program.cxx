@@ -318,17 +318,17 @@ lineno_program_t::run(delegate_t *delegate)
 bool
 lineno_program_t::get_source_line(
     np::spiegel::addr_t addr,
-    np::util::filename_t &filename,
-    unsigned &line, unsigned &column)
+    np::util::filename_t *filenamep,
+    uint32_t *linep, uint32_t *columnp)
 {
     class get_source_line_delegate_t : public lineno_program_t::delegate_t
     {
     public:
-        get_source_line_delegate_t(addr_t a, np::util::filename_t &f, unsigned &l, unsigned &c)
+        get_source_line_delegate_t(addr_t a, np::util::filename_t *fp, uint32_t *lp, uint32_t *cp)
           : seeking_(a),
-            filename_(f),
-            line_(l),
-            column_(c),
+            filenamep_(fp),
+            linep_(lp),
+            columnp_(cp),
             found_(false)
         { }
 
@@ -337,9 +337,9 @@ lineno_program_t::get_source_line(
             if (r.contains(seeking_))
             {
                 found_ = true;
-                filename_ = r.get_absolute_filename();
-                line_ = r.get_line();
-                column_ = r.get_column();
+                *filenamep_ = r.get_absolute_filename();
+                *linep_ = r.get_line();
+                *columnp_ = r.get_column();
                 return false;   /* stop running the Line Number Program */
             }
             return true;
@@ -349,12 +349,12 @@ lineno_program_t::get_source_line(
 
     private:
         addr_t seeking_;
-        np::util::filename_t &filename_;
-        unsigned &line_;
-        unsigned &column_;
+        np::util::filename_t *filenamep_;
+        uint32_t *linep_;
+        uint32_t *columnp_;
         bool found_;
     };
-    get_source_line_delegate_t delegate(addr, filename, line, column);
+    get_source_line_delegate_t delegate(addr, filenamep, linep, columnp);
     status_t status = run(&delegate);
     return (status == ERR_HALTED_BY_DELEGATE && delegate.was_found());
 }
