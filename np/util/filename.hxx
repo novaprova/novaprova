@@ -27,6 +27,24 @@ public:
     filename_t(const filename_t &o) : std::string(o.c_str()) {}
     filename_t(const std::string &o) : std::string(o) {}
     filename_t(const char *s) : std::string(s ? s : "") {}
+    /* move ctor */
+    filename_t(filename_t &&o) = default;
+
+    filename_t &operator=(const filename_t &o)
+    {
+        this->std::string::operator=(o);
+        return *this;
+    }
+    filename_t &operator=(const std::string &o)
+    {
+        this->std::string::operator=(o);
+        return *this;
+    }
+    filename_t &operator=(const char *s)
+    {
+        this->std::string::operator=(s ? s : "");
+        return *this;
+    }
 
     bool is_absolute() const
     {
