@@ -179,7 +179,6 @@ state_t::add_executable(const char *filename)
     link_object_t *lo = get_link_object(filename);
     if (!lo)
         lo = make_link_object(filename);
-	return false;
     bool r = read_link_objects();
     if (r)
 	prepare_address_index();
