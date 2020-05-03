@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 #include "np/spiegel/spiegel.hxx"
+#include "np/spiegel/platform/abi.h"
 #include "fw.h"
 #include "succulents.hxx"
 
 using namespace std;
 using namespace np::util;
 
-#if defined(__x86_64__)
-#define capture_pc(nm) \
-    do { \
-        unsigned long _pc; \
-        __asm__ volatile("call 1f; 1: popq %0" : "=r"(_pc)); \
-        (nm) = _pc; \
-    } while(0)
-#endif
 #define capture_line(nm) \
     (nm) = __LINE__
 

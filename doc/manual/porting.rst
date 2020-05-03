@@ -101,6 +101,13 @@ set the scene for future ports.  But partly it is due to current necessity, as
 NovaProva is sufficiently sensitive to platform details that 32 bit and 64 bit
 x86 Linux platforms need different code.
 
+ABI Defines
+~~~~~~~~~~~
+
+The header file ``np/spiegel/platform/abi.h`` contains a few
+ABI-specific macros which need to be used outside of the
+platform-specific code.
+
 Code Layout
 ~~~~~~~~~~~
 

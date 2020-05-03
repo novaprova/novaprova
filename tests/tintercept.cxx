@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "np/spiegel/spiegel.hxx"
+#include "np/spiegel/platform/abi.h"
 #include "np/spiegel/dwarf/state.hxx"
 #include "np/util/trace.h"
 #include "np/util/log.hxx"
@@ -31,8 +32,8 @@ using namespace np::util;
     { \
 	unsigned long rsp; \
 	unsigned long rbp; \
-	__asm__ volatile("movq %%rsp, %0" : "=r"(rsp)); \
-	__asm__ volatile("movq %%rbp, %0" : "=r"(rbp)); \
+        capture_sp(rsp); \
+        capture_bp(rbp); \
 	np_trace(ff ": started %rsp="); \
 	np_trace_hex(rsp); \
 	np_trace(" %rbp="); \
@@ -73,8 +74,8 @@ __dump_stack(unsigned long ebp, unsigned long eip)
     { \
 	register unsigned long ebp; \
 	register unsigned long eip; \
-	__asm__ volatile("mov %%ebp,%0" : "=r"(ebp)); \
-	__asm__ volatile("call .Lxx; .Lxx: popl %0" : "=r"(eip)); \
+        capture_bp(ebp);
+        capture_pc(eip);
 	__dump_stack(ebp, eip); \
     }
 #endif

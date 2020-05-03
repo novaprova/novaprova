@@ -16,6 +16,7 @@
 #include <np.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "np/spiegel/platform/abi.h"
 
 int called = 0;
 
@@ -37,13 +38,12 @@ static NP_USED void test_mocking(void)
 
 int mock_bird_tequila(int x)
 {
-#ifdef _NP_x86_64
     /* check that the ABI-mandated stack alignment is correct */
     fprintf(stderr, "checking stack alignment\n");
-    unsigned long rbp;
-    __asm__ volatile("movq %%rbp, %0" : "=r"(rbp));
-    NP_ASSERT((rbp & 0xf) == 0);
-#endif
+    unsigned long bp;
+    capture_bp(bp);
+    NP_ASSERT((bp & (_NP_STACK_ALIGNMENT_BYTES-1)) == 0);
+
     fprintf(stderr, "mocked bird_tequila(%d)\n", x);
     called = 2;
     return x*2;
