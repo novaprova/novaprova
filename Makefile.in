@@ -146,7 +146,8 @@ libnovaprova_HEADERS= \
 libnovaprova_OBJS= \
 	$(patsubst %.c,%.o,$(filter %.c,$(libnovaprova_SOURCE))) \
 	$(patsubst %.cxx,%.o,$(filter %.cxx,$(libnovaprova_SOURCE))) \
-	$(patsubst %.S,%.o,$(filter %.S,$(libnovaprova_SOURCE)))
+	$(patsubst %.S,%.o,$(filter %.S,$(libnovaprova_SOURCE))) \
+	$(filter %.o,$(libnovaprova_SOURCE))
 #
 # Automatic dependency tracking
 libnovaprova_DFILES= \
@@ -171,6 +172,25 @@ libnovaprova_DFILES= \
 
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
+
+### Linux-specific build time magic
+
+PLATD=          np/spiegel/platform
+LINK_TO_OBJ=    $(CC) -r -nostdlib
+
+# Extract a copy of the mprotect() system call stub, and its
+# transitive dependencies like __syscall_error(), from the
+# static libc into mprotect_stub.o
+$(PLATD)/mprotect_stub.o:
+	$(LINK_TO_OBJ) -o $@ -u mprotect -Wl,-Bstatic -lc
+
+# Build page-aligned buffers around the mprotect stub
+# to make sure that it cannot accidentally turn off
+# execute permissions on the text page including itself.
+$(PLATD)/mprotect_stub_aligned.o: $(PLATD)/page_align.o $(PLATD)/mprotect_stub.o
+	$(LINK_TO_OBJ) -o $@ $(PLATD)/page_align.o $(PLATD)/mprotect_stub.o $(PLATD)/page_align.o
+
+###
 
 # Do the part of the docs build that just runs Doxygen.
 # We can rely on this being present even for TOT builds.
@@ -219,6 +239,7 @@ endif
 
 clean-local:
 	$(RM) libnovaprova.a $(libnovaprova_OBJS)
+	$(RM) $(PLATD)/mprotect_stub.o $(PLATD)/page_align.o
 
 distclean-local: clean-local
 	$(RM) -r doc/man

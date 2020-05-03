@@ -19,6 +19,7 @@
 #include "np/util/trace.h"
 #include "np/util/log.hxx"
 #include <libintl.h>
+#include <sys/mman.h>
 #ifdef __APPLE__
 #include <zlib.h>
 #endif
@@ -514,6 +515,26 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it5->before_count == 1);
     CHECK(it5->after_count == 1);
     it5->uninstall();
+    END;
+
+    /* In glibc, mincore() is on the same text page as mprotect */
+    BEGIN("libc mincore");
+    unsigned char results[1];
+    void *page = memalign(page_size(), page_size());
+    /* ensure page is in memory */
+    *(unsigned char *)page = 0;
+    libc_intercept_tester_t *it = new libc_intercept_tester_t((fn_t)mincore, "mincore");
+    it->install();
+    CHECK(it->before_count == 0);
+    CHECK(it->after_count == 0);
+    results[0] = 0xff;
+    int r = mincore(page, page_size(), results);
+    CHECK(r == 0);
+    CHECK(results[0] == 1);
+    CHECK(it->before_count == 1);
+    CHECK(it->after_count == 1);
+    it->uninstall();
+    free(page);
     END;
 
 #ifdef __APPLE__

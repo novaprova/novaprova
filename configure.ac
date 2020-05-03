@@ -44,7 +44,7 @@ linux-gnu)
     os=linux
     platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
     platform_LIBS="-ldl -lrt"
-    platform_SOURCE="mprotect.cxx"
+    platform_SOURCE="mprotect.cxx mprotect_stub_aligned.o"
     sed_extended_opt="-r"
     ;;
 darwin*)

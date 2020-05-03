@@ -20,27 +20,23 @@
 #include "common.hxx"
 #include "np/util/log.hxx"
 #include <sys/mman.h>
-#include <dlfcn.h>
 #include "np/util/valgrind.h"
 
 namespace np { namespace spiegel { namespace platform {
 using namespace std;
 using namespace np::util;
 
-
 /*
- * Call the mprotect() system call without using the PLT.
- * This horrible workaround is necessary to avoid a SEGV
- * if the mprotect() in text_map_writable() happens to
- * accidentally remove execute protection from the PLT.
+ * On Linux the mprotect() system call stub we're calling from this file
+ * is actually not in libc, it's in a specially crafted text page of our
+ * own making which is organized so that the text page is not shared
+ * with any other code.  This avoids two problems:
+ *
+ * - the PLT is accidentally in the same text page as the function we're
+ *   trying to intercept, resulting in a non-executable PLT, or
+ * - the libc function __syslog_chk() which we always intercept, is
+ *   accidentally in the same text page as the mprotect() system call stub.
  */
-static int mprotect(void *start, size_t len, int prot)
-{
-    static int (*real_mprotect)(void*, size_t, int) = 0;
-    if (!real_mprotect)
-        real_mprotect = (int (*)(void*, size_t, int))dlsym(RTLD_NEXT, "mprotect");
-    return real_mprotect(start, len, prot);
-}
 
 static int
 text_map_writable(addr_t addr, size_t len)
