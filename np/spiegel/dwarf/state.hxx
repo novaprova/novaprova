@@ -73,11 +73,12 @@ public:
     compile_unit_offset_tuple_t resolve_link_object_reference(const reference_t &ref) const;
 
     const std::vector<link_object_t*> &get_link_objects() const { return link_objects_; }
-    link_object_t *get_link_object(uint32_t loidx) { return loidx < link_objects_.size() ? link_objects_[loidx] : 0; }
-    link_object_t *get_link_object(const char *filename);
+    link_object_t *get_link_object(uint32_t loidx) const { return loidx < link_objects_.size() ? link_objects_[loidx] : 0; }
+    link_object_t *get_link_object(const char *filename) const;
 
 private:
     bool read_link_objects();
+    link_object_t *make_link_object(const char *filename);
     bool read_compile_units(link_object_t *);
     /* Prepare an index which will speed up all later calls to describe_address(). */
     void prepare_address_index();

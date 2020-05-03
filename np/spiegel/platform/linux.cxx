@@ -151,9 +151,9 @@ add_one_linkobj(struct dl_phdr_info *info,
     if (!name)
     {
         if (info->dlpi_addr)
-            dprintf("XXX: link object is an executable with ASLR enabled, address 0x%lx", info->dlpi_addr);
+            dprintf("link object is an executable with ASLR enabled, address 0x%lx", info->dlpi_addr);
         else
-            dprintf("XXX: link object is an executable without ASLR enabled");
+            dprintf("link object is an executable without ASLR enabled");
     }
     if (!info->dlpi_phnum)
     {
@@ -174,19 +174,26 @@ add_one_linkobj(struct dl_phdr_info *info,
 
     for (int i = 0 ; i < info->dlpi_phnum ; i++)
     {
-	if (info->dlpi_phdr[i].p_type != PT_LOAD)
+	const ElfW(Phdr) *ph = &info->dlpi_phdr[i];
+
+        dprintf("PHDR[%d] p_type=%u p_flags=0x%x p_offset=0x%lx p_filesz=0x%lx p_memsz=0x%lx",
+                i, ph->p_type, ph->p_flags,
+                (unsigned long)ph->p_offset,
+                (unsigned long)ph->p_filesz,
+                (unsigned long)ph->p_memsz);
+
+	if (ph->p_type != PT_LOAD)
         {
-            dprintf("PHDR[%d] has type %d, ignoring\n", i, info->dlpi_phdr[i].p_type);
+            dprintf("PHDR[%d] has type %d, ignoring\n", i, ph->p_type);
 	    continue;
         }
 
-	if (!info->dlpi_phdr[i].p_memsz)
+	if (!ph->p_memsz)
         {
             dprintf("PHDR[%d] has zero size, ignoring\n", i);
 	    continue;
         }
 
-	const ElfW(Phdr) *ph = &info->dlpi_phdr[i];
 	mapping_t m((unsigned long)ph->p_offset, (unsigned long)ph->p_memsz,
 		    (void *)((unsigned long)info->dlpi_addr + ph->p_vaddr));
         dprintf("PHDR[%d] -> mapping { offset=%lu size=%lu map=%p }\n",

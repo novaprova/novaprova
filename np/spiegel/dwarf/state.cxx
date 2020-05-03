@@ -148,8 +148,13 @@ state_t::add_self()
         }
 
 	link_object_t *lo = get_link_object(filename);
-	if (lo)
+        if (lo)
+        {
+            dprintf("platform link object has duplicate name \"%s\", skipping", filename);
+        }
+	else
 	{
+            lo = make_link_object(filename);
 	    dprintf("have spiegel link_object\n");
             lo->set_system_mappings(i->mappings);
 	    lo->set_slide(i->slide);
@@ -173,6 +178,7 @@ state_t::add_executable(const char *filename)
     dprintf("Adding executable %s\n", filename);
     link_object_t *lo = get_link_object(filename);
     if (!lo)
+        lo = make_link_object(filename);
 	return false;
     bool r = read_link_objects();
     if (r)
@@ -181,18 +187,22 @@ state_t::add_executable(const char *filename)
 }
 
 link_object_t *
-state_t::get_link_object(const char *filename)
+state_t::get_link_object(const char *filename) const
 {
     if (!filename)
 	return 0;
 
-    vector<link_object_t*>::iterator i;
-    for (i = link_objects_.begin() ; i != link_objects_.end() ; ++i)
+    for (link_object_t *lo : link_objects_)
     {
-	if (!strcmp((*i)->get_filename(), filename))
-	    return (*i);
+	if (!strcmp(lo->get_filename(), filename))
+	    return lo;
     }
+    return 0;
+}
 
+link_object_t *
+state_t::make_link_object(const char *filename)
+{
     link_object_t *lo = new link_object_t(filename, this);
     link_objects_.push_back(lo);
     return lo;
@@ -542,9 +552,8 @@ state_t::resolve_link_object_reference(const reference_t &ref) const
 {
     link_object_t *lo = (link_object_t *)ref.resolver;
     uint64_t off = ref.offset;
-    for (auto itr = compile_units_.begin() ; itr != compile_units_.end() ; ++itr)
+    for (compile_unit_t *cu : compile_units_)
     {
-        compile_unit_t *cu = *itr;
         if (lo == cu->get_link_object() &&
             cu->get_start_offset() <= off &&
             off < cu->get_end_offset())
@@ -607,10 +616,9 @@ state_t::insert_ranges(const walker_t &w, reference_t funcref)
 void
 state_t::prepare_address_index()
 {
-    vector<compile_unit_t*>::iterator i;
-    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    for (compile_unit_t *cu : compile_units_)
     {
-	walker_t w(*i);
+	walker_t w(cu);
 	w.set_filter_tag(DW_TAG_subprogram);
 	while (const entry_t *e = w.move_preorder())
 	{
@@ -723,10 +731,9 @@ state_t::describe_address(np::spiegel::addr_t addr,
 	return true;
     }
 
-    vector<compile_unit_t*>::const_iterator i;
-    for (i = compile_units_.begin() ; i != compile_units_.end() ; ++i)
+    for (compile_unit_t *cu : compile_units_)
     {
-	walker_t w((*i)->make_root_reference());
+	walker_t w(cu->make_root_reference());
 	const entry_t *e = w.move_next();
 	for (; e ; e = w.move_next())
 	{
