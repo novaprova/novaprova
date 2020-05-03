@@ -24,7 +24,7 @@ build-stamp:
 	autoreconf -iv
 	./configure --prefix=/usr
 	make
-	make check
+	make V=1 check
 	touch build-stamp
 
 clean:
