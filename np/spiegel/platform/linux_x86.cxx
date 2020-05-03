@@ -406,7 +406,7 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state)
     }
     /* TODO: trap_len uses using_int3 before its correctly set,
      * but this doesn't matter as trap_len=1 always */
-    memcpy((void *)&state.orig_, addr, trap_len);
+    memcpy((void *)&state.orig_, (const void *)addr, trap_len);
 
     static bool installed_sigaction = false;
     if (!installed_sigaction)
@@ -421,7 +421,6 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state)
 	if (r < 0)
 	{
 	    eprintf("Failed to call sigaction(): %s\n", strerror(errno));
-	    err = "cannot install signal handler";
 	    return -1;
 	}
 	installed_sigaction = true;
