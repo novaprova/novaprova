@@ -8,8 +8,7 @@ apt-get install -y \
     <% if @gcc_version %>g++-<%= @gcc_version %><% end %> \
     git autoconf automake libxml2-dev libxml2-utils \
     pkg-config valgrind binutils-dev doxygen \
-    zlib1g-dev libiberty-dev python-pip
-pip install breathe Sphinx
+    zlib1g-dev libiberty-dev python-breathe sphinx-common
 <% if @gcc_version %>
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-<%= @gcc_version %> \
     60 --slave /usr/bin/g++ g++ /usr/bin/g++-<%= @gcc_version %>

@@ -1,0 +1,2 @@
+box: "ubuntu/bionic64"
+script_file: "ubuntu.sh"

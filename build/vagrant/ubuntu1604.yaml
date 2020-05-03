@@ -1,0 +1,2 @@
+box: "ubuntu/xenial64"
+script_file: "ubuntu.sh"
