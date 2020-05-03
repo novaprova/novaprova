@@ -19,7 +19,9 @@
 #include "np/util/trace.h"
 #include "np/util/log.hxx"
 #include <libintl.h>
+#ifdef __GLIBC__
 #include <sys/mman.h>
+#endif
 #ifdef __APPLE__
 #include <zlib.h>
 #endif
@@ -517,6 +519,7 @@ main(int argc, char **argv __attribute__((unused)))
     it5->uninstall();
     END;
 
+#ifdef __GLIBC__
     /* In glibc, mincore() is on the same text page as mprotect */
     BEGIN("libc mincore");
     unsigned char results[1];
@@ -536,6 +539,7 @@ main(int argc, char **argv __attribute__((unused)))
     it->uninstall();
     free(page);
     END;
+#endif
 
 #ifdef __APPLE__
     /* On Linux and Darwin, libz is another shared library we use */
