@@ -1,4 +1,4 @@
-EVENT SLMATCH /[edison/: Unmatched [ or [^
+EVENT SLMATCH /[edison/: Unmatched %METACHARS%
 FAIL tnsyslogmatch.invalid_regex
 EVENT SLMATCH Unmatched syslog tag 1
 FAIL tnsyslogmatch.unmatched_tag
