@@ -1,0 +1,2 @@
+box: "bento/opensuse-leap-15.1"
+script_file: "suse.sh"
