@@ -28,7 +28,7 @@ public:
     filename_t(const std::string &o) : std::string(o) {}
     filename_t(const char *s) : std::string(s ? s : "") {}
     /* move ctor */
-    filename_t(filename_t &&o) = default;
+    filename_t(filename_t &&) = default;
 
     filename_t &operator=(const filename_t &o)
     {
