@@ -14,6 +14,9 @@ Requires: valgrind, binutils-devel
 BuildRequires: autoconf, automake, gcc-c++
 BuildRequires: valgrind-devel, binutils-devel, libxml2-devel, pkgconfig
 BuildRequires: doxygen, perl-XML-LibXML
+%if %{_vendor} == "suse"
+BuildRequires: glibc-devel-static
+%endif
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description
