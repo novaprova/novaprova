@@ -124,6 +124,31 @@ esac
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
 
+AC_MSG_CHECKING([Platform static C library])
+case "$os" in
+linux)
+    old_IFS="$IFS"
+    platform_STATIC_LIBC=
+    IFS=:
+    for d in `$CC -print-search-dirs | sed -n '/^libraries/s/[^\/]*//p'` ; do
+        if test -f "$d/libc.a" ; then
+            platform_STATIC_LIBC="$d/libc.a"
+            break
+        fi
+    done
+    IFS="$old_IFS"
+    if test x"$platform_STATIC_LIBC" = x ; then
+        AC_MSG_ERROR([On this platform NovaProva needs a static libc in addition to the dynamic one, but could not find it.  You may need to install some special package e.g. glibc-devel-static])
+    fi
+    AC_MSG_RESULT($platform_STATIC_LIBC)
+    ;;
+*)
+    AC_MSG_RESULT([not needed on this platform])
+    platform_STATIC_LIBC=
+    ;;
+esac
+AC_SUBST(platform_STATIC_LIBC)
+
 if test "$libbfd_LIBS" = "" ; then
     dnl Prime the AC cache of compiler behavior
     AC_TRY_LINK([], [return 0])
