@@ -177,12 +177,19 @@ libnovaprova.a: $(libnovaprova_OBJS)
 
 PLATD=          np/spiegel/platform
 LINK_TO_OBJ=    $(CC) -r -nostdlib
+STATIC_LIBC=    $(shell $(CC) -print-search-dirs |\
+                    sed -n '/^libraries/s/[^\/]*//p' |\
+                    tr : '\012' |\
+                    while read d ; do \
+                        ls -1 "$$d/libc.a" 2>/dev/null ;\
+                    done |\
+                    head -1)
 
 # Extract a copy of the mprotect() system call stub, and its
 # transitive dependencies like __syscall_error(), from the
 # static libc into mprotect_stub.o
 $(PLATD)/mprotect_stub.o:
-	$(LINK_TO_OBJ) -o $@ -u mprotect -Wl,-Bstatic -lc
+	$(LINK_TO_OBJ) -o $@ -u mprotect $(STATIC_LIBC)
 
 # Build page-aligned buffers around the mprotect stub
 # to make sure that it cannot accidentally turn off
