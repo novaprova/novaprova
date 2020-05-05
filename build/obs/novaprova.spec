@@ -16,6 +16,9 @@ BuildRequires: doxygen, perl-XML-LibXML
 %if %{_vendor} == "suse"
 BuildRequires: glibc-devel-static
 %endif
+%if %{_vendor} == "redhat"
+BuildRequires: glibc-static
+%endif
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description
