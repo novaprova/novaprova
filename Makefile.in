@@ -289,6 +289,9 @@ build/obs/rel/%: build/obs/% build/obs/ifdef.py
 	@mkdir -p $(@D)
 	build/obs/ifdef.py -Drel -Drelease -DPACKAGE_VERSION=$(PACKAGE_VERSION) < $< > $@
 
+rpmlint: build/obs/rel/novaprova.spec
+	rpmlint build/obs/rel/novaprova.spec
+
 # Build CScope database
 tags:
 	cscope -b -k $(libnovaprova_SOURCE) $(libnovaprova_PRIVHEADERS) $(libnovaprova_HEADERS)

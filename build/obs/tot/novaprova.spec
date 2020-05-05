@@ -1,14 +1,13 @@
-Summary: novaprova, the new generation unit test framework for C
+Summary: The new generation unit test framework for C.
 Name: novaprova
 Version: 1.4
 Release: 1
-License: GPL
-Group: Development/C
+License: Apache-2.0
+Group: Development/Libraries/C and C++
 Source: http://sourceforge.net/projects/novaprova/files/novaprova-%{version}.tar.gz
 Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
-Requires: valgrind, binutils-devel
-BuildRequires: autoconf, automake, gcc-c++
+BuildRequires: autoconf, automake, gcc-c++ >= 4.8
 BuildRequires: valgrind-devel, binutils-devel, libxml2-devel, pkgconfig
 BuildRequires: doxygen, perl-XML-LibXML
 %if %{_vendor} == "suse"
@@ -46,14 +45,48 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%files
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+%package devel
+Summary: The new generation unit test framework for C.
+Group: Development/Libraries/C and C++
+Requires: valgrind, binutils-devel
+Obsoletes: novaprova
+
+%description devel
+Novaprova is the newest way to organise and run unit tests for libraries
+and programs written in the C language. Novaprova takes the xUnit
+paradigm into the 21st century.
+
+Novaprova has many advanced features previously only available in unit
+test frameworks for languages such as Java or Perl.
+
+This package includes the header files and libraries you need to use Novaprova.
+
+%files devel
 %defattr(-,root,root)
 %{_includedir}/novaprova/
 %{_libdir}/libnovaprova.a
 %{_libdir}/pkgconfig/novaprova.pc
+%doc README.md LICENSE ChangeLog
+
+%package doc
+Summary: Documentation for the new generation unit test framework for C.
+Group: Development/Libraries/C and C++
+
+%description doc
+Novaprova is the newest way to organise and run unit tests for libraries
+and programs written in the C language. Novaprova takes the xUnit
+paradigm into the 21st century.
+
+Novaprova has many advanced features previously only available in unit
+test frameworks for languages such as Java or Perl.
+
+This package includes documentation for using and hacking on Novaprova.
+
+%files doc
+%defattr(-,root,root)
 %docdir %{_mandir}
 %{_mandir}/man3/np*.3*
 %{_mandir}/man3/NP*.3*
-%doc README.md LICENSE ChangeLog
 
 %changelog
