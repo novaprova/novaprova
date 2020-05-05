@@ -1,4 +1,4 @@
-Summary: The new generation unit test framework for C.
+Summary: The new generation unit test framework for C
 Name: novaprova
 Version: 1.4
 Release: 1
@@ -48,10 +48,11 @@ rm -rf $RPM_BUILD_ROOT
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 %package devel
-Summary: The new generation unit test framework for C.
+Summary: The new generation unit test framework for C
 Group: Development/Libraries/C and C++
 Requires: valgrind, binutils-devel
 Obsoletes: novaprova
+Provides: novaprova
 
 %description devel
 Novaprova is the newest way to organise and run unit tests for libraries
@@ -71,7 +72,7 @@ This package includes the header files and libraries you need to use Novaprova.
 %doc README.md LICENSE ChangeLog
 
 %package doc
-Summary: Documentation for the new generation unit test framework for C.
+Summary: Documentation for the new generation unit test framework for C
 Group: Development/Libraries/C and C++
 
 %description doc
