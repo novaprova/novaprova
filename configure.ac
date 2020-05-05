@@ -323,6 +323,17 @@ if test "$with_valgrind" = yes ; then
     PKG_CHECK_MODULES(valgrind, valgrind)
 fi
 
+if test "$with_valgrind" = yes ; then
+AC_MSG_CHECKING([for valgrind --show-leak-kinds option])
+res=`"$VALGRIND_BINARY" --help | grep -o -e '--show-leak-kinds' | head -1`
+if test x"$res" != x ; then
+    AC_DEFINE(HAVE_VALGRIND_SHOW_LEAK_KINDS, 1,[whether Valgrind has the --show-leak-kinds option])
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+fi
+fi
+
 AC_ARG_WITH(valgrind-suppression,
 	      [Path to a suppression file to use when running Valgrind],
 	      [with_valgrind_suppression=$withval],

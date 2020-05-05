@@ -57,7 +57,9 @@ be_valground(void)
     *p++ = "-q";
     *p++ = "--tool=memcheck";
     *p++ = "--sym-offsets=yes";
+#ifdef HAVE_VALGRIND_SHOW_LEAK_KINDS
     *p++ = "--show-leak-kinds=definite,indirect";
+#endif
 #ifdef _NP_VALGRIND_SUPPRESSION_FILE
     *p++ = "--gen-suppressions=all";
     *p++ = "--suppressions=" _NP_VALGRIND_SUPPRESSION_FILE;
