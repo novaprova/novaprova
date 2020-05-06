@@ -44,7 +44,7 @@ linux-gnu)
     os=linux
     platform_CFLAGS="$platform_CFLAGS -D_GNU_SOURCE"
     platform_LIBS="-ldl -lrt"
-    platform_SOURCE="mprotect.cxx mprotect_stub_aligned.o"
+    platform_SOURCE="mprotect.cxx"
     sed_extended_opt="-r"
     ;;
 darwin*)
@@ -121,33 +121,12 @@ platform_SOURCE="$os.cxx $os"_"$arch.cxx $platform_SOURCE"
 case "$arch" in
 x86|x86_64) platform_SOURCE="x86x.cxx $platform_SOURCE" ;;
 esac
+case "$os-$arch" in
+linux-x86|linux-x86_64) platform_SOURCE="mprotect_${os}_${arch}.S $platform_SOURCE" ;;
+esac
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
 
-AC_MSG_CHECKING([Platform static C library])
-case "$os" in
-linux)
-    old_IFS="$IFS"
-    platform_STATIC_LIBC=
-    IFS=:
-    for d in `$CC -print-search-dirs | sed -n '/^libraries/s/[^\/]*//p'` ; do
-        if test -f "$d/libc.a" ; then
-            platform_STATIC_LIBC="$d/libc.a"
-            break
-        fi
-    done
-    IFS="$old_IFS"
-    if test x"$platform_STATIC_LIBC" = x ; then
-        AC_MSG_ERROR([On this platform NovaProva needs a static libc in addition to the dynamic one, but could not find it.  You may need to install some special package e.g. glibc-devel-static])
-    fi
-    AC_MSG_RESULT($platform_STATIC_LIBC)
-    ;;
-*)
-    AC_MSG_RESULT([not needed on this platform])
-    platform_STATIC_LIBC=
-    ;;
-esac
-AC_SUBST(platform_STATIC_LIBC)
 
 if test "$libbfd_LIBS" = "" ; then
     dnl Prime the AC cache of compiler behavior

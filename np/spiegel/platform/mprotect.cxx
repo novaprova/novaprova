@@ -37,6 +37,7 @@ using namespace np::util;
  * - the libc function __syslog_chk() which we always intercept, is
  *   accidentally in the same text page as the mprotect() system call stub.
  */
+extern "C" int __np_mprotect(void *addr, size_t len, int prot);
 
 static int
 text_map_writable(addr_t addr, size_t len)
@@ -47,12 +48,12 @@ text_map_writable(addr_t addr, size_t len)
 
     /* actually change the underlying mapping in one
      * big system call. */
-    r = mprotect((void *)start,
+    r = __np_mprotect((void *)start,
 		 (size_t)(end-start),
 		 PROT_READ|PROT_WRITE);
     if (r)
     {
-        eprintf("Failed to call mprotect(PROT_READ|PROT_WRITE): %s\n", strerror(errno));
+        eprintf("Failed to call mprotect(PROT_READ|PROT_WRITE): %s\n", strerror(-r));
 	return -1;
     }
     return 0;
@@ -67,12 +68,12 @@ text_restore(addr_t addr, size_t len)
 
     /* actually change the underlying mapping in one
      * big system call. */
-    r = mprotect((void *)start,
+    r = __np_mprotect((void *)start,
                  (size_t)(end-start),
                  PROT_READ|PROT_EXEC);
     if (r)
     {
-        eprintf("Failed to mprotect(PROT_READ|PROT_EXEC): %s\n", strerror(errno));
+        eprintf("Failed to mprotect(PROT_READ|PROT_EXEC): %s\n", strerror(-r));
         return -1;
     }
 
