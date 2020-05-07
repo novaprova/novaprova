@@ -97,8 +97,8 @@ some example commands which download and install them.
 
     # on Ubuntu
     # install all the prereqs above, then add...
-    sudo apt-get install -y doxygen libxml-libxml-perl python-pip
-    sudo pip install breathe Sphinx
+    sudo apt-get install -y doxygen libxml-libxml-perl python-pip \
+        python-breathe sphinx-common
 
     # on RHEL / Fedora
     # install all the prereqs above, then add...
@@ -114,6 +114,7 @@ and build NovaProva.
 
     git clone https://github.com/novaprova/novaprova.git
     cd novaprova
+    automake -ac    # ignore the errors
     autoreconf -iv
     ./configure
     make
