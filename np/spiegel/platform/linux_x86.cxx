@@ -390,6 +390,9 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state)
 {
     int r;
 
+    if (!addr)
+        return -1;
+
     switch (*(unsigned char *)addr)
     {
     case INSN_PUSH_EBP:
