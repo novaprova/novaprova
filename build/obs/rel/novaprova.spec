@@ -11,7 +11,6 @@ BuildRoot: /var/tmp/%{name}-root
 BuildRequires: autoconf, automake, gcc-c++ >= 4.8
 BuildRequires: valgrind-devel, binutils-devel, libxml2-devel, pkgconfig
 BuildRequires: doxygen, perl-XML-LibXML
-BuildRequires: python3-Sphinx >= 1.3.1, python3-breathe >= 4.0.0
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description
