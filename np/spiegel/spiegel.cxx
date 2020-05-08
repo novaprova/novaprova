@@ -483,6 +483,7 @@ function_t::populate()
 	return false;
 
     low_pc_ = e->get_uint64_attribute(DW_AT_low_pc);
+    is_declaration_ = e->get_uint64_attribute(DW_AT_declaration);
 
     return true;
 }
@@ -590,6 +591,8 @@ function_t::to_string() const
 // defined in this compile unit (in which case, good luck finding it in
 // some other compile unit).  Note this needs to be turned into an
 // instrumentable address to instrument or invoke it.
+//
+// TODO: this can be wrong if the DIE has DW_AT_ranges
 addr_t
 function_t::get_address() const
 {
@@ -606,6 +609,12 @@ function_t::get_live_address() const
     np::spiegel::dwarf::walker_t w(ref_);
     const np::spiegel::dwarf::entry_t *e = w.move_next();
     return w.live_address(e->get_address_attribute(DW_AT_low_pc));
+}
+
+bool
+function_t::is_declaration() const
+{
+    return is_declaration_;
 }
 
 

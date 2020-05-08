@@ -153,9 +153,81 @@ test_name(np::spiegel::function_t *fn, char *submatch)
     return name;
 }
 
+/*
+ * Returns true if `target` a well-known function name in libc which is
+ * difficult to auto-mock because the symbol name that we know it by
+ * (e.g. fopen) is not what the C library exports it as (e.g. fopen64)
+ * due to various header file shenanigans like #defines and __REDIRECT.
+ * Most of these are old-fashioned filesystem functions which need
+ * foo64() versions to cope with large files in 32b ABIs.
+ */
+static bool warn_on_automock(const char *target)
+{
+    static const char *names[] = {
+#ifdef __GLIBC__
+        "alphasort",        /* alphasort, alphasort64 */
+        "creat",            /* creat, creat64 */
+        "fallocate",        /* fallocate, fallocate64 */
+        "fclose",           /* fclose, _IO_fclose */
+        "fdopen",           /* fdopen, _IO_fdopen */
+        "fgetpos",          /* fgetpos, fgetpos64, _IO_fgetpos, _IO_fgetpos64 */
+        "fopen",            /* fopen, fopen64, _IO_fopen */
+        "fputs",            /* fputs, _IO_fputs */
+        "freopen",          /* freopen, freopen64 */
+        "fseeko",           /* fseeko, fseeko64 */
+        "fsetpos",          /* fsetpos, fsetpos64, _IO_fsetpos, _IO_fsetpos64 */
+        "fstat",            /* fstat, fstat64, __fxstat, __fxstat64 */
+        "fstatat",          /* fstatat, fstatat64, __fxstatat, __fxstatat64 */
+        "fstatfs",          /* fstatfs, fstatfs64 */
+        "fstatvfs",         /* fstatvfs, fstatvfs64 */
+        "ftello",           /* ftello, ftello64 */
+        "ftruncate",        /* ftruncate, ftruncate64 */
+        "ftw",              /* ftw, ftw64 */
+        "getdirentries",    /* getdirentries, getdirentries64 */
+        "getrlimit",        /* getrlimit, getrlimit64 */
+        "glob",             /* glob, glob64 */
+        "globfree",         /* globfree, globfree64 */
+        "lockf",            /* lockf, lockf64 */
+        "lseek",            /* lseek, lseek64 */
+        "lstat",            /* lstat, lstat64, __lxstat , __lxstat64 */
+        "mkostemp",         /* mkostemp, mkostemp64 */
+        "mkostemps",        /* mkostemps, mkostemps64 */
+        "mkstemp",          /* mkstemp, mkstemp64 */
+        "mkstemps",         /* mkstemps, mkstemps64 */
+        "mmap",             /* mmap, mmap64 */
+        "nftw",             /* nftw, nftw64 */
+        "open",             /* open, open64 */
+        "openat",           /* openat, openat64 */
+        "posix_fadvise",    /* posix_fadvise, posix_fadvise64 */
+        "posix_fallocate",  /* posix_fallocate, posix_fallocate64 */
+        "pread",            /* pread, pread64 */
+        "preadv",           /* preadv, preadv64 */
+        "prlimit",          /* prlimit, prlimit64 */
+        "pwrite",           /* pwrite, pwrite64 */
+        "pwritev",          /* pwritev, pwritev64 */
+        "readdir",          /* readdir, readdir64 */
+        "scandir",          /* scandir, scandir64 */
+        "scandirat",        /* scandirat, scandirat64 */
+        "sendfile",         /* sendfile, sendfile64 */
+        "setrlimit",        /* setrlimit, setrlimit64 */
+        "stat",             /* stat, stat64, __xstat, __xstat64 */
+        "statfs",           /* statfs, statfs64 */
+        "statvfs",          /* statvfs, statvfs64 */
+        "tmpfile",          /* tmpfile, tmpfile64 */
+        "truncate",         /* truncate, truncate64 */
+        "versionsort"       /* versionsort, versionsort64 */
+#endif
+    };
+    for (unsigned i = 0 ; i < sizeof(names)/sizeof(names[0]) ; i++)
+        if (!strcmp(names[i], target))
+            return true;
+    return false;
+}
+
 np::spiegel::function_t *
 testmanager_t::find_mock_target(string name)
 {
+    dprintf("Finding mock target %s", name.c_str());
     vector<np::spiegel::compile_unit_t *> units = spiegel_->get_compile_units();
     vector<np::spiegel::compile_unit_t *>::iterator i;
     for (i = units.begin() ; i != units.end() ; ++i)
@@ -164,10 +236,19 @@ testmanager_t::find_mock_target(string name)
 	vector<np::spiegel::function_t *>::iterator j;
 	for (j = fns.begin() ; j != fns.end() ; ++j)
 	{
-	    if ((*j)->get_name() == name)
-		return *j;
+            if ((*j)->get_name() != name)
+                continue;
+            if ((*j)->is_declaration())
+                continue;
+            if (!(*j)->get_address())
+                continue;
+            dprintf("Found function %s in compile unit %s link object %s",
+                    name.c_str(), (*i)->get_filename().c_str(),
+                    (*i)->get_executable());
+            return *j;
 	}
     }
+    dprintf("Failed to find mock target for %s", name.c_str());
     return 0;
 }
 
@@ -249,9 +330,21 @@ testmanager_t::discover_functions()
 		if (!submatch[0])
 		    continue;
 		{
+                    if (warn_on_automock(submatch))
+                        wprintf("Mock target function %s is a function in "
+                                "libc which is commonly difficult to mock "
+                                "using NovaProva's automatic mocks.  Please "
+                                "read the section \"Automatic Mocks and The "
+                                "C Library\" in the manual for details.", submatch);
 		    np::spiegel::function_t *target = find_mock_target(submatch);
 		    if (!target)
+                    {
+                        wprintf("Unable to find mock target function %s for "
+                                "automatic mock function %s.  No mock will "
+                                "be installed.",
+                                submatch, fn->get_name().c_str());
 			continue;
+                    }
 		    root_->make_path(test_name(fn, 0))->add_mock(target, fn);
 		}
 		break;

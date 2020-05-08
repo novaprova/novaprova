@@ -234,4 +234,37 @@ function normally, so you can mock static functions in other modules
         foo_mustache(10);       /* bar_txn_alloc() returns NULL */
     }
 
+
+Automatic Mocks and The C Library
+---------------------------------
+.. this section is referred to in an warning message, be careful renaming it
+
+You may have been directed here by a runtime warning message.  If so,
+please read this section and adjust your test code accordingly.
+
+On Linux, NovaProva's automatic mocking (where you designate a mock
+function by using the naming convention of a ``mock_`` prefix) does not
+work well with certain functions in the C library.  The GNU C library
+uses a number of pre-processor and compiler tricks to silently rename
+it's functions in between the source code you write and the symbols in
+the library.  For example, you think you're mocking the ``fopen()``
+function, but under various combinations of ABIs and compiler flags the
+actual function in libc that your code is calling could be ``fopen``, or
+``fopen64``, or ``_IO_fopen``.  The same caveats apply to the
+``np_mock_by_name()`` function.
+
+Coping with this complexity is very challenging for both NovaProva and
+you, not least because it's a hidden implementation detail of the C
+library and not necessarily stable between C library versions.  Our
+recommendation is that you avoid using automatic mocking, or
+``np_mock_by_name()``, for functions in the platform C library.  Using
+the ``np_mock()`` function should be safe (as long as your test code is
+compiled with the same compiler flags as the code being tested).
+
+From release 1.5, NovaProva will detect when your test code includes
+automatic mocks of libc functions known to troublesome, and issue
+a warning message directing you to this section.  Please take this
+opportunity to make your tests more reliable by switching to dynamic
+mocking of those functions.
+
 .. vim:set ft=rst:

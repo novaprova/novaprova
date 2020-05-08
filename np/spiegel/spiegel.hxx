@@ -308,6 +308,7 @@ public:
     bool has_unspecified_parameters() const;
     addr_t get_address() const;
     addr_t get_live_address() const;
+    bool is_declaration() const;
 
 //     std::vector<type_t*> get_exception_types() const;
 
@@ -323,6 +324,7 @@ private:
     bool populate();
 
     uint64_t low_pc_;	    // TODO: should be an addr_t
+    bool is_declaration_;
 
     friend class compile_unit_t;
     friend class _factory_t;

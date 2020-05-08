@@ -95,6 +95,7 @@ SIMPLE_TESTS= \
     tnatruefail \
     tnmocking \
     tnbug20 \
+    tnbug34 \
     tndynmock \
     tndynmock2 \
     tndynmock3 \

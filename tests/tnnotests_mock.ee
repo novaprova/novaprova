@@ -1,2 +1,3 @@
+np: WARN Unable to find mock target function hard_with_a_vengeance for automatic mock function mock_hard_with_a_vengeance.  No mock will be installed.
 np: WARN no tests discovered
 EXIT 0

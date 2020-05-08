@@ -1,0 +1,10 @@
+np: WARN Mock target function fopen is a function in libc which is commonly difficult to mock using NovaProva's automatic mocks.  Please read the section "Automatic Mocks and The C Library" in the manual for details.
+np: WARN Unable to find mock target function fopen for automatic mock function mock_fopen.  No mock will be installed.
+np: WARN Mock target function fclose is a function in libc which is commonly difficult to mock using NovaProva's automatic mocks.  Please read the section "Automatic Mocks and The C Library" in the manual for details.
+np: WARN Unable to find mock target function fclose for automatic mock function mock_fclose.  No mock will be installed.
+EVENT ASSERT NP_ASSERT_EQUAL(r=-1, 0=0)
+at %ADDR%: %NPCODE% (%NPLOC%)
+by %ADDR%: test_fopen (%TOPDIR%/tests/tnbug34.c:64)
+by %ADDR%: %NPCODE% (%NPLOC%)
+FAIL tnbug34.fopen
+EXIT 1

@@ -444,6 +444,9 @@ install_intercept(np::spiegel::addr_t addr, intstate_t &state)
 int
 uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state)
 {
+    if (!addr)
+        return -1;
+
     if (*(unsigned char *)addr != trap_bytes[0])
     {
         eprintf("Intercept not installed at 0x%lx", addr);
