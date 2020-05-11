@@ -54,7 +54,7 @@ int myfopen(char *path)
     return -1;
 }
 
-static void test_fopen(void)
+void test_fopen(void)
 {
     int r;
 

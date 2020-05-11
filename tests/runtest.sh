@@ -19,6 +19,8 @@ source ../plat.sh
 
 FAILFILE=.failing-tests.dat
 RESULTSFILE=.results.dat
+IFDEF=$(dirname $0)/../build/obs/ifdef.py
+IFDEFARGS=
 
 function fatal()
 {
@@ -71,7 +73,7 @@ function usagef()
 {
     local msg="$*"
     [ -n "$msg" ] && echo "$0: $msg" 1>&2
-    echo "Usage: $0 [--verbose] [--enable-valgrind] [--failing-only] test [arg...]" 1>&2
+    echo "Usage: $0 [--verbose] [--enable-valgrind] [--failing-only] [-Dvar|-Dvar=val] test [arg...]" 1>&2
     echo "       $0 --begin|--end" 1>&2
     exit 1
 }
@@ -98,6 +100,13 @@ while [ $# -gt 0 -a $done = no ] ; do
         ;;
     --begin|--test|--end)
         mode=${1#--}
+        ;;
+    -D*)
+        IFDEFARGS="$IFDEFARGS $1"
+        ;;
+    --define)
+        IFDEFARGS="$IFDEFARGS -D$2"
+        shift
         ;;
     -*)
         usagef "Unknown option $1"
@@ -193,11 +202,13 @@ function normalize_output
 function normalize_golden_output()
 {
     local f="$1"
-    if [ $enable_valgrind = yes ] ; then
-        cat "$f"
-    else
-        egrep -v '^==%PID%==' < "$f"
-    fi
+    $IFDEF $IFDEFARGS < "$f" | (
+        if [ $enable_valgrind = yes ] ; then
+            cat
+        else
+            egrep -v '^==%PID%=='
+        fi
+    )
 }
 
 function runtest
