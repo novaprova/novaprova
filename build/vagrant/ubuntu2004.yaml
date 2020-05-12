@@ -1,0 +1,3 @@
+box: "bento/ubuntu-20.04"
+# box: "ubuntu/focal64"
+script_file: "ubuntu.sh"
