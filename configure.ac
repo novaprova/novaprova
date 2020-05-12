@@ -364,6 +364,30 @@ AC_CHECK_HEADERS([\
 ])
 AC_SUBST(sed_extended_opt)
 
+
+AC_MSG_CHECKING([for Python binary])
+found=no
+for dir in `echo $PATH | tr : '\012'` ; do
+    for file in python3 python2 python ; do
+        if test -f $dir/$file ; then
+            out=`$dir/$file -c 'print("hello")'`
+            if test x"$out" = xhello ; then
+                found=yes
+                python="$dir/$file"
+                break
+            fi
+        fi
+    done
+done
+if test $found = yes ; then
+    AC_MSG_RESULT($python)
+    AC_SUBST(python)
+else
+    AC_MSG_RESULT([not found])
+    AC_MSG_ERROR([Cannot find a functioning Python interpreter in $PATH])
+fi
+
+
 AC_CONFIG_HEADERS([np/util/config.h])
 AC_CONFIG_FILES([
     Makefile
@@ -375,7 +399,8 @@ AC_CONFIG_FILES([
     plat.sh
     uninstalled/bin/pkg-config
     uninstalled/lib/pkgconfig/novaprova.pc
+    build/obs/ifdef.py
 ])
 AC_OUTPUT
 
-chmod +x uninstalled/bin/pkg-config
+chmod +x uninstalled/bin/pkg-config build/obs/ifdef.py
