@@ -237,7 +237,20 @@ intercept_tramp(void)
     frame.call.args_ = frame.stack+nstack;
     intercept_t::dispatch_before(frame.addr, frame.call);
     if (frame.call.skip_)
+    {
+	switch (tramp_intstate->type_)
+	{
+	case intstate_t::PUSHBP:
+	    break;
+	case intstate_t::OTHER:
+	    /* Re-insert the breakpoint */
+            text_write(frame.addr, trap_bytes, trap_len);
+	    break;
+	case intstate_t::UNKNOWN:
+	    break;
+	}
 	return frame.call.retval_;	/* before() requested skip() */
+    }
     if (frame.call.redirect_)
     {
 	/* before() requested redirect, so setup the context to call
@@ -458,6 +471,16 @@ uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state)
         eprintf("Failed to uninstall intercept at 0x%lx", addr);
 
     return r;
+}
+
+bool
+is_intercept_installed(
+    np::spiegel::addr_t addr,
+    const intstate_t &state __attribute__((unused)))
+{
+    if (!addr)
+        return false;
+    return (*(unsigned char *)addr == trap_bytes[0]);
 }
 
 // close namespaces

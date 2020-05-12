@@ -119,6 +119,8 @@ extern int install_intercept(np::spiegel::addr_t,
 			     intstate_t &state);
 extern int uninstall_intercept(np::spiegel::addr_t,
 			     intstate_t &state);
+extern bool is_intercept_installed(np::spiegel::addr_t,
+			     const intstate_t &state);
 
 extern std::vector<np::spiegel::addr_t> get_stacktrace();
 

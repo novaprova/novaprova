@@ -106,6 +106,15 @@ intercept_t::uninstall()
 }
 
 bool
+intercept_t::is_installed() const
+{
+    addrstate_t *as = get_addrstate(addr_, /*create*/false);
+    if (!as)
+        return false;
+    return np::spiegel::platform::is_intercept_installed(addr_, as->state_);
+}
+
+bool
 intercept_t::is_intercepted(addr_t addr)
 {
     return (get_addrstate(addr, /*create*/false) != NULL);

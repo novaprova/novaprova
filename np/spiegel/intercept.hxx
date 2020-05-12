@@ -90,6 +90,7 @@ struct intercept_t : public np::util::zalloc
 
     int install();
     int uninstall();
+    bool is_installed() const;
 
     // functions for the platform-specific intercept code
     static bool is_intercepted(addr_t);

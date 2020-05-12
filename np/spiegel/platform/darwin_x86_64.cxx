@@ -289,6 +289,17 @@ static unsigned long intercept_tramp(void)
     if (frame.call.skip_)
     {
 	np_trace("intercept_tramp: skipping call to real function\n");
+	switch (tramp_intstate->type_)
+	{
+	case intstate_t::PUSHBP:
+	    break;
+	case intstate_t::OTHER:
+	    /* Re-insert the breakpoint */
+            text_write(frame.addr, trap_bytes, trap_len);
+	    break;
+	case intstate_t::UNKNOWN:
+	    break;
+	};
 	return frame.call.retval_;	/* before() requested skip() */
     }
     if (frame.call.redirect_)
@@ -615,6 +626,15 @@ uninstall_intercept(np::spiegel::addr_t addr, intstate_t &state)
     return r;
 }
 
+bool
+is_intercept_installed(
+    np::spiegel::addr_t addr,
+    const intstate_t &state __attribute__((unused)))
+{
+    if (!addr)
+        return false;
+    return (*(unsigned char *)addr == trap_bytes[0]);
+}
 
 
 	};

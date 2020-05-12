@@ -288,6 +288,129 @@ public:
     }
 };
 
+#if defined(__x86_64__)
+
+unsigned char meggings_called = 0;
+int meggings(int x)
+{
+    meggings_called++;
+    return 1 + x;
+}
+
+/*
+ * These three functions are copies of compiler-generated
+ * assembler for various compiler options when compiling
+ * the following simple function
+ *
+ * unsigned char foo_called = 0;
+ * int foo(int x) { foo_called++; return 42 + x * x; }
+ */
+/* waistcoat has a standard "push %rbp" function prolog */
+unsigned char waistcoat_called = 0;
+extern "C" int waistcoat(int);
+
+__asm__(
+".text\n"
+".globl waistcoat\n"
+"waistcoat:\n"
+"    pushq %rbp\n"
+"    movq %rsp, %rbp\n"
+"    movl %edi, -4(%rbp)\n"
+"    movzbl waistcoat_called(%rip), %eax\n"
+"    addl $1, %eax\n"
+"    movb %al, waistcoat_called(%rip)\n"
+"    movl -4(%rbp), %eax\n"
+"    imull %eax, %eax\n"
+"    addl $42, %eax\n"
+"    popq %rbp\n"
+"    ret\n");
+
+/* cardigan has a function prolog without a "push %rbp" insn
+ * which is what you would expect when a leaf function
+ * like this is optimized. */
+__asm__(".data");
+unsigned char cardigan_called = 0;
+extern "C" int cardigan(int);
+
+__asm__(
+".text\n"
+".globl cardigan\n"
+"cardigan:\n"
+"    imull %edi, %edi\n"
+"    addb $1, cardigan_called(%rip)\n"
+"    leal 42(%rdi), %eax\n"
+"    ret\n");
+
+/* hoodie has an Intel CET function prolog with a function
+ * prolog starting with an "endbr64" insn.  */
+__asm__(".data");
+unsigned char hoodie_called = 0;
+extern "C" int hoodie(int);
+
+__asm__(
+".text\n"
+".globl hoodie\n"
+"hoodie:\n"
+"    endbr64\n"
+"    pushq %rbp\n"
+"    movq %rsp, %rbp\n"
+"    movl %edi, -4(%rbp)\n"
+"    movzbl hoodie_called(%rip), %eax\n"
+"    addl $1, %eax\n"
+"    movb %al, hoodie_called(%rip)\n"
+"    movl -4(%rbp), %eax\n"
+"    imull %eax, %eax\n"
+"    addl $42, %eax\n"
+"    popq %rbp\n"
+"    ret\n");
+
+class garment_intercept_tester_t : public np::spiegel::intercept_t
+{
+public:
+    garment_intercept_tester_t(int (*fn)(int), const char *name)
+      : np::spiegel::intercept_t((np::spiegel::addr_t)fn, name) {}
+    ~garment_intercept_tester_t() {}
+
+    void before(np::spiegel::call_t &call)
+    {
+        before_count++;
+        dprintf("BEFORE\n");
+        if (test_skip)
+        {
+            dprintf("SKIPPING\n");
+            call.skip(123);
+        }
+        if (test_redirect)
+        {
+            dprintf("REDIRECTING to meggings\n");
+            call.redirect((np::spiegel::addr_t)&meggings);
+        }
+    }
+
+    void after(np::spiegel::call_t &call)
+    {
+        after_count++;
+        dprintf("AFTER\n");
+    }
+
+    void reset_counters()
+    {
+        before_count = 0;
+        after_count = 0;
+        the_function_count = 0;
+        another_function_count = 0;
+        test_skip = false;
+        test_redirect = false;
+    }
+
+    unsigned int after_count;
+    unsigned int before_count;
+    bool test_skip;
+    bool test_redirect;
+};
+#endif
+
+
 int
 main(int argc, char **argv __attribute__((unused)))
 {
@@ -603,6 +726,76 @@ main(int argc, char **argv __attribute__((unused)))
     it6->uninstall();
     END;
 #endif /* __APPLE__ */
+
+#if defined(__x86_64__)
+    static const struct
+    {
+        int (*function)(int);
+        const char *name;
+        unsigned char *called_counter;
+    } cases[] = {
+        {waistcoat, "waistcoat", &waistcoat_called},
+        {cardigan, "cardigan", &cardigan_called},
+        {hoodie, "hoodie", &hoodie_called}
+    };
+    for (unsigned i = 0 ; i < sizeof(cases)/sizeof(cases[0]) ; i++)
+    {
+        BEGIN("%s unintercepted", cases[i].name);
+        *cases[i].called_counter = 0;
+        meggings_called = 0;
+        r = cases[i].function(3);
+        CHECK(r == 51);
+        CHECK(*cases[i].called_counter == 1);
+        CHECK(meggings_called == 0);
+        END;
+
+        garment_intercept_tester_t *git = new garment_intercept_tester_t(cases[i].function, cases[i].name);
+        CHECK(git->is_installed() == false);
+        git->install();
+        CHECK(git->is_installed() == true);
+
+        BEGIN("%s intercepted, no skip or redirect", cases[i].name);
+        git->reset_counters();
+        *cases[i].called_counter = 0;
+        meggings_called = 0;
+        r = cases[i].function(4);
+        CHECK(r == 58);
+        CHECK(*cases[i].called_counter == 1);
+        CHECK(meggings_called == 0);
+        CHECK(git->before_count == 1);
+        CHECK(git->after_count == 1);
+        CHECK(git->is_installed() == true);
+        END;
+
+        BEGIN("%s intercepted, skip", cases[i].name);
+        git->reset_counters();
+        *cases[i].called_counter = 0;
+        meggings_called = 0;
+        git->test_skip = true;
+        r = cases[i].function(3);
+        CHECK(r == 123);
+        CHECK(*cases[i].called_counter == 0);
+        CHECK(meggings_called == 0);
+        CHECK(git->before_count == 1);
+        CHECK(git->after_count == 0);
+        CHECK(git->is_installed() == true);
+        END;
+
+        BEGIN("%s intercepted, redirected", cases[i].name);
+        git->reset_counters();
+        *cases[i].called_counter = 0;
+        meggings_called = 0;
+        git->test_redirect = true;
+        r = cases[i].function(4);
+        CHECK(r == 5);
+        CHECK(*cases[i].called_counter == 0);
+        CHECK(meggings_called == 1);
+        CHECK(git->before_count == 1);
+        CHECK(git->after_count == 1);
+        CHECK(git->is_installed() == true);
+        END;
+    }
+#endif
 
     return 0;
 }
