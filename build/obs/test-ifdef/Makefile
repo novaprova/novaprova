@@ -24,5 +24,5 @@ run-tests:
 	    ../ifdef.py `cat $$test.args` < $$test.in > $$test.out 2>&1 ;\
 	    diff -u $$test.out $$test.exp && res=PASS ;\
 	    echo "$$res $$test" ;\
-	    if [ $$res == FAIL ]; then nfailed=`expr $$nfailed + 1` ; fi ;\
+	    if [ $$res = FAIL ]; then nfailed=`expr $$nfailed + 1` ; fi ;\
 	done ; echo "$$nfailed failures"
