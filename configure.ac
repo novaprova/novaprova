@@ -108,6 +108,31 @@ if test "$trace" = yes ; then
     platform_CFLAGS="$platform_CFLAGS -D_NP_ENABLE_TRACE"
 fi
 
+case "$arch" in
+x86|x86_64)
+    AC_MSG_CHECKING([Support for Intel CET])
+    saved_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -fcf-protection=full"
+    itworks=no
+    AC_TRY_LINK([], [
+#if defined(__CET__) && __CET__ >= 3
+#else
+#error CET support not enabled
+#endif
+], [ itworks=yes ])
+    CFLAGS="$saved_CFLAGS"
+    if test "$itworks" = yes ; then
+        AC_MSG_RESULT([enabled; disabling])
+        # it exists, which is unfortunate because
+        # we cannot handle it yet, so disable it
+        platform_CFLAGS="$platform_CFLAGS -fcf-protection=none"
+    else
+        # phew
+        AC_MSG_RESULT(disabled)
+    fi
+    ;;
+esac
+
 AC_MSG_CHECKING([Platform specific CFLAGS])
 AC_MSG_RESULT($platform_CFLAGS)
 AC_SUBST(platform_CFLAGS)
