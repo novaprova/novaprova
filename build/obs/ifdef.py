@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright 2011-2020 Gregory Banks
 #
@@ -24,23 +24,9 @@ else_re = re.compile(r'^@else\s*$')
 endif_re = re.compile(r'^@endif\s*$')
 reference_re = re.compile(r'@([a-zA-Z_][a-zA-Z0-9_]*)@')
 
-if __name__ == "__main__":
-    # Cannot rely on argparse being present
-    # so we parse args ourselves.
-    defines = {}
-    for a in sys.argv[1:]:
-        if a.startswith('-D'):
-            if "=" in a:
-                name, value = a[2:].split("=", 1)
-            else:
-                name = a[2:]
-                value = 1
-            defines[name] = value
-        else:
-            raise RuntimeError("Unknown option \"%s\"" % a)
-
+def filter_file(fin, fout, defines):
     stack = []
-    for line in sys.stdin:
+    for line in fin:
         line = line.rstrip("\r\n")
 
         m = ifdef_re.match(line)
@@ -71,4 +57,26 @@ if __name__ == "__main__":
                 if name not in defines:
                     raise RuntimeError("undefined variable {}".format(name))
                 line = line[0:m.start()] + str(defines[name]) + line[m.end():]
-            sys.stdout.write(line + "\n")
+            fout.write(line + "\n")
+
+def main():
+    # This statement used to be true in Python v2
+    # now the only reason we're not using argparse
+    # is inertia:
+    # Cannot rely on argparse being present
+    # so we parse args ourselves.
+    defines = {}
+    for a in sys.argv[1:]:
+        if a.startswith('-D'):
+            if "=" in a:
+                name, value = a[2:].split("=", 1)
+            else:
+                name = a[2:]
+                value = 1
+            defines[name] = value
+        else:
+            raise RuntimeError("Unknown option \"%s\"" % a)
+    filter_file(sys.stdin, sys.stdout, defines)
+
+if __name__ == "__main__":
+    main()
