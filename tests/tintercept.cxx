@@ -341,6 +341,7 @@ __asm__(
 "    leal 42(%rdi), %eax\n"
 "    ret\n");
 
+#ifdef _NP_INTEL_CET
 /* hoodie has an Intel CET function prolog with a function
  * prolog starting with an "endbr64" insn.  */
 __asm__(".data");
@@ -351,7 +352,7 @@ __asm__(
 ".text\n"
 ".globl hoodie\n"
 "hoodie:\n"
-"    endbr64\n"
+"    endbr64\n"     /* new insn won't build on old compilers */
 "    pushq %rbp\n"
 "    movq %rsp, %rbp\n"
 "    movl %edi, -4(%rbp)\n"
@@ -363,6 +364,7 @@ __asm__(
 "    addl $42, %eax\n"
 "    popq %rbp\n"
 "    ret\n");
+#endif /* _NP_INTEL_CET */
 
 class garment_intercept_tester_t : public np::spiegel::intercept_t
 {
@@ -736,7 +738,9 @@ main(int argc, char **argv __attribute__((unused)))
     } cases[] = {
         {waistcoat, "waistcoat", &waistcoat_called},
         {cardigan, "cardigan", &cardigan_called},
-        {hoodie, "hoodie", &hoodie_called}
+#ifdef _NP_INTEL_CET
+        {hoodie, "hoodie", &hoodie_called},
+#endif /* _NP_INTEL_CET */
     };
     for (unsigned i = 0 ; i < sizeof(cases)/sizeof(cases[0]) ; i++)
     {

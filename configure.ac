@@ -125,7 +125,7 @@ x86|x86_64)
         AC_MSG_RESULT([enabled; disabling])
         # it exists, which is unfortunate because
         # we cannot handle it yet, so disable it
-        platform_CFLAGS="$platform_CFLAGS -fcf-protection=none"
+        platform_CFLAGS="$platform_CFLAGS -D_NP_INTEL_CET -fcf-protection=none"
     else
         # phew
         AC_MSG_RESULT(disabled)
