@@ -9,7 +9,7 @@ Url: http://www.novaprova.org/
 BuildRoot: /var/tmp/%{name}-root
 BuildRequires: autoconf, automake, gcc-c++ >= 4.8
 BuildRequires: valgrind-devel, binutils-devel, libxml2-devel, pkgconfig
-BuildRequires: doxygen, perl-XML-LibXML
+BuildRequires: doxygen, perl-XML-LibXML, python3
 Vendor: Greg Banks <gnb@fmeh.org>
 
 %description
