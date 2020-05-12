@@ -232,7 +232,7 @@ state_t::read_link_objects()
     return true;
 }
 
-static void
+static string
 describe_type(const walker_t &ow)
 {
     walker_t w = ow;
@@ -244,74 +244,86 @@ describe_type(const walker_t &ow)
 
     ref = e->get_reference_attribute(DW_AT_type);
     if (ref == reference_t::null)
-    {
-	printf("void ");
-	return;
-    }
+        return string("void ");
 
     e = w.move_to(ref);
     if (!e)
-    {
-	printf("??? ");
-	return;
-    }
+        return string("??? ");
 
+    string s;
     const char *name = get_partial_name(w.get_reference());
     switch (e->get_tag())
     {
     case DW_TAG_base_type:
     case DW_TAG_typedef:
-	printf("%s ", name);
+        s += name;
+        s += " ";
 	break;
     case DW_TAG_pointer_type:
-	describe_type(w);
-	printf("* ");
+	s += describe_type(w);
+        s += "* ";
 	break;
     case DW_TAG_volatile_type:
-	describe_type(w);
-	printf("volatile ");
+	s += describe_type(w);
+	s += "volatile ";
 	break;
     case DW_TAG_const_type:
-	describe_type(w);
-	printf("const ");
+	s += describe_type(w);
+	s += "const ";
 	break;
     case DW_TAG_structure_type:
-	printf("struct %s ", (name ? name : "{...}"));
+        s += "struct ";
+        s += (name ? name : "{...}");
+        s += " ";
 	break;
     case DW_TAG_union_type:
-	printf("union %s ", (name ? name : "{...}"));
+        s += "union ";
+        s += (name ? name : "{...}");
+        s += " ";
 	break;
     case DW_TAG_class_type:
-	printf("class %s ", (name ? name : "{...}"));
+        s += "class ";
+        s += (name ? name : "{...}");
+        s += " ";
 	break;
     case DW_TAG_enumeration_type:
-	printf("enum %s ", (name ? name : "{...}"));
+        s += "enum ";
+        s += (name ? name : "{...}");
+        s += " ";
 	break;
     case DW_TAG_namespace_type:
-	printf("namespace %s ", (name ? name : "{...}"));
+        s += "namespace ";
+        s += (name ? name : "{...}");
+        s += " ";
 	break;
     case DW_TAG_array_type:
-	describe_type(w);
+	s += describe_type(w);
 	for (e = w.move_down() ; e ; e = w.move_next())
 	{
 	    uint32_t count;
 	    if (e->get_tag() == DW_TAG_subrange_type &&
 		((count = e->get_uint32_attribute(DW_AT_count)) ||
 		 (count = e->get_uint32_attribute(DW_AT_upper_bound))))
-		printf("[%u]", count);
+            {
+                char buf[32];
+                snprintf(buf, sizeof(buf), "[%u]", count);
+                s += buf;
+            }
 	}
-	printf(" ");
+	s += " ";
 	break;
     default:
-	printf("%s ", tagnames.to_name(e->get_tag()));
+        s += tagnames.to_name(e->get_tag());
+	s += " ";
 	break;
     }
+    return s;
 }
 
-static void
+static string
 describe_function_parameters(walker_t &w)
 {
-    printf("(");
+    string s = "(";
     int nparams = 0;
     bool got_ellipsis = false;
     for (const entry_t *e = w.move_down() ; e ; e = w.move_next())
@@ -321,18 +333,19 @@ describe_function_parameters(walker_t &w)
 	if (e->get_tag() == DW_TAG_formal_parameter)
 	{
 	    if (nparams++)
-		printf(", ");
-	    describe_type(w);
+                s += ", ";
+	    s += describe_type(w);
 	}
 	else if (e->get_tag() == DW_TAG_unspecified_parameters)
 	{
 	    if (nparams++)
-		printf(", ");
-	    printf("...");
+		s += ", ";
+	    s += "...";
 	    got_ellipsis = true;
 	}
     }
-    printf(")");
+    s += ")";
+    return s;
 }
 
 void
@@ -367,45 +380,59 @@ state_t::dump_structs()
 	    printf("%s %s {\n", keyword, get_full_name(w.get_reference()).c_str());
 
 	    // print members
+            vector<string> variables;
+            vector<string> functions;
 	    for (e = w.move_down() ; e ; e = w.move_next())
 	    {
 		const char *name = e->get_string_attribute(DW_AT_name);
 		if (!name)
 		    continue;
 
+                string s;
 		switch (e->get_tag())
 		{
 		case DW_TAG_member:
 		case DW_TAG_variable:	/* seen on some older toolchains, e.g. SLES11 */
-		    printf("    /*member*/ ");
-		    describe_type(w);
-		    printf(" %s;\n", name);
+                    s += "    /*member*/ ";
+                    s += describe_type(w);
+		    s += " ";
+                    s += name;
+                    s += ";\n";
+                    variables.push_back(s);
 		    break;
 		case DW_TAG_subprogram:
 		    {
 			if (!strcmp(name, structname))
 			{
-			    printf("    /*constructor*/ ");
+			    s += "    /*constructor*/ ";
 			}
 			else if (name[0] == '~' && !strcmp(name+1, structname))
 			{
-			    printf("    /*destructor*/ ");
+			    s += "    /*destructor*/ ";
 			}
 			else
 			{
-			    printf("    /*function*/ ");
-			    describe_type(w);
+			    s += "    /*function*/ ";
+                            s += describe_type(w);
 			}
-			printf("%s", name);
-			describe_function_parameters(w);
-			printf("\n");
+			s += name;
+			s += describe_function_parameters(w);
+			s += "\n";
+                        functions.push_back(s);
 		    }
 		    break;
 		default:
-		    printf("    /* %s */\n", tagnames.to_name(e->get_tag()));
+		    s += "    /* ";
+                    s += tagnames.to_name(e->get_tag());
+                    s += " */\n";
+                    variables.push_back(s);
 		    continue;
 		}
 	    }
+            for (string s : variables)
+                printf("%s", s.c_str());
+            for (string s : functions)
+                printf("%s", s.c_str());
 	    printf("} %s\n", keyword);
 	}
 
@@ -435,9 +462,9 @@ state_t::dump_functions()
 	    if (!name)
 		continue;
 
-	    describe_type(w);
+            printf("%s", describe_type(w).c_str());
 	    printf("%s", name);
-	    describe_function_parameters(w);
+	    printf("%s", describe_function_parameters(w).c_str());
 	    printf("\n");
 	}
 
@@ -465,7 +492,7 @@ state_t::dump_variables()
 	    if (!e->get_attribute(DW_AT_location))
 		continue;
 
-	    describe_type(w);
+            printf("%s", describe_type(w).c_str());
 	    printf("%s;\n", get_full_name(w.get_reference()).c_str());
 	}
 
