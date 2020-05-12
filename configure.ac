@@ -369,15 +369,22 @@ AC_MSG_CHECKING([for Python binary])
 found=no
 for dir in `echo $PATH | tr : '\012'` ; do
     for file in python3 python2 python ; do
-        if test -f $dir/$file ; then
+        AC_MSG_NOTICE([iterating to $dir/$file])
+        if test -x $dir/$file ; then
+            AC_MSG_NOTICE([$dir/$file is executable])
             out=`$dir/$file -c 'print("hello")'`
+            AC_MSG_NOTICE([$dir/$file output is "$out"])
             if test x"$out" = xhello ; then
+                AC_MSG_NOTICE([found])
                 found=yes
                 python="$dir/$file"
                 break
             fi
         fi
     done
+    if test $found = yes ; then
+        break
+    fi
 done
 if test $found = yes ; then
     AC_MSG_RESULT($python)
