@@ -2,7 +2,17 @@ Source: novaprova
 Section: novaprova
 Priority: optional
 Maintainer: Greg Banks <gnb@fmeh.org>
-Build-Depends: debhelper (>= 4.1.16), libxml2-dev, libxml2-utils, pkg-config, valgrind, binutils-dev, doxygen, libxml-libxml-perl, zlib1g-dev, libiberty-dev, python3-minimal
+Build-Depends: binutils-dev,
+	debhelper (>= 4.1.16),
+	doxygen,
+	libiberty-dev,
+	libxml-libxml-perl,
+	libxml2-dev,
+	libxml2-utils,
+	pkg-config,
+	python3-minimal | python2-minimal | python-minimal | python,
+	valgrind,
+	zlib1g-dev
 
 Package: novaprova
 Architecture: any
