@@ -19,7 +19,7 @@ source ../plat.sh
 
 FAILFILE=.failing-tests.dat
 RESULTSFILE=.results.dat
-IFDEF=$(dirname $0)/../build/obs/ifdef.py
+IFDEF=$(dirname $0)/../build/obs/ifdef.pl
 IFDEFARGS=
 
 function fatal()

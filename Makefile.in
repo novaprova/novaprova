@@ -262,13 +262,13 @@ OBS_SOURCE=	debian.changelog debian.control \
                 debian.compat
 obs-metadata:	$(addprefix build/obs/rel/,$(OBS_SOURCE)) $(addprefix build/obs/tot/,$(OBS_SOURCE))
 
-build/obs/tot/%: build/obs/% build/obs/ifdef.py
+build/obs/tot/%: build/obs/% build/obs/ifdef.pl
 	@mkdir -p $(@D)
-	build/obs/ifdef.py -Dtot -Dtop_of_tree -DPACKAGE_VERSION=$(PACKAGE_VERSION) < $< > $@
+	build/obs/ifdef.pl -Dtot -Dtop_of_tree -DPACKAGE_VERSION=$(PACKAGE_VERSION) < $< > $@
 
-build/obs/rel/%: build/obs/% build/obs/ifdef.py
+build/obs/rel/%: build/obs/% build/obs/ifdef.pl
 	@mkdir -p $(@D)
-	build/obs/ifdef.py -Drel -Drelease -DPACKAGE_VERSION=$(PACKAGE_VERSION) < $< > $@
+	build/obs/ifdef.pl -Drel -Drelease -DPACKAGE_VERSION=$(PACKAGE_VERSION) < $< > $@
 
 rpmlint: build/obs/rel/novaprova.spec
 	rpmlint build/obs/rel/novaprova.spec

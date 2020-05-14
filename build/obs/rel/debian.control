@@ -10,7 +10,6 @@ Build-Depends: binutils-dev,
 	libxml2-dev,
 	libxml2-utils,
 	pkg-config,
-	python,
 	valgrind,
 	zlib1g-dev
 

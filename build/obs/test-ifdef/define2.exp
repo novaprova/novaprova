@@ -1,8 +1,1 @@
-Traceback (most recent call last):
-  File "../ifdef.py", line 82, in <module>
-    main()
-  File "../ifdef.py", line 79, in main
-    filter_file(sys.stdin, sys.stdout, defines)
-  File "../ifdef.py", line 58, in filter_file
-    raise RuntimeError("undefined variable {}".format(name))
-RuntimeError: undefined variable authentic
+undefined variable authentic at ../ifdef.pl line 74, <STDIN> line 1.

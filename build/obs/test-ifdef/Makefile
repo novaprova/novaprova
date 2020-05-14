@@ -21,7 +21,7 @@ TESTS=	$(patsubst %.args,%,$(wildcard *.args))
 run-tests:
 	@nfailed=0 ; for test in $(TESTS) ; do \
 	    res=FAIL ;\
-	    ../ifdef.py `cat $$test.args` < $$test.in > $$test.out 2>&1 ;\
+	    ../ifdef.pl `cat $$test.args` < $$test.in > $$test.out 2>&1 ;\
 	    diff -u $$test.out $$test.exp && res=PASS ;\
 	    echo "$$res $$test" ;\
 	    if [ $$res = FAIL ]; then nfailed=`expr $$nfailed + 1` ; fi ;\

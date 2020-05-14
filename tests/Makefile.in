@@ -173,7 +173,7 @@ endif
 ifeq ($(_VALGRIND_ENABLED),yes)
 RUNTEST_FLAGS+= --enable-valgrind
 endif
-# flags for ifdef.py to support platform specific golden test output
+# flags for ifdef.pl to support platform specific golden test output
 RUNTEST_FLAGS+= $(filter -D%,$(platform_CFLAGS))
 
 check: tests run
