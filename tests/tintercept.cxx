@@ -305,20 +305,27 @@ int meggings(int x)
  * unsigned char foo_called = 0;
  * int foo(int x) { foo_called++; return 42 + x * x; }
  */
+
+#ifdef __linux__
+#define UU   ""
+#else
+#define UU   "_"
+#endif
+
 /* waistcoat has a standard "push %rbp" function prolog */
 unsigned char waistcoat_called = 0;
 extern "C" int waistcoat(int);
 
 __asm__(
 ".text\n"
-".globl waistcoat\n"
-"waistcoat:\n"
+".globl " UU "waistcoat\n"
+UU "waistcoat:\n"
 "    pushq %rbp\n"
 "    movq %rsp, %rbp\n"
 "    movl %edi, -4(%rbp)\n"
-"    movzbl waistcoat_called(%rip), %eax\n"
+"    movzbl " UU "waistcoat_called(%rip), %eax\n"
 "    addl $1, %eax\n"
-"    movb %al, waistcoat_called(%rip)\n"
+"    movb %al, " UU "waistcoat_called(%rip)\n"
 "    movl -4(%rbp), %eax\n"
 "    imull %eax, %eax\n"
 "    addl $42, %eax\n"
@@ -334,10 +341,10 @@ extern "C" int cardigan(int);
 
 __asm__(
 ".text\n"
-".globl cardigan\n"
-"cardigan:\n"
+".globl " UU "cardigan\n"
+UU "cardigan:\n"
 "    imull %edi, %edi\n"
-"    addb $1, cardigan_called(%rip)\n"
+"    addb $1, " UU "cardigan_called(%rip)\n"
 "    leal 42(%rdi), %eax\n"
 "    ret\n");
 
@@ -350,15 +357,15 @@ extern "C" int hoodie(int);
 
 __asm__(
 ".text\n"
-".globl hoodie\n"
-"hoodie:\n"
+".globl " UU "hoodie\n"
+UU "hoodie:\n"
 "    endbr64\n"     /* new insn won't build on old compilers */
 "    pushq %rbp\n"
 "    movq %rsp, %rbp\n"
 "    movl %edi, -4(%rbp)\n"
-"    movzbl hoodie_called(%rip), %eax\n"
+"    movzbl " UU "hoodie_called(%rip), %eax\n"
 "    addl $1, %eax\n"
-"    movb %al, hoodie_called(%rip)\n"
+"    movb %al, " UU "hoodie_called(%rip)\n"
 "    movl -4(%rbp), %eax\n"
 "    imull %eax, %eax\n"
 "    addl $42, %eax\n"
