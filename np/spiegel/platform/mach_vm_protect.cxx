@@ -19,6 +19,7 @@
 #include "np/spiegel/common.hxx"
 #include "common.hxx"
 #include "np/util/log.hxx"
+#include "np/util/trace.h"
 #include <mach/mach_init.h>
 #include <mach/vm_map.h>
 #include <mach/vm_prot.h>
@@ -27,6 +28,12 @@
 namespace np { namespace spiegel { namespace platform {
 using namespace std;
 using namespace np::util;
+
+extern "C" kern_return_t __np_vm_protect(vm_map_t target_task,
+                                         vm_address_t address,
+                                         vm_size_t size,
+                                         boolean_t set_maximum,
+                                         vm_prot_t new_protection);
 
 
 static int
@@ -39,7 +46,7 @@ text_map_writable(addr_t addr, size_t len)
 
     /* actually change the underlying mapping in one
      * big system call. */
-    r = ::vm_protect(
+    r = __np_vm_protect(
         mach_task_self(),
         (vm_address_t)start,
         (vm_size_t)(end-start),
@@ -62,7 +69,7 @@ text_restore(addr_t addr, size_t len)
 
     /* actually change the underlying mapping in one
      * big system call. */
-    r = ::vm_protect(
+    r = __np_vm_protect(
         mach_task_self(),
         (vm_address_t)start,
         (vm_size_t)(end-start),
@@ -80,6 +87,14 @@ text_restore(addr_t addr, size_t len)
 int
 text_write(addr_t to, const uint8_t *from, size_t len)
 {
+    np_trace("text_write: to=");
+    np_trace_hex(to);
+    np_trace(" from=");
+    np_trace_hex((uint64_t)from);
+    np_trace(" len=");
+    np_trace_hex(len);
+    np_trace("\n");
+
     int r = text_map_writable(to, len);
     if (r)
         return r;

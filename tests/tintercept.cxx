@@ -681,7 +681,6 @@ main(int argc, char **argv __attribute__((unused)))
     END;
 #endif
 
-#ifndef __APPLE__
     /*
      * getpid() is a nice and system call wrapper.
      *
@@ -727,7 +726,6 @@ main(int argc, char **argv __attribute__((unused)))
     CHECK(it6->after_count == 1);
     it6->uninstall();
     END;
-#endif /* __APPLE__ */
 
 #if defined(__x86_64__)
     static const struct

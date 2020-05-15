@@ -148,6 +148,7 @@ x86|x86_64) platform_SOURCE="x86x.cxx $platform_SOURCE" ;;
 esac
 case "$os-$arch" in
 linux-x86|linux-x86_64) platform_SOURCE="mprotect_${os}_${arch}.S $platform_SOURCE" ;;
+darwin-x86_64) platform_SOURCE="vm_protect_${os}_${arch}.S $platform_SOURCE" ;;
 esac
 AC_MSG_RESULT($platform_SOURCE)
 AC_SUBST(platform_SOURCE)
