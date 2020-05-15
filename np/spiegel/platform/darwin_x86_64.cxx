@@ -134,6 +134,8 @@ struct frame
     x86_64_darwin_call_t call;
     addr_t addr;
     unsigned long our_rsp;
+#define FRAME_MAGIC 0x0fa30411
+    uint32_t magic;
 };
 
 
@@ -143,6 +145,7 @@ static unsigned long intercept_tramp(void)
     unsigned long parent_size;
     unsigned long *new_rsp;
 
+    frame.magic = FRAME_MAGIC;
     /* address of the breakpoint insn */
     frame.addr = tramp_uc.__mcontext_data.__ss.__rip - (using_int3 ? 1 : 0);
 
@@ -231,8 +234,7 @@ static unsigned long intercept_tramp(void)
 	/* simulate the callq insn pushing the return address */
 	*(--new_rsp) = (unsigned long)__np_intercept_tramp0;
 	/* replace the breakpoint with the original insn */
-	*(unsigned char *)frame.addr = tramp_intstate->orig_;
-	VALGRIND_DISCARD_TRANSLATIONS(frame.addr, 1);
+	text_write(frame.addr, &tramp_intstate->orig_, trap_len);
 	/* setup to start executing it again */
 	tramp_uc.__mcontext_data.__ss.__rip = frame.addr;
 	break;
@@ -295,6 +297,7 @@ static unsigned long intercept_tramp(void)
 	    break;
 	case intstate_t::OTHER:
 	    /* Re-insert the breakpoint */
+            np_trace("intercept_tramp: re-inserting breakpoint\n");
             text_write(frame.addr, trap_bytes, trap_len);
 	    break;
 	case intstate_t::UNKNOWN:
@@ -317,6 +320,7 @@ static unsigned long intercept_tramp(void)
 	    break;
 	case intstate_t::OTHER:
 	    /* Re-insert the breakpoint */
+            np_trace("intercept_tramp: re-inserting breakpoint\n");
             text_write(frame.addr, trap_bytes, trap_len);
 	    break;
 	case intstate_t::UNKNOWN:
@@ -333,6 +337,8 @@ static unsigned long intercept_tramp(void)
     np_trace_hex(tramp_uc.__mcontext_data.__ss.__rsp);
     np_trace(" rbp=");
     np_trace_hex(tramp_uc.__mcontext_data.__ss.__rbp);
+    np_trace(" frame.addr=");
+    np_trace_hex((unsigned long)frame.addr);
     np_trace("\n");
 
     setcontext(&tramp_uc);
@@ -401,7 +407,7 @@ __asm__ (
 "___np_intercept_tramp0:\n"
 "movq %rax,%rdi;\n"
 "movq %rsp,%rsi;\n"
-"subq $8,%rsi;\n"
+"subq $16,%rsi;\n"
 "subq $24,%rsp;\n"
 "callq ___np_intercept_after;\n"
 "movq %rbp,%rsp;\n"
@@ -423,6 +429,10 @@ extern "C" unsigned long __np_intercept_after(unsigned long rax, struct frame &f
 	np_trace_hex(rax);
 	np_trace(" frame=");
 	np_trace_hex((unsigned long)&frame.stack[0]);
+        np_trace(" frame.addr=");
+        np_trace_hex((unsigned long)frame.addr);
+        np_trace(" frame.magic=");
+        np_trace_hex((unsigned long)frame.magic);
 	np_trace(" %rsp=");
 	np_trace_hex(rsp);
 	np_trace(" %rbp=");
@@ -430,6 +440,15 @@ extern "C" unsigned long __np_intercept_after(unsigned long rax, struct frame &f
 	np_trace("\n");
     }
 #endif
+    if ((((unsigned long)&frame) & 0xf) || frame.magic != FRAME_MAGIC)
+    {
+        // If we've screwed up the stack then neither eprintf()
+        // nor fatal() are going to work, so our only reporting
+        // mechanism is np_trace which is off by default.  Still
+        // it's better than a mysterious SEGV.
+        np_trace("__np_intercept_after: bad frame, failing\n");
+        return ~0UL;
+    }
 
     /* return value is in RAX, save it directly into the call_t */
     frame.call.retval_ = rax;
@@ -457,6 +476,7 @@ extern "C" unsigned long __np_intercept_after(unsigned long rax, struct frame &f
 	break;
     case intstate_t::OTHER:
 	/* Re-insert the breakpoint */
+        np_trace("__np_intercept_after: re-inserting breakpoint\n");
         text_write(frame.addr, trap_bytes, trap_len);
 	break;
     case intstate_t::UNKNOWN:
