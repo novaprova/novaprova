@@ -65,6 +65,8 @@ tests in an automake-based project too.
 
 First, ensure that your ``configure.ac`` has the following
 
+.. highlight:: sh
+
 ::
 
     dnl configure.ac
@@ -79,8 +81,6 @@ First, ensure that your ``configure.ac`` has the following
     AC_CONFIG_HEADERS([config.h])
     AC_CONFIG_FILES([Makefile])
     AC_OUTPUT
-
-.. highlight:: make
 
 Note the use of the ``serial-tests`` automake option.  Recent versions
 of automake feature a new "parallel tests" feature, which is enabled by

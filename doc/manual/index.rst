@@ -1,6 +1,6 @@
 ..
-.. NovaProva Manual 1.3
-.. Copyright (c) 2015 Gregory Banks
+.. NovaProva Manual
+.. Copyright (c) 2015-2020 Gregory Banks
 ..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    intro
    getting-started
@@ -36,12 +36,14 @@ Contents
    mocking
    parameters
    c-api-ref
+   releasenotes
    porting
+   releasing
 
 Legal Notice
 ------------
 
-Copyright (c) 2015 Gregory Banks
+Copyright (c) 2015-2020 Gregory Banks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

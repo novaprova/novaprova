@@ -7,8 +7,8 @@ Installation
 First you need to download and install NovaProva.  Here are several
 ways you can do this, starting with the easiest.
 
-From The OpenSUSE Build Service
-+++++++++++++++++++++++++++++++
+Linux: From The OpenSUSE Build Service
+++++++++++++++++++++++++++++++++++++++
 
 NovaProva is available in installable repositories for many recent Linux
 distributions at
@@ -21,7 +21,7 @@ For Debian/Ubuntu systems, copy and paste the following commands.
 ::
 
     # Choose a distro
-    distro=xUbuntu_12.04
+    distro=xUbuntu_20.04
     
     # This is the base URL for the NovaProva repo
     repo=http://download.opensuse.org/repositories/home:/gnb:/novaprova/$distro
@@ -37,6 +37,30 @@ For Debian/Ubuntu systems, copy and paste the following commands.
     sudo apt-get install novaprova
 
 See `here <http://en.opensuse.org/openSUSE:Build_Service_Enduser_Info>`_ for RedHat and SUSE instructions.
+
+Note: from release 1.5 onwards, a combination of RedHat and OBS policies
+make it impossible to provide OBS-built NovaProva RPMs for RHEL6, though
+that platform is still technically supported by RedHat and would
+otherwise be supported by NovaProva through to the RHEL6 retirement date
+of 30 November 2020.  The specific issue is availability of a compiler
+with C++11 support.
+
+MacOS: From Homebrew
+++++++++++++++++++++
+
+From release 1.5, NovaProva supports MacOS and provides
+`a Homebrew tap <https://github.com/novaprova/homebrew-novaprova>`_
+for quick and easy installation on your Mac.  Open *Terminal* and paste
+these commands:
+
+.. highlight:: sh
+
+::
+
+    brew update
+    brew tap novaprova/novaprova
+    brew install novaprova
+
 
 From A Release Tarball
 ++++++++++++++++++++++
@@ -64,6 +88,18 @@ commands which download and install them.
     sudo yum install -y \
        gcc gcc-c++ autoconf automake libxml2-devel pkgconfig \
        valgrind valgrind-devel binutils-devel zlib-devel
+
+    # on MacOS
+    # EITHER install Apple Xcode to get Apple's clang-based compiler, OR
+    brew install gcc
+    # then all these
+    brew install autoconf automake libxml2 pkg-config binutils gettext
+    # Valgrind is very useful but you might have packaging issues
+    brew install valgrind
+
+Note that from release 1.5, NovaProva requires a compiler with C++11
+support, for example gcc 4.8.2 or later.  On some platforms NovaProva
+has been successfully tested with the clang compiler as well as gcc.
 
 Once you have those prerequisites installed, you can download, install
 and build NovaProva.
@@ -97,13 +133,17 @@ some example commands which download and install them.
 
     # on Ubuntu
     # install all the prereqs above, then add...
-    sudo apt-get install -y doxygen libxml-libxml-perl python-pip \
+    sudo apt-get install -y doxygen libxml-libxml-perl \
         python-breathe sphinx-common
 
     # on RHEL / Fedora
     # install all the prereqs above, then add...
     sudo yum install -y doxygen perl-XML-LibXML \
         python-breathe python-sphinx
+
+    # on MacOS
+    brew install doxygen
+    sudo pip install breathe Sphinx
 
 Once you have those prerequisites installed, you can clone, install
 and build NovaProva.
@@ -114,7 +154,7 @@ and build NovaProva.
 
     git clone https://github.com/novaprova/novaprova.git
     cd novaprova
-    automake -ac    # ignore the errors
+    automake -ac   # ignore the errors
     autoreconf -iv
     ./configure
     make
@@ -249,7 +289,8 @@ equal, and if not fails the test.  Note that if the assert fails, the
 test function terminates immediately.  If the test function gets to it's
 end and returns naturally, the test is considered to have passed.
 
-If we build run this test we get output something like this.
+If we build run this test we get output something like this (some
+details of the log messages have been replaced with ``...`` for clarity):
 
 .. highlight:: sh
 
@@ -257,7 +298,9 @@ If we build run this test we get output something like this.
 
     % make check
     ./testrunner
-    np: starting valgrind
+    np: [...][...][INFO] starting valgrind
+    np: [...][...][INFO] NovaProva Copyright (c) Gregory Banks
+    np: [...][...][INFO] Built for O/S linux architecture x86_64
     np: running
     np: running: "mytest.simple"
     PASS mytest.simple
