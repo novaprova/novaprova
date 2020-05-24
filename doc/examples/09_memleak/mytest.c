@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void test_memleak(void)
+void test_memleak(void)
 {
     fprintf(stderr, "About to do leak 32 bytes from malloc()\n");
     malloc(32);

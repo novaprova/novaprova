@@ -17,28 +17,28 @@
 #include <stdio.h>
 #include <np.h>	    /* NovaProva library */
 
-static void test_000(void)
+void test_000(void)
 {
     fprintf(stderr, "Running test 0\n");
     sleep(3);
     fprintf(stderr, "Finished test 0\n");
 }
 
-static void test_001(void)
+void test_001(void)
 {
     fprintf(stderr, "Running test 1\n");
     sleep(3);
     fprintf(stderr, "Finished test 1\n");
 }
 
-static void test_002(void)
+void test_002(void)
 {
     fprintf(stderr, "Running test 2\n");
     sleep(3);
     fprintf(stderr, "Finished test 2\n");
 }
 
-static void test_003(void)
+void test_003(void)
 {
     fprintf(stderr, "Running test 3\n");
     sleep(3);

@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void test_slow(void)
+void test_slow(void)
 {
     int i;
     fprintf(stderr, "Test runs for 100 seconds\n");

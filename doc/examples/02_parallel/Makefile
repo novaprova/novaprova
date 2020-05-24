@@ -32,6 +32,7 @@ TEST_OBJS=  $(TEST_SOURCE:.c=.o)
 
 testrunner:  $(TEST_OBJS) $(MYCODE_OBJS)
 	$(LINK.c) -o $@ $(TEST_OBJS) $(MYCODE_OBJS) $(NOVAPROVA_LIBS)
+	@[ `uname -s` = Darwin ] && dsymutil $@
 
 clean:
 	$(RM) testrunner $(MYCODE_OBJS) $(TEST_OBJS)

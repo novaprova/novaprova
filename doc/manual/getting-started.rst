@@ -1,8 +1,8 @@
 Getting Started
 ===============
 
-Installation
-------------
+Installing NovaProva
+--------------------
 
 First you need to download and install NovaProva.  Here are several
 ways you can do this, starting with the easiest.
@@ -143,7 +143,13 @@ some example commands which download and install them.
 
     # on MacOS
     brew install doxygen
+    # then EITHER install these Python dependencies globally
     sudo pip install breathe Sphinx
+    # OR install them into a virtual env
+    python -m venv novaprova.venv
+    source novaprova.venv/bin/activate
+    pip install --upgrade pip # you might need to do this
+    pip install breathe Sphinx
 
 Once you have those prerequisites installed, you can clone, install
 and build NovaProva.
@@ -160,7 +166,7 @@ and build NovaProva.
     make
     make install
 
-Building a Test Executable
+Building and Running Tests
 --------------------------
 
 Because you're testing C code, the first step is to build a test runner
@@ -169,7 +175,9 @@ and will be linked against the NovaProva
 library and whatever other libraries your Code Under Test needs.  Typically, this
 is done using the `check:` make target to both build and run the tests.
 
-Start by creating a Makefile containing:
+All the code for this example is included in NovaProva, in the `doc/examples/01_simple/` directory.
+
+Let's start by creating a Makefile containing:
 
 .. highlight:: make
 
@@ -198,6 +206,7 @@ Start by creating a Makefile containing:
     
     testrunner:  $(TEST_OBJS) libmycode.a
             $(LINK.c) -o $@ $(TEST_OBJS) libmycode.a $(NOVAPROVA_LIBS)
+            @[ `uname -s` = Darwin ] && dsymutil $@
     
     clean:
             $(RM) testrunner libmycode.a $(TEST_OBJS) $(MYCODE_OBJS)
@@ -276,7 +285,7 @@ the most basic functionality of `myatoi()`.
     #include <np.h>	    /* NovaProva library */
     #include "mycode.h" /* declares the Code Under Test */
     
-    static void test_simple(void)
+    void test_simple(void)
     {
         int r;
     
@@ -341,23 +350,26 @@ Running the tests we see:
 
     % make check
     ./testrunner
-    np: starting valgrind
+    np: [...][...][INFO] starting valgrind
+    np: [...][...][INFO] NovaProva Copyright (c) Gregory Banks
+    np: [...][...][INFO] Built for O/S linux architecture x86_64
     np: running
     np: running: "mytest.simple"
     PASS mytest.simple
     np: running: "mytest.initial"
     EVENT ASSERT NP_ASSERT_EQUAL(r=532, 4=4)
-    at 0x80529F2: np::spiegel::describe_stacktrace (np/spiegel/spiegel.cxx)
-    by 0x804C0FC: np::event_t::with_stack (np/event.cxx)
-    by 0x804B2D2: __np_assert_failed (uasserts.c)
-    by 0x804AC27: test_initial (mytest.c)
-    by 0x80522D0: np::spiegel::function_t::invoke (np/spiegel/spiegel.cxx)
-    by 0x804C731: np::runner_t::run_function (np/runner.cxx)
-    by 0x804D5C4: np::runner_t::run_test_code (np/runner.cxx)
-    by 0x804D831: np::runner_t::begin_job (np/runner.cxx)
-    by 0x804E0D4: np::runner_t::run_tests (np/runner.cxx)
-    by 0x804E22C: np_run_tests (np/runner.cxx)
-    by 0x804AB12: main (main.c)
+      at mytest.c:34
+    at 0x80529F2: np::spiegel::describe_stacktrace (/home/gnb/Software/novaprova/np/spiegel/spiegel.cxx:738)
+    by 0x804C0FC: np::event_t::with_stack (/home/gnb/Software/novaprova/np/event.cxx:26)
+    by 0x804B2D2: __np_assert_failed (/home/gnb/Software/novaprova/uasserts.c:54)
+    by 0x804AC27: test_initial (/home/gnb/Software/novaprova/doc/examples/01_simple/mytest.c:34)
+    by 0x80522D0: np::spiegel::function_t::invoke (/home/gnb/Software/novaprova/np/spiegel/spiegel.cxx:638)
+    by 0x804C731: np::runner_t::run_function (/home/gnb/Software/novaprova/np/runner.cxx:575)
+    by 0x804D5C4: np::runner_t::run_test_code (/home/gnb/Software/novaprova/np/runner.cxx:705)
+    by 0x804D831: np::runner_t::begin_job (/home/gnb/Software/novaprova/np/runner.cxx:762)
+    by 0x804E0D4: np::runner_t::run_tests (/home/gnb/Software/novaprova/np/runner.cxx:145)
+    by 0x804E22C: np_run_tests (/home/gnb/Software/novaprova/np/runner.cxx:865)
+    by 0x804AB12: main (/home/gnb/Software/novaprova/main.c:135)
     
     FAIL mytest.initial
     np: 2 run 1 failed

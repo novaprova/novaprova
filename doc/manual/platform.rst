@@ -27,6 +27,10 @@ use NovaProva you may need to disable those features using compiler options.
      - Support
    * - The DWARF-5 standard
      - Unsupported.  Please disable using the ``-gdwarf-4`` compiler option.
+   * - The DWARF-4 standard
+     - Supported since release 1.5.
+   * - The DWARF-3 standard
+     - Supported since release 1.5.
    * - Intel CET (Control-flow Enforcement Technology)
      - Unsupported.  Please disable using the ``-fcf-protection=none`` compiler option.
    * - Compressed Debug Info sections

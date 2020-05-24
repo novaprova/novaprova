@@ -1,10 +1,8 @@
 
-.. _releasing:
-
 Releasing NovaProva
 ===================
 
-This chapter documents the NovaProva release procedure.
+This document describes the NovaProva release procedure.
 
 Healthy Code
 ------------

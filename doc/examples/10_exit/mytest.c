@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void test_exit(void)
+void test_exit(void)
 {
     fprintf(stderr, "About to call exit(37)\n");
     exit(37);

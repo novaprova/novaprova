@@ -22,14 +22,14 @@
 
 static char *str;
 
-static int set_up(void)
+int set_up(void)
 {
     fprintf(stderr, "Setting up fixtures\n");
     str = strdup("Hello");
     return 0;
 }
 
-static void test_one(void)
+void test_one(void)
 {
     fprintf(stderr, "Running test_one\n");
     str[0] = tolower(str[0]);
@@ -37,7 +37,7 @@ static void test_one(void)
     fprintf(stderr, "Finished test_one\n");
 }
 
-static void test_two(void)
+void test_two(void)
 {
     fprintf(stderr, "Running test_two\n");
     str[1] = toupper(str[1]);
@@ -45,7 +45,7 @@ static void test_two(void)
     fprintf(stderr, "Finished test_two\n");
 }
 
-static int tear_down(void)
+int tear_down(void)
 {
     fprintf(stderr, "Tearing down fixtures\n");
     free(str);

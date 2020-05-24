@@ -17,12 +17,12 @@
 #include <syslog.h>
 #include <np.h>	    /* NovaProva library */
 
-static void test_unexpected(void)
+void test_unexpected(void)
 {
     syslog(LOG_ERR, "This message shouldn't happen");
 }
 
-static void test_expected(void)
+void test_expected(void)
 {
     np_syslog_ignore("entirely expected");
     syslog(LOG_ERR, "This message was entirely expected");

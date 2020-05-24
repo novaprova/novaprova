@@ -19,7 +19,7 @@
 NP_PARAMETER(pastry, "donut,bearclaw,danish");
 NP_PARAMETER(beverage, "tea,coffee");
 
-static void test_munchies(void)
+void test_munchies(void)
 {
     fprintf(stderr, "I'd love a %s with my %s\n", pastry, beverage);
 }

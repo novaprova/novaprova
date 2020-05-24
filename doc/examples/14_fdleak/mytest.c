@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <sys/fcntl.h>
 
-static void test_fdleak(void)
+void test_fdleak(void)
 {
     int fd = open("Makefile", O_RDONLY, 0);
 }

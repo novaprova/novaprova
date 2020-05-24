@@ -122,6 +122,7 @@
 
  * write a proper manual in DocBook; steal Valgrind's build
    infrastructure for it
+   NO.  The manual is in RST.
 
  * catch call to pure virtual function in C++
 

@@ -18,7 +18,7 @@
 #include <np.h>	    /* NovaProva library */
 #include "mycode.h" /* declares the Code Under Test */
 
-static void test_simple(void)
+void test_simple(void)
 {
     int r;
 

@@ -26,8 +26,6 @@ Contents
 
    intro
    getting-started
-   platform
-   installing
    building
    functions
    failures
@@ -37,8 +35,8 @@ Contents
    parameters
    c-api-ref
    releasenotes
+   platform
    porting
-   releasing
 
 Legal Notice
 ------------

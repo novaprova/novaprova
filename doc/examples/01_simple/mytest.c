@@ -17,7 +17,7 @@
 #include <np.h>	    /* NovaProva library */
 #include "mycode.h" /* declares the Code Under Test */
 
-static void test_simple(void)
+void test_simple(void)
 {
     int r;
 
@@ -25,3 +25,12 @@ static void test_simple(void)
     NP_ASSERT_EQUAL(r, 42);
 }
 
+#if 0 /* change this 0 to a 1 to enable the second example test */
+void test_initial(void)
+{
+    int r;
+
+    r = myatoi("4=2");
+    NP_ASSERT_EQUAL(r, 4);
+}
+#endif

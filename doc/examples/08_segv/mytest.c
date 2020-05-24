@@ -16,7 +16,7 @@
 #include <np.h>
 #include <stdio.h>
 
-static void test_segv(void)
+void test_segv(void)
 {
     fprintf(stderr, "About to follow a NULL pointer\n");
     *(char *)0 = 0;

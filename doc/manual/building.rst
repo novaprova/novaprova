@@ -14,11 +14,21 @@ or one of your tests, you run this executable with various arguments.
 Setting Up the Makefile
 -----------------------
 
-Most C and C++ software is built using the venerable ``make`` utility,
-these days usually the GNU make implementation.  While you can use any
-names you like, the GNU project defines a standard set of target names
-and their semantics, which you would be advised to stick to.  The target
-``check:`` is what you should be using to both build and run the tests.
+You can use any build system you like with NovaProva, it doesn't care.
+For this document we'll be using the GNU version of the
+`venerable make utility <https://www.gnu.org/software/make/>`_, because
+a lot of C and C++ software is built that way.  Other build systems
+like `CMake <https://cmake.org/>`_ or `SCons <https://scons.org/>`_
+or even `Gradle <https://gradle.org/>`_ should also work just fine.
+
+``Make`` lets you define "targets" to build different aspects of the
+software. While you can use any names you like, the GNU project defines a
+`standard set of target names
+<https://www.gnu.org/prep/standards/html_node/Standard-Targets.html>`_ and their semantics, which
+you would be advised to stick to.  For example
+the ``all`` target builds the all the executable deliverables in the
+local directory.  According to that standard, the target ``check`` is
+what you should be using to both build and run the tests.
 
 Here is a fragment of an example Makefile.  It assumes your code to
 be tested has been built into a local archive library ``libmycode.a``,
@@ -43,6 +53,13 @@ separate object files.
     testrunner:  $(TEST_OBJS) libmycode.a
             $(LINK.c) -o $@ $(TEST_OBJS) libmycode.a $(NOVAPROVA_LIBS)
 
+Making the ``check`` target will first make ``testrunner``, then run it.  The
+``testrunner`` executable contains all your tests (via ``$(TEST_OBJS)``),
+enough of your code (via ``libmycode.a``) to satisfy link-time
+dependencies from your tests, and the NovaProva library and some other libraries
+that NovaProva needs (via ``$(NOVAPROVA_LIBS)``)  Note that the ``main()``
+routine actually comes from the NovaProva library.
+
 NovaProva uses the GNOME ``pkgconfig`` system to make it easy to find the
 right set of compile and link flags.
 
@@ -59,7 +76,7 @@ Using GNU Automake
 ------------------
 
 Many C developers prefer to use GNU automake to build their projects.
-One good reason is that it's by far the easiest technique to build shared
+One good reason is that it's a relatively easy way to build shared
 libraries in a cross-platform manner.  NovaProva can be used to run
 tests in an automake-based project too.
 
@@ -142,10 +159,10 @@ Test Executable Usage
 Here is a description of the test executable usage.
 
 |    **./testrunner --list**
-|    **./testrunner** [**-j** *number*] [**-f** *format*] [*test_spec*...]
+|    **./testrunner** [*options*] [*test_spec*...]
 
-**-f** *format*, **--format** *format*
-    Set the format in which test results will be emitted.  See
+**-f** *format*\ [,\ *format*\ ...], **--format** *format*\ [,\ *format*\ ...]
+    Set the format or formats in which test results will be emitted.  See
     :doc:`output-formats` for a list of available formats.
 
 **-j** *number*, **--jobs** *number*
@@ -159,6 +176,11 @@ Here is a description of the test executable usage.
     Instead of running any tests, print to stdout the fully qualified
     names of all the test functions (i.e. leaf test nodes) known to
     NovaProva, and exit.
+
+**--debug**
+    Enable debug messages from the NovaProva library at runtime.  Debug
+    logging can also be enabled by setting the environment variable
+    ``$NOVAPROVA_DEBUG`` to ``yes``.  New in release 1.5.
 
 *test_spec*
     The fully qualified name of a test node (i.e. a test, a

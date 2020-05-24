@@ -185,7 +185,7 @@ the test passes and the message does not appear.
     np: running: "mytest.expected"
     PASS mytest.expected
 
-This behavior changed in version 1.4 (commit 6234a2a). Before
+This behavior changed in version 1.5 (commit 6234a2a). Before
 that, the call to ``syslog()`` would result in an ``EVENT`` and a
 stacktrace rather than being silently ignored.
 
@@ -201,7 +201,7 @@ Finally, if the test depends on the Code Under Test generating
 (or not generating) specific messages, you can use ``np_syslog_match()``
 which tells NovaProva to just count any matching messages, and
 ``np_syslog_count()`` to discover that count and assert on its value.
-The behavior of ``np_syslog_match()`` changed in version 1.4
+The behavior of ``np_syslog_match()`` changed in version 1.5
 (commit ef2f3b4).  Before that, the call to ``syslog()`` would result in
 an ``EVENT`` and a stacktrace rather than being silently counted.
 

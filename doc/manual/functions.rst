@@ -5,8 +5,9 @@ Writing Test Functions
 Runtime Discovery
 -----------------
 
-Test functions are discovered at runtime using Reflection.  The
-NovaProva library walks through all the functions linked into the test
+Test functions are discovered at runtime using
+`Reflection <https://en.wikipedia.org/wiki/Reflection_(computer_programming)>`_.
+The NovaProva library walks through all the functions linked into the test
 executable and matches those which take no arguments, return ``void``, and
 have a name matching one of the following patterns:
 
@@ -52,7 +53,8 @@ function, and the hierarchy of filesystem directories containing that
 source file.  These form a natural classifying scheme that you are
 already controlling by choosing the names of filenames and functions.
 These names are stuck together in order from least to most specific,
-separated by ASCII '.' characters, and in general look like this.
+like a Unix filename but separated by ASCII '.' characters, and in
+general look like this.
 
 .. highlight:: none
 
@@ -129,7 +131,7 @@ result, only that the test itself thinks it has passed.  It is possible
 that NovaProva will detect more subtle failures that the test itself
 does not see; some of these failures are not even detectable until after
 the test terminates.  So, ``NP_PASS`` is really just a complicated
-``return`` statement and you should probably never use it.
+``return`` statement.
 
 .. highlight:: c
 
