@@ -68,6 +68,16 @@ Release 1.5
   using NovaProva as a library do NOT change.
 - First attempts to use Travis for CI.
 
+Thanks to the following people who contributed to this release (in alphabetical order)
+
+- David Arnold
+- Matt Bennett
+- greenbender
+- Greig Hamilton
+- Kyeong Yoo
+- Chris Packham
+
+
 Release 1.4
 -----------
 
