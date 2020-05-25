@@ -24,10 +24,10 @@ Why Create NovaProva?
 
 At the time NovaProva was first written, the author had a day job
 working on a large C (K&R in some places) `codebase
-<http://git.cyrusimap.org/>`_  which was in parts decades old.
+<https://github.com/cyrusimap/cyrus-imapd>`_  which was in parts decades old.
 This code had *zero* buildable tests. The author created hundreds of
 tests, both system tests using a new `application-specific Perl
-framework <http://git.cyrusimap.org/cassandane/>`_ and C regression
+framework <https://github.com/cyrusimap/cassandane>`_ and C regression
 tests using the venerable `CUnit library
 <http://cunit.sourceforge.net>`_.
 
