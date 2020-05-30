@@ -29,7 +29,7 @@ This code had *zero* buildable tests. The author created hundreds of
 tests, both system tests using a new `application-specific Perl
 framework <https://github.com/cyrusimap/cassandane>`_ and C regression
 tests using the venerable `CUnit library
-<http://cunit.sourceforge.net>`_.
+<http://cunit.sourceforge.net>`_ (now `at gitlab <https://gitlab.com/cunity/cunit>`_).
 
 This experience showed that writing more than a handful of tests using
 CUnit is very hard, and gets harder the more tests are written and the
