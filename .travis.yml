@@ -19,17 +19,10 @@ branches:
     - 1.5rc1
 matrix:
   include:
-    - name: MacOS from source
+    - name: MacOS
       os: osx
       osx_image: xcode10.3
       compiler: clang
-    - name: MacOS from Homebrew
-      os: osx
-      osx_image: xcode10.3
-      compiler: clang
-      script: |
-        cd /tmp
-        brew install novaprova
     - os: linux
       dist: bionic
       compiler: clang
