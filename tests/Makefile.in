@@ -211,7 +211,7 @@ d-%: d-%.cxx
 	perl $< > $@
 
 fw.a: fw.o fw-stubs.o
-	ar ruv $@ fw.o fw-stubs.o
+	$(AR) ruv $@ fw.o fw-stubs.o
 	ranlib $@
 
 $(DUMPERS): tdump
