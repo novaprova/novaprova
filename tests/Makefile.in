@@ -36,6 +36,8 @@ CFLAGS=		$(CDEBUGFLAGS) $(COPTFLAGS) $(CWARNFLAGS) $(CCOVFLAGS) \
 CXX=		@CXX@
 CXXSTDFLAGS=	-std=c++11
 CXXFLAGS=	$(CXXSTDFLAGS) $(CFLAGS)
+AR=             @AR@
+RANLIB=		@RANLIB@
 
 INCLUDES=	-I..
 LIBS=		../libnovaprova.a -lstdc++ \
@@ -212,7 +214,7 @@ d-%: d-%.cxx
 
 fw.a: fw.o fw-stubs.o
 	$(AR) ruv $@ fw.o fw-stubs.o
-	ranlib $@
+	$(RANLIB) $@
 
 $(DUMPERS): tdump
 	ln -f $< $@

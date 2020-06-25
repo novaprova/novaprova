@@ -18,9 +18,26 @@ AC_INIT(novaprova, 1.4, [gnb@fmeh.org])
 AC_CANONICAL_TARGET
 # AM_MAINTAINER_MODE
 AC_PROG_INSTALL
-AC_PROG_RANLIB
 AC_PROG_CXX
 AC_PROG_CC
+
+AC_ARG_WITH(ar,[ar binary to use],[
+    AC_MSG_CHECKING(ar)
+    AR=$withval
+    AC_SUBST(AR)
+    AC_MSG_RESULT($AR)
+],[
+    AC_CHECK_TOOL(AR, ar)
+])
+
+AC_ARG_WITH(ranlib,[ranlib binary to use],[
+    AC_MSG_CHECKING(ranlib)
+    RANLIB=$withval
+    AC_SUBST(RANLIB)
+    AC_MSG_RESULT($RANLIB)
+],[
+    AC_PROG_RANLIB
+])
 
 libxml=
 for p in libxml-2.0 ; do
