@@ -303,7 +303,9 @@ static bool describe_fd(int fd, ostream &o)
 	r = getsockname(fd, (struct sockaddr *)&addr, &socklen);
 	if (r < 0)
 	{
-        eprintf("Failed to call getsockname(): %s\n", strerror(errno));
+            /* ENOTSUPP happens mysteriously when running in Travis */
+            if (errno != ENOTSUPP)
+                eprintf("Failed to call getsockname(): %s\n", strerror(errno));
 	    return false;
 	}
 	o << "local ";
@@ -314,7 +316,8 @@ static bool describe_fd(int fd, ostream &o)
 	    r = getpeername(fd, (struct sockaddr *)&addr, &socklen);
 	    if (r < 0)
 	    {
-                eprintf("Failed to call getpeername(): %s\n", strerror(errno));
+                if (errno != ENOTSUPP)
+                    eprintf("Failed to call getpeername(): %s\n", strerror(errno));
 		return false;
 	    }
 	    o << " remote ";
