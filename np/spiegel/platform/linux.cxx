@@ -307,7 +307,7 @@ get_tracer_pid()
 // Determine whether this process is running under a debugger
 bool is_running_under_debugger()
 {
-    static const char * const debuggers[] = { "gdb", NULL };
+    static const char * const debuggers_allowed[] = { "gdb", NULL };
     const char *tail;
     int i;
     pid_t tracer = 0;
@@ -327,8 +327,8 @@ bool is_running_under_debugger()
     // we're being debugged or strace()d.  In the latter case we don't
     // want to return true because we actually want our process to
     // behave as normally as possible.  One way of telling is to compare
-    // the name of the program which is ptrace()ing us against a
-    // whitelist of debugger names.  This may not be the best way, only
+    // the name of the program which is ptrace()ing us against an
+    // allowlist of debugger names.  This may not be the best way, only
     // time will tell.  Note that we choose cmdline because it's
     // commonly readable even when the 'exe' symlink isn't.
     command = get_exe_by_pid(tracer);
@@ -346,10 +346,10 @@ bool is_running_under_debugger()
     else
 	tail = command;
 
-    // compare against the whitelist
-    for (i = 0 ; debuggers[i] ; i++)
+    // compare against the allowlist
+    for (i = 0 ; debuggers_allowed[i] ; i++)
     {
-	if (!strcmp(tail, debuggers[i]))
+	if (!strcmp(tail, debuggers_allowed[i]))
 	{
 	    iprintf("being debugged by %s\n", command);
 	    free(command);
@@ -357,7 +357,7 @@ bool is_running_under_debugger()
 	}
     }
 
-    // didn't match the whitelist, probably strace or something strange
+    // didn't match the allowlist, probably strace or something strange
 
     free(command);
     return false;

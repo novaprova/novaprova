@@ -229,9 +229,9 @@ Here's an example.
 
     static void test_assert(void)
     {
-        int white = 1;
-        int black = 0;
-        assert(white == black);
+        int yang = 1;
+        int yin = -1;
+        assert(yin == yang);
     }
 
 When run, this test produces the following output and the test fails.
@@ -241,7 +241,7 @@ When run, this test produces the following output and the test fails.
 ::
 
     np: running: "tnassert.assert"
-    EVENT ASSERT white == black
+    EVENT ASSERT yin == yang
     at 0x41827F: np::spiegel::describe_stacktrace (np/spiegel/spiegel.cxx)
     by 0x40555C: np::event_t::with_stack (np/event.cxx)
     by 0x404CCD: __assert_fail (iassert.c)

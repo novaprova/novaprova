@@ -18,9 +18,9 @@
 
 static NP_USED void test_assert(void)
 {
-    int white = 1;
-    int black = 0;
+    int yang = 1;
+    int yin = -1;
 
-    assert(white == black);
+    assert(yin == yang);
 }
 

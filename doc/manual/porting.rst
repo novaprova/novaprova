@@ -354,7 +354,7 @@ interfering with debugger breakpoints.  Also, some features like test timeouts
 are disabled when running under a debugger if they would do more harm than good.
 The Linux implementation digs around in the ``/proc`` filesystem to discover
 whether the current process is running under ``ptrace()`` and if so compares
-the commandline of the tracing process against a whitelist.
+the commandline of the tracing process against an allowlist.
 
 Describe File Descriptors
 +++++++++++++++++++++++++
