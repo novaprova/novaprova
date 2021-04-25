@@ -34,7 +34,6 @@ public:
      :  filename_(np::util::xstrdup(n)),
         state_(state)
     {
-        memset(sections_, 0, sizeof(sections_));
     }
     ~link_object_t()
     {
