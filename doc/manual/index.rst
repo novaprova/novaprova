@@ -1,6 +1,6 @@
 ..
 .. NovaProva Manual
-.. Copyright (c) 2015-2020 Gregory Banks
+.. Copyright (c) 2015-2021 Gregory Banks
 ..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ Contents
 Legal Notice
 ------------
 
-Copyright (c) 2015-2020 Gregory Banks
+Copyright (c) 2015-2021 Gregory Banks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
