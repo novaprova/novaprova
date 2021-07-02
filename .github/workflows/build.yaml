@@ -66,7 +66,7 @@ jobs:
               if: ${{ contains(matrix.os, 'macos') }}
               run: |
                 brew tap novaprova/novaprova
-                brew install doxygen binutils libxml2 libiberty gettext
+                brew install autoconf automake binutils doxygen gettext libiberty libxml2
                 # MacOS is clang only
                 # Some releases of Valgrind work on MacOS, some don't, so
                 # avoid cluttering up our CI results for now.
