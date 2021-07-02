@@ -49,8 +49,8 @@ jobs:
             - name: "Prepare development environment (Ubuntu)"
               if: ${{ contains(matrix.container, 'ubuntu') }}
               run: |
-                sudo apt-get update
-                sudo apt-get install -y binutils-dev doxygen libiberty-dev \
+                apt-get update
+                apt-get install -y binutils-dev doxygen libiberty-dev \
                     libxml-libxml-perl libxml2 libxml2-dev libxml2-utils \
                     pkg-config zlib1g-dev
 # valgrind
