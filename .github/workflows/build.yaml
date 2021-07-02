@@ -38,8 +38,8 @@ jobs:
 #                    - "ubuntu:hirsute"
                 os: [ubuntu-latest]
                 # TODO
-                compiler: [gcc]
-#                compiler: [clang, gcc]
+#                compiler: [gcc]
+                compiler: [clang, gcc]
                 include:
                     - os: macos-latest
         runs-on: ${{ matrix.os }}
