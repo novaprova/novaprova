@@ -72,7 +72,7 @@ jobs:
                 # avoid cluttering up our CI results for now.
             - name: Configure
               run: |
-                automake -ac
+                automake -ac || echo 'please ignore the automake error about a missing Makefile.am'
                 autoreconf -iv && \
                 ./configure --without-valgrind
             - name: Build
