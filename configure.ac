@@ -21,8 +21,8 @@ AC_PROG_INSTALL
 AC_PROG_CXX
 AC_PROG_CC
 
-AC_MSG_CHECKING([$(CXX) version])
-cxx_version=`$(CXX) --version`
+AC_MSG_CHECKING([$CXX version])
+cxx_version=`$CXX --version`
 AC_MSG_RESULT($cxx_version)
 
 AC_ARG_WITH(ar,[ar binary to use],[
