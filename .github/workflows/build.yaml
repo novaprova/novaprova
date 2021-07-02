@@ -1,0 +1,86 @@
+#
+#  Copyright 2011-2021 Gregory Banks
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
+name: Build and Test
+on:
+    push:
+        branches: [ "main", "1.5rc1" ]
+jobs:
+    build-and-test:
+        name: Build and Test
+        strategy:
+            matrix:
+                container:
+                    # Fedora 33 supported until approx 2021-11
+                    - "fedora:33"
+                    # Fedora 34 supported until approx 2022-05
+                    - "fedora:34"
+                    # Ubuntu 18.04, oldest LTS release still in Standard Support, until 2023-04
+                    - "ubuntu:bionic"
+                    # Ubuntu 20.04, latest LTS release, until 2025-04
+                    - "ubuntu:focal"
+                    # Ubuntu 20.10, interim release, supported until 2021-07
+                    - "ubuntu:groovy"
+                    # Ubuntu 21.04, interim release, supported until 2022-01
+                    - "ubuntu:hirsute"
+                os: [ubuntu-latest]
+                # TODO
+                # compiler: [clang, gcc]
+                include:
+                    - os: macos-latest
+        runs-on: ${{ matrix.os }}
+        container: ${{ matrix.container }}
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v2
+            - name: "Prepare development environment (Ubuntu)"
+              if: ${{ contains(matrix.container, 'ubuntu') }}
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y binutils-dev doxygen libiberty-dev \
+                    libxml-libxml-perl libxml2 libxml2-dev libxml2-utils \
+                    pkg-config zlib1g-dev
+# valgrind
+            - name: "Prepare development environment (Fedora)"
+              if: ${{ contains(matrix.container, 'fedora') }}
+              run: |
+                sudo yum -y install \
+                    git valgrind-devel binutils-devel libxml2-devel \
+                    doxygen perl-XML-LibXML strace python-pip
+                sudo pip install breathe Sphinx
+            - name: "Prepare development environment (MacOS)"
+              if: ${{ contains(matrix.os, 'macos') }}
+              run: |
+                brew tap novaprova/novaprova
+                brew install doxygen binutils libxml2 libiberty gettext
+# valgrind
+            - name: Configure
+              run: |
+                automake -ac
+                autoreconf -iv && \
+                ./configure --without-valgrind
+            - name: Build
+              run: make
+            - name: Test
+              run: make -k check
+            - name: Upload test logs if failed
+              uses: actions/upload-artifact@v2
+              if: failure()
+              with:
+                name: ${{ matrix.os }}-${{ matrix.container }}-test-logs
+                path: |
+                    tests/test-suite.log
+                    tests/t*.sh.log
