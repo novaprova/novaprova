@@ -25,20 +25,21 @@ jobs:
             matrix:
                 container:
                     # Fedora 33 supported until approx 2021-11
-                    - "fedora:33"
+#                    - "fedora:33"
                     # Fedora 34 supported until approx 2022-05
-                    - "fedora:34"
+#                    - "fedora:34"
                     # Ubuntu 18.04, oldest LTS release still in Standard Support, until 2023-04
                     - "ubuntu:bionic"
                     # Ubuntu 20.04, latest LTS release, until 2025-04
-                    - "ubuntu:focal"
+#                    - "ubuntu:focal"
                     # Ubuntu 20.10, interim release, supported until 2021-07
-                    - "ubuntu:groovy"
+#                     - "ubuntu:groovy"
                     # Ubuntu 21.04, interim release, supported until 2022-01
-                    - "ubuntu:hirsute"
+#                    - "ubuntu:hirsute"
                 os: [ubuntu-latest]
                 # TODO
-                # compiler: [clang, gcc]
+                compiler: gcc
+#                compiler: [clang, gcc]
                 include:
                     - os: macos-latest
         runs-on: ${{ matrix.os }}
@@ -50,10 +51,10 @@ jobs:
               if: ${{ contains(matrix.container, 'ubuntu') }}
               run: |
                 apt-get update
-                apt-get install -y binutils-dev doxygen libiberty-dev \
-                    libxml-libxml-perl libxml2 libxml2-dev libxml2-utils \
-                    pkg-config zlib1g-dev
-# valgrind
+                apt-get install -y autoconf automake binutils-dev doxygen \
+                    libiberty-dev libxml-libxml-perl libxml2 libxml2-dev \
+                    libxml2-utils make pkg-config zlib1g-dev \
+                    ${{ matrix.compiler }}
             - name: "Prepare development environment (Fedora)"
               if: ${{ contains(matrix.container, 'fedora') }}
               run: |
@@ -66,7 +67,9 @@ jobs:
               run: |
                 brew tap novaprova/novaprova
                 brew install doxygen binutils libxml2 libiberty gettext
-# valgrind
+                # MacOS is clang only
+                # Some releases of Valgrind work on MacOS, some don't, so
+                # avoid cluttering up our CI results for now.
             - name: Configure
               run: |
                 automake -ac
