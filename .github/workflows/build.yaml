@@ -129,7 +129,7 @@ jobs:
               uses: actions/upload-artifact@v2
               if: failure()
               with:
-                name: "${{ steps.prep_artifact_name.outputs.name }}"-test-logs
+                name: "${{ steps.prep_artifact_name.outputs.name }}-test-logs"
                 path: |
                     tests/t*.log
                     tests/t*.ee
