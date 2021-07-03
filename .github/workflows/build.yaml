@@ -33,7 +33,7 @@ jobs:
                     # Ubuntu 20.04, latest LTS release, until 2025-04
                     - "ubuntu:focal"
                     # Ubuntu 20.10, interim release, supported until 2021-07
-                     - "ubuntu:groovy"
+                    - "ubuntu:groovy"
                     # Ubuntu 21.04, interim release, supported until 2022-01
                     - "ubuntu:hirsute"
                 os: [ubuntu-latest]
