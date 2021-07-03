@@ -37,8 +37,6 @@ jobs:
                     # Ubuntu 21.04, interim release, supported until 2022-01
 #                    - "ubuntu:hirsute"
                 os: [ubuntu-latest]
-                # TODO
-#                compiler: [gcc]
                 compiler: [clang, gcc]
                 include:
                     - os: macos-latest
@@ -73,7 +71,11 @@ jobs:
             - name: Configure
               run: |
                 automake -ac || echo 'please ignore the automake error about a missing Makefile.am'
-                autoreconf -iv && \
+                autoreconf -iv
+                if [ "${{ matrix.compiler }}" = clang ] ; then
+                    export CC=clang
+                    export CXX=clang++
+                fi
                 ./configure --without-valgrind
             - name: Build
               run: make
