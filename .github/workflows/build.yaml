@@ -117,5 +117,5 @@ jobs:
               with:
                 name: ${{ matrix.os }}-${{ matrix.container }}-test-logs
                 path: |
-                    tests/test-suite.log
-                    tests/t*.sh.log
+                    tests/t*.log
+                    tests/t*.ee
