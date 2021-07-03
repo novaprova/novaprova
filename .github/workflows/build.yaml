@@ -53,6 +53,7 @@ jobs:
                     libiberty-dev libxml-libxml-perl libxml2 libxml2-dev \
                     libxml2-utils make pkg-config zlib1g-dev \
                     ${{ matrix.compiler }}
+                set -x
                 case "${{ matrix.compiler }}" in
                 gcc*)
                     # Some modern Ubuntu versions don't have a /usr/bin/gcc
