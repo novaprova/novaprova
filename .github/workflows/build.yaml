@@ -45,6 +45,20 @@ jobs:
         steps:
             - name: Check out repository
               uses: actions/checkout@v2
+            - name: prep_artifact_name
+              run: |
+                # Calculate a unique string which applies to the matrix entry
+                # that we can use to construct unique and valid artifact names.
+                # We achieve that by squashing runs of characters are invalid
+                # in artifact names, and also whitespace and dashes, into a
+                # single dash character.
+                if [ "${{ matrix.container }}" != "" ] ; then
+                    name="${{ matrix.container }}"
+                else
+                    name="${{ matrix.os }}"
+                fi
+                name=$(echo -n "$name" | sed -e 's/[- \t:\/\\"<>|*?]*/-/')
+                echo "::set-output name=name::$name"
             - name: "Prepare development environment (Ubuntu)"
               if: ${{ contains(matrix.container, 'ubuntu') }}
               run: |
@@ -115,7 +129,7 @@ jobs:
               uses: actions/upload-artifact@v2
               if: failure()
               with:
-                name: ${{ matrix.os }}-${{ matrix.container }}-test-logs
+                name: "${{ steps.prep_artifact_name.outputs.name }}"-test-logs
                 path: |
                     tests/t*.log
                     tests/t*.ee
