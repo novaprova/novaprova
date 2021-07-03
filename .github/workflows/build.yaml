@@ -27,7 +27,8 @@ jobs:
                     # Fedora 33 supported until approx 2021-11
                     - "fedora:33"
                     # Fedora 34 supported until approx 2022-05
-                    - "fedora:34"
+# The gcc-11 on Fedora 34 has issues with DWARF version 5
+#                    - "fedora:34"
                     # Ubuntu 18.04, oldest LTS release still in Standard Support, until 2023-04
                     - "ubuntu:bionic"
                     # Ubuntu 20.04, latest LTS release, until 2025-04
