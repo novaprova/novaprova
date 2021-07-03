@@ -154,6 +154,59 @@ x86|x86_64)
     ;;
 esac
 
+
+# Figure out what DWARF versions the NP source supports
+AC_MSG_CHECKING([Minimum DWARF version supported])
+changequote(<<, >>)dnl
+NP_MIN_DWARF_VERSION=`sed -n -e 's/.*MIN_DWARF_VERSION *= *\([0-9][0-9]*\).*/\1/p' "$srcdir/np/spiegel/dwarf/compile_unit.hxx"`
+changequote([, ])dnl
+AC_MSG_RESULT($NP_MIN_DWARF_VERSION)
+
+AC_MSG_CHECKING([Maximum DWARF version supported])
+changequote(<<, >>)dnl
+NP_MAX_DWARF_VERSION=`sed -n -e 's/.*MAX_DWARF_VERSION *= *\([0-9][0-9]*\).*/\1/p' "$srcdir/np/spiegel/dwarf/compile_unit.hxx"`
+changequote([, ])dnl
+AC_MSG_RESULT($NP_MAX_DWARF_VERSION)
+
+if test x"$NP_MIN_DWARF_VERSION" = x -o x"$NP_MAX_DWARF_VERSION" = x ; then
+    AC_MSG_ERROR([Unable to extract range of supported DWARF versions from source])
+fi
+
+# Figure out what the compiler supports
+AC_MSG_CHECKING([DWARF versions available in compiler])
+saved_CFLAGS="$CFLAGS"
+COMPILER_DWARF_VERSIONS=
+NP_DWARF_SUPPORT_MISSING=no
+for dwarf_version in `seq $NP_MIN_DWARF_VERSION 1 20` ; do
+    CFLAGS="$CFLAGS -gdwarf-$dwarf_version"
+    itworks=no
+    AC_TRY_LINK([], [
+const char * msg = "compile me";
+], [ itworks=yes ])
+    CFLAGS="$saved_CFLAGS"
+    if test "$itworks" = no ; then
+        break
+    fi
+    COMPILER_DWARF_VERSIONS="$COMPILER_DWARF_VERSIONS $dwarf_version"
+    if test "$dwarf_version" -gt $NP_MAX_DWARF_VERSION ; then
+        NP_DWARF_SUPPORT_MISSING=yes
+    fi
+done
+AC_MSG_RESULT($COMPILER_DWARF_VERSIONS)
+
+if test $NP_DWARF_SUPPORT_MISSING = yes ; then
+    # This compiler supports a DWARF version higher
+    # than the NovaProva source code.  NovaProva aims
+    # to support all DWARF versions, but we don't
+    # always achieve that.  Here we add a compile
+    # flag to ensure that NP and the tests are built
+    # using a DWARF version that NP can read, and so
+    # the tests will pass.
+    platform_CFLAGS="$platform_CFLAGS -gdwarf-$NP_MAX_DWARF_VERSION"
+    AC_MSG_WARN([Your compiler $CXX supports versions of the DWARF standard ($COMPILER_DWARF_VERSIONS) some of which are not yet supported by NovaProva.  Please report this to the NovaProva maintainers])
+fi
+
+
 AC_MSG_CHECKING([Platform specific CFLAGS])
 AC_MSG_RESULT($platform_CFLAGS)
 AC_SUBST(platform_CFLAGS)
