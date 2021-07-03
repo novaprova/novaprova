@@ -48,21 +48,26 @@ jobs:
             - name: "Prepare development environment (Ubuntu)"
               if: ${{ contains(matrix.container, 'ubuntu') }}
               run: |
+                case "${{ matrix.compiler }}" in
+                ""|gcc*)
+                    # Installing gcc may not also get us g++
+                    compilers="gcc g++"
+                    ;;
+                clang)
+                    compilers="clang"
+                    ;;
+                esac
                 apt-get update
                 apt-get install -y autoconf automake binutils-dev doxygen \
                     libiberty-dev libxml-libxml-perl libxml2 libxml2-dev \
-                    libxml2-utils make pkg-config zlib1g-dev \
-                    ${{ matrix.compiler }}
+                    libxml2-utils make pkg-config zlib1g-dev $compilers
                 case "${{ matrix.compiler }}" in
                 gcc*)
-                    set -x
-                    ls -l /usr/bin/gcc /usr/bin/g++
-                    apt-get install -y g++
-                    ls -l /usr/bin/gcc /usr/bin/g++
                     # Make sure we have the HIGHEST installed gcc
                     # version enabled as the default /usr/bin/gcc
                     gcc_version="$(ls /usr/bin/gcc* | sed -ne '/\/gcc-[0-9][0-9]*$/s/.*\/gcc-//p' | sort -nr | head -1)"
-                    if [ "$gcc_version" != "" -a ! -x /usr/bin/gcc ] ; then
+                    if [ "$gcc_version" != "" ] ; then
+                        echo "Updating alternatives to gcc-${gcc_version} and g++-${gcc_version}"
                         update-alternatives \
                             --install /usr/bin/gcc gcc /usr/bin/gcc-${gcc_version} 60 \
                             --slave /usr/bin/g++ g++ /usr/bin/g++-${gcc_version}
