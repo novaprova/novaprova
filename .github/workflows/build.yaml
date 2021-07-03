@@ -53,6 +53,21 @@ jobs:
                     libiberty-dev libxml-libxml-perl libxml2 libxml2-dev \
                     libxml2-utils make pkg-config zlib1g-dev \
                     ${{ matrix.compiler }}
+                case "${{ matrix.compiler }}" in
+                gcc*)
+                    # Some modern Ubuntu versions don't have a /usr/bin/gcc
+                    # by default but do have a /usr/bin/gcc-10 which configure
+                    # will not be able to find.  To allow configure to cope we
+                    # use the Ubuntu update-alternatives utility to make symlinks.
+                    gcc_version="$(ls /usr/bin/gcc* | sed -ne '/\/gcc-[0-9][0-9]*$/s/.*\/gcc-//p' | sort -nr | head -1)"
+                    # This is the HIGHEST version installed
+                    if [ "$gcc_version" != "" -a ! -x /usr/bin/gcc ] ; then
+                        update-alternatives \
+                            --install /usr/bin/gcc gcc /usr/bin/gcc-${gcc_version} 60 \
+                            --slave /usr/bin/g++ g++ /usr/bin/g++-${gcc_version}
+                    fi
+                    ;;
+                esac
             - name: "Prepare development environment (Fedora)"
               if: ${{ contains(matrix.container, 'fedora') }}
               run: |
