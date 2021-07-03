@@ -105,7 +105,7 @@ jobs:
                     ;;
                 esac
                 sudo yum -y install \
-                    autoconf automake binutils-devel diffutils doxygen libxml2-devel \
+                    autoconf automake binutils-devel diffutils doxygen libxml2 libxml2-devel \
                     perl-XML-LibXML python-pip strace valgrind-devel $compilers
                 sudo pip install breathe Sphinx
             - name: "Prepare development environment (MacOS)"
