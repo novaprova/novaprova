@@ -25,17 +25,17 @@ jobs:
             matrix:
                 container:
                     # Fedora 33 supported until approx 2021-11
-#                    - "fedora:33"
+                    - "fedora:33"
                     # Fedora 34 supported until approx 2022-05
-#                    - "fedora:34"
+                    - "fedora:34"
                     # Ubuntu 18.04, oldest LTS release still in Standard Support, until 2023-04
                     - "ubuntu:bionic"
                     # Ubuntu 20.04, latest LTS release, until 2025-04
-#                    - "ubuntu:focal"
+                    - "ubuntu:focal"
                     # Ubuntu 20.10, interim release, supported until 2021-07
-#                     - "ubuntu:groovy"
+                     - "ubuntu:groovy"
                     # Ubuntu 21.04, interim release, supported until 2022-01
-#                    - "ubuntu:hirsute"
+                    - "ubuntu:hirsute"
                 os: [ubuntu-latest]
                 compiler: [clang, gcc]
                 include:
@@ -57,8 +57,9 @@ jobs:
               if: ${{ contains(matrix.container, 'fedora') }}
               run: |
                 sudo yum -y install \
-                    git valgrind-devel binutils-devel libxml2-devel \
-                    doxygen perl-XML-LibXML strace python-pip
+                    autoconf automake binutils-devel doxygen libxml2-devel \
+                    perl-XML-LibXML python-pip strace valgrind-devel \
+                    ${{ matrix.compiler }}
                 sudo pip install breathe Sphinx
             - name: "Prepare development environment (MacOS)"
               if: ${{ contains(matrix.os, 'macos') }}
