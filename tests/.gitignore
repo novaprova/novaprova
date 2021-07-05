@@ -14,6 +14,8 @@
 #  limitations under the License.
 #
 *.log
+*.log.norm
+*.ee.norm
 .failing-tests.dat
 .leaky_fixture.dat
 .leaky_test.dat
@@ -93,3 +95,5 @@ tnuninit
 treader
 tstack
 tdescaddr
+tlog
+trangetree
