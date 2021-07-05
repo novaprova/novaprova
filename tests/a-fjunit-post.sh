@@ -26,12 +26,6 @@ function fail()
 [ -d reports ] || fail 'reports directory not created'
 [ -f reports/TEST-$TEST.xml ] || fail 'report file not created'
 
-if [ -f /etc/fedora-release ] ; then
-    set -x
-    rpm -ql libxml2
-    ls -l /usr/bin/xmllint
-    type which
-fi
 xx=$(which xmllint 2>/dev/null)
 [ -n "$xx" ] || fail "could not find xmllint executable in PATH=\"$PATH\""
 

@@ -108,11 +108,8 @@ jobs:
                 sudo yum -y install \
                     autoconf automake binutils-devel.$arch diffutils doxygen \
                     libxml2.$arch libxml2-devel.$arch perl-XML-LibXML python-pip \
-                    strace valgrind-devel.$arch $compilers
+                    strace valgrind-devel.$arch which $compilers
                 sudo pip install breathe Sphinx
-                echo "=== libxml2 ==="
-                rpm -ql libxml2.$arch | grep /bin/
-                echo "==="
             - name: "Prepare development environment (MacOS)"
               if: ${{ contains(matrix.os, 'macos') }}
               run: |
