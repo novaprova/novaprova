@@ -27,7 +27,7 @@ function fail()
 [ -f reports/TEST-$TEST.xml ] || fail 'report file not created'
 
 xx=$(which xmllint 2>/dev/null)
-[ -n "$xx" ] || fail 'could not find xmllint executable'
+[ -n "$xx" ] || fail "could not find xmllint executable in PATH=\"$PATH\""
 
 xmllint --schema JUnit.xsd -noout reports/TEST-$TEST.xml || \
     fail 'xml schema validation failed'
