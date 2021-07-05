@@ -99,7 +99,7 @@ jobs:
                 case "${{ matrix.compiler }}" in
                 ""|gcc*)
                     # Installing gcc may not also get us g++
-                    compilers="gcc.$arch g++.$arch"
+                    compilers="gcc g++"
                     ;;
                 clang)
                     compilers="clang.$arch"
