@@ -95,18 +95,20 @@ jobs:
             - name: "Prepare development environment (Fedora)"
               if: ${{ contains(matrix.container, 'fedora') }}
               run: |
+                arch=x86_64
                 case "${{ matrix.compiler }}" in
                 ""|gcc*)
                     # Installing gcc may not also get us g++
-                    compilers="gcc g++"
+                    compilers="gcc.$arch g++.$arch"
                     ;;
                 clang)
-                    compilers="clang"
+                    compilers="clang.$arch"
                     ;;
                 esac
                 sudo yum -y install \
-                    autoconf automake binutils-devel diffutils doxygen libxml2 libxml2-devel \
-                    perl-XML-LibXML python-pip strace valgrind-devel $compilers
+                    autoconf automake binutils-devel.$arch diffutils doxygen \
+                    libxml2.$arch libxml2-devel.$arch perl-XML-LibXML python-pip \
+                    strace valgrind-devel.$arch $compilers
                 sudo pip install breathe Sphinx
             - name: "Prepare development environment (MacOS)"
               if: ${{ contains(matrix.os, 'macos') }}
