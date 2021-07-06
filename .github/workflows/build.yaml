@@ -27,9 +27,7 @@ jobs:
                     # Fedora 33 supported until approx 2021-11
                     - "fedora:33"
                     # Fedora 34 supported until approx 2022-05
-# The libbfd.a on Fedora 34 is built with DWARF version 5
-# which infects the NP test executables and breaks the tests
-#                    - "fedora:34"
+                    - "fedora:34"
                     # Ubuntu 18.04, oldest LTS release still in Standard Support, until 2023-04
                     - "ubuntu:bionic"
                     # Ubuntu 20.04, latest LTS release, until 2025-04
