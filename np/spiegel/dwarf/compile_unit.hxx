@@ -35,7 +35,7 @@ class compile_unit_t : public reference_resolver_t, public np::util::zalloc
 {
 private:
     enum {
-	header_length = 11,	// this might depend on version
+	MIN_HEADER_LENGTH = 7,	// not including the initial length
 
 	MIN_DWARF_VERSION = 2,
 	MAX_DWARF_VERSION = 4
@@ -49,7 +49,22 @@ public:
     ~compile_unit_t()
     {}
 
-    bool read_header(reader_t &r);
+    enum read_result_t {
+        // We were able to read the result
+        READ_SUCCEEDED,
+        // We failed to get a result but the underlying
+        // reader has been reliably adjusted to point
+        // at the next object in the stream, so parsing
+        // can continue.  This can happen when e.g.
+        // a compile unit with an unsupported DWARF header
+        // appears in a .info section; we know the compile
+        // unit's length and can skip over it.
+        READ_SKIPPED,
+        // We failed and have lost synchronization with
+        // the underlying stream.
+        READ_FAILED
+    };
+    read_result_t read_header(reader_t &r);
     void read_abbrevs(reader_t &r);
     bool read_lineno_program(reader_t &r);
     void dump_abbrevs() const;
@@ -74,7 +89,7 @@ public:
     }
     reference_t make_root_reference() const
     {
-        return reference_t::make(this, header_length);
+        return reference_t::make(this, header_length_);
     }
 
     compile_unit_offset_tuple_t resolve_reference(const reference_t &ref) const override;
@@ -83,7 +98,7 @@ public:
     reader_t get_contents() const
     {
 	reader_t r = reader_;
-	r.skip(header_length);
+	r.skip(header_length_);
 	return r;
     }
 
@@ -108,6 +123,7 @@ private:
     bool is64_;		    // new 64b format introduced in DWARF3
     reader_t reader_;	    // for whole including header
     np::spiegel::offset_t offset_;
+    size_t header_length_;  // 19 in 64b mode for DWARF4, 11 for 32b mode for DWARF<=4
     uint32_t abbrevs_offset_;
     std::vector<abbrev_t*> abbrevs_;
     // from attributes of DW_TAG_compile_unit

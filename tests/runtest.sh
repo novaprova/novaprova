@@ -177,6 +177,7 @@ function normalize_output
 	egrep '^(EVENT |MSG |PASS |FAIL |N/A |EXIT |np: .*\[(WARN|ERROR)\]|\?\?\? |==[0-9]+== [A-Z]|^at |^by )' < $f |\
 	    sed $sed_extended_opt \
                 -e 's/\[(WARN|ERROR)\]/\1/' \
+		-e '/unexpected DWARF version 5/d' \
                 -e 's/\[[^]=]*\]//g' \
 		-e 's|'$TOPDIR'|%TOPDIR%|g' \
 		-e 's/process [0-9]+/process %PID%/g' \

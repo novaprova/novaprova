@@ -26,37 +26,66 @@ namespace np { namespace spiegel { namespace dwarf {
 using namespace std;
 using namespace np::util;
 
-bool
+compile_unit_t::read_result_t
 compile_unit_t::read_header(reader_t &r)
 {
     reader_ = r;
     offset_ = r.get_offset(); // sample offset of start of header
 
-    dprintf("DWARF debug_info compile unit header at section offset 0x%lx\n",
-            r.get_offset());
+    string context = string("compile unit header at section offset ") + HEX(offset_);
+    dprintf("DWARF debug_info %s\n", context.c_str());
 
+    // Per [DWARF4] section 7.5.1.1 point 1, "representing the length
+    // of the .debug_info contribution for that compilation unit, not
+    // including the length field itself"
     np::spiegel::offset_t length;
     bool is64;
     if (!r.read_initial_length(length, is64))
-	return false;
-    if (length > r.get_remains())
-	fatal("Bad DWARF compile unit length %llu", (unsigned long long)length);
+    {
+        // no error message here, because this is normal
+        // behavior at the end of a .info section.
+	return READ_FAILED;
+    }
+    size_t initial_length_length = r.get_offset() - offset_;    // 12 in 64b mode, 4 in 32b mode
+    if (length > r.get_remains() || length < MIN_HEADER_LENGTH)
+    {
+	eprintf("%s: bad DWARF compile unit length %llu, failing\n",
+                context.c_str(), (unsigned long long)length);
+        return READ_FAILED;
+    }
+    size_t next_header_offset = r.get_offset() + length;        // how to get to the next CU header
 
     uint16_t version;
     if (!r.read_u16(version))
-	return false;
+    {
+        eprintf("%s: short DWARF compile unit header, cannot read version\n",
+                context.c_str());
+        r.seek(next_header_offset);
+	return READ_SKIPPED;
+    }
     if (version < MIN_DWARF_VERSION || version > MAX_DWARF_VERSION)
-	fatal("Bad DWARF version %u, expecting %u-%u",
-	      version, MIN_DWARF_VERSION, MAX_DWARF_VERSION);
-    if (length < (unsigned)(header_length-(is64 ? 14 : 6)/*read so far*/))
-	fatal("Bad DWARF compile unit length %llu", (unsigned long long)length);
+    {
+	wprintf("%s: unexpected DWARF version %u, expecting %u-%u\n",
+	        context.c_str(), version, MIN_DWARF_VERSION, MAX_DWARF_VERSION);
+        r.seek(next_header_offset);
+	return READ_SKIPPED;
+    }
 
     uint8_t addrsize;
     if (!r.read_u32(abbrevs_offset_) ||
 	!r.read_u8(addrsize))
-	return false;
-    if (addrsize != _NP_ADDRSIZE) fatal("Bad DWARF addrsize %u, expecting %u",
-	      addrsize, _NP_ADDRSIZE);
+    {
+        eprintf("%s: bad DWARF header: unable to read abbrevs_offset or addrsize\n",
+	        context.c_str());
+        r.seek(next_header_offset);
+	return READ_SKIPPED;
+    }
+    if (addrsize != _NP_ADDRSIZE) {
+        eprintf("%s: bad DWARF addrsize %u, expecting %u\n",
+	        context.c_str(), addrsize, _NP_ADDRSIZE);
+        r.seek(next_header_offset);
+	return READ_SKIPPED;
+    }
 
     dprintf("length %u version %u is64 %s abbrevs_offset %u addrsize %u\n",
 	    (unsigned)length,
@@ -65,20 +94,19 @@ compile_unit_t::read_header(reader_t &r)
 	    (unsigned)abbrevs_offset_,
 	    (unsigned)addrsize);
 
+    header_length_ = r.get_offset() - offset_;
     version_ = version;
     is64_ = is64;
-
-    length += is64 ? 12 : 4;	// account for the `length' field of the header
 
     // setup reader_ to point to the whole compile
     // unit but not any bytes of the next one
     reader_.set_is64(is64);
-    reader_ = reader_.initial_subset(length);
+    reader_ = reader_.initial_subset(length+initial_length_length);
 
     // skip the outer reader over the body
-    r.skip(length - header_length);
+    r.seek(next_header_offset);
 
-    return true;
+    return READ_SUCCEEDED;
 }
 
 void

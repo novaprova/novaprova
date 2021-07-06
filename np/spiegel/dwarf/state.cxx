@@ -60,8 +60,19 @@ state_t::read_compile_units(link_object_t *lo)
     for (;;)
     {
 	cu = new compile_unit_t(compile_units_.size(), lo);
-	if (!cu->read_header(infor))
-	    break;
+
+        compile_unit_t::read_result_t r = cu->read_header(infor);
+        if (r == compile_unit_t::READ_FAILED)
+        {
+            // lost sync, or end of section: cannot get any more CUs from this section
+            break;
+        }
+        if (r == compile_unit_t::READ_SKIPPED)
+        {
+            // skip this CU, try to read others
+            delete cu;
+            continue;
+        }
 
 	cu->read_abbrevs(abbrevr);
 
