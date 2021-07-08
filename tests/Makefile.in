@@ -145,11 +145,15 @@ COMPOUND_SUBTESTS= \
 
 COMPOUND_DATA= $(addprefix d-,$(COMPOUND_SUBTESTS))
 
+SPECIAL_TESTS= \
+    twatch
+
 TESTS= \
     $(SIMPLE_TESTS) \
     $(foreach t,$(BASIC_TESTS),$t $(foreach s,$(OUTPUT_FORMATS),$t%-f$s)) \
     $(MAINFUL_TESTS) \
-    $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s))
+    $(foreach t,$(COMPOUND_TESTS),$(foreach s,$(COMPOUND_DATA),$t%$s)) \
+    $(SPECIAL_TESTS)
 
 UNRELIABLE_TESTS= \
     $(foreach t,$(PARALLEL_TESTS),$t $(foreach j,$(PARALLELISM),$t%-j$j)) \
@@ -227,6 +231,10 @@ $(SIMPLE_TESTS) $(BASIC_TESTS) $(PARALLEL_TESTS): % : %.c $(DEPS)
 
 $(SIMPLE_TESTS_CXX): % : %.cxx $(DEPS)
 	$(LINK.C) -o $@ $< $(LIBS)
+
+twatch_OBJS=        twatchtofu.o tofu.o
+twatch: $(twatch_OBJS)
+	$(LINK.C) -o $@ $(twatch_OBJS) $(LIBS)
 
 clean:
 	$(RM) $(TEST_EXES) $(COMPOUND_DATA)

@@ -91,6 +91,7 @@ public:
 
     std::vector<function_t *> get_functions();
     std::vector<np::util::filename_t> get_all_absolute_paths() const;
+    void get_link_symbols(std::vector<std::string> &defined, std::vector<std::string> &undefined);
 
     void dump_types();
 

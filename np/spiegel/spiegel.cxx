@@ -427,6 +427,29 @@ compile_unit_t::get_all_absolute_paths() const
 }
 
 void
+compile_unit_t::get_link_symbols(vector<string> &defined, vector<string> &undefined)
+{
+    np::spiegel::dwarf::walker_t w(lower()->make_root_reference());
+    // move to DW_TAG_compile_unit
+    w.move_next();
+
+    // scan children of DW_TAG_compile_unit for functions
+    for (const np::spiegel::dwarf::entry_t *e = w.move_down() ; e ; e = w.move_next())
+    {
+        // TODO: need to do this with D symbol dependencies as well as T
+	if (e->get_tag() != DW_TAG_subprogram)
+            continue;
+        const char *name = e->get_string_attribute(DW_AT_name);
+        if (!name)
+            continue;
+        if (e->get_attribute(DW_AT_declaration))
+            undefined.push_back(name);
+	else
+            defined.push_back(name);
+    }
+}
+
+void
 compile_unit_t::dump_types()
 {
     np::spiegel::dwarf::walker_t w(ref_);

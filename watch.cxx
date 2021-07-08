@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <set>
 #include <np.h>
 #include <getopt.h>
 #include <sys/stat.h>
@@ -62,8 +63,10 @@ private:
     {
         np::util::filename_t name;
         std::vector<testnode_t *> tests;
-        std::vector<file_state_t *> down;   // files that I depend on
-        std::vector<file_state_t *> up;     // files that depend on me
+        std::set<file_state_t *> down;   // files that I depend on
+        std::set<file_state_t *> up;     // files that depend on me
+        std::vector<std::string> defined_symbols;
+        std::vector<std::string> undefined_symbols;
         struct timespec mtime;
         bool dirty;
 
@@ -135,13 +138,35 @@ watch_daemon_t::build_dependency_graph()
         if (!fstate)
         {
             fstate = make_file_state(source_path);
-            dprintf("Enqueueing file %s\n", fstate->name.c_str());
+            dprintf("Enqueueing file %s for testnode %s\n",
+                    fstate->name.c_str(), tn->get_fullname().c_str());
             pending.push_back(fstate);
         }
         fstate->tests.push_back(tn);
     }
 
+    dprintf("Adding all other compile units to queue of pending files\n");
+    for (auto &cu_item : compile_units_by_filename)
+    {
+        np::util::filename_t source_path = cu_item.first;
+        file_state_t *fstate = find_file_state(source_path);
+        if (!fstate)
+        {
+            fstate = make_file_state(source_path);
+            dprintf("Enqueueing file %s\n", fstate->name.c_str());
+            pending.push_back(fstate);
+        }
+    }
+
+    // TODO: should sort `queue` by something which is a proxy for linking
+    // order, such as start of address range, to best simulate the actual
+    // linker's behavior in corner cases such as symbols which are defined
+    // in multiple compile units.
+
+    // TODO: just iterate over `queue` and rename it, it's no longer
+    // used as temporary state in a depth-first search
     dprintf("Working the queue of pending files\n");
+    std::map<std::string, file_state_t* > symbol_resolution;
     while (!pending.empty())
     {
         file_state_t *fstate = pending.back();
@@ -161,24 +186,41 @@ watch_daemon_t::build_dependency_graph()
             dprintf("No compile unit for this file\n");
             continue;
         }
+        np::spiegel::compile_unit_t *cu = cuitr->second;
 
-        for (auto &cfilename : cuitr->second->get_all_absolute_paths())
+        dprintf("Getting link symbols\n");
+        cu->get_link_symbols(fstate->defined_symbols, fstate->undefined_symbols);
+        dprintf("Got %u defined symbols and %u undefined symbols\n",
+                fstate->defined_symbols.size(), fstate->undefined_symbols.size());
+        for (auto &sym : fstate->defined_symbols)
+            symbol_resolution[sym] = fstate;
+    }
+
+    for (auto &fstate_item : files_)
+    {
+        file_state_t *fstate = fstate_item.second;
+        dprintf("Resolving symbols for file %s\n", fstate->name.c_str());
+        for (std::string &sym : fstate->undefined_symbols)
         {
-            np::util::filename_t filename(cfilename);
-            file_state_t *down_fstate = find_file_state(filename);
-            if (!down_fstate)
+            auto itr = symbol_resolution.find(sym);
+            if (itr == symbol_resolution.end())
             {
-                down_fstate = make_file_state(filename);
-                dprintf("Enqueueing file %s\n", down_fstate->name.c_str());
-                pending.push_back(down_fstate);
+                dprintf("Symbol %s not resolved\n", sym.c_str());
             }
-            if (down_fstate != fstate)
+            else
             {
-                down_fstate->up.push_back(fstate);
-                fstate->down.push_back(down_fstate);
+                file_state_t *down_fstate = itr->second;
+                if (down_fstate != fstate)
+                {
+                    dprintf("Symbol %s adds dependency on file %s\n",
+                            sym.c_str(), down_fstate->name.c_str());
+                    down_fstate->up.insert(fstate);
+                    fstate->down.insert(down_fstate);
+                }
             }
         }
     }
+
     dprintf("Finished working the queue of pending files\n");
 
     delete plan;
@@ -209,6 +251,14 @@ watch_daemon_t::mainloop()
         fprintf(stderr, "    up {\n");
         for (auto &up_fstate : fstate->up)
             fprintf(stderr, "        %s\n", up_fstate->name.c_str());
+        fprintf(stderr, "    }\n");
+        fprintf(stderr, "    defined_symbols {\n");
+        for (auto &sym : fstate->defined_symbols)
+            fprintf(stderr, "        %s\n", sym.c_str());
+        fprintf(stderr, "    }\n");
+        fprintf(stderr, "    undefined_symbols {\n");
+        for (auto &sym : fstate->undefined_symbols)
+            fprintf(stderr, "        %s\n", sym.c_str());
         fprintf(stderr, "    }\n");
         fprintf(stderr, "    mtime %llu.%lu\n",
                 (unsigned long long)fstate->mtime.tv_sec, (unsigned long)fstate->mtime.tv_nsec);
