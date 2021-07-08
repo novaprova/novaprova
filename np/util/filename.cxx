@@ -156,6 +156,30 @@ filename_t::basename() const
 }
 
 filename_t
+filename_t::dirname() const
+{
+    size_t tail = find_last_of('/');
+    if (tail == string::npos)
+        return filename_t(".");
+    else
+        return filename_t(c_str(), tail-1);
+}
+
+filename_t
+filename_t::join(const string &o) const
+{
+    size_t len = length();
+    bool this_ends_with_slash = (len > 0 && c_str()[len - 1] == '/');
+    bool o_starts_with_slash = (o.length() > 0 && o.c_str()[0] == '/');
+    filename_t result;
+    result.append(*this);
+    if (!this_ends_with_slash && !o_starts_with_slash)
+        result.append("/");
+    result.append(o);
+    return result;
+}
+
+filename_t
 filename_t::current_dir()
 {
     char path[PATH_MAX];

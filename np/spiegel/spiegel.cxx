@@ -18,6 +18,7 @@
 #include "np/spiegel/dwarf/walker.hxx"
 #include "np/spiegel/dwarf/entry.hxx"
 #include "np/spiegel/dwarf/enumerations.hxx"
+#include "np/spiegel/dwarf/lineno_program.hxx"
 #include "np/spiegel/platform/common.hxx"
 #include "np/util/log.hxx"
 #include <algorithm>
@@ -413,6 +414,15 @@ compile_unit_t::get_functions()
     // when the DWARF info has them recorded in some other order.
     // Seen in Debian Buster.
     std::sort(res.begin(), res.end(), compare_functions_by_address);
+    return res;
+}
+
+std::vector<np::util::filename_t>
+compile_unit_t::get_all_absolute_paths() const
+{
+    vector<np::util::filename_t> res;
+    for (auto filename : lower()->get_lineno_program()->get_all_absolute_paths())
+        res.push_back(filename);
     return res;
 }
 

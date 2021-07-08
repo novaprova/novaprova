@@ -26,6 +26,7 @@ static void
 usage(const char *argv0)
 {
     fprintf(stderr, "Usage: %s [--debug] [-f output-format] [test-spec...]\n", argv0);
+    fprintf(stderr, "       %s [--debug] --list [test-spec...]\n", argv0);
     exit(1);
 }
 

@@ -56,7 +56,7 @@ testmanager_t::~testmanager_t()
 
 
 testmanager_t *
-testmanager_t::instance()
+testmanager_t::instance_for_executable(const char *exe)
 {
     if (!instance_)
     {
@@ -64,6 +64,7 @@ testmanager_t::instance()
 	new testmanager_t();
 	instance_->print_banner();
 	instance_->setup_classifiers();
+        instance_->init_spiegel_state(exe);
 	instance_->discover_functions();
 	instance_->setup_builtin_intercepts();
 	/* TODO: check tree for a) leaves without FT_TEST
@@ -72,6 +73,12 @@ testmanager_t::instance()
             instance_->root_->dump(string(""));
     }
     return instance_;
+}
+
+testmanager_t *
+testmanager_t::instance()
+{
+    return instance_for_executable(0);
 }
 
 void
@@ -261,16 +268,25 @@ get_param_dec(np::spiegel::function_t *fn)
 }
 
 void
-testmanager_t::discover_functions()
+testmanager_t::init_spiegel_state(const char *exe)
 {
     if (!spiegel_)
     {
 	dprintf("creating np::spiegel::state_t instance\n");
 	spiegel_ = new np::spiegel::state_t();
-	spiegel_->add_self();
+        if (exe && *exe)
+            spiegel_->add_executable(exe);
+        else
+            spiegel_->add_self();
         event_t::init(spiegel_);
-	root_ = new testnode_t(0);
     }
+}
+
+void
+testmanager_t::discover_functions()
+{
+    if (!root_)
+        root_ = new testnode_t(0);
     // else: splice common_ and root_ back together
 
     dprintf("scanning for test functions\n");

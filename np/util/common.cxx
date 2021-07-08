@@ -42,7 +42,7 @@ fatal(const char *fmt, ...)
 /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
 /* Do write() but handle short writes */
-static int
+int
 do_write(int fd, const char *buf, int len)
 {
     int remain = len;

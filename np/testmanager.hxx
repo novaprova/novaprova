@@ -33,12 +33,14 @@ class testmanager_t : public np::util::zalloc
 public:
     /* testmanager is a singleton */
     static testmanager_t *instance();
+    static testmanager_t *instance_for_executable(const char *exe);
 
     testnode_t *find_node(const char *nm) const
     {
 	return root_ ? root_->find(nm) : 0;
     }
     testnode_t *get_root() { return root_; }
+    np::spiegel::state_t *get_spiegel_state() { return spiegel_; };
 
     static void done() { delete instance_; }
 
@@ -52,6 +54,7 @@ private:
     functype_t classify_function(const char *func, char *match_return, size_t maxmatch);
     void add_classifier(const char *re, bool case_sensitive, functype_t type);
     void setup_classifiers();
+    void init_spiegel_state(const char *exe);
     void discover_functions();
     void setup_builtin_intercepts();
 

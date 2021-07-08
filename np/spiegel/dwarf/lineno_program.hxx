@@ -103,13 +103,7 @@ public:
             const lineno_program_t::file_table_entry_t *e = get_file_entry(i);
             if (!e)
                 return np::util::filename_t();
-            np::util::filename_t f(e->filename);
-            const char *cd = program_.compilation_directory_;
-            const char *d = (e->directory_index ?
-                             program_.include_directories_[e->directory_index-1] :
-                             cd);
-            np::util::filename_t f2 = f.make_absolute_to_dir(np::util::filename_t(d));
-            return f2.make_absolute_to_dir(np::util::filename_t(cd));
+            return program_.get_absolute_filename(e);
         }
 
         const registers_t &registers() const { return registers_; }
@@ -240,6 +234,58 @@ public:
         ERR_HALTED_BY_DELEGATE = -4
     };
 
+    class filenames_collection
+    {
+    public:
+        class iterator
+        {
+        public:
+            iterator() : program_(0) {}
+            iterator(const iterator &o)
+             :  program_(o.program_), itr_(o.itr_)
+            {}
+            iterator &operator++()
+            {
+                ++itr_;
+                return *this;
+            }
+            iterator &operator=(const iterator &o)
+            {
+                program_ = o.program_;
+                itr_ = o.itr_;
+                return *this;
+            }
+            int operator==(const iterator &o) const
+            {
+                return (itr_ == o.itr_);
+            }
+            int operator!=(const iterator &o) const
+            {
+                return !operator==(o);
+            }
+
+            np::util::filename_t operator*() const { return program_->get_absolute_filename(&(*itr_)); }
+
+        private:
+            iterator(lineno_program_t *program, std::vector<file_table_entry_t>::iterator itr)
+             :  program_(program), itr_(itr)
+            {}
+
+            lineno_program_t *program_;
+            std::vector<file_table_entry_t>::iterator itr_;
+            friend class filenames_collection;
+        };
+        iterator begin() { return iterator(program_, program_->files_.begin()); }
+        iterator end() { return iterator(program_, program_->files_.end()); }
+        
+    private:
+        lineno_program_t *program_;
+        filenames_collection(lineno_program_t *program) : program_(program) { }
+        friend class lineno_program_t;
+    };
+    filenames_collection get_all_absolute_paths() { return filenames_collection(this); }
+
+
     bool read_header(reader_t &);
     status_t run(delegate_t *);
     bool get_source_line(np::spiegel::addr_t addr,
@@ -258,6 +304,17 @@ private:
         uint8_t adjusted_opcode = opcode - opcode_base_;
         return adjusted_opcode / line_range_;
     }
+    np::util::filename_t get_absolute_filename(const file_table_entry_t *e) const
+    {
+        np::util::filename_t f(e->filename);
+        const char *cd = compilation_directory_;
+        const char *d = (e->directory_index ?
+                         include_directories_[e->directory_index-1] :
+                         cd);
+        np::util::filename_t f2 = f.make_absolute_to_dir(np::util::filename_t(d));
+        return f2.make_absolute_to_dir(np::util::filename_t(cd));
+    }
+
 
     // read from the .debug_info attributes, passed in by compile_unit_t
     // used to make absolure filenames

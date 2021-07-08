@@ -26,9 +26,12 @@ mandir=		@mandir@
 pkgconfigdir=	$(libdir)/pkgconfig
 
 libxml_CFLAGS=	@libxml_CFLAGS@
+libxml_LIBS=	@libxml_LIBS@
 libbfd_CFLAGS=	@libbfd_CFLAGS@
+libbfd_LIBS=    @libbfd_LIBS@
 valgrind_CFLAGS=@valgrind_CFLAGS@
 platform_CFLAGS=@platform_CFLAGS@
+platform_LIBS=	@platform_LIBS@
 platform_SOURCE=@platform_SOURCE@
 BUILD_DOCS=@BUILD_DOCS@
 
@@ -57,9 +60,9 @@ all clean distclean check install docs:
 install check: all
 
 ifeq ($(BUILD_DOCS), yes)
-all-local: libnovaprova.a obs-metadata doc/.doxy-stamp
+all-local: libnovaprova.a novaprova-watcher obs-metadata doc/.doxy-stamp
 else
-all-local: libnovaprova.a obs-metadata
+all-local: libnovaprova.a novaprova-watcher obs-metadata
 endif
 
 libnovaprova_SOURCE= \
@@ -94,6 +97,7 @@ libnovaprova_SOURCE= \
 		np/text_listener.cxx \
 		np/types.cxx \
 		np/util/common.cxx \
+		np/util/daemon.cxx \
 		np/util/filename.cxx \
 		np/util/log.cxx \
 		np/util/profile.cxx \
@@ -120,6 +124,7 @@ libnovaprova_PRIVHEADERS= \
 		np/spiegel/platform/common.hxx \
 		np/spiegel/spiegel.hxx \
 		np/util/common.hxx \
+		np/util/daemon.hxx \
 		np/util/filename.hxx \
 		np/util/log.hxx \
 		np/util/profile.hxx \
@@ -155,7 +160,21 @@ libnovaprova_DFILES= \
 	$(patsubst %.c,$(depdir)/%.d,$(filter %.c,$(libnovaprova_SOURCE))) \
 	$(patsubst %.cxx,$(depdir)/%.d,$(filter %.cxx,$(libnovaprova_SOURCE))) \
 
--include $(libnovaprova_DFILES)
+novaprova_watcher_OBJS= \
+	$(patsubst %.cxx,%.o,$(filter %.cxx,$(novaprova_watcher_SOURCE)))
+
+novaprova_watcher_SOURCE= \
+		watch.cxx
+
+novaprova_watcher_LDADD=    libnovaprova.a -lstdc++ \
+		$(libbfd_LIBS) $(libxml_LIBS) $(platform_LIBS)
+
+# Automatic dependency tracking
+novaprova_watcher_DFILES= \
+	$(patsubst %.cxx,$(depdir)/%.d,$(filter %.cxx,$(novaprova_watcher_SOURCE)))
+
+
+-include $(libnovaprova_DFILES) $(novaprova_watcher_DFILES)
 
 %.o: %.cxx
 	@mkdir -p $(dir $(depdir)/$(patsubst %.cxx,%.d,$<))
@@ -173,6 +192,9 @@ libnovaprova_DFILES= \
 
 libnovaprova.a: $(libnovaprova_OBJS)
 	$(AR) $(ARFLAGS) libnovaprova.a $(libnovaprova_OBJS)
+
+novaprova-watcher: $(novaprova_watcher_OBJS) libnovaprova.a
+	$(LINK.C) -o $@ $(novaprova_watcher_OBJS) $(novaprova_watcher_LDADD)
 
 ###
 
@@ -277,3 +299,6 @@ rpmlint: build/obs/rel/novaprova.spec
 # Build CScope database
 tags:
 	cscope -b -k $(libnovaprova_SOURCE) $(libnovaprova_PRIVHEADERS) $(libnovaprova_HEADERS)
+
+ctags:
+	ctags $(libnovaprova_SOURCE) $(libnovaprova_PRIVHEADERS) $(libnovaprova_HEADERS)

@@ -90,6 +90,7 @@ public:
 //     static compile_unit_t *for_name(const char *name);
 
     std::vector<function_t *> get_functions();
+    std::vector<np::util::filename_t> get_all_absolute_paths() const;
 
     void dump_types();
 

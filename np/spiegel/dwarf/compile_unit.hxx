@@ -115,6 +115,7 @@ public:
     np::util::filename_t get_compilation_directory() const { return compilation_directory_; }
     np::util::filename_t get_absolute_path() const;
     uint32_t get_language() const { return language_; }
+    lineno_program_t *get_lineno_program() const { return lineno_program_; }
 private:
     uint32_t index_;
     link_object_t *link_object_;

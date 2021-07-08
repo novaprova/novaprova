@@ -43,7 +43,9 @@ doc/manual/_build
 doc/xml
 install-sh
 novaprova-*.tar.bz2
+novaprova-watcher
 novaprova.pc
 plat.sh
+tags
 uninstalled/bin/pkg-config
 uninstalled/lib/pkgconfig/novaprova.pc
