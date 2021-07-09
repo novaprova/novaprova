@@ -15,6 +15,7 @@
  */
 
 #include <set>
+#include <functional>
 #include <np.h>
 #include <getopt.h>
 #include <sys/stat.h>
@@ -68,11 +69,11 @@ private:
         std::vector<std::string> defined_symbols;
         std::vector<std::string> undefined_symbols;
         struct timespec mtime;
-        bool dirty;
+        uint32_t generation;
 
         file_state_t(const np::util::filename_t &nm)
          :  name(nm),
-            dirty(false)
+            generation(0)
         {
             mtime.tv_sec = 0;
             mtime.tv_nsec = 0;
@@ -81,8 +82,10 @@ private:
 
     np::util::filename_t testrunner_;
     std::map<np::util::filename_t, file_state_t *> files_;
+    uint32_t generation_;
 
     void build_dependency_graph();
+    void dump_dependency_graph();
     file_state_t *find_file_state(const np::util::filename_t &nm)
     {
         std::map<np::util::filename_t, file_state_t *>::iterator itr = files_.find(nm);
@@ -94,9 +97,11 @@ private:
         files_[fstate->name] = fstate;
         return fstate;
     }
+    uint32_t next_generation() { return ++generation_; }
+    void apply_downwards(file_state_t *, uint32_t generation, std::function<void (file_state_t *)>);
 
 public:
-    watch_daemon_t() {}
+    watch_daemon_t() : generation_(0) {}
     // TODO: dtor which cleans up files_
 
     watch_daemon_t &set_testrunner(const np::util::filename_t &testrunner)
@@ -111,6 +116,30 @@ public:
 
     bool mainloop();
 };
+
+void
+watch_daemon_t::apply_downwards(
+    file_state_t *seed,
+    uint32_t generation,
+    std::function<void (file_state_t *)> callback)
+{
+    std::vector<file_state_t *> pending;
+    pending.push_back(seed);
+    while (!pending.empty())
+    {
+        file_state_t *fstate = pending.back();
+        pending.pop_back();
+
+        if (fstate->generation >= generation)
+            continue;
+
+        fstate->generation = generation;
+        callback(fstate);
+
+        for (auto &down_fstate : fstate->down)
+            pending.push_back(down_fstate);
+    }
+}
 
 void
 watch_daemon_t::build_dependency_graph()
@@ -226,11 +255,9 @@ watch_daemon_t::build_dependency_graph()
     delete plan;
 }
 
-bool
-watch_daemon_t::mainloop()
+void
+watch_daemon_t::dump_dependency_graph()
 {
-    build_dependency_graph();
-
     fprintf(stderr, "XXX dumping dependency graph\n");
     for (auto &pair : files_)
     {
@@ -262,10 +289,38 @@ watch_daemon_t::mainloop()
         fprintf(stderr, "    }\n");
         fprintf(stderr, "    mtime %llu.%lu\n",
                 (unsigned long long)fstate->mtime.tv_sec, (unsigned long)fstate->mtime.tv_nsec);
-        fprintf(stderr, "    dirty %s\n", fstate->dirty ? "true" : "false");
+        fprintf(stderr, "    generation %u\n", fstate->generation);
         fprintf(stderr, "}\n");
     }
     fprintf(stderr, "XXX done\n");
+}
+
+bool
+watch_daemon_t::mainloop()
+{
+    build_dependency_graph();
+    dump_dependency_graph();
+
+    // all files which any test depends on
+    std::vector<std::string> files_to_watch;
+    uint32_t generation = next_generation();
+    for (auto &item : files_)
+    {
+        file_state_t *fstate = item.second;
+        if (!fstate->tests.empty())
+            apply_downwards(fstate,
+                            generation,
+                            [&files_to_watch](file_state_t *up_fstate)
+                            {
+                                files_to_watch.push_back(up_fstate->name);
+                            });
+    }
+
+    fprintf(stderr, "XXX will watch files {\n");
+    for (auto &filename : files_to_watch)
+        fprintf(stderr, "    \"%s\"\n", filename.c_str());
+    fprintf(stderr, "}\n");
+
 
     /*
     while (running())
