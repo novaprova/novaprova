@@ -425,15 +425,21 @@ runner_t::wait()
 		 * Woken up from the poll() by a delivered SIGCHLD, so go
 		 * see if there any newly exited children to reap.  Note
 		 * that under Valgrind on Darwin, we don't get woken.
+		 *
+		 * SIGCHLD Most likely due to process killed after timeout. Need
+		 * to count this as a finished test.
 		 */
-		reap_children(-1, WNOHANG);
-		continue;
+		nfinished += reap_children(-1, WNOHANG);
+		dprintf ("nfinished now %d\n", nfinished);
 	    }
-	    /* poll reported an error */
-            eprintf("Failed to poll(): %s\n", strerror(errno));
-	    return;
+	    else
+	    {
+	        /* poll reported an error */
+                eprintf("Failed to poll(): %s\n", strerror(errno));
+	        return;
+	    }
 	}
-	if (r == 0)
+	else if (r == 0)
 	{
 	    /* poll() timed out */
 	    int64_t end = rel_now();
@@ -479,12 +485,13 @@ runner_t::wait()
 	    caught_sigchld, nfinished);
 }
 
-void
+int
 runner_t::reap_children(pid_t reqpid, int waitflags)
 {
     pid_t pid;
     int status;
     char msg[1024];
+    int num_finished = 0;
 
     dprintf("starting to reap children\n");
     caught_sigchld = 0;
@@ -508,7 +515,7 @@ runner_t::reap_children(pid_t reqpid, int waitflags)
 	    if (errno == ESRCH || errno == ECHILD)
 		break;
             eprintf("Failed to waitpid(): %s\n", strerror(errno));
-	    return;
+	    return num_finished;
 	}
 	if (WIFSTOPPED(status))
 	{
@@ -540,6 +547,7 @@ runner_t::reap_children(pid_t reqpid, int waitflags)
 			 (int)pid, WEXITSTATUS(status));
 		event_t ev(EV_EXIT, msg);
 		child->merge_result(raise_event(child->get_job(), &ev));
+		num_finished++;
 	    }
 	}
 	else if (WIFSIGNALED(status))
@@ -549,6 +557,9 @@ runner_t::reap_children(pid_t reqpid, int waitflags)
 		    (int)pid, WTERMSIG(status));
 	    event_t ev(EV_SIGNAL, msg);
 	    child->merge_result(raise_event(child->get_job(), &ev));
+	    /* Set state to finished because process has been successfully killed */
+	    child->handle_hangup();
+	    num_finished++;
 	}
 
 	/* test is finished; if nothing went wrong then PASS */
@@ -566,6 +577,8 @@ runner_t::reap_children(pid_t reqpid, int waitflags)
     }
 
     /* nothing to reap here, move along */
+
+    return num_finished;
 }
 
 void

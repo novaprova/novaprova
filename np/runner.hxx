@@ -54,7 +54,7 @@ private:
     /* Wait for and reap the child process specified by pid.  If pid is -1,
      * reaps any child processes.  If waitflags contains WNOHANG, do not
      * wait for child processes to exit. */
-    void reap_children(pid_t pid, int waitflags);
+    int reap_children(pid_t pid, int waitflags);
     void run_function(functype_t ft, spiegel::function_t *f);
     void run_fixtures(testnode_t *tn, functype_t type);
     result_t valgrind_errors(job_t *, result_t);
